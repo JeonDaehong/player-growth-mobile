@@ -2720,6 +2720,428 @@
         "attack",
         "down"
       ]
+    },
+    {
+      "file": "pf_vine.jpg",
+      "name": "pf_vine",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 덩굴손 (docs/foe-art2/pf_vine.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pf_maw.jpg",
+      "name": "pf_maw",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 아귀꽃 (docs/foe-art2/pf_maw.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pf_bramble.jpg",
+      "name": "pf_bramble",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 가시덤불 (docs/foe-art2/pf_bramble.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pf_moss.jpg",
+      "name": "pf_moss",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 이끼덩이 (docs/foe-art2/pf_moss.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pf_spore.jpg",
+      "name": "pf_spore",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 홀씨대 (docs/foe-art2/pf_spore.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pf_sap.jpg",
+      "name": "pf_sap",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 진액꽃 (docs/foe-art2/pf_sap.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pw_stump.jpg",
+      "name": "pw_stump",
+      "grid": [
+        3,
+        1
+      ],
+      "floor": true,
+      "invert": true,
+      "note": "11~20 잡몹 — 걷는 그루터기 (docs/foe-art2/pw_stump.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다. 흰 바탕이라 뒤집었고, 그때 남는 흰 액자를 inset 으로 깎는다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ],
+      "inset": 0.05,
+      "minPart": 0.02
+    },
+    {
+      "file": "pf_hollow.jpg",
+      "name": "pw_hollow",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 속 빈 나무 (docs/foe-art2/pw_hollow.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다. 파일 이름이 pf_hollow.jpg 로 왔지만 나무 챕터라 세트는 pw_hollow 다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pw_root.jpg",
+      "name": "pw_root",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 뿌리덩이 (docs/foe-art2/pw_root.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pw_bark.jpg",
+      "name": "pw_bark",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 껍질갑옷 (docs/foe-art2/pw_bark.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pw_branch.jpg",
+      "name": "pw_branch",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 가지창 (docs/foe-art2/pw_branch.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pf_pod.jpg",
+      "name": "pw_pod",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 잡몹 — 꼬투리나무 (docs/foe-art2/pw_pod.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다. 파일 이름이 pf_pod.jpg 로 왔지만 나무 챕터라 세트는 pw_pod 다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "pb_bramble.jpg",
+      "name": "pb_bramble",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 가시덤불 군체 (docs/foe-art2/pb_bramble.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ]
+    },
+    {
+      "file": "pb_bloom.jpg",
+      "name": "pb_bloom",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "invert": true,
+      "note": "11~20 우두머리 — 아귀꽃 여왕 (docs/foe-art2/pb_bloom.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다. 흰 바탕이라 뒤집었고, 그때 남는 흰 액자를 inset 으로 깎는다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ],
+      "inset": 0.05,
+      "minPart": 0.02
+    },
+    {
+      "file": "pb_spore.jpg",
+      "name": "pb_spore",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 홀씨 기둥 (docs/foe-art2/pb_spore.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ]
+    },
+    {
+      "file": "pb_carrion.jpg",
+      "name": "pb_carrion",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 시체꽃 (docs/foe-art2/pb_carrion.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ]
+    },
+    {
+      "file": "pb_stump.jpg",
+      "name": "pb_stump",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 늙은 그루터기 (docs/foe-art2/pb_stump.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ]
+    },
+    {
+      "file": "pb_hollow.jpg",
+      "name": "pb_hollow",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 속 빈 거인 (docs/foe-art2/pb_hollow.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ]
+    },
+    {
+      "file": "pb_thornwood.jpg",
+      "name": "pb_thornwood",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 가시나무 (docs/foe-art2/pb_thornwood.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ]
+    },
+    {
+      "file": "pb_rot.jpg",
+      "name": "pb_rot",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 썩은 거목 (docs/foe-art2/pb_rot.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ]
+    },
+    {
+      "file": "pb_elder.jpg",
+      "name": "pb_elder",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 숲의 어른 (docs/foe-art2/pb_elder.md). **네 칸이다** — special 은 파티 넷을 한꺼번에 치는 기술의 그림이다",
+      "labels": [
+        "idle",
+        "attack",
+        "special",
+        "down"
+      ]
+    },
+    {
+      "file": "11-15.jpg",
+      "name": "bg_chapter",
+      "grid": [
+        1,
+        1
+      ],
+      "append": true,
+      "allowFilled": true,
+      "note": "오염된 잔재들의 숲 배경 (docs/FOE_BG_PROMPTS.md). 검은 바탕에 흰 나무로 제대로 왔다 — 뒤집지 않는다",
+      "labels": [
+        "03"
+      ]
+    },
+    {
+      "file": "16-20.jpg",
+      "name": "bg_chapter",
+      "grid": [
+        1,
+        1
+      ],
+      "append": true,
+      "invert": true,
+      "allowFilled": true,
+      "note": "타락한 잔재들의 숲 배경 (docs/FOE_BG_PROMPTS.md). 흰 하늘에 검은 나무로 와서 뒤집는다 — 나머지 셋은 검은 바탕에 흰 그림이다",
+      "labels": [
+        "04"
+      ]
+    },
+    {
+      "file": "pb_creeper.jpg",
+      "name": "pb_creeper",
+      "region": [
+        0.004,
+        0.012,
+        0.502,
+        0.988
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "floor": true,
+      "note": "11~20 우두머리 — 덩굴 어미 (docs/foe-art2/pb_creeper.md). 4x2 로 왔는데 3열만 두 줄을 합쳐 쓴 찢어진 시트라, 영역을 셋으로 나눠 적는다 — 1·2열",
+      "labels": [
+        "idle",
+        "alt1",
+        "alt2",
+        "attack"
+      ]
+    },
+    {
+      "file": "pb_creeper.jpg",
+      "name": "pb_creeper",
+      "region": [
+        0.502,
+        0.012,
+        0.75,
+        0.988
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "append": true,
+      "floor": true,
+      "note": "11~20 우두머리 — 덩굴 어미 (docs/foe-art2/pb_creeper.md). 4x2 로 왔는데 3열만 두 줄을 합쳐 쓴 찢어진 시트라, 영역을 셋으로 나눠 적는다 — 3열(두 줄을 합친 특수 동작)",
+      "labels": [
+        "special"
+      ]
+    },
+    {
+      "file": "pb_creeper.jpg",
+      "name": "pb_creeper",
+      "region": [
+        0.75,
+        0.012,
+        0.996,
+        0.988
+      ],
+      "grid": [
+        1,
+        2
+      ],
+      "append": true,
+      "floor": true,
+      "note": "11~20 우두머리 — 덩굴 어미 (docs/foe-art2/pb_creeper.md). 4x2 로 왔는데 3열만 두 줄을 합쳐 쓴 찢어진 시트라, 영역을 셋으로 나눠 적는다 — 4열",
+      "labels": [
+        "alt3",
+        "down"
+      ]
     }
   ],
   "_srcDirs": [

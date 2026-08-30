@@ -17,7 +17,6 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useGame } from '@/state/store';
 import { TICK_MS } from '@/core/autoBattle';
-import { CHAR_IDS } from '@/core/chars';
 import { Btn, Screen, Sep, Row, T } from '@/ui/atoms';
 import { startBgm } from '@/ui/sfx';
 import { SP } from '@/ui/theme';
@@ -25,7 +24,6 @@ import { Money } from '@/ui/Money';
 import { BattleView } from './home/BattleView';
 import { BenchTag, PartyBar } from './home/PartyBar';
 import { CharPopup } from './home/CharPopup';
-import { RecruitPopup } from './home/RecruitPopup';
 
 /**
  * 배경음 스위치.
@@ -56,8 +54,6 @@ export default function HomeScreen() {
   const tickOnce = useGame((s) => s.battleTickOnce);
   const money = useGame((s) => s.money);
   const [slot, setSlot] = useState<number | null>(null);
-  const [recruiting, setRecruiting] = useState(false);
-  const owned = useGame((s) => Object.keys(s.chars).length);
 
   /*
     전투를 굴린다.
@@ -111,15 +107,16 @@ export default function HomeScreen() {
 
       <PartyBar onPick={setSlot} />
 
-      <Btn
-        label="캐릭터 모집"
-        /* 12 로 박아 뒀더니 한 명씩 늘릴 때마다 표시가 거짓말이 됐다 */
-        sub={`도감 ${owned} / ${CHAR_IDS.length}`}
-        size="lg"
-        fill
-        style={{ marginTop: SP.md }}
-        onPress={() => setRecruiting(true)}
-      />
+      {/*
+        ── "캐릭터 모집" 단추는 없앴다 ──
+
+        단추와 함께 그것만 쓰던 것들도 뺐다 — 팝업(`RecruitPopup`), 그걸
+        여닫던 상태, 그리고 `도감 n / 12` 를 세던 값. 열 수 없는 팝업을
+        남겨 두면 다음에 볼 때 "이건 왜 여기 있지" 를 다시 판단해야 한다.
+
+        모집 로직 자체(`recruitDraw`)와 `RecruitPopup` 컴포넌트는 그대로
+        있으므로, 다시 열 때는 이 자리에 단추와 팝업 두 줄을 되돌리면 된다.
+      */}
 
       <View style={{ marginTop: SP.sm }}>
         <T size={9} dim="dim">
@@ -128,7 +125,6 @@ export default function HomeScreen() {
       </View>
 
       <CharPopup slot={slot} onClose={() => setSlot(null)} />
-      <RecruitPopup visible={recruiting} onClose={() => setRecruiting(false)} />
     </Screen>
   );
 }

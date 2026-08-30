@@ -458,8 +458,16 @@ def run(only=None):
     for name, status, cnt in report:
         print(f'  {name.ljust(w)}  {str(cnt).rjust(3)}장  {status}')
     print(f'\n총 {total}장 → {OUT}/')
-    if not only:
-        emit_index(cfg)
+    # 한 세트만 잘랐을 때도 다시 쓴다.
+    #
+    # 전체 실행일 때만 쓰게 막아 뒀었다. 그런데 인덱스는 **디스크를 읽어서**
+    # 만들므로 언제 써도 옳고, 안 쓰면 파일과 인덱스가 갈라진다.
+    #
+    # 가려 둔 대가가 컸다. `slice.py pb_creeper` 로 칸 구성을 고쳤더니 파일은
+    # 바뀌었는데 인덱스는 옛 이름(`05`~`08`)을 그대로 가리켰고, 그게 배포할
+    # 때 번들러에서 터졌다 — "Unable to resolve module .../05.png". 자른
+    # 자리와 터지는 자리가 멀어서 원인을 찾는 데 시간이 든다.
+    emit_index(cfg)
 
 
 def emit_index(cfg):

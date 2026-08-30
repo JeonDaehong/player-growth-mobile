@@ -231,6 +231,8 @@ export const CR_TENTACLE_SPRITES = {
 export const BG_CHAPTER_SPRITES = {
   '01': require('../../assets/sprites/bg_chapter/01.png'),
   '02': require('../../assets/sprites/bg_chapter/02.png'),
+  '03': require('../../assets/sprites/bg_chapter/03.png'),
+  '04': require('../../assets/sprites/bg_chapter/04.png'),
 } as const;
 
 export const BG_PLACE_SPRITES = {
@@ -1242,7 +1244,152 @@ export const SB_KING_SPRITES = {
   'idle': require('../../assets/sprites/sb_king/idle.png'),
 } as const;
 
-export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king';
+export const PF_VINE_SPRITES = {
+  'attack': require('../../assets/sprites/pf_vine/attack.png'),
+  'down': require('../../assets/sprites/pf_vine/down.png'),
+  'idle': require('../../assets/sprites/pf_vine/idle.png'),
+} as const;
+
+export const PF_MAW_SPRITES = {
+  'attack': require('../../assets/sprites/pf_maw/attack.png'),
+  'down': require('../../assets/sprites/pf_maw/down.png'),
+  'idle': require('../../assets/sprites/pf_maw/idle.png'),
+} as const;
+
+export const PF_BRAMBLE_SPRITES = {
+  'attack': require('../../assets/sprites/pf_bramble/attack.png'),
+  'down': require('../../assets/sprites/pf_bramble/down.png'),
+  'idle': require('../../assets/sprites/pf_bramble/idle.png'),
+} as const;
+
+export const PF_MOSS_SPRITES = {
+  'attack': require('../../assets/sprites/pf_moss/attack.png'),
+  'down': require('../../assets/sprites/pf_moss/down.png'),
+  'idle': require('../../assets/sprites/pf_moss/idle.png'),
+} as const;
+
+export const PF_SPORE_SPRITES = {
+  'attack': require('../../assets/sprites/pf_spore/attack.png'),
+  'down': require('../../assets/sprites/pf_spore/down.png'),
+  'idle': require('../../assets/sprites/pf_spore/idle.png'),
+} as const;
+
+export const PF_SAP_SPRITES = {
+  'attack': require('../../assets/sprites/pf_sap/attack.png'),
+  'down': require('../../assets/sprites/pf_sap/down.png'),
+  'idle': require('../../assets/sprites/pf_sap/idle.png'),
+} as const;
+
+export const PW_STUMP_SPRITES = {
+  'attack': require('../../assets/sprites/pw_stump/attack.png'),
+  'down': require('../../assets/sprites/pw_stump/down.png'),
+  'idle': require('../../assets/sprites/pw_stump/idle.png'),
+} as const;
+
+export const PW_HOLLOW_SPRITES = {
+  'attack': require('../../assets/sprites/pw_hollow/attack.png'),
+  'down': require('../../assets/sprites/pw_hollow/down.png'),
+  'idle': require('../../assets/sprites/pw_hollow/idle.png'),
+} as const;
+
+export const PW_ROOT_SPRITES = {
+  'attack': require('../../assets/sprites/pw_root/attack.png'),
+  'down': require('../../assets/sprites/pw_root/down.png'),
+  'idle': require('../../assets/sprites/pw_root/idle.png'),
+} as const;
+
+export const PW_BARK_SPRITES = {
+  'attack': require('../../assets/sprites/pw_bark/attack.png'),
+  'down': require('../../assets/sprites/pw_bark/down.png'),
+  'idle': require('../../assets/sprites/pw_bark/idle.png'),
+} as const;
+
+export const PW_BRANCH_SPRITES = {
+  'attack': require('../../assets/sprites/pw_branch/attack.png'),
+  'down': require('../../assets/sprites/pw_branch/down.png'),
+  'idle': require('../../assets/sprites/pw_branch/idle.png'),
+} as const;
+
+export const PW_POD_SPRITES = {
+  'attack': require('../../assets/sprites/pw_pod/attack.png'),
+  'down': require('../../assets/sprites/pw_pod/down.png'),
+  'idle': require('../../assets/sprites/pw_pod/idle.png'),
+} as const;
+
+export const PB_BRAMBLE_SPRITES = {
+  'attack': require('../../assets/sprites/pb_bramble/attack.png'),
+  'down': require('../../assets/sprites/pb_bramble/down.png'),
+  'idle': require('../../assets/sprites/pb_bramble/idle.png'),
+  'special': require('../../assets/sprites/pb_bramble/special.png'),
+} as const;
+
+export const PB_BLOOM_SPRITES = {
+  'attack': require('../../assets/sprites/pb_bloom/attack.png'),
+  'down': require('../../assets/sprites/pb_bloom/down.png'),
+  'idle': require('../../assets/sprites/pb_bloom/idle.png'),
+  'special': require('../../assets/sprites/pb_bloom/special.png'),
+} as const;
+
+export const PB_SPORE_SPRITES = {
+  'attack': require('../../assets/sprites/pb_spore/attack.png'),
+  'down': require('../../assets/sprites/pb_spore/down.png'),
+  'idle': require('../../assets/sprites/pb_spore/idle.png'),
+  'special': require('../../assets/sprites/pb_spore/special.png'),
+} as const;
+
+export const PB_CARRION_SPRITES = {
+  'attack': require('../../assets/sprites/pb_carrion/attack.png'),
+  'down': require('../../assets/sprites/pb_carrion/down.png'),
+  'idle': require('../../assets/sprites/pb_carrion/idle.png'),
+  'special': require('../../assets/sprites/pb_carrion/special.png'),
+} as const;
+
+export const PB_STUMP_SPRITES = {
+  'attack': require('../../assets/sprites/pb_stump/attack.png'),
+  'down': require('../../assets/sprites/pb_stump/down.png'),
+  'idle': require('../../assets/sprites/pb_stump/idle.png'),
+  'special': require('../../assets/sprites/pb_stump/special.png'),
+} as const;
+
+export const PB_HOLLOW_SPRITES = {
+  'attack': require('../../assets/sprites/pb_hollow/attack.png'),
+  'down': require('../../assets/sprites/pb_hollow/down.png'),
+  'idle': require('../../assets/sprites/pb_hollow/idle.png'),
+  'special': require('../../assets/sprites/pb_hollow/special.png'),
+} as const;
+
+export const PB_THORNWOOD_SPRITES = {
+  'attack': require('../../assets/sprites/pb_thornwood/attack.png'),
+  'down': require('../../assets/sprites/pb_thornwood/down.png'),
+  'idle': require('../../assets/sprites/pb_thornwood/idle.png'),
+  'special': require('../../assets/sprites/pb_thornwood/special.png'),
+} as const;
+
+export const PB_ROT_SPRITES = {
+  'attack': require('../../assets/sprites/pb_rot/attack.png'),
+  'down': require('../../assets/sprites/pb_rot/down.png'),
+  'idle': require('../../assets/sprites/pb_rot/idle.png'),
+  'special': require('../../assets/sprites/pb_rot/special.png'),
+} as const;
+
+export const PB_ELDER_SPRITES = {
+  'attack': require('../../assets/sprites/pb_elder/attack.png'),
+  'down': require('../../assets/sprites/pb_elder/down.png'),
+  'idle': require('../../assets/sprites/pb_elder/idle.png'),
+  'special': require('../../assets/sprites/pb_elder/special.png'),
+} as const;
+
+export const PB_CREEPER_SPRITES = {
+  'alt1': require('../../assets/sprites/pb_creeper/alt1.png'),
+  'alt2': require('../../assets/sprites/pb_creeper/alt2.png'),
+  'alt3': require('../../assets/sprites/pb_creeper/alt3.png'),
+  'attack': require('../../assets/sprites/pb_creeper/attack.png'),
+  'down': require('../../assets/sprites/pb_creeper/down.png'),
+  'idle': require('../../assets/sprites/pb_creeper/idle.png'),
+  'special': require('../../assets/sprites/pb_creeper/special.png'),
+} as const;
+
+export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper';
 
 export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   scroll: SCROLL_SPRITES,
@@ -1360,6 +1507,28 @@ export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   sb_acid: SB_ACID_SPRITES,
   sb_bone: SB_BONE_SPRITES,
   sb_king: SB_KING_SPRITES,
+  pf_vine: PF_VINE_SPRITES,
+  pf_maw: PF_MAW_SPRITES,
+  pf_bramble: PF_BRAMBLE_SPRITES,
+  pf_moss: PF_MOSS_SPRITES,
+  pf_spore: PF_SPORE_SPRITES,
+  pf_sap: PF_SAP_SPRITES,
+  pw_stump: PW_STUMP_SPRITES,
+  pw_hollow: PW_HOLLOW_SPRITES,
+  pw_root: PW_ROOT_SPRITES,
+  pw_bark: PW_BARK_SPRITES,
+  pw_branch: PW_BRANCH_SPRITES,
+  pw_pod: PW_POD_SPRITES,
+  pb_bramble: PB_BRAMBLE_SPRITES,
+  pb_bloom: PB_BLOOM_SPRITES,
+  pb_spore: PB_SPORE_SPRITES,
+  pb_carrion: PB_CARRION_SPRITES,
+  pb_stump: PB_STUMP_SPRITES,
+  pb_hollow: PB_HOLLOW_SPRITES,
+  pb_thornwood: PB_THORNWOOD_SPRITES,
+  pb_rot: PB_ROT_SPRITES,
+  pb_elder: PB_ELDER_SPRITES,
+  pb_creeper: PB_CREEPER_SPRITES,
 };
 
 /** 세트에서 키를 안전하게 꺼낸다. 없으면 undefined — 호출부가 대체 렌더를 하도록. */
@@ -1422,6 +1591,8 @@ export const SPRITE_RATIO: Record<string, number> = {
   'avatar/witchgirl': 0.9792,
   'bg_chapter/01': 0.4688,
   'bg_chapter/02': 0.5938,
+  'bg_chapter/03': 0.2344,
+  'bg_chapter/04': 0.2448,
   'bg_forest/deep': 0.8021,
   'bg_forest/elf_house': 0.8073,
   'bg_forest/elf_night': 0.8073,
@@ -1986,6 +2157,67 @@ export const SPRITE_RATIO: Record<string, number> = {
   'nun_wave/wave_1': 1.4615,
   'nun_wave/wave_2': 1.7143,
   'nun_wave/wave_3': 4.2414,
+  'pb_bloom/attack': 0.8333,
+  'pb_bloom/down': 0.974,
+  'pb_bloom/idle': 1.0213,
+  'pb_bloom/special': 1.2,
+  'pb_bramble/attack': 0.5885,
+  'pb_bramble/down': 0.776,
+  'pb_bramble/idle': 0.6302,
+  'pb_bramble/special': 0.8333,
+  'pb_carrion/attack': 1.4118,
+  'pb_carrion/down': 1.0549,
+  'pb_carrion/idle': 0.901,
+  'pb_carrion/special': 1.0105,
+  'pb_creeper/alt1': 0.3125,
+  'pb_creeper/alt2': 0.2292,
+  'pb_creeper/alt3': 0.3073,
+  'pb_creeper/attack': 0.3698,
+  'pb_creeper/down': 0.3333,
+  'pb_creeper/idle': 0.3854,
+  'pb_creeper/special': 0.9271,
+  'pb_elder/attack': 0.8177,
+  'pb_elder/down': 1.0971,
+  'pb_elder/idle': 0.8906,
+  'pb_elder/special': 1.0608,
+  'pb_hollow/attack': 0.974,
+  'pb_hollow/down': 0.9635,
+  'pb_hollow/idle': 1.0323,
+  'pb_hollow/special': 0.9896,
+  'pb_rot/attack': 0.8854,
+  'pb_rot/down': 0.7969,
+  'pb_rot/idle': 1.0159,
+  'pb_rot/special': 0.9948,
+  'pb_spore/attack': 1.4015,
+  'pb_spore/down': 0.7969,
+  'pb_spore/idle': 1.7778,
+  'pb_spore/special': 0.9167,
+  'pb_stump/attack': 1.0,
+  'pb_stump/down': 0.9531,
+  'pb_stump/idle': 0.9792,
+  'pb_stump/special': 1.0847,
+  'pb_thornwood/attack': 0.9062,
+  'pb_thornwood/down': 0.9531,
+  'pb_thornwood/idle': 1.0435,
+  'pb_thornwood/special': 0.974,
+  'pf_bramble/attack': 0.724,
+  'pf_bramble/down': 0.8854,
+  'pf_bramble/idle': 0.9323,
+  'pf_maw/attack': 1.0323,
+  'pf_maw/down': 1.2468,
+  'pf_maw/idle': 1.0726,
+  'pf_moss/attack': 0.7448,
+  'pf_moss/down': 0.9115,
+  'pf_moss/idle': 0.9271,
+  'pf_sap/attack': 1.2387,
+  'pf_sap/down': 0.8333,
+  'pf_sap/idle': 1.3151,
+  'pf_spore/attack': 1.3913,
+  'pf_spore/down': 1.0726,
+  'pf_spore/idle': 1.92,
+  'pf_vine/attack': 0.5573,
+  'pf_vine/down': 0.5469,
+  'pf_vine/idle': 0.5052,
   'pl_attack/cast_1': 1.0294,
   'pl_attack/cast_2': 0.4062,
   'pl_attack/cast_3': 1.4688,
@@ -2008,6 +2240,24 @@ export const SPRITE_RATIO: Record<string, number> = {
   'potion/high': 0.9202,
   'potion/low': 1.4747,
   'potion/mid': 1.7826,
+  'pw_bark/attack': 1.1925,
+  'pw_bark/down': 1.1294,
+  'pw_bark/idle': 1.2715,
+  'pw_branch/attack': 1.0667,
+  'pw_branch/down': 0.7344,
+  'pw_branch/idle': 1.1925,
+  'pw_hollow/attack': 1.1228,
+  'pw_hollow/down': 1.0667,
+  'pw_hollow/idle': 1.2089,
+  'pw_pod/attack': 1.0,
+  'pw_pod/down': 1.0378,
+  'pw_pod/idle': 1.2,
+  'pw_root/attack': 0.6927,
+  'pw_root/down': 0.9167,
+  'pw_root/idle': 0.8125,
+  'pw_stump/attack': 0.9219,
+  'pw_stump/down': 0.75,
+  'pw_stump/idle': 0.8438,
   'raid_boss/d01': 1.0169,
   'raid_boss/d02': 1.3094,
   'raid_boss/d03': 0.8202,

@@ -1406,7 +1406,7 @@ FOES += [
 
 # ══ 배경 ═════════════════════════════════════════════════════
 
-# ══ 덩굴 숲 ═══════════════════════════════════════════════════
+# ══ 오염된 잔재들의 숲 ═══════════════════════════════════════════════════
 #
 # 11~15 스테이지. 슬라임 다음 챕터다.
 #
@@ -1422,7 +1422,7 @@ FOES += [
 
 FOES += [
     mob3(
-        'pf_vine', '덩굴손', '근접 · 덩굴 숲 11~13', '바닥을 기어 와서 휘감는다. 이 지역의 기본형이다.',
+        'pf_vine', '덩굴손', '근접 · 오염된 잔재들의 숲 11~13', '바닥을 기어 와서 휘감는다. 이 지역의 기본형이다.',
         'A creeper that learned to move toward warmth.' + NL
         + 'BODY: LOW AND LONG — it lies along the ground and reaches forward, about three times as long as it is tall. It is the flattest thing in this chapter and every other plant here is measured against it.' + NL
         + 'THE MASS is a tangle of four or five thick runners twisted together into one rope, thicker at the back and fraying into separate strands at the front.' + NL
@@ -1435,7 +1435,7 @@ FOES += [
         'struck. The rope has buckled in the middle and the strands have come apart, three tendrils flung wide and one torn off entirely. The rib has come loose.',
         '- It fills about 34% of the cell height. It is LOW — leave the space above it empty rather than scaling it up.' + NL
         + '- Cell 2 is the longest. Size the sheet from it.',
-        """11~13 스테이지의 기본형입니다. 덩굴 숲 여섯의 **기준**이 되는 모양이라,
+        """11~13 스테이지의 기본형입니다. 오염된 잔재들의 숲 여섯의 **기준**이 되는 모양이라,
 이것부터 그리고 나머지를 여기에 견주세요.
 
 **제일 낮고 제일 깁니다.** 슬라임 챕터가 덩어리로 갈렸다면 이 챕터는 **뻗은
@@ -1443,7 +1443,7 @@ FOES += [
     ),
 
     mob3(
-        'pf_maw', '아귀꽃', '근접 · 덩굴 숲 12~13, 15', '고개를 숙였다가 통째로 문다.',
+        'pf_maw', '아귀꽃', '근접 · 오염된 잔재들의 숲 12~13, 15', '고개를 숙였다가 통째로 문다.',
         'A flower that stopped waiting for insects.' + NL
         + 'BODY: TOP-HEAVY. A single thick stem, about as tall as a person\'s waist, carrying a HEAD far too big for it — the head is nearly half the whole height and visibly drags the stem over to one side. Nothing else in this chapter is top-heavy; that is its read.' + NL
         + 'THE HEAD is a deep CUP, not a bloom. Four heavy petal-lobes fold around an opening, and they are thick and leathery, not thin. The rim is ragged.' + NL
@@ -1464,7 +1464,7 @@ FOES += [
     ),
 
     mob3(
-        'pf_bramble', '가시덤불', '근접 · 덩굴 숲 13~15', '굴러와서 몸으로 긁는다. 만지면 아프다.',
+        'pf_bramble', '가시덤불', '근접 · 오염된 잔재들의 숲 13~15', '굴러와서 몸으로 긁는다. 만지면 아프다.',
         'A thicket that rolled over something and kept the shape.' + NL
         + 'BODY: a rough BALL of tangled thorny canes, about as wide as it is tall. The outline is spiky ALL THE WAY ROUND — twenty or more thorn tips break the silhouette in every direction. Nothing else in this chapter is spiky on every side.' + NL
         + 'THE CANES are dark and hard where they cross, so the mass reads as dense at the centre and open at the edges.' + NL
@@ -1476,7 +1476,7 @@ FOES += [
         'struck. The ball has burst open on one side, canes splayed outward in a fan, six or seven thorns snapped off and flying. The jawbone shows through the gap.',
         '- It fills about 46% of the cell height.' + NL
         + '- Cell 2 is the longest. Size the sheet from it.',
-        """**사방이 뾰족합니다.** 덩굴 숲 여섯 중 유일하게 윤곽이 전 방향으로 튀는
+        """**사방이 뾰족합니다.** 오염된 잔재들의 숲 여섯 중 유일하게 윤곽이 전 방향으로 튀는
 놈이라, 46px 로 줄여도 혼자만 실루엣이 다릅니다.
 
 가시 슬라임(`sg_thorn`)과 헷갈리면 안 됩니다. 그쪽은 **뜨고**, 가시가 몸에서
@@ -1484,7 +1484,7 @@ FOES += [
     ),
 
     mob3(
-        'pf_moss', '이끼덩이', '근접 · 덩굴 숲 14~15', '느리게 다가와 짓누른다. 축축하다.',
+        'pf_moss', '이끼덩이', '근접 · 오염된 잔재들의 숲 14~15', '느리게 다가와 짓누른다. 축축하다.',
         'A mound of wet moss with something underneath holding it up.' + NL
         + 'BODY: HEAVY AND SHAGGY, about as tall as it is wide, standing but losing to its own weight — the middle bulges out past the base and the top slumps over to one side.' + NL
         + 'THE SURFACE is the read: the whole outline is FURRED with short ragged tufts, so the edge is soft and broken everywhere. Nothing else in this chapter has a soft outline — the others are all hard tendrils and thorns.' + NL
@@ -1504,7 +1504,7 @@ FOES += [
     ),
 
     mob3(
-        'pf_spore', '홀씨대', '원거리 · 덩굴 숲 11~13', '멀리서 홀씨를 쏜다. 무르고 아프다.',
+        'pf_spore', '홀씨대', '원거리 · 오염된 잔재들의 숲 11~13', '멀리서 홀씨를 쏜다. 무르고 아프다.',
         'A stalk that grew straight up out of a body and started aiming.' + NL
         + 'BODY: TALL AND THIN — a single stalk, three or four times as tall as it is wide, the narrowest silhouette in this chapter. It stands and does not lean much.' + NL
         + 'THE HEAD is a hard closed POD at the top, blunt and heavy, with four seams down its sides. It is the only wide part and it sits right at the top.' + NL
@@ -1528,7 +1528,7 @@ FOES += [
     ),
 
     mob3(
-        'pf_sap', '진액꽃', '원거리 · 덩굴 숲 14~15', '멀리서 진액을 뱉는다. 닿으면 녹는다.',
+        'pf_sap', '진액꽃', '원거리 · 오염된 잔재들의 숲 14~15', '멀리서 진액을 뱉는다. 닿으면 녹는다.',
         'A bloom that fills with something and spits it.' + NL
         + 'BODY: a stalk of medium height that BENDS OVER at the top, so the head hangs forward and down — the silhouette is a hook. The spore stalk stands straight; this one is bent, and that is how the two ranged plants are told apart.' + NL
         + 'THE HEAD is a heavy drooping SAC, wider than it is tall, sagging under what is inside it. Two or three thick drips hang off its underside and stop in empty black.' + NL
@@ -1550,7 +1550,7 @@ FOES += [
 ]
 
 
-# ══ 썩은 고목 숲 ══════════════════════════════════════════════
+# ══ 타락한 잔재들의 숲 ══════════════════════════════════════════════
 #
 # 16~20 스테이지. 식물 챕터의 **높이를 올린 것**이 이 챕터의 정체다.
 #
@@ -1564,7 +1564,7 @@ FOES += [
 
 FOES += [
     mob3(
-        'pw_stump', '걷는 그루터기', '근접 · 고목 숲 16~17', '느리게 걸어와서 짓밟는다. 이 지역의 기본형이다.',
+        'pw_stump', '걷는 그루터기', '근접 · 타락한 잔재들의 숲 16~17', '느리게 걸어와서 짓밟는다. 이 지역의 기본형이다.',
         'What is left after a tree was felled, walking on the roots it was cut from.' + NL
         + 'BODY: LOW, THICK AND WIDE — a broad drum of trunk, cut off flat across the top, wider than it is tall. It is the shortest thing in this chapter and every other tree here is measured against it. Even so it stands taller than any plant from the chapter before.' + NL
         + 'THE CUT TOP is the read: a flat disc, tilted, with the rings showing as THREE OR FOUR concentric hard lines — no more. Twenty rings turn to grey mush at this size.' + NL
@@ -1577,7 +1577,7 @@ FOES += [
         'struck. The drum has split from the cut top downward, the crack running deep, two roots torn out and the whole thing folding sideways. Splinters thrown off.',
         '- It fills about 52% of the cell height. It is LOW AND WIDE for this chapter.' + NL
         + '- Cell 2 is the tallest. Size the sheet from it.',
-        """16~17 스테이지의 기본형입니다. 고목 숲 여섯의 **기준**이 되는 모양이라,
+        """16~17 스테이지의 기본형입니다. 타락한 잔재들의 숲 여섯의 **기준**이 되는 모양이라,
 이것부터 그리고 나머지를 여기에 견주세요.
 
 **이 챕터에서 제일 낮은 놈인데도 앞 챕터의 무엇보다 큽니다.** 그 높이 차이가
@@ -1586,7 +1586,7 @@ FOES += [
     ),
 
     mob3(
-        'pw_hollow', '속 빈 나무', '근접 · 고목 숲 17~18, 20', '가운데가 뚫려 있다. 거기로 문다.',
+        'pw_hollow', '속 빈 나무', '근접 · 타락한 잔재들의 숲 17~18, 20', '가운데가 뚫려 있다. 거기로 문다.',
         'A trunk that rotted through the middle and did not fall.' + NL
         + 'BODY: TALL AND LEANING — half again as tall as it is wide, and the whole mass is tipped well off vertical.' + NL
         + 'THE HOLE IS THE READ. A large opening goes CLEAN THROUGH the trunk at chest height — you can see black sky through it. It is nearly a third of the width of the body and it breaks the silhouette from the inside. Nothing else in this set has a hole through it; protect this above everything.' + NL
@@ -1608,7 +1608,7 @@ FOES += [
     ),
 
     mob3(
-        'pw_root', '뿌리덩이', '근접 · 고목 숲 18~20', '아래가 넓다. 뿌리로 후려친다.',
+        'pw_root', '뿌리덩이', '근접 · 타락한 잔재들의 숲 18~20', '아래가 넓다. 뿌리로 후려친다.',
         'A root ball that came up out of the ground and left the tree behind.' + NL
         + 'BODY: BOTTOM-HEAVY — a wide splayed knot of roots at the base narrowing to a short broken stub at the top. The silhouette is a triangle standing on its wide edge, and it is the only one in this set that is widest at the bottom.' + NL
         + 'THE ROOTS: EIGHT OR NINE of them, thick and uneven, spreading out and down in every direction, clotted with hanging earth. Three of them are lifted clear of the ground and reaching forward — those are the ones it hits with.' + NL
@@ -1629,7 +1629,7 @@ FOES += [
     ),
 
     mob3(
-        'pw_bark', '껍질갑옷', '근접 · 고목 숲 19~20', '두껍다. 잘 안 죽는다.',
+        'pw_bark', '껍질갑옷', '근접 · 타락한 잔재들의 숲 19~20', '두껍다. 잘 안 죽는다.',
         'A tree that answered being cut by growing armour.' + NL
         + 'BODY: a THICK COLUMN, taller than wide, leaning but massive — the heaviest silhouette in this chapter.' + NL
         + 'THE PLATES ARE THE READ: SIX OR SEVEN slabs of bark, hard and STRAIGHT-EDGED, standing proud of the trunk and overlapping each other down the front and one shoulder. They are angular shapes on an otherwise round outline, and that contrast is the whole silhouette. One large plate at the top, the rest smaller and irregular.' + NL
@@ -1653,7 +1653,7 @@ FOES += [
     ),
 
     mob3(
-        'pw_branch', '가지창', '원거리 · 고목 숲 16~17, 19', '멀리서 가지를 던진다. 무르고 아프다.',
+        'pw_branch', '가지창', '원거리 · 타락한 잔재들의 숲 16~17, 19', '멀리서 가지를 던진다. 무르고 아프다.',
         'A thin dead tree that throws its own branches.' + NL
         + 'BODY: TALL AND NARROW — the thinnest silhouette in this chapter, four times as tall as it is wide, standing nearly straight with only a slight lean.' + NL
         + 'THE BRANCHES ARE THE READ: SIX OR SEVEN long bare branches, no leaves, angled sharply UPWARD and back from the upper half of the trunk, all at different heights. They are straight hard lines coming out of the outline — the only thing in this chapter with straight lines radiating from it.' + NL
@@ -1677,7 +1677,7 @@ FOES += [
     ),
 
     mob3(
-        'pw_pod', '꼬투리나무', '원거리 · 고목 숲 18~20', '멀리서 씨앗을 쏜다. 위가 무겁다.',
+        'pw_pod', '꼬투리나무', '원거리 · 타락한 잔재들의 숲 18~20', '멀리서 씨앗을 쏜다. 위가 무겁다.',
         'A tree that grew heavy seed pods and learned to aim them.' + NL
         + 'BODY: TOP-HEAVY. A medium trunk carrying a dense CLUSTER OF PODS at the top that is wider than the trunk is tall — it drags the whole thing over to one side.' + NL
         + 'THE PODS: SEVEN OR EIGHT, big and hard, hanging in a heavy bunch, each a different size. Two have already SPLIT OPEN and hang empty and gaping. The branch-thrower is narrow and straight; this one is wide and heavy at the top, and that is how the two ranged trees are told apart.' + NL
@@ -1726,7 +1726,7 @@ FOES += [
         'THE SWEEP. All three lumps rear UP together and the entire hedge unfolds into a wide arc that reaches across the whole cell, canes fanned out like a net thrown open. It is the widest cell by far. Six or seven broken thorns hang in the air clear of the outline.',
         'struck. The middle lump has burst open and the three are coming apart at the fused base, canes splayed, the skull knocked loose and falling.',
         58,
-        """11스테이지 우두머리. 덩굴 숲의 첫 관문입니다.
+        """11스테이지 우두머리. 오염된 잔재들의 숲의 첫 관문입니다.
 
 잡몹 가시덤불은 **공** 하나인데, 이놈은 **세 덩이가 붙은 울타리**입니다.
 키운 게 아니라 다른 모양이어야 합니다 — 위 가장자리가 세 봉우리로 울퉁불퉁
@@ -1811,7 +1811,7 @@ FOES += [
     ),
 
     plantboss(
-        'pb_carrion', '시체꽃', '우두머리 · 15스테이지', '덩굴 숲의 끝. 이 숲이 먹은 것이 전부 여기 있다.', 'plant',
+        'pb_carrion', '시체꽃', '우두머리 · 15스테이지', '오염된 잔재들의 숲의 끝. 이 숲이 먹은 것이 전부 여기 있다.', 'plant',
         'The bloom this whole wood was feeding.' + NL
         + 'BODY: a single ENORMOUS FLOWER opened flat and facing forward — the widest thing in this chapter, nearly filling the cell. Five heavy lobes spread open around a deep dark centre.' + NL
         + 'IT IS THE ONLY THING HERE THAT FACES YOU. Every other plant in the wood is seen from the side; this one has turned to look, and the flat open disc of it is a shape nothing else in the set has.' + NL
@@ -1826,7 +1826,7 @@ FOES += [
         'THE BLOOM. Every lobe thrown back FLAT AND WIDE past where they should go, the pit opened to its full depth and every spine standing out from the rim, so the creature is a huge open ring filling the cell edge to edge. It is the widest cell. A cloud of loose spores hangs clear all round it.',
         'struck. Three lobes torn half off and curling back, the rim broken open on one side, the helm and the sword hilt knocked loose and falling.',
         80,
-        """15스테이지 우두머리. **덩굴 숲의 끝**입니다.
+        """15스테이지 우두머리. **오염된 잔재들의 숲의 끝**입니다.
 
 **정면을 보는 유일한 놈**입니다. 이 챕터의 나머지는 전부 옆에서 본 모습인데
 이놈만 몸을 돌려 이쪽을 봅니다 — 활짝 벌어진 원반은 세트의 다른 무엇과도
@@ -1853,7 +1853,7 @@ FOES += [
         'THE QUAKE. It has REARED UP onto its back roots so the whole drum is lifted high and tipped forward, all the front roots raised and spread, about to come down. It is the tallest cell by a long way. Six or seven clods and two broken shoots hang in the air beneath it.',
         'struck. The drum has split from the cut top down through the front knot-hole, the crack running deep, three roots torn out, one axe knocked free.',
         62,
-        """16스테이지 우두머리. 고목 숲의 첫 관문입니다.
+        """16스테이지 우두머리. 타락한 잔재들의 숲, 그 첫 관문입니다.
 
 잡몹 그루터기에 도끼가 **하나** 박혀 있다면 이놈에게는 **셋**입니다. 세 번
 시도했고 세 번 다 모자랐다는 뜻입니다.
@@ -1990,46 +1990,6 @@ BACKGROUNDS = [
             'not in this image — the game draws it.',
     },
     {
-        'id': '03', 'name': '덩굴 숲', 'stages': '11~15',
-        'scene':
-            'The edge of a wood seen from OUTSIDE it, from a long way off, looking '
-            'across at the tree line. The horizon runs the WHOLE WIDTH along the very '
-            'bottom edge.' + NL
-            + 'UPPER HALF — sky, but LESS of it than the plain had. Two cloud banks '
-            'only, high and thin, and the top of the wood eats into the lower part of '
-            'this half. The plain was open; this is closing in, and that is the whole '
-            'difference between the two chapters.' + NL
-            + 'LOWER HALF — a WALL OF WOOD along the bottom edge, spread across the '
-            'full width: eight or ten trunks in silhouette at different thicknesses '
-            'and spacings, close enough together that you cannot see between them. '
-            'They stand about half the height of the strip — much taller than the lone '
-            'trees of the plain.' + NL
-            + 'STRUNG BETWEEN THEM, and this is what names the place: four or five '
-            'long sagging VINE ROPES hanging from trunk to trunk at different heights, '
-            'and two hanging straight down. Draw them as clean hanging curves, not as '
-            'texture.' + NL
-            + 'No ground, no path, no undergrowth in front. The floor between you and '
-            'the tree line is not in this image — the game draws it.',
-    },
-    {
-        'id': '04', 'name': '썩은 고목 숲', 'stages': '16~20',
-        'scene':
-            'Deep inside the same wood, where the trees are far older and mostly dead. '
-            'Seen from a long way off, looking through.' + NL
-            + 'UPPER HALF — almost no sky. A CANOPY presses down across the full width '
-            'from the top edge, drawn as a heavy dark irregular mass with three or '
-            'four ragged gaps where pale light comes through. Where the vine wood had '
-            'two clouds, this has a lid. That closing-over is how the player knows the '
-            'chapter turned.' + NL
-            + 'LOWER HALF — six or seven ENORMOUS trunks in silhouette, far thicker '
-            'and further apart than the vine wood, running from the bottom edge up '
-            'into the canopy so they cross both halves. Two of them are BROKEN OFF '
-            'partway up, snapped at an angle, and one has a large hole through it.' + NL
-            + 'Between and behind them, small and far: three or four leaning dead '
-            'stumps along the bottom edge.' + NL
-            + 'No ground, no path, no leaf litter in front — the game draws the floor.',
-    },
-    {
         'id': '02', 'name': '슬라임 초원 깊숙한 곳', 'stages': '6~10',
         'scene':
             'The same plain, further in, where a settlement has been swallowed. What '
@@ -2044,6 +2004,65 @@ BACKGROUNDS = [
             'They stand no taller than a third of the strip.' + NL
             + 'Draw no ground between you and the ruins, and no rubble in front of '
             'them. The ruins sit ON the bottom edge and that is where the image ends.',
+    },
+    {
+        'id': '03', 'name': '오염된 잔재들의 숲', 'stages': '11~15',
+        'scene':
+            'A wood that grew up through the wreck of something, seen from OUTSIDE '
+            'and from a long way off, looking across at the tree line. The horizon '
+            'runs the WHOLE WIDTH along the very bottom edge.' + NL
+            + 'UPPER HALF — sky, but LESS of it than the plain had. Two cloud banks '
+            'only, high and thin, and the top of the wood eats up into this half. '
+            'The plain was open; this is closing in, and that closing is the first '
+            'thing that separates this wood from the plain behind it.' + NL
+            + 'LOWER HALF — a line of TREES along the bottom edge across the full '
+            'width: eight or ten trunks in silhouette at different thicknesses and '
+            'spacings, standing about half the height of the strip. They lean at '
+            'slightly different angles; none is straight.' + NL
+            + 'THE REMNANTS — this is what names the place, and it is the whole job '
+            'of this image. STANDING AMONG THE TRUNKS, not part of them, are the '
+            'silhouettes of things people made and left: a leaning WATCHTOWER frame '
+            'with its top gone, two upright STANDING STONES, a broken CART on its '
+            'side, and a run of low WALL. They are spread across the width, mixed in '
+            'with the trees, all the same flat far-off silhouette. You should read '
+            'the line as "trees AND something else" before you read either one.' + NL
+            + 'THE POLLUTION: a low band of heavy dithered HAZE lies among the bases '
+            'of the trunks and the wreckage, thickest in the gaps, thinning as it '
+            'rises. It never reaches the sky. That haze is the only thing here that '
+            'is not a hard silhouette.' + NL
+            + 'The remnants still stand APART from the wood — leaning on it, sunk in '
+            'it, but separate. In the next chapter they will not be.' + NL
+            + 'No ground, no path, no undergrowth in front. The floor between you and '
+            'the tree line is not in this image — the game draws it.',
+    },
+    {
+        'id': '04', 'name': '타락한 잔재들의 숲', 'stages': '16~20',
+        'scene':
+            'The same wood, five stages deeper, where the trees have finished eating '
+            'what was left here. Seen from a long way off, looking through.' + NL
+            + 'UPPER HALF — almost no sky. A CANOPY presses down across the full '
+            'width from the top edge, drawn as a heavy dark irregular mass with three '
+            'or four ragged gaps where pale light comes through. The chapter before '
+            'had two thin clouds and open air; this has a lid. That closing-over is '
+            'the first thing that says the chapter turned.' + NL
+            + 'LOWER HALF — six or seven ENORMOUS trunks in silhouette, far thicker '
+            'and further apart than before, running from the bottom edge up into the '
+            'canopy so they cross both halves. Two are BROKEN OFF partway up, snapped '
+            'at an angle.' + NL
+            + 'THE REMNANTS ARE INSIDE THE TREES NOW. This is the one difference that '
+            'matters, and it is what the chapter name means. In the chapter before, '
+            'the wreckage stood among the trunks; here it has been GROWN OVER and is '
+            'part of them — a tower frame swallowed into one trunk with only its '
+            'crossbeams still showing, a standing stone half absorbed into another, a '
+            'cartwheel held in the fork of a third, a length of wall running INTO a '
+            'trunk and stopping. Each one reads as one shape, tree and thing together, '
+            'not two shapes side by side.' + NL
+            + 'THE HAZE IS GONE. Where the last chapter had a band of pollution lying '
+            'among the trunks, here there is none — it has all gone into the wood. '
+            'Everything is hard silhouette.' + NL
+            + 'Along the bottom edge, small and far: three or four leaning dead stumps.'
+            + NL
+            + 'No ground, no path, no leaf litter in front — the game draws the floor.',
     },
 ]
 
@@ -2455,16 +2474,16 @@ STAGE_TABLE = [
     ('슬라임 초원 깊숙한 곳', ['뼈 슬라임', '쌍둥이 슬라임', '산성 슬라임'], '녹이는 슬라임'),
     ('슬라임 초원 깊숙한 곳', ['뼈 슬라임', '쌍둥이 슬라임', '산성 슬라임', '가시 슬라임'], '뼈무덤 슬라임'),
     ('슬라임 초원 깊숙한 곳', ['돌 슬라임', '뼈 슬라임', '쌍둥이 슬라임', '산성 슬라임'], '슬라임 군주'),
-    ('덩굴 숲', ['덩굴손', '홀씨대'], '가시덤불 군체'),
-    ('덩굴 숲', ['덩굴손', '아귀꽃', '홀씨대'], '아귀꽃 여왕'),
-    ('덩굴 숲', ['아귀꽃', '가시덤불', '홀씨대'], '덩굴 어미'),
-    ('덩굴 숲', ['가시덤불', '이끼덩이', '진액꽃'], '홀씨 기둥'),
-    ('덩굴 숲', ['아귀꽃', '가시덤불', '이끼덩이', '진액꽃'], '시체꽃'),
-    ('썩은 고목 숲', ['걷는 그루터기', '가지창'], '늙은 그루터기'),
-    ('썩은 고목 숲', ['걷는 그루터기', '속 빈 나무', '가지창'], '속 빈 거인'),
-    ('썩은 고목 숲', ['속 빈 나무', '뿌리덩이', '꼬투리나무'], '가시나무'),
-    ('썩은 고목 숲', ['뿌리덩이', '껍질갑옷', '가지창', '꼬투리나무'], '썩은 거목'),
-    ('썩은 고목 숲', ['속 빈 나무', '뿌리덩이', '껍질갑옷', '꼬투리나무'], '숲의 어른'),
+    ('오염된 잔재들의 숲', ['덩굴손', '홀씨대'], '가시덤불 군체'),
+    ('오염된 잔재들의 숲', ['덩굴손', '아귀꽃', '홀씨대'], '아귀꽃 여왕'),
+    ('오염된 잔재들의 숲', ['아귀꽃', '가시덤불', '홀씨대'], '덩굴 어미'),
+    ('오염된 잔재들의 숲', ['가시덤불', '이끼덩이', '진액꽃'], '홀씨 기둥'),
+    ('오염된 잔재들의 숲', ['아귀꽃', '가시덤불', '이끼덩이', '진액꽃'], '시체꽃'),
+    ('타락한 잔재들의 숲', ['걷는 그루터기', '가지창'], '늙은 그루터기'),
+    ('타락한 잔재들의 숲', ['걷는 그루터기', '속 빈 나무', '가지창'], '속 빈 거인'),
+    ('타락한 잔재들의 숲', ['속 빈 나무', '뿌리덩이', '꼬투리나무'], '가시나무'),
+    ('타락한 잔재들의 숲', ['뿌리덩이', '껍질갑옷', '가지창', '꼬투리나무'], '썩은 거목'),
+    ('타락한 잔재들의 숲', ['속 빈 나무', '뿌리덩이', '껍질갑옷', '꼬투리나무'], '숲의 어른'),
 ]
 
 def tag_families():
