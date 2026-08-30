@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "플레이어 키우기",
+    "slug": "player-growth",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#000000",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundImage": "./assets/android-icon-background.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "player-growth",
+    "extra": {
+      "googleAuth": {
+        "webClientId": "329853970665-5dk8rgbf3e8gl1rp9pnpuaet0fnitfrk.apps.googleusercontent.com",
+        "iosClientId": "",
+        "androidClientId": ""
+      }
+    },
+    "plugins": [
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ],
+      "expo-audio"
+    ]
+  }
+}

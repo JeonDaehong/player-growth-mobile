@@ -1,0 +1,2729 @@
+{
+  "_comment": "마젠타 경계 시트 → 셀 단위 PNG. rows/cols 는 검출값 확인용, pickRows 는 쓸 행(1-based), cropBottom 은 셀 하단에서 잘라낼 비율(글자 제거)",
+  "sets": [
+    {
+      "file": "1571295d-8c9f-4185-8a83-5b23af5fe0b0.jpeg",
+      "name": "scroll",
+      "expect": [
+        3,
+        2
+      ],
+      "labels": [
+        "succ_low",
+        "succ_mid",
+        "succ_high",
+        "guard_down",
+        "guard_destroy50",
+        "guard_destroy100"
+      ]
+    },
+    {
+      "file": "37d00a29-6e24-43e0-9e21-4bcedd1e53ad.jpeg",
+      "name": "weapon",
+      "expect": [
+        4,
+        3
+      ],
+      "drop": [
+        12
+      ],
+      "labels": [
+        "spear",
+        "sword",
+        "blade",
+        "axe",
+        "mace",
+        "hammer",
+        "bow",
+        "crossbow",
+        "staff",
+        "rod",
+        "fan"
+      ]
+    },
+    {
+      "file": "55c9219f-4de4-4bb8-861a-658a97e99374.jpeg",
+      "name": "attend",
+      "expect": [
+        4,
+        2
+      ],
+      "labels": [
+        "stamp_check",
+        "stamp_sun",
+        "stamp_moon",
+        "stamp_flame",
+        "cal_empty",
+        "cal_stamped",
+        "cal_today",
+        "cal_missed"
+      ]
+    },
+    {
+      "file": "812b31b0-9769-44a6-bd9f-1070b2858eb6.jpeg",
+      "name": "gear",
+      "expect": [
+        5,
+        2
+      ],
+      "labels": [
+        "shoulder",
+        "chest",
+        "helm",
+        "glove",
+        "greaves",
+        "boot",
+        "ear",
+        "neck",
+        "ring",
+        "belt"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_56vsbr56vsbr56vs.png",
+      "name": "card",
+      "expect": [
+        4,
+        10
+      ],
+      "labels": [
+        "m01_1",
+        "m01_2",
+        "m01_3",
+        "m01_4",
+        "m02_1",
+        "m02_2",
+        "m02_3",
+        "m02_4",
+        "m03_1",
+        "m03_2",
+        "m03_3",
+        "m03_4",
+        "m04_1",
+        "m04_2",
+        "m04_3",
+        "m04_4",
+        "m05_1",
+        "m05_2",
+        "m05_3",
+        "m05_4",
+        "m06_1",
+        "m06_2",
+        "m06_3",
+        "m06_4",
+        "m07_1",
+        "m07_2",
+        "m07_3",
+        "m07_4",
+        "m08_1",
+        "m08_2",
+        "m08_3",
+        "m08_4",
+        "m09_1",
+        "m09_2",
+        "m09_3",
+        "m09_4",
+        "m10_1",
+        "m10_2",
+        "m10_3",
+        "m10_4"
+      ],
+      "note": "월당 4종으로 나옴(실제 화투 구조). 섯다는 월당 2종만 쓴다 → _1(주요)·_3(피)",
+      "allowFilled": true
+    },
+    {
+      "file": "Gemini_Generated_Image_5mihtu5mihtu5mih.png",
+      "name": "title",
+      "expect": [
+        4,
+        3
+      ],
+      "drop": [
+        12
+      ],
+      "labels": [
+        "bankrupt_king",
+        "artisan_path",
+        "curse13",
+        "all_in",
+        "defaulter",
+        "gwang38",
+        "weapon_collector",
+        "curator",
+        "tower_conqueror",
+        "veteran",
+        "gladiator"
+      ],
+      "note": "defaulter 셀에 영문 글자가 박혀 나옴 (재생성 권장)"
+    },
+    {
+      "file": "Gemini_Generated_Image_6jymqg6jymqg6jym.png",
+      "name": "bubble",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "empty",
+        "message",
+        "typing",
+        "conversation"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_au1oqmau1oqmau1o.png",
+      "name": "jackpot",
+      "expect": [
+        6,
+        3
+      ],
+      "pickRows": [
+        1
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_z64451z64451z644.png",
+      "name": "creature",
+      "expect": [
+        5,
+        2
+      ],
+      "labels": [
+        "slime",
+        "wolf",
+        "golem",
+        "bat",
+        "boar",
+        "skeleton",
+        "toad",
+        "mantis",
+        "ogre",
+        "tentacle"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_7ngdtp7ngdtp7ngd.png",
+      "name": "cr_slime",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ],
+      "invert": true
+    },
+    {
+      "file": "Gemini_Generated_Image_ks31ykks31ykks31.png",
+      "name": "cr_wolf",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_ep7sj8ep7sj8ep7s.png",
+      "name": "cr_golem",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_mm1ylrmm1ylrmm1y.png",
+      "name": "cr_bat",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_w6fx2gw6fx2gw6fx.png",
+      "name": "cr_boar",
+      "expect": [
+        4,
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_e85a73e85a73e85a.png",
+      "name": "cr_skeleton",
+      "expect": [
+        4,
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_7y71w87y71w87y71.png",
+      "name": "cr_toad",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ],
+      "invert": true
+    },
+    {
+      "file": "Gemini_Generated_Image_j75qnfj75qnfj75q.png",
+      "name": "cr_mantis",
+      "expect": [
+        4,
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_xd0483xd0483xd04.png",
+      "name": "cr_ogre",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_29vmtp29vmtp29vm.png",
+      "name": "cr_tentacle",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "idle",
+        "windup",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "b370f029-563a-4584-b475-54086eb29fb5.jpeg",
+      "name": "bg_chapter",
+      "expect": [
+        5,
+        2
+      ]
+    },
+    {
+      "file": "f0e04c65-ef2c-4d47-9b14-8d1af62362b3.jpeg",
+      "name": "bg_place",
+      "expect": [
+        4,
+        2
+      ],
+      "labels": [
+        "shop",
+        "tavern",
+        "house",
+        "artisan",
+        "gamble",
+        "arena",
+        "mine",
+        "tower"
+      ],
+      "allowFilled": true
+    },
+    {
+      "file": "f45039ce-3881-4385-94c7-65a84055f6a1.jpeg",
+      "name": "job",
+      "expect": [
+        4,
+        2
+      ],
+      "labels": [
+        "broom",
+        "flyer",
+        "shovel",
+        "cart",
+        "ice",
+        "bellows",
+        "bucket",
+        "hay"
+      ]
+    },
+    {
+      "file": "d1015158-87eb-406a-8603-72ac752e50d9.jpeg",
+      "name": "avatar",
+      "expect": [
+        4,
+        3
+      ],
+      "cropBottom": 0.15,
+      "note": "셀 안에 영문 이름이 박혀 나옴 → 하단 15% 잘라냄",
+      "labels": [
+        "swordsman",
+        "miner",
+        "mercenary",
+        "knight",
+        "regular",
+        "merchant",
+        "duelist",
+        "robber",
+        "deserter",
+        "baron",
+        "spearman",
+        "archer"
+      ]
+    },
+    {
+      "file": "9da14eb8-35f3-4949-a116-a5fca596e032.jpeg",
+      "name": "single_icon",
+      "expect": [
+        1,
+        1
+      ],
+      "killCorner": true
+    },
+    {
+      "file": "Gemini_Generated_Image_ptcsb0ptcsb0ptcs.png",
+      "name": "single_icon_alt",
+      "expect": [
+        1,
+        1
+      ],
+      "killCorner": true
+    },
+    {
+      "file": "b1819632-2033-4360-9f4e-2a8f6c8460d2.jpeg",
+      "name": "single_splash",
+      "expect": [
+        1,
+        1
+      ],
+      "killCorner": true
+    },
+    {
+      "file": "17dc960e-6b15-4d6a-a1dc-bcabdf0c2d92.jpeg",
+      "name": "pl_attack",
+      "note": "1~3행은 3칸 격자 (찌르기·베기·내려치기)",
+      "region": [
+        0,
+        0,
+        1,
+        0.5995
+      ],
+      "auto": true,
+      "invert": true,
+      "labels": [
+        "thrust_1",
+        "thrust_2",
+        "thrust_3",
+        "slash_1",
+        "slash_2",
+        "slash_3",
+        "smash_1",
+        "smash_2",
+        "smash_3"
+      ]
+    },
+    {
+      "file": "17dc960e-6b15-4d6a-a1dc-bcabdf0c2d92.jpeg",
+      "name": "pl_attack",
+      "note": "4행(활)은 5칸이다. 2·4칸은 1·3칸과 거의 같은 포즈라 버리고 당기기·발사·대기만 쓴다",
+      "region": [
+        0,
+        0.5975,
+        1,
+        0.799
+      ],
+      "auto": true,
+      "invert": true,
+      "append": true,
+      "drop": [
+        2,
+        4
+      ],
+      "labels": [
+        "shoot_1",
+        "shoot_2",
+        "shoot_3"
+      ]
+    },
+    {
+      "file": "17dc960e-6b15-4d6a-a1dc-bcabdf0c2d92.jpeg",
+      "name": "pl_attack",
+      "note": "5행(주문)도 5칸. 1칸은 밋밋하고 5칸은 비어 있어 버린다",
+      "region": [
+        0,
+        0.797,
+        1,
+        1.0
+      ],
+      "auto": true,
+      "invert": true,
+      "append": true,
+      "drop": [
+        1,
+        5
+      ],
+      "labels": [
+        "cast_1",
+        "cast_2",
+        "cast_3"
+      ]
+    },
+    {
+      "file": "8b95c8c6-f9bd-4cb6-8086-e5a76b42efed.jpeg",
+      "name": "lender",
+      "expect": [
+        3,
+        2
+      ],
+      "note": "2번 간판에 SECOND-TIER LENDER 글자가 박혀 나옴 (재생성 필요)",
+      "labels": [
+        "sign_1",
+        "sign_2",
+        "sign_3",
+        "stamp_1",
+        "stamp_2",
+        "stamp_3"
+      ]
+    },
+    {
+      "file": "46c1e85c-72e1-45b0-84d1-d210e9a8ac8c.jpeg",
+      "name": "card_back",
+      "expect": [
+        5,
+        1
+      ],
+      "labels": [
+        "lattice",
+        "diamond",
+        "checker",
+        "frames",
+        "frames2"
+      ],
+      "allowFilled": true
+    },
+    {
+      "file": "4ff1ce71-bcc1-41d2-af44-0c0cfbb3a6bc.jpeg",
+      "name": "coin",
+      "expect": [
+        3,
+        1
+      ],
+      "labels": [
+        "gold",
+        "silver",
+        "copper"
+      ]
+    },
+    {
+      "file": "64754508-c62e-424f-8d10-05408760d77f.jpeg",
+      "name": "crowd",
+      "expect": [
+        3,
+        2
+      ],
+      "labels": [
+        "neutral",
+        "cheer",
+        "jeer",
+        "react_cheer",
+        "react_jeer",
+        "react_tension"
+      ]
+    },
+    {
+      "file": "74a6b3c5-504f-4272-89a5-f778dca24185.jpeg",
+      "name": "player",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "idle",
+        "breathe",
+        "victory",
+        "defeated"
+      ]
+    },
+    {
+      "file": "75dcac6f-4c3b-4d76-9154-914ac552f250.jpeg",
+      "name": "lottery",
+      "expect": [
+        5,
+        2
+      ],
+      "labels": [
+        "ticket_plain",
+        "ticket_clover",
+        "ticket_torn",
+        "ticket_torn2",
+        "rank1",
+        "rank2",
+        "rank3",
+        "rank4",
+        "rank5"
+      ]
+    },
+    {
+      "file": "77f0e3a4-3c02-40ec-898a-495c4c25eb68.jpeg",
+      "name": "fx",
+      "expect": [
+        5,
+        4
+      ],
+      "labels": [
+        "burst_1",
+        "burst_2",
+        "burst_3",
+        "burst_4",
+        "burst_5",
+        "shatter_1",
+        "shatter_2",
+        "shatter_3",
+        "shatter_4",
+        "shatter_5",
+        "smoke_1",
+        "smoke_2",
+        "smoke_3",
+        "smoke_4",
+        "smoke_5",
+        "glow_1",
+        "glow_2",
+        "glow_3",
+        "glow_4",
+        "glow_5"
+      ]
+    },
+    {
+      "file": "acb0b7e9-9cc0-47d7-bf9f-d04a49891cc1.jpeg",
+      "name": "tierframe",
+      "expect": [
+        5,
+        3
+      ],
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "_alt4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "_alt8",
+        "t9",
+        "t10",
+        "_alt10",
+        "t11"
+      ]
+    },
+    {
+      "file": "d4412350-e479-4279-abcc-820182e29e66.jpeg",
+      "name": "slot",
+      "expect": [
+        5,
+        3
+      ],
+      "labels": [
+        "sword",
+        "helm",
+        "shoulder",
+        "chest",
+        "_bracer",
+        "glove",
+        "greaves",
+        "boot",
+        "ear",
+        "_ear2",
+        "neck",
+        "ring",
+        "belt"
+      ]
+    },
+    {
+      "file": "a881ee1e-ec1a-4012-8fa7-86e7eb0e8873.jpeg",
+      "name": "eq_spear",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "5f653a2f-2a73-4c48-b839-9f461b778caa.jpeg",
+      "name": "eq_blade",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "7e4fc5aa-9af4-4400-8c2d-8b342a8e62a4.jpeg",
+      "name": "eq_mace",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "1885ea0a-5c27-4743-8d92-26bd77c2a7d6.jpeg",
+      "name": "eq_hammer",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ],
+      "inset": 0.04
+    },
+    {
+      "file": "d0f76442-888d-40ca-b9a4-d58026e35bdf.jpeg",
+      "name": "eq_bow",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "bcd74acd-702d-461e-ace6-f1851bcde219.jpeg",
+      "name": "eq_staff",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "439beefd-010a-4c7c-a5e1-42bb449dc93b.jpeg",
+      "name": "eq_shoulder",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "629db0d6-fdaf-438a-a6ef-84523a0e9af5.jpeg",
+      "name": "eq_boot",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "3e11e44f-cab4-4cc4-8b49-3f07bee8e0f5.jpeg",
+      "name": "eq_ear",
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ],
+      "grid": [
+        5,
+        2
+      ]
+    },
+    {
+      "file": "0c023fd5-b3e5-4ffd-8772-ba8a04df57d2.jpeg",
+      "name": "eq_ring",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "3b9e5046-96d2-4660-bff0-65890c190d73.jpeg",
+      "name": "eq_belt",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "c9a92db4-5431-49f8-810a-cc93727f10df.jpeg",
+      "name": "eq_chest",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "b1b14d22-291e-40b7-978e-a918b17cd3cd.jpeg",
+      "name": "eq_sword",
+      "region": [
+        0,
+        0,
+        1,
+        0.465
+      ],
+      "grid": [
+        5,
+        1
+      ],
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5"
+      ],
+      "cropBottom": 0.2
+    },
+    {
+      "file": "b1b14d22-291e-40b7-978e-a918b17cd3cd.jpeg",
+      "name": "eq_sword",
+      "region": [
+        0,
+        0.465,
+        1,
+        0.997
+      ],
+      "grid": [
+        5,
+        1
+      ],
+      "labels": [
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ],
+      "cropBottom": 0.2,
+      "append": true
+    },
+    {
+      "file": "24b33b31-60c7-4341-a6fe-85d0ab7b2dac.jpeg",
+      "name": "eq_axe",
+      "region": [
+        0,
+        0,
+        1,
+        0.363
+      ],
+      "grid": [
+        5,
+        1
+      ],
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5"
+      ]
+    },
+    {
+      "file": "24b33b31-60c7-4341-a6fe-85d0ab7b2dac.jpeg",
+      "name": "eq_axe",
+      "region": [
+        0,
+        0.501,
+        1,
+        0.997
+      ],
+      "grid": [
+        5,
+        1
+      ],
+      "labels": [
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ],
+      "append": true,
+      "cropTop": 0.2
+    },
+    {
+      "file": "ee894870-d0f3-4b6e-bc4e-3162da87d8e9.jpeg",
+      "name": "eq_crossbow",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ],
+      "cropBottom": 0.16
+    },
+    {
+      "file": "watermarked_img_16800839529377636693.jpg",
+      "name": "eq_greaves",
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ],
+      "auto": true
+    },
+    {
+      "file": "1dee2496-97bd-45fa-9cb3-2c85db852890.jpeg",
+      "name": "eq_glove",
+      "auto": true,
+      "drop": [
+        8,
+        9
+      ],
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "3ed583d2-2899-49f2-a776-4aacaface332.jpeg",
+      "name": "eq_rod",
+      "auto": true,
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        [
+          "t8",
+          "t9"
+        ],
+        "t10"
+      ],
+      "rowEdges": [
+        0.0024,
+        0.9964
+      ]
+    },
+    {
+      "file": "9d7dc5b7-3969-41c9-b0e8-e66b96d9be22.jpeg",
+      "name": "eq_neck",
+      "drop": [
+        9
+      ],
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9"
+      ],
+      "colEdges": [
+        0,
+        0.1714,
+        0.3259,
+        0.4849,
+        0.6226,
+        0.7608
+      ],
+      "rowEdges": [
+        0.0036,
+        0.4988,
+        0.9951
+      ]
+    },
+    {
+      "file": "9d7dc5b7-3969-41c9-b0e8-e66b96d9be22.jpeg",
+      "name": "eq_neck",
+      "region": [
+        0.7671,
+        0.004,
+        1,
+        0.995
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "t10"
+      ],
+      "append": true
+    },
+    {
+      "file": "438dc6a6-4b94-47de-99a9-86cbff4f2d4f.jpeg",
+      "name": "eq_fan",
+      "region": [
+        0,
+        0.0024,
+        1,
+        0.3337
+      ],
+      "grid": [
+        5,
+        1
+      ],
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5"
+      ]
+    },
+    {
+      "file": "438dc6a6-4b94-47de-99a9-86cbff4f2d4f.jpeg",
+      "name": "eq_fan",
+      "region": [
+        0,
+        0.336,
+        0.1963,
+        0.665
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "t6"
+      ],
+      "append": true
+    },
+    {
+      "file": "438dc6a6-4b94-47de-99a9-86cbff4f2d4f.jpeg",
+      "name": "eq_fan",
+      "region": [
+        0.1963,
+        0.4988,
+        1,
+        0.9964
+      ],
+      "grid": [
+        4,
+        1
+      ],
+      "labels": [
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ],
+      "append": true
+    },
+    {
+      "file": "1e47c177-5979-401d-a663-8404fd7f3392.jpeg",
+      "name": "guild",
+      "auto": true,
+      "labels": [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15"
+      ]
+    },
+    {
+      "file": "4c9ef7f5-dcc8-449c-b1bb-8de7b6c97431.jpeg",
+      "name": "guild_ui",
+      "auto": true,
+      "labels": [
+        "members",
+        "banner",
+        "member",
+        "master",
+        "rank1",
+        "rank2",
+        "rank3",
+        "chevron"
+      ]
+    },
+    {
+      "file": "3308031f-4cf8-43d6-a78f-f8ed209b8b61.jpeg",
+      "name": "eq_helm",
+      "invert": true,
+      "region": [
+        0,
+        0.002,
+        1,
+        0.442
+      ],
+      "colEdges": [
+        0.001,
+        0.2007,
+        0.3999,
+        0.5986,
+        0.7983,
+        0.9976
+      ],
+      "rowEdges": [
+        0,
+        1
+      ],
+      "labels": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5"
+      ]
+    },
+    {
+      "file": "3308031f-4cf8-43d6-a78f-f8ed209b8b61.jpeg",
+      "name": "eq_helm",
+      "invert": true,
+      "append": true,
+      "region": [
+        0,
+        0.502,
+        1,
+        0.947
+      ],
+      "colEdges": [
+        0.001,
+        0.2007,
+        0.3999,
+        0.5986,
+        0.7983,
+        0.9976
+      ],
+      "rowEdges": [
+        0,
+        1
+      ],
+      "labels": [
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10"
+      ]
+    },
+    {
+      "file": "728bc3c8-d50d-4c45-ab2a-861f023b1bb2.jpeg",
+      "name": "map",
+      "auto": true,
+      "labels": [
+        "town",
+        "forest",
+        "wild",
+        "snow",
+        "ruin",
+        "sea"
+      ],
+      "allowFilled": true
+    },
+    {
+      "file": "d48680b8-73a1-4d14-8a79-47b641ae0eb2.jpeg",
+      "name": "map_pin",
+      "auto": true,
+      "labels": [
+        "visited",
+        "unvisited",
+        "here",
+        "locked",
+        "compass",
+        "signpost",
+        "banner",
+        "road_node"
+      ]
+    },
+    {
+      "file": "3e7e4541-0a86-49a7-a380-2efdc4d188da.jpeg",
+      "name": "bg_forest",
+      "auto": true,
+      "labels": [
+        "gate",
+        "deep",
+        "elf_house",
+        "elf_night",
+        "worldtree",
+        "spring"
+      ],
+      "invert": true
+    },
+    {
+      "file": "ef7c20bf-c633-450a-ac25-86a24885fd1f.jpeg",
+      "name": "bg_place",
+      "auto": true,
+      "append": true,
+      "labels": [
+        "bank",
+        "bank_night",
+        "office",
+        "beastwood",
+        "hill_house",
+        "stock"
+      ]
+    },
+    {
+      "file": "8f194213-e537-4695-801c-8bbe8ca11345.jpeg",
+      "name": "scroll",
+      "auto": true,
+      "append": true,
+      "drop": [
+        2,
+        3
+      ],
+      "labels": [
+        "guarantee"
+      ]
+    },
+    {
+      "file": "2c83e20a-14d3-43e0-90e3-c1f62638bdfd.jpeg",
+      "name": "stone",
+      "auto": true,
+      "labels": [
+        "low_idle",
+        "low_glow",
+        "low_crack",
+        "mid_idle",
+        "mid_glow",
+        "mid_crack",
+        "high_idle",
+        "high_glow",
+        "high_crack"
+      ]
+    },
+    {
+      "file": "511457e1-402c-4372-933c-170011055219.jpeg",
+      "name": "grade",
+      "auto": true,
+      "labels": [
+        "g1",
+        "g2",
+        "g3",
+        "g4",
+        "g5",
+        "g6",
+        "g7",
+        "g8",
+        "g9"
+      ]
+    },
+    {
+      "file": "2d491f04-36c1-4681-af03-2e83269a3469.jpeg",
+      "name": "fx_rune",
+      "auto": true,
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "file": "90b8dacd-1977-464a-807b-7414c3d01e75.jpeg",
+      "name": "synergy",
+      "auto": true,
+      "labels": [
+        "ring1",
+        "ring2",
+        "ring3",
+        "crown",
+        "leaf",
+        "wind",
+        "rock",
+        "rune"
+      ]
+    },
+    {
+      "file": "f4027b23-5efa-4abd-9651-0db0355938a3.jpeg",
+      "name": "stock",
+      "auto": true,
+      "labels": [
+        "steel",
+        "pick",
+        "slime",
+        "dragon",
+        "pick2x"
+      ],
+      "drop": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "file": "f4027b23-5efa-4abd-9651-0db0355938a3.jpeg",
+      "name": "tab",
+      "auto": true,
+      "append": true,
+      "labels": [
+        "home",
+        "money",
+        "town",
+        "collection",
+        "etc"
+      ],
+      "drop": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "file": "967cb673-3287-4679-bd91-9fa2f485dbfc.jpeg",
+      "name": "coin_logo",
+      "auto": true,
+      "cropBottom": 0.18,
+      "labels": [
+        "rune",
+        "dungeon",
+        "pick2xi",
+        "closed"
+      ],
+      "drop": [
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "file": "c234a629-c940-4fb7-aec6-ff00fa8bf833.jpeg",
+      "name": "title",
+      "expect": [
+        4,
+        4
+      ],
+      "append": true,
+      "labels": [
+        "rune_smith",
+        "rune_master",
+        "set_keeper",
+        "bernstein_slayer",
+        "day_trader",
+        "coin_believer",
+        "guild_founder",
+        "lucky_hand",
+        "night_owl",
+        "iron_wallet",
+        "first_player",
+        "first_hundred",
+        "first_thousand",
+        "first_sss",
+        "first_artisan",
+        "first_summit"
+      ],
+      "note": "§T1 — 기존 11종 뒤에 얹는다(append). 앞 title 항목이 먼저 폴더를 비운다"
+    },
+    {
+      "file": "d7ba0877-35e1-4403-bb94-6d787d411519.jpeg",
+      "name": "eq_t11_weapon",
+      "expect": [
+        4,
+        3
+      ],
+      "drop": [
+        12
+      ],
+      "cellFolders": [
+        "eq_spear",
+        "eq_sword",
+        "eq_blade",
+        "eq_axe",
+        "eq_mace",
+        "eq_hammer",
+        "eq_bow",
+        "eq_crossbow",
+        "eq_staff",
+        "eq_rod",
+        "eq_fan"
+      ],
+      "cellName": "t11",
+      "note": "§A1 둔카락스 무기 11종 — 칸마다 다른 부위 폴더의 t11 로 들어간다. 12칸은 빈칸"
+    },
+    {
+      "file": "8785c021-917e-46fc-af43-30b2d22a8aeb.jpeg",
+      "name": "eq_t11_gear",
+      "expect": [
+        5,
+        2
+      ],
+      "cellFolders": [
+        "eq_shoulder",
+        "eq_chest",
+        "eq_helm",
+        "eq_glove",
+        "eq_greaves",
+        "eq_boot",
+        "eq_ear",
+        "eq_neck",
+        "eq_ring",
+        "eq_belt"
+      ],
+      "cellName": "t11",
+      "note": "§A2 둔카락스 방어구 6 + 장신구 4"
+    },
+    {
+      "file": "ac57fb5f-0b61-4b0e-8ae9-c1dc504a60d1.jpeg",
+      "name": "auth",
+      "expect": [
+        4,
+        1
+      ],
+      "labels": [
+        "hero",
+        "google",
+        "guest",
+        "quill"
+      ],
+      "note": "§L1 로그인 화면 — hero 는 가로로 넓은 칸이다"
+    },
+    {
+      "file": "3f906caf-0240-4e0f-9e46-3de7b163f657.jpg",
+      "name": "bg_place",
+      "expect": [
+        4,
+        2
+      ],
+      "append": true,
+      "drop": [
+        6,
+        7,
+        8
+      ],
+      "allowFilled": true,
+      "labels": [
+        "gather",
+        "hunt",
+        "fish",
+        "abyss",
+        "alchemist"
+      ]
+    },
+    {
+      "file": "0d4d7e2c-4d03-4264-adc2-51aeb1f2cd40.jpg",
+      "name": "map",
+      "expect": [
+        1,
+        1
+      ],
+      "append": true,
+      "allowFilled": true,
+      "labels": [
+        "rift"
+      ]
+    },
+    {
+      "file": "8d5a7a1e-f642-411e-9e5c-0de0e9900846.jpg",
+      "name": "potion",
+      "expect": [
+        5,
+        3
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "low",
+        "mid",
+        "high"
+      ]
+    },
+    {
+      "file": "8d5a7a1e-f642-411e-9e5c-0de0e9900846.jpg",
+      "name": "abyssmat",
+      "expect": [
+        5,
+        3
+      ],
+      "pickRows": [
+        2
+      ],
+      "drop": [
+        4,
+        5
+      ],
+      "labels": [
+        "ash",
+        "shard",
+        "core"
+      ]
+    },
+    {
+      "file": "8d5a7a1e-f642-411e-9e5c-0de0e9900846.jpg",
+      "name": "family",
+      "expect": [
+        5,
+        3
+      ],
+      "pickRows": [
+        2
+      ],
+      "drop": [
+        1,
+        2,
+        3
+      ],
+      "labels": [
+        "beast",
+        "fish"
+      ]
+    },
+    {
+      "file": "8d5a7a1e-f642-411e-9e5c-0de0e9900846.jpg",
+      "name": "family",
+      "expect": [
+        5,
+        3
+      ],
+      "pickRows": [
+        3
+      ],
+      "drop": [
+        4,
+        5
+      ],
+      "append": true,
+      "labels": [
+        "herb",
+        "ore",
+        "mushroom"
+      ]
+    },
+    {
+      "file": "8d5a7a1e-f642-411e-9e5c-0de0e9900846.jpg",
+      "name": "tool",
+      "expect": [
+        5,
+        3
+      ],
+      "pickRows": [
+        3
+      ],
+      "drop": [
+        1,
+        2,
+        3
+      ],
+      "labels": [
+        "gather",
+        "fish"
+      ]
+    },
+    {
+      "file": "befc85f0-0297-4097-ac3b-976698cd234c.jpg",
+      "name": "holo",
+      "expect": [
+        4,
+        2
+      ],
+      "killCorner": true,
+      "labels": [
+        "head",
+        "body",
+        "tail",
+        "head_x",
+        "body_x",
+        "tail_x",
+        "ship",
+        "bullet"
+      ]
+    },
+    {
+      "file": "cde3a6c7-ffb1-45ee-bcb5-95e325612aee.jpg",
+      "name": "mines",
+      "expect": [
+        4,
+        1
+      ],
+      "labels": [
+        "closed",
+        "open",
+        "bomb",
+        "flag"
+      ]
+    },
+    {
+      "file": "53f9258a-715c-40a8-9d52-1188c83cd375.jpg",
+      "name": "title",
+      "expect": [
+        3,
+        2
+      ],
+      "append": true,
+      "labels": [
+        "gather_king",
+        "hunter",
+        "angler",
+        "polymath",
+        "abyss_diver",
+        "alchemist"
+      ]
+    },
+    {
+      "file": "48e4e70e-3392-48cc-9d65-f9be67ce8b30.jpg",
+      "name": "sp_herb",
+      "expect": [
+        4,
+        4
+      ],
+      "pickRows": [
+        1,
+        2
+      ],
+      "minPart": 0.06,
+      "labels": [
+        "dewgrass",
+        "bitterleaf",
+        "bandagemoss",
+        "silverleaf",
+        "moonflower",
+        "spiritherb",
+        "frostlily",
+        "dragonblood"
+      ],
+      "cropTop": 0.15
+    },
+    {
+      "file": "48e4e70e-3392-48cc-9d65-f9be67ce8b30.jpg",
+      "name": "sp_ore",
+      "expect": [
+        4,
+        4
+      ],
+      "pickRows": [
+        3,
+        4
+      ],
+      "minPart": 0.06,
+      "labels": [
+        "pebble",
+        "quartz",
+        "copperore",
+        "ironore",
+        "silverore",
+        "goldore",
+        "mithrilbit",
+        "orichalcum"
+      ],
+      "cropTop": 0.15
+    },
+    {
+      "file": "7431235c-c069-4418-840e-f49724094712.jpg",
+      "name": "sp_mushroom",
+      "expect": [
+        4,
+        5
+      ],
+      "pickRows": [
+        1,
+        2
+      ],
+      "minPart": 0.06,
+      "labels": [
+        "dirtcap",
+        "moldcap",
+        "lampcap",
+        "poisonbrolly",
+        "dreamcap",
+        "spiritcap",
+        "abyssspore",
+        "panaceacap"
+      ],
+      "cropBottom": 0.17
+    },
+    {
+      "file": "7431235c-c069-4418-840e-f49724094712.jpg",
+      "name": "sp_beast",
+      "expect": [
+        4,
+        5
+      ],
+      "pickRows": [
+        3,
+        4,
+        5
+      ],
+      "minPart": 0.06,
+      "killCorner": true,
+      "labels": [
+        "fieldrat",
+        "hare",
+        "hornlessdeer",
+        "greywolf",
+        "boar",
+        "spinytoad",
+        "blackbear",
+        "oneeyedowl",
+        "icefox",
+        "steelmantis",
+        "onehornogre",
+        "shadowpanther"
+      ],
+      "cropBottom": 0.17
+    },
+    {
+      "file": "0b16d4f5-c472-4e5a-aba2-ca96fb50e1ea.jpg",
+      "name": "sp_fish",
+      "expect": [
+        4,
+        4
+      ],
+      "drop": [
+        15,
+        16
+      ],
+      "labels": [
+        "minnow",
+        "mudcarp",
+        "silverscale",
+        "whiskercat",
+        "riverpike",
+        "icetrout",
+        "lampangler",
+        "ironcarp",
+        "moonray",
+        "abysseel",
+        "centuryturtle",
+        "whirltuna",
+        "spiritwhale",
+        "dragonsturgeon"
+      ]
+    },
+    {
+      "file": "12aa2839-ec37-4fae-954f-083b64aae343.jpg",
+      "name": "food",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        1
+      ],
+      "labels": [
+        "water",
+        "bread",
+        "stew",
+        "booze"
+      ]
+    },
+    {
+      "file": "12aa2839-ec37-4fae-954f-083b64aae343.jpg",
+      "name": "material",
+      "expect": [
+        4,
+        2
+      ],
+      "pickRows": [
+        2
+      ],
+      "drop": [
+        4
+      ],
+      "labels": [
+        "skin",
+        "tooth",
+        "bone"
+      ]
+    },
+    {
+      "file": "2c2700af-764c-444c-af4c-72586324b8ad.jpg",
+      "name": "tool",
+      "expect": [
+        4,
+        2
+      ],
+      "append": true,
+      "drop": [
+        6
+      ],
+      "labels": [
+        "gather_F",
+        "gather_E",
+        "gather_D",
+        "gather_C",
+        "gather_B",
+        "gather_A",
+        "gather_S"
+      ]
+    },
+    {
+      "file": "eaa91ae8-7aeb-4826-8d61-a33d280cefd5.jpg",
+      "name": "tool",
+      "expect": [
+        4,
+        2
+      ],
+      "append": true,
+      "drop": [
+        6
+      ],
+      "labels": [
+        "hunt_F",
+        "hunt_E",
+        "hunt_D",
+        "hunt_C",
+        "hunt_B",
+        "hunt_A",
+        "hunt_S"
+      ]
+    },
+    {
+      "file": "c8c0692d-df34-4db7-a142-564139a03803.jpg",
+      "name": "tool",
+      "expect": [
+        4,
+        2
+      ],
+      "append": true,
+      "drop": [
+        8
+      ],
+      "labels": [
+        "fish_F",
+        "fish_E",
+        "fish_D",
+        "fish_C",
+        "fish_B",
+        "fish_A",
+        "fish_S"
+      ]
+    },
+    {
+      "file": "watermarked_img_5832854414490849441.jpg",
+      "name": "duel",
+      "expect": [
+        4,
+        2
+      ],
+      "labels": [
+        "guard",
+        "windup",
+        "strike",
+        "recover",
+        "hit",
+        "stagger",
+        "win",
+        "lose"
+      ]
+    },
+    {
+      "file": "watermarked_img_13277283810273372046.jpg",
+      "name": "tutorial",
+      "expect": [
+        5,
+        2
+      ],
+      "labels": [
+        "point_up",
+        "point_down",
+        "point_left",
+        "point_right",
+        "tap",
+        "drag",
+        "hint",
+        "warn",
+        "check",
+        "skip"
+      ]
+    },
+    {
+      "file": "watermarked_img_11857853027533404708.jpg",
+      "name": "raid_boss",
+      "expect": [
+        5,
+        2
+      ],
+      "labels": [
+        "d01",
+        "d02",
+        "d03",
+        "d04",
+        "d05",
+        "d06",
+        "d07",
+        "d08",
+        "d09",
+        "d10"
+      ]
+    },
+    {
+      "file": "watermarked_img_15027582307745185025.jpg",
+      "name": "raid_boss",
+      "expect": [
+        3,
+        2
+      ],
+      "append": true,
+      "labels": [
+        "w01",
+        "w02",
+        "w03",
+        "s01",
+        "s02",
+        "s03"
+      ]
+    },
+    {
+      "file": "watermarked_img_2172247968516147154.jpg",
+      "name": "event",
+      "expect": [
+        3,
+        3
+      ],
+      "drop": [
+        8
+      ],
+      "allowFilled": true,
+      "labels": [
+        "attend",
+        "gift",
+        "bonus",
+        "season",
+        "notice",
+        "notice_alt",
+        "season_alt",
+        "ended"
+      ]
+    },
+    {
+      "file": "Gemini_Generated_Image_wbypirwbypirwbyp.png",
+      "name": "avatar",
+      "expect": [
+        4,
+        1
+      ],
+      "append": true,
+      "note": "§L1 여캐 로고 4종 — 기본 12종 뒤에 덧붙인다 (append 없으면 12종이 지워진다)",
+      "labels": [
+        "bunnyblade",
+        "maidhammer",
+        "witchgirl",
+        "knightgirl"
+      ]
+    },
+    {
+      "file": "e13c3260-9e09-45a1-8a4d-ea21ec1d7677.jpg",
+      "name": "elf",
+      "expect": [
+        2,
+        1
+      ],
+      "note": "§L2 엘프 NPC — 왼쪽 전신, 오른쪽 초상",
+      "labels": [
+        "stand",
+        "portrait"
+      ]
+    },
+    {
+      "file": "a3710279-b1d1-4fe6-a250-28fc86cd59b4.jpg",
+      "name": "smith",
+      "expect": [
+        2,
+        1
+      ],
+      "note": "§N1 대장간 장인 — 왼쪽 전신, 오른쪽 초상",
+      "labels": [
+        "stand",
+        "portrait"
+      ]
+    },
+    {
+      "file": "b4632d8d-ebcf-4109-92e4-1024fc88ee9d.jpg",
+      "name": "maid",
+      "expect": [
+        4,
+        1
+      ],
+      "note": "§N2 선술집 점원 — 전신 · 초상 · 기쁨(팁) · 부끄러움(이스터에그)",
+      "labels": [
+        "stand",
+        "portrait",
+        "happy",
+        "shy"
+      ]
+    },
+    {
+      "file": "c8253c6b-6f0e-4ce5-bf96-6ea55281284d.jpg",
+      "name": "knightgirl",
+      "note": "여기사 이졸데 — 전투 8프레임. 위아래 마젠타 테두리가 없어 검출이 안 된다. 실측이 균등(255.5 x 253)이라 균등분할로 자른다",
+      "labels": [
+        "guard",
+        "windup",
+        "strike",
+        "recover",
+        "hit",
+        "stagger",
+        "win",
+        "lose"
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "floor": true
+    },
+    {
+      "file": "ca823c8f-5749-49ca-adde-7eb6ee132142.jpg",
+      "name": "knightgirl",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "베기 3프레임 (docs/character-art/knightgirl.md D). append 필수 - 없으면 8프레임을 지운다",
+      "labels": [
+        "cut_1",
+        "cut_2",
+        "cut_3"
+      ],
+      "floor": true
+    },
+    {
+      "file": "3e35ecbc-9f40-4112-9f4a-5a04762111de.jpg",
+      "name": "knightgirl",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "스킬 횡베기 3프레임 (E-1). append 필수 - 같은 폴더",
+      "labels": [
+        "sk_1",
+        "sk_2",
+        "sk_3"
+      ],
+      "floor": true
+    },
+    {
+      "file": "e26d19f3-10c7-46b8-8a3d-a8285174a3b6.jpg",
+      "name": "knightgirl_wave",
+      "expect": [
+        3,
+        1
+      ],
+      "note": "검기 3프레임 (§E-2). 화면에서는 wave_1 만 쓴다. 좌우는 그린 그대로 — 오목한 쪽이 진행 방향(오른쪽)을 본다",
+      "labels": [
+        "wave_1",
+        "wave_2",
+        "wave_3"
+      ]
+    },
+    {
+      "file": "1.jpg",
+      "name": "bunnyaxe",
+      "expect": [
+        4,
+        2
+      ],
+      "note": "바니걸 비앙카 — 전투 8프레임 (docs/character-art/bunnyaxe.md §A)",
+      "labels": [
+        "guard",
+        "windup",
+        "strike",
+        "recover",
+        "hit",
+        "stagger",
+        "win",
+        "lose"
+      ],
+      "floor": true
+    },
+    {
+      "file": "3.jpg",
+      "name": "bunnyaxe",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "내리찍기 3프레임 (§D). append 필수 - 없으면 8프레임을 지운다",
+      "labels": [
+        "cut_1",
+        "cut_2",
+        "cut_3"
+      ],
+      "floor": true
+    },
+    {
+      "file": "5.jpg",
+      "name": "bunnyaxe",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "도약 강타 3프레임 (§E-1). 폭발이 3번 칸에 같이 그려져 있어 §E-2 를 안 받았다",
+      "labels": [
+        "sk_1",
+        "sk_2",
+        "sk_3"
+      ],
+      "floor": true
+    },
+    {
+      "file": "01.jpg",
+      "name": "elfarcher",
+      "expect": [
+        4,
+        2
+      ],
+      "floor": true,
+      "note": "엘프 궁수 리안느 — 전투 8프레임 (docs/character-art/elfarcher.md §A)",
+      "labels": [
+        "guard",
+        "windup",
+        "strike",
+        "recover",
+        "hit",
+        "stagger",
+        "win",
+        "lose"
+      ]
+    },
+    {
+      "file": "03.jpg",
+      "name": "elfarcher",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "floor": true,
+      "note": "쏘기 3프레임 (§D). append 필수 - 없으면 8프레임을 지운다",
+      "labels": [
+        "cut_1",
+        "cut_2",
+        "cut_3"
+      ]
+    },
+    {
+      "file": "05.jpg",
+      "name": "elfarcher",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "floor": true,
+      "note": "화살비 3프레임 (§E-1) — 무릎 꿇고 하늘로 쏜다",
+      "labels": [
+        "sk_1",
+        "sk_2",
+        "sk_3"
+      ]
+    },
+    {
+      "file": "06.jpg",
+      "name": "elfarcher_shot",
+      "expect": [
+        3,
+        1
+      ],
+      "note": "화살 (§D-2). 평타도 스킬도 이 한 장을 쓴다 (core/chars 의 projSet). 화면에서는 shot_1 만 쓴다",
+      "labels": [
+        "shot_1",
+        "shot_2",
+        "shot_3"
+      ]
+    },
+    {
+      "file": "111.jpg",
+      "name": "nun",
+      "floor": true,
+      "note": "사제 아녜스 — 전투 8프레임 (docs/character-art/nun.md §A). 001 을 다시 받은 것. 가운데 가로 마젠타선이 흐려 검출이 안 된다. 실측이 균등(256x253)이라 균등분할로 자른다 / 임계값을 170 으로 올린다 — 이 장만 수도복에 하프톤 점을 깔아 그려 와서, 기본값(128)으로 자르면 점이 흰색으로 살아남아 얼룩덜룩해진다. 예전에는 정반대로 §D/§E 가 밝게 와서 그쪽을 올렸었다. 어느 장이 튀느냐만 바뀔 뿐 맞추는 기준은 늘 같다 — 서 있을 때와 움직일 때가 같은 색",
+      "labels": [
+        "guard",
+        "windup",
+        "strike",
+        "recover",
+        "hit",
+        "stagger",
+        "win",
+        "lose"
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "smooth": true,
+      "thresh": 170
+    },
+    {
+      "file": "222.jpg",
+      "name": "nun",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "floor": true,
+      "note": "휘두르기 3프레임 (§D). append 필수 - 없으면 8프레임을 지운다 / 003 을 §A 와 같은 톤으로 다시 받았다. 예전에는 이 장만 밝게 그려져 와서 임계값을 170 으로 올려 막고 있었는데, 그림이 맞게 오니 그 보정을 뗀다",
+      "labels": [
+        "cut_1",
+        "cut_2",
+        "cut_3"
+      ],
+      "smooth": true
+    },
+    {
+      "file": "333.jpg",
+      "name": "nun",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "floor": true,
+      "note": "기도 3프레임 (§E-1) — 무릎 꿇고 아군을 회복시킨다. 004 를 §A 와 같은 톤으로 다시 받았다 (222 와 같은 이유로 임계값 보정을 뗐다)",
+      "labels": [
+        "sk_1",
+        "sk_2",
+        "sk_3"
+      ],
+      "smooth": true
+    },
+    {
+      "file": "006.jpg",
+      "name": "nun_wave",
+      "expect": [
+        3,
+        1
+      ],
+      "note": "회복 빛 (§E-2). 적에게 날아가는 게 아니라 회복받는 아군 위에 그린다. 화면에서는 wave_1 만 쓴다",
+      "labels": [
+        "wave_1",
+        "wave_2",
+        "wave_3"
+      ],
+      "smooth": true
+    },
+    {
+      "file": "s-01.jpg",
+      "name": "sl_melee",
+      "floor": true,
+      "note": "1스테이지 근접 슬라임 (docs/foe-art/sl_melee.md). 시트 바깥이 흰색이라 칸마다 흰 액자가 남는다 — inset 으로 가장자리를 깎는다. 격자도 칸마다 마젠타 상자가 따로 있어 5x3 으로 잡히므로 균등분할. 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ],
+      "grid": [
+        3,
+        1
+      ],
+      "inset": 0.09,
+      "minPart": 0.02
+    },
+    {
+      "file": "s-02.jpg",
+      "name": "sl_ranged",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "1스테이지 원거리 — 뱉는 슬라임 (docs/foe-art/sl_ranged.md) — 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "s-03.jpg",
+      "name": "sl_boss",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "1스테이지 우두머리 — 빅 슬라임 (docs/foe-art/sl_boss.md) — 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "icon-1.jpg",
+      "name": "role_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "note": "전투 타입 4종 (docs/ICON_PROMPTS.md) — 방패·검·활·십자. 12~16px 로 붙으므로 윤곽만 남는다",
+      "labels": [
+        "role_tank",
+        "role_melee",
+        "role_ranged",
+        "role_support"
+      ]
+    },
+    {
+      "file": "icon-2.jpg",
+      "name": "skill_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "note": "스킬 4종 — 검기·강타·화살비·기도. 기술이 늘면 여기에 칸을 더한다",
+      "labels": [
+        "sk_wave",
+        "sk_leap",
+        "sk_rain",
+        "sk_heal"
+      ]
+    },
+    {
+      "file": "sg_grass.jpg",
+      "name": "sg_grass",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 풀슬라임 (docs/foe-art/sg_grass.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sg_mud.jpg",
+      "name": "sg_mud",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 진흙 슬라임 (docs/foe-art/sg_mud.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sg_stone.jpg",
+      "name": "sg_stone",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 돌 슬라임 (docs/foe-art/sg_stone.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sg_bone.jpg",
+      "name": "sg_bone",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 뼈 슬라임 (docs/foe-art/sg_bone.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sg_twin.jpg",
+      "name": "sg_twin",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 쌍둥이 슬라임 (docs/foe-art/sg_twin.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sg_spore.jpg",
+      "name": "sg_spore",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 포자 슬라임 (docs/foe-art/sg_spore.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sg_thorn.jpg",
+      "name": "sg_thorn",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 가시 슬라임 (docs/foe-art/sg_thorn.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sg_acid.jpg",
+      "name": "sg_acid",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 산성 슬라임 (docs/foe-art/sg_acid.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ],
+      "invert": true
+    },
+    {
+      "file": "sb_grass.jpg",
+      "name": "sb_grass",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 풀무더기 슬라임 (docs/foe-art/sb_grass.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sb_mud.jpg",
+      "name": "sb_mud",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 수렁 슬라임 (docs/foe-art/sb_mud.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sb_spore.jpg",
+      "name": "sb_spore",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 홀씨 슬라임 (docs/foe-art/sb_spore.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sb_thorn.jpg",
+      "name": "sb_thorn",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 가시덩이 슬라임 (docs/foe-art/sb_thorn.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sb_stone.jpg",
+      "name": "sb_stone",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 바위 슬라임 (docs/foe-art/sb_stone.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sb_twin.jpg",
+      "name": "sb_twin",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 가르는 슬라임 (docs/foe-art/sb_twin.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sb_acid.jpg",
+      "name": "sb_acid",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 녹이는 슬라임 (docs/foe-art/sb_acid.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sb_bone.jpg",
+      "name": "sb_bone",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 뼈무덤 슬라임 (docs/foe-art/sb_bone.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sb_king.jpg",
+      "name": "sb_king",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "초원 슬라임 — 슬라임 군주 (docs/foe-art/sb_king.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    }
+  ],
+  "_srcDirs": [
+    "assets/2026-08-29-001",
+    "assets/2026-08-30-001"
+  ]
+}
