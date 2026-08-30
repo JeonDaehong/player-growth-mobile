@@ -322,6 +322,74 @@ export function BossCall({ nonce, name }: { nonce: number; name: string }) {
   );
 }
 
+/** 특수기 이름이 떴다 사라지기까지 (ms) */
+const PAT_MS = 950;
+
+/**
+ * 우두머리 특수기 이름 — 무대 위쪽에 짧게.
+ *
+ * `BossCall` 과 자리도 방식도 닮았지만 **훨씬 짧고 작다.** 등장은 판에 한 번
+ * 뿐이라 2.2초를 써도 되지만, 특수기는 세 번에 한 번씩 나오므로 그만큼
+ * 머무르면 화면이 글씨로 덮인다.
+ *
+ * 무대 **위쪽**에 둔다. `BossCall` 이 쓰는 34% 자리에 겹쳐 두면 우두머리가
+ * 나오는 순간 둘이 포개진다.
+ */
+export function PatternCall({ nonce, name }: { nonce: number; name: string }) {
+  const t = useRef(new Animated.Value(0)).current;
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    if (nonce <= 0 || !name) return undefined;
+    setOn(true);
+    t.setValue(0);
+    let alive = true;
+    const a = Animated.timing(t, {
+      toValue: 1, duration: PAT_MS, easing: Easing.linear, useNativeDriver: true,
+    });
+    a.start(() => { if (alive) setOn(false); });
+    return () => { alive = false; a.stop(); };
+  }, [nonce, name, t]);
+
+  /*
+    `interpolate()` 는 부를 때마다 `t` 에 자식 노드를 매단다. `t` 는 이
+    컴포넌트가 살아 있는 내내 같은 값이라, 그리기마다 부르면 노드가 쌓여
+    시간에 비례해 느려진다 (`HitBurst` 에서 겪은 그것).
+  */
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.18, 0.62, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+  /* 위로 살짝 밀려 올라간다 — 제자리에서 켜지면 자막처럼 보인다 */
+  const rise = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [6, -4],
+  }), [t]);
+
+  if (!on) return null;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: 0, right: 0, top: 8,
+        alignItems: 'center',
+        zIndex: 92,
+        opacity: fade,
+        transform: [{ translateY: rise }],
+      }}
+    >
+      <Animated.Text
+        style={{
+          color: WHITE, fontFamily: MONO, fontSize: 12, fontWeight: '700',
+          letterSpacing: 2,
+        }}
+      >
+        {name}
+      </Animated.Text>
+    </Animated.View>
+  );
+}
+
 /** 회복 표시의 색 — 흑백 화면에서 유일하게 색을 쓰는 자리 */
 const HEAL_GREEN = '#7CFF9B';
 

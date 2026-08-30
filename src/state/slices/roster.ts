@@ -15,8 +15,8 @@ import {
 import { PARTY_SIZE, Party, cleanParty } from '@/core/party';
 import { drawChar, poolOf, recruitCost } from '@/core/recruit';
 import {
-  BattleState, applyHit, applySkill, battleTick, canGoStage, enterStage,
-  fightHeld, TICK_MS,
+  BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, leaveFor,
+  TICK_MS,
 } from '@/core/autoBattle';
 import type { SliceGet, SliceSet } from './kit';
 
@@ -37,6 +37,13 @@ export interface RosterActions {
    * 오는 것이 회복 수단이 된다.
    */
   goStage: (stage: number) => boolean;
+  /**
+   * 우두머리를 부른다 — "우두머리 토벌" 단추.
+   *
+   * 1분을 사냥해야 부를 수 있다 (`bossReady`). 누르는 순간 나오지는 않고,
+   * 서 있던 잡몹을 마저 잡으면 그때 걸어 나온다.
+   */
+  callBossNow: () => boolean;
   /**
    * 한 명이 검을 내려친 순간. 그 사람 공격력만큼 맨 앞 적에게 들어간다.
    *
@@ -203,13 +210,22 @@ export const createRosterSlice = (
 
   goStage: (stage) => {
     const st = get();
-    if (!canGoStage(st.battle, stage)) return false;
-    if (stage === st.battle.stage) return false;
     /*
-      체력은 들고 간다. 판을 옮기면 회복까지 된다면, 위험할 때마다 1판에
-      갔다 오는 것이 제일 싼 회복 수단이 되어 버린다.
+      **바로 안 옮긴다.** 화면을 먼저 덮고, 다 덮인 뒤에 틱이 옮긴다
+      (`leaveFor` → `battleTick`). 그 자리에서 갈아 치우면 적이 바뀌는
+      순간이 막이 오기 전에 다 보인다 — 실제로 그렇게 보였다.
     */
-    set({ battle: enterStage(st.battle, stage, st.battle.hp) });
+    const next = leaveFor(st.battle, stage);
+    if (next === st.battle) return false;
+    set({ battle: next });
+    return true;
+  },
+
+  callBossNow: () => {
+    const st = get();
+    const next = callBoss(st.battle);
+    if (next === st.battle) return false;
+    set({ battle: next });
     return true;
   },
 

@@ -59,13 +59,17 @@ import {
 export const TICK_MS = 500;
 
 /**
- * 한 스테이지에서 잡몹이 몰려오는 시간 — 이 시간이 지나면 우두머리가 나온다.
+ * 우두머리를 부를 수 있게 되기까지 사냥하는 시간.
  *
- * ⚠ **지금은 시험용으로 30초다.** 원래 값은 2분(`120_000`)이었다. 열 판의
- * 우두머리 그림과 판 연출을 눈으로 확인하려면 한 판에 2분씩 기다려야 하는데,
- * 열 판이면 20분이다. 확인이 끝나면 되돌린다.
+ * **지나도 우두머리가 저절로 안 나온다.** 이 시간이 다 흐르면 "우두머리
+ * 토벌" 단추가 생기고, 부르는 것은 사람이다 (`BattleState.called`).
+ *
+ * 예전에는 시간이 되면 잡몹이 끊기고 우두머리가 걸어 나왔다. 그러면 판의
+ * 흐름을 사람이 못 정한다 — 아직 약한데 우두머리가 오고, 더 사냥해서
+ * 골드를 모으고 싶어도 못 한다. 이제 시간은 **문을 여는 것**까지만 하고,
+ * 언제 들어갈지는 사람이 정한다.
  */
-export const STAGE_MS = 30_000;
+export const STAGE_MS = 60_000;
 
 /**
  * 판이 열릴 때 검은 막이 떴다 걷히고 양쪽에서 걸어 들어오기까지 (ms).
@@ -93,11 +97,26 @@ export const OPEN_WALK_MS = TICK_MS;
 export const CLEAR_MS = 2000;
 
 /**
+ * `< >` 로 판을 옮길 때 화면이 어두워지기까지 (ms).
+ *
+ * 클리어보다 훨씬 짧다. 클리어는 **보여 줄 것이 있어서**(`Clear` 글씨) 길고,
+ * 이건 그냥 가리기만 하면 되기 때문이다. 사용자가 직접 누른 것이라 기다릴
+ * 이유도 없다.
+ */
+export const MOVE_MS = 400;
+
+/**
  * 여기까지만 나아간다. `null` 이면 끝없이.
  *
  * **10 이다.** 초원 열 판의 적과 우두머리 그림이 다 들어왔으므로 (`assets/
  * sprites/sg_*`, `sb_*`) 열 판을 다 연다. 10 을 깨면 넘어갈 곳이 없으므로
  * `Math.min` 에 걸려 **10 을 다시 돈다** — 그게 지금 있는 마지막 판이다.
+ *
+ * `STAGES` 에는 20 판이 적혀 있다. 11~20(덩굴 숲 · 썩은 고목 숲)은 구성만
+ * 짜 두고 **그림을 기다리는 중**이다 (`docs/foe-art/pf_*`, `pw_*`, `pb_*`).
+ * 지금 열면 전부 `creature/slime` 으로 떨어져서, 판이 넘어가도 같은 것이
+ * 나온다. 시트가 들어오면 여기를 20 으로 올린다 — 슬라임 챕터도 같은
+ * 자리에서 기다렸다.
  *
  * 우두머리를 잡으면 보상도 클리어 연출도 그대로 나온다. 달라지는 건 다음에
  * 어디로 가느냐뿐이다.
@@ -201,6 +220,77 @@ export interface FoeKind {
    * 아녜스(공격력 10)의 평타가 통째로 최소치로 깎인다.
    */
   def?: number;
+  /**
+   * 우두머리만 쓰는 특수 패턴. 안 적으면 `BOSS_PATTERNS` 를 쓴다.
+   *
+   * 빈 배열(`[]`)을 주면 **패턴 없이** 평타만 친다 — "이 우두머리는 단순한
+   * 놈" 을 표현할 자리가 필요해서 `undefined` 와 `[]` 를 구분해 둔다.
+   */
+  patterns?: readonly BossPattern[];
+}
+
+/**
+ * 우두머리의 특수 공격 한 가지.
+ *
+ * **파티 스킬과 같은 규칙이다** (`core/chars` 의 `SkillDef`) — 몇 번째
+ * 공격마다(`every`) 나오고, 공격력의 몇 배(`mul`)로, 누구를(`aim`) 치는가.
+ * 규칙을 맞춰 둔 이유는 화면이 두 가지를 따로 셀 필요가 없어서다.
+ */
+export interface BossPattern {
+  /** 그림·연출을 고를 때 쓰는 이름표 */
+  id: string;
+  /** 화면에 뜨는 이름 */
+  name: string;
+  /**
+   * 몇 번째 공격마다 나오나. 3 이면 세 번에 한 번.
+   *
+   * 둘이 같은 차례에 걸리면 **드문 쪽이 이긴다** (`every` 가 큰 쪽). 자주
+   * 나오는 것이 이기면 드문 것은 영영 안 나온다 — 6 과 3 이면 6의 배수는
+   * 전부 3의 배수이기도 하다.
+   */
+  every: number;
+  /** 공격력의 몇 배 */
+  mul: number;
+  /** 전원인가 한 명인가 */
+  aim: 'all' | 'one';
+}
+
+/**
+ * 우두머리가 쓰는 기본 패턴 둘.
+ *
+ * 종마다 다르게 주고 싶으면 `FoeKind.patterns` 로 덮어쓴다. 안 적으면 모든
+ * 우두머리가 이 둘을 쓴다 — 잡몹과 똑같이 한 대씩만 치는 우두머리는 체력만
+ * 많은 잡몹이라 싸움이 길어지기만 한다.
+ *
+ * ## 숫자를 왜 이렇게 잡았나
+ *
+ * 휩쓸기는 한 명당 0.6배지만 넷이 맞으니 합쳐서 2.4배다. 앞에 선 사람이
+ * 대신 받아 줄 수 없는 유일한 공격이라, **회복이 있고 없고**가 여기서
+ * 갈린다. 세 번에 한 번이면 사제의 기도 주기와 엇비슷하게 맞물린다.
+ *
+ * 내려찍기는 한 명에게 2.2배다. 자리 확률(`AIM`)이 앞을 50% 로 잡으므로
+ * 대개 앞사람이 받는다 — "앞에 단단한 사람을 세운다" 가 값을 갖는 자리다.
+ * 다섯 번에 한 번으로 드물게 두어, 걸린 판이 실제로 위험하게 만든다.
+ */
+export const BOSS_PATTERNS: readonly BossPattern[] = [
+  { id: 'sweep', name: '휩쓸기', every: 3, mul: 0.6, aim: 'all' },
+  { id: 'smash', name: '내려찍기', every: 5, mul: 2.2, aim: 'one' },
+];
+
+/**
+ * `n` 번째 공격에 나오는 패턴. 없으면 `null` (평타).
+ *
+ * `n` 은 1부터 센다. 0 번째는 없다 — `n % every === 0` 이 0 에서 참이 되어
+ * 첫 공격부터 특수기가 나가면 우두머리가 나오자마자 전원이 맞는다.
+ */
+export function patternAt(
+  n: number, list: readonly BossPattern[] = BOSS_PATTERNS,
+): BossPattern | null {
+  if (!Number.isFinite(n) || n < 1) return null;
+  /* 드문 것이 이긴다 — 자주 나오는 쪽이 이기면 드문 것은 영영 안 나온다 */
+  const due = list.filter((p) => p.every > 0 && n % p.every === 0);
+  if (!due.length) return null;
+  return due.reduce((a, b) => (b.every > a.every ? b : a));
 }
 
 /**
@@ -266,6 +356,61 @@ const SLIME = {
 } as const;
 
 const g = (k: keyof typeof SLIME): FoeKind => ({ ...SLIME[k] });
+
+/**
+ * 덩굴 숲의 식물들 — 11~15 스테이지.
+ *
+ * 슬라임 다음 챕터다. 슬라임이 **덩어리 하나**로 갈렸다면 (낮다/높다/
+ * 각졌다/둘이다) 식물은 **뻗은 것**으로 갈린다 — 무엇이, 어느 방향으로,
+ * 몇 갈래로 뻗어 나왔는가. 40~52px 흑백에서 남는 것이 윤곽뿐인 것은
+ * 여기서도 같다.
+ *
+ *   덩굴손  바닥을 기며 옆으로 길게    (제일 낮고 제일 넓다)
+ *   아귀꽃  한 덩이가 위에 크게 얹혔다  (머리가 무겁다)
+ *   가시덤불 사방으로 뾰족하다          (윤곽이 다 튄다)
+ *   이끼덩이 뭉툭하고 축 늘어졌다        (윤곽이 흐리다)
+ *   홀씨대  가늘고 곧게 섰다 · 던진다
+ *   진액꽃  고개를 숙였다 · 던진다
+ */
+const PLANT = {
+  /* ── 붙어서 싸운다 ── */
+  vine: { art: 'pf_vine', name: '덩굴손', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  maw: { art: 'pf_maw', name: '아귀꽃', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  bramble: { art: 'pf_bramble', name: '가시덤불', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  moss: { art: 'pf_moss', name: '이끼덩이', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  /* ── 떨어져서 던진다 ── */
+  spore: { art: 'pf_spore', name: '홀씨대', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
+  sap: { art: 'pf_sap', name: '진액꽃', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
+} as const;
+
+/**
+ * 썩은 고목 숲의 나무들 — 16~20 스테이지.
+ *
+ * 식물 챕터와 **높이로** 갈린다. 식물은 사람 키를 안 넘고 바닥에 붙어
+ * 있었는데, 여기는 전부 사람보다 크고 서 있다. 챕터가 넘어간 것을 알리는
+ * 가장 싼 방법이 그것이다 — 종을 하나하나 알아보기 전에 **줄의 높이**가
+ * 먼저 눈에 들어온다.
+ *
+ *   그루터기 낮고 두껍다 (이 챕터의 기준)
+ *   빈나무   속이 뚫려 있다 (윤곽 안에 구멍)
+ *   뿌리덩이 아래로 여러 갈래 (밑이 넓다)
+ *   껍질갑옷 딱딱한 판이 덮였다 (잘 안 죽는 놈)
+ *   가지창   가늘고 길다 · 던진다
+ *   꼬투리   위가 무겁다 · 던진다
+ */
+const WOOD = {
+  /* ── 붙어서 싸운다 ── */
+  stump: { art: 'pw_stump', name: '걷는 그루터기', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  hollow: { art: 'pw_hollow', name: '속 빈 나무', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  root: { art: 'pw_root', name: '뿌리덩이', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  bark: { art: 'pw_bark', name: '껍질갑옷', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  /* ── 떨어져서 던진다 ── */
+  branch: { art: 'pw_branch', name: '가지창', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
+  pod: { art: 'pw_pod', name: '꼬투리나무', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
+} as const;
+
+const p = (k: keyof typeof PLANT): FoeKind => ({ ...PLANT[k] });
+const w = (k: keyof typeof WOOD): FoeKind => ({ ...WOOD[k] });
 
 /*
   ── 수치는 열 판이 전부 같다 (임시) ──
@@ -345,6 +490,60 @@ export const STAGES: StageDef[] = [
     kinds: [g('stone'), g('bone'), g('twin'), g('acid')],
     boss: { art: 'sb_king', name: '슬라임 군주', bg: '02', melee: true , atk: 20, hp: 300, spd: 0.8 },
   },
+
+  /* ── 11~15 · 덩굴 숲 ── */
+  {
+    bg: '03', zone: '덩굴 숲',
+    kinds: [p('vine'), p('spore')],
+    boss: { art: 'pb_bramble', name: '가시덤불 군체', bg: '03', melee: true, atk: 20, hp: 300, spd: 0.8 },
+  },
+  {
+    bg: '03', zone: '덩굴 숲',
+    kinds: [p('vine'), p('maw'), p('spore')],
+    boss: { art: 'pb_bloom', name: '아귀꽃 여왕', bg: '03', melee: true, atk: 20, hp: 300, spd: 0.8 },
+  },
+  {
+    bg: '03', zone: '덩굴 숲',
+    kinds: [p('maw'), p('bramble'), p('spore')],
+    boss: { art: 'pb_creeper', name: '덩굴 어미', bg: '03', melee: true, atk: 20, hp: 300, spd: 0.8 },
+  },
+  {
+    bg: '03', zone: '덩굴 숲',
+    kinds: [p('bramble'), p('moss'), p('sap')],
+    boss: { art: 'pb_spore', name: '홀씨 기둥', bg: '03', melee: false, atk: 20, hp: 300, spd: 0.8 },
+  },
+  {
+    bg: '03', zone: '덩굴 숲',
+    kinds: [p('maw'), p('bramble'), p('moss'), p('sap')],
+    boss: { art: 'pb_carrion', name: '시체꽃', bg: '03', melee: false, atk: 20, hp: 300, spd: 0.8 },
+  },
+
+  /* ── 16~20 · 썩은 고목 숲 ── */
+  {
+    bg: '04', zone: '썩은 고목 숲',
+    kinds: [w('stump'), w('branch')],
+    boss: { art: 'pb_stump', name: '늙은 그루터기', bg: '04', melee: true, atk: 20, hp: 300, spd: 0.8 },
+  },
+  {
+    bg: '04', zone: '썩은 고목 숲',
+    kinds: [w('stump'), w('hollow'), w('branch')],
+    boss: { art: 'pb_hollow', name: '속 빈 거인', bg: '04', melee: true, atk: 20, hp: 300, spd: 0.8 },
+  },
+  {
+    bg: '04', zone: '썩은 고목 숲',
+    kinds: [w('hollow'), w('root'), w('pod')],
+    boss: { art: 'pb_thornwood', name: '가시나무', bg: '04', melee: true, atk: 20, hp: 300, spd: 0.8 },
+  },
+  {
+    bg: '04', zone: '썩은 고목 숲',
+    kinds: [w('root'), w('bark'), w('branch'), w('pod')],
+    boss: { art: 'pb_rot', name: '썩은 거목', bg: '04', melee: true, atk: 20, hp: 300, spd: 0.8 },
+  },
+  {
+    bg: '04', zone: '썩은 고목 숲',
+    kinds: [w('hollow'), w('root'), w('bark'), w('pod')],
+    boss: { art: 'pb_elder', name: '숲의 어른', bg: '04', melee: true, atk: 20, hp: 300, spd: 0.8 },
+  },
 ];
 
 /** 그 스테이지의 구성 — 열 판을 돌면 한 바퀴 */
@@ -387,6 +586,17 @@ export interface FoeSlot {
    * 그대로** 한 대 친 뒤 `1200 / spd` 만큼 다시 채운다.
    */
   cd: number;
+  /**
+   * 여태 휘두른 횟수. 1부터 센다.
+   *
+   * 우두머리의 특수 패턴이 **몇 번째 공격이냐**로 정해지므로 (`patternAt`)
+   * 그걸 셀 자리가 필요하다. 시간으로 재지 않는 이유는 파티 스킬과 같다 —
+   * 공격속도를 올리면 특수기도 같이 자주 나와야 말이 된다.
+   *
+   * 잡몹도 세지만 쓰지는 않는다. 마리마다 다르게 굴리면 "이건 우두머리
+   * 전용" 이라는 갈래가 하나 더 생기고, 갈래가 둘이면 한쪽만 고치게 된다.
+   */
+  n: number;
   /** `kindsOf(stage)` 안에서의 자리 — 0 이 주력, 1 이 원거리 */
   k: number;
   /**
@@ -522,6 +732,14 @@ export interface BattleState {
   /** 우두머리가 나왔나 */
   boss: boolean;
   /**
+   * 우두머리를 불렀나 — 사람이 "우두머리 토벌" 을 눌렀나.
+   *
+   * 누르는 순간 나오지는 않는다. **잡몹이 더 안 나오고**, 서 있던 놈을
+   * 마저 잡으면 그때 우두머리가 걸어 나온다. 싸우던 것이 갑자기 사라지면
+   * 이긴 건지 도망간 건지 알 수가 없다.
+   */
+  called: boolean;
+  /**
    * 지금 서 있는 적들. **앞에서부터** 순서대로.
    * 우두머리 단계에서는 한 칸뿐이다.
    */
@@ -552,6 +770,19 @@ export interface BattleState {
   /** 다음 한 마리가 걸어 들어올 때까지 (틱) */
   spawnIn: number;
   /**
+   * 방금 나간 우두머리 특수기의 이름과 번호.
+   *
+   * `TickEvent.pattern` 은 **그 한 틱에만** 실려 온다. 화면은 스토어가 넣어
+   * 준 상태만 보므로(틱 결과를 직접 못 본다) 거기 실린 값은 다음 그리기
+   * 전에 사라진다. `BossCall` 이 `battle.boss` 의 거짓→참을 보고 있는 것과
+   * 같은 문제라, 같은 방식으로 상태에 남긴다.
+   *
+   * `patSeq` 는 **같은 이름이 연달아 나와도** 화면이 알아보게 하는 번호다.
+   * 이름만 보면 휩쓸기 다음에 또 휩쓸기가 나올 때 안 바뀐 것으로 읽힌다.
+   */
+  pat: string | null;
+  patSeq: number;
+  /**
    * 판 시작 연출이 끝나기까지 남은 시간 (ms). 0 이면 평소.
    *
    * `OPEN_WALK_MS` 보다 크면 검은 막이 덮인 채라 **아무것도 안 싸운다.**
@@ -559,13 +790,31 @@ export interface BattleState {
    */
   openIn: number;
   /**
-   * 클리어 연출이 끝나기까지 남은 시간 (ms). 0 이면 평소.
+   * **화면을 덮는 중**이면 남은 시간 (ms). 0 이면 평소.
    *
-   * 우두머리를 잡는 **그 순간에는 판을 안 넘긴다.** 여기에 `CLEAR_MS` 를
-   * 넣어 두고, 다 흐른 뒤에 틱이 넘긴다. 예전에는 잡자마자 넘겼는데, 그러면
-   * 화면이 `Clear` 를 띄울 틈도 없이 다음 판의 적이 이미 서 있었다.
+   * 판이 바뀌는 길은 둘이다 — 우두머리를 잡거나, `< >` 로 골라 가거나.
+   * 둘 다 **바뀌기 전에 먼저 어두워져야 한다.** 그래서 시계 하나를 같이
+   * 쓴다: 여기에 시간을 걸어 두고 `goTo` 에 갈 곳을 적어 두면, 다 흐른 뒤에
+   * 틱이 옮긴다.
+   *
+   * 예전에는 우두머리 쪽만 이렇게 하고 `< >` 는 그 자리에서 갈아 치웠다.
+   * 그러면 "적이 바뀐다 → 어두워진다 → 밝아진다" 가 되어, 감추려던 순간이
+   * 막이 오기 전에 다 보인다.
    */
   clearIn: number;
+  /**
+   * 덮는 동안 무엇을 띄우나.
+   *
+   * `boss` 면 `Clear`, `move` 면 아무것도 안 띄우고 그냥 어두워진다.
+   * 판을 옮기는 것은 사용자가 방금 누른 일이라 설명할 것이 없다.
+   */
+  clearKind: 'boss' | 'move' | null;
+  /**
+   * 다 덮이면 갈 판. `null` 이면 다음 판 (`nextStage`).
+   *
+   * `< >` 로 뒤로 갈 수도 있으므로 "다음" 으로는 표현이 안 된다.
+   */
+  goTo: number | null;
 }
 
 /**
@@ -616,7 +865,7 @@ const startFoes = (stage: number, seq = 0): { foes: FoeSlot[]; seq: number } => 
  */
 function fresh(stage: number, k: number, id: number): FoeSlot {
   const kind = foeOf(stage, false, k);
-  return { hp: kind.hp, k, id, cd: swingMs(kind.spd) };
+  return { hp: kind.hp, k, id, cd: swingMs(kind.spd), n: 0 };
 }
 
 /**
@@ -655,7 +904,8 @@ export const newBattle = (): BattleState => {
     stage: 1, best: 1, msLeft: STAGE_MS, boss: false,
     foes: first.foes, seq: first.seq,
     slain: 0, target: 0, hp: {}, down: 0, spawnIn: 0,
-    openIn: OPEN_MS, clearIn: 0,
+    openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
+    called: false, pat: null, patSeq: 0,
   };
 };
 
@@ -720,7 +970,43 @@ export function enterStage(
     spawnIn: 0,
     openIn: OPEN_MS,
     clearIn: 0,
+    clearKind: null,
+    goTo: null,
+    /* 새 판은 다시 1분을 사냥해야 부를 수 있다 */
+    called: false,
+    /* 판이 바뀌면 지난 판의 특수기 이름이 남아 있으면 안 된다 */
+    pat: null,
   };
+}
+
+/** 우두머리를 부를 수 있나 — 사냥 시간이 다 됐고 아직 안 불렀다 */
+export const bossReady = (st: BattleState): boolean => (
+  !st.boss && !st.called && st.msLeft <= 0 && !fightHeld(st)
+);
+
+/**
+ * 우두머리를 부른다. 부를 수 없으면 그대로 돌려준다.
+ *
+ * 여기서 우두머리를 세우지 않는다 — 잡몹이 서 있으면 마저 잡아야 하므로,
+ * 표시만 해 두고 실제로 세우는 것은 틱이 한다.
+ */
+export function callBoss(st: BattleState): BattleState {
+  if (!bossReady(st)) return st;
+  return { ...st, called: true };
+}
+
+/**
+ * 판을 옮기기 시작한다 — **바로 안 옮긴다.**
+ *
+ * 화면을 먼저 덮고(`clearIn`), 다 덮인 뒤에 틱이 `goTo` 로 옮긴다. 그
+ * 순서여야 바뀌는 순간이 막 아래에서 일어난다.
+ *
+ * 갈 수 없는 판이거나 이미 그 판이면 그대로 돌려준다 — 부르는 쪽이
+ * 판단하지 않아도 되게.
+ */
+export function leaveFor(st: BattleState, stage: number): BattleState {
+  if (!canGoStage(st, stage) || stage === st.stage) return st;
+  return { ...st, clearIn: MOVE_MS, clearKind: 'move', goTo: stage };
 }
 
 /**
@@ -800,6 +1086,14 @@ export interface TickEvent {
   gold: number;
   /** 이번에 회복한 총량 (사제의 기도) */
   healed: number;
+  /**
+   * 이번 틱에 나간 우두머리 특수기의 이름. 안 나갔으면 `null`.
+   *
+   * 화면이 이걸 보고 이름을 띄운다. 이름이 없으면 전원이 한꺼번에 맞는
+   * 순간이 그냥 "숫자가 여러 개 뜬 것" 으로만 보여서, 무엇 때문에 아팠는지를
+   * 알 수가 없다.
+   */
+  pattern: string | null;
 }
 
 export interface TickResult {
@@ -809,7 +1103,7 @@ export interface TickResult {
 
 const NOTHING: TickEvent = {
   hit: 0, taken: 0, hurt: null, fell: null, killed: 0, cleared: false,
-  bossCame: false, wiped: false, gold: 0, healed: 0,
+  bossCame: false, wiped: false, gold: 0, healed: 0, pattern: null,
 };
 
 /**
@@ -844,8 +1138,15 @@ export function battleTick(
   if (clearIn > 0) {
     const left = clearIn - TICK_MS;
     if (left > 0) return { battle: { ...st, clearIn: left }, ev: NOTHING };
-    /* 다 어두워졌다 — 이제 넘긴다. 체력은 그대로 (잡았다고 차지 않는다) */
-    return { battle: enterStage(st, nextStage(st.stage), st.hp), ev: NOTHING };
+    /*
+      다 어두워졌다 — 이제 옮긴다.
+
+      `goTo` 가 있으면 거기로 (`< >` 로 고른 판), 없으면 다음 판으로
+      (우두머리를 잡았을 때). 체력은 그대로 간다 — 판을 옮겼다고 회복시키면
+      위험할 때마다 한 판 갔다 오는 것이 제일 싼 회복 수단이 된다.
+    */
+    const to = Number.isFinite(st.goTo) && st.goTo ? st.goTo : nextStage(st.stage);
+    return { battle: enterStage(st, to, st.hp), ev: NOTHING };
   }
 
   const openIn = Number.isFinite(st.openIn) ? st.openIn : 0;
@@ -891,8 +1192,18 @@ export function battleTick(
   // ── 시간이 흐른다 ──
   if (!isBoss) msLeft = Math.max(0, msLeft - TICK_MS);
 
-  // ── 잡몹이 걸어 들어온다 ──
-  if (!isBoss && msLeft > 0) {
+  /*
+    ── 잡몹이 걸어 들어온다 ──
+
+    **시간이 다 돼도 계속 나온다.** 예전에는 `msLeft > 0` 일 때만 채웠다 —
+    시간이 되면 잡몹이 끊기고 우두머리가 저절로 나오는 흐름이었기 때문이다.
+    이제 우두머리는 사람이 부르므로, 부르기 전까지는 사냥이 이어져야 한다.
+    안 그러면 단추를 안 누른 사람 앞에서 화면이 텅 빈 채로 멈춘다.
+
+    부르고 나면(`called`) 그때부터 안 채운다. 서 있던 놈을 마저 잡으면
+    자리가 비고, 그 자리에 우두머리가 걸어 나온다.
+  */
+  if (!isBoss && !st.called) {
     spawnIn -= 1;
     if (spawnIn <= 0 && foes.length < MOB_CAP) {
       /*
@@ -913,10 +1224,10 @@ export function battleTick(
     시간이 되는 순간 잡몹을 지워 버리지 않는다. 싸우던 것이 갑자기 사라지면
     이긴 건지 도망간 건지 알 수 없다 — 마저 잡게 두고, 다 잡히면 그때 나온다.
   */
-  if (!isBoss && msLeft <= 0 && foes.length === 0) {
+  if (!isBoss && st.called && foes.length === 0) {
     isBoss = true;
     bossCame = true;
-    foes = [{ hp: bossFoe.hp, k: 0, id: seq, cd: swingMs(bossFoe.spd) }];
+    foes = [{ hp: bossFoe.hp, k: 0, id: seq, cd: swingMs(bossFoe.spd), n: 0 }];
     seq += 1;
   }
 
@@ -982,37 +1293,69 @@ export function battleTick(
       전투가 아닌 것이 된다.
     */
     let cd = (Number.isFinite(f.cd) ? f.cd : 0) - TICK_MS;
+    /* `n` 도 나중에 생긴 칸이다 — `cd` 와 같은 이유로 걸러서 읽는다 */
+    let n = Number.isFinite(f.n) ? f.n : 0;
     let swings = 0;
     /* 한 틱 안에 두 번 칠 수도 있다 (아주 빠른 적) */
+    const at: (BossPattern | null)[] = [];
     while (cd <= 0 && swings < 4) {
       swings += 1;
+      n += 1;
       cd += swingMs(kind.spd);
+      /*
+        **우두머리만** 패턴을 쓴다. 잡몹도 횟수는 세지만(갈래를 안 늘리려고)
+        고르지는 않는다 — 잡몹 넷이 각자 특수기를 쓰면 화면이 읽히지 않는다.
+      */
+      at.push(isBoss ? patternAt(n, kind.patterns ?? BOSS_PATTERNS) : null);
     }
-    return { slot: { ...f, cd }, atk: kind.atk, swings };
+    return { slot: { ...f, cd, n }, atk: kind.atk, swings, at };
   });
   /* 줄어든 시계를 실제로 들고 나간다 — 안 그러면 시계가 영영 안 준다 */
   foes = ticked.map((t) => t.slot);
 
   /*
-    친 만큼 한 대씩 늘어놓는다.
+    친 만큼 한 대씩 늘어놓는다. 한 대마다 **어떤 공격이었는지**를 달고 간다.
 
     우두머리와 잡몹을 갈라 놓았었다 (`isBoss` 면 `bossFoe.atk`). 이제 위에서
     제 종을 제대로 읽으므로 `t.atk` 하나면 된다 — 갈래가 둘이면 한쪽만 고치는
     일이 생기고, 실제로 시계는 잡몹 것을 쓰면서 공격력만 우두머리 것을 쓰고
     있었다.
   */
-  const hits: number[] = [];
-  for (const t of ticked) for (let n = 0; n < t.swings; n++) hits.push(t.atk);
+  const hits: { atk: number; pat: BossPattern | null }[] = [];
+  for (const t of ticked) {
+    for (let i = 0; i < t.swings; i++) hits.push({ atk: t.atk, pat: t.at[i] ?? null });
+  }
 
-  for (const atk of hits) {
+  /* 이번 틱에 나간 특수기 — 화면이 이름을 띄운다. 여럿이면 마지막 것 */
+  let pattern: string | null = null;
+
+  for (const h of hits) {
     const alive = line.filter((c) => hp[c.id] > 0);
     if (!alive.length) break;
-    const who2 = alive[pickAim(alive.length, rand)];
-    const dmg = strikeFor(atk, 1, statOf(who2).def);
-    hp[who2.id] = Math.max(0, hp[who2.id] - dmg);
-    taken += dmg;
-    hurtId = who2.id;
-    if (hp[who2.id] <= 0) fell = who2.id;
+
+    /*
+      **누구를 때리나.**
+
+      평타와 `one` 은 자리 확률대로 한 명 (`AIM`). `all` 은 살아 있는 전원이다 —
+      앞에 세운 사람이 대신 받아 줄 수 없는 유일한 공격이라, 여기서만 회복이
+      유일한 대답이 된다.
+    */
+    const marks = h.pat && h.pat.aim === 'all'
+      ? alive
+      : [alive[pickAim(alive.length, rand)]];
+
+    for (const who2 of marks) {
+      /*
+        배수는 **방어력을 빼기 전에** 곱한다. 뺀 뒤에 곱하면 방어가 배수만큼
+        같이 커져서, 세게 치는 공격일수록 방어가 잘 먹는 거꾸로 된 일이 된다.
+      */
+      const dmg = strikeFor(Math.round(h.atk * (h.pat ? h.pat.mul : 1)), 1, statOf(who2).def);
+      hp[who2.id] = Math.max(0, hp[who2.id] - dmg);
+      taken += dmg;
+      hurtId = who2.id;
+      if (hp[who2.id] <= 0) fell = who2.id;
+    }
+    if (h.pat) pattern = h.pat.name;
   }
 
   if (allDown(party, chars, hp)) {
@@ -1029,9 +1372,10 @@ export function battleTick(
         hp,
         down: REVIVE_TICKS,
         spawnIn: 0,
+        pat: null,
       },
       ev: {
-        hit, taken, hurt: hurtId, fell,
+        hit, taken, hurt: hurtId, fell, pattern,
         killed, cleared: false, bossCame, wiped: true, gold, healed: 0,
       },
     };
@@ -1042,9 +1386,16 @@ export function battleTick(
       ...st,
       msLeft, boss: isBoss, foes, slain, target, seq,
       hp, down: 0, spawnIn,
+      /*
+        나간 특수기를 상태에 남긴다 — 화면은 틱 결과를 못 보고 상태만 본다.
+        번호를 같이 올려서, 휩쓸기 다음에 또 휩쓸기가 나와도 화면이 "새로
+        나갔다" 를 알아보게 한다.
+      */
+      pat: pattern ?? st.pat ?? null,
+      patSeq: pattern ? (Number.isFinite(st.patSeq) ? st.patSeq : 0) + 1 : (st.patSeq ?? 0),
     },
     ev: {
-      hit, taken, hurt: hurtId, fell,
+      hit, taken, hurt: hurtId, fell, pattern,
       killed, cleared: false, bossCame, wiped: false, gold, healed: 0,
     },
   };
@@ -1143,7 +1494,13 @@ export function applyHit(
     */
     return {
       battle: {
-        ...st, foes, slain: st.slain + 1, target: 0, clearIn: CLEAR_MS,
+        ...st,
+        foes,
+        slain: st.slain + 1,
+        target: 0,
+        clearIn: CLEAR_MS,
+        clearKind: 'boss',
+        goTo: nextStage(st.stage),
       },
       ev: {
         ...NOTHING, hit: dmg, killed: 1, cleared: true, gold,
@@ -1446,7 +1803,13 @@ export function applySkill(
     */
     return {
       battle: {
-        ...st, foes, slain: st.slain + killed, target: 0, clearIn: CLEAR_MS,
+        ...st,
+        foes,
+        slain: st.slain + killed,
+        target: 0,
+        clearIn: CLEAR_MS,
+        clearKind: 'boss',
+        goTo: nextStage(st.stage),
       },
       ev: { ...NOTHING, hit, killed, cleared: true, gold },
     };

@@ -34,7 +34,18 @@ from artstyle import (  # noqa: E402
     rows_of, table_of,
 )
 
-OUT_DIR = 'docs/foe-art'
+# 챕터마다 폴더를 나눈다 — 한 폴더에 마흔둘이 쌓이면 이름으로만 구분해야 한다
+OUT_DIR = 'docs/foe-art'          # 1~10 · 슬라임
+OUT_DIR2 = 'docs/foe-art2'        # 11~20 · 식물 · 나무
+
+
+def out_dir_of(f):
+    """이 적의 프롬프트가 놓일 폴더.
+
+    id 앞자리로 정한다 — `family` 와 같은 이유다 (`tag_families`). 항목마다
+    폴더를 손으로 적게 하면 언젠가 하나가 엉뚱한 데로 간다.
+    """
+    return OUT_DIR2 if f['id'][:3] in ('pf_', 'pw_', 'pb_') else OUT_DIR
 
 
 # ══ 적이 화면에서 쓰는 세 칸 ═════════════════════════════════
@@ -175,6 +186,88 @@ BANNED: glossy healthy coats, soft fur rendering, correct symmetrical anatomy,
 noble or handsome heads, anything that reads as a pet or a mount."""
 
 
+PLANT = """IT IS A PLANT THAT HUNTS. IT IS NOT A PLANT.
+
+"Plant monster" pulls every model toward a friendly potted thing with a smiling
+flower face, or toward a botanically correct drawing of a real weed. Both are wrong,
+and they are wrong in opposite directions.
+
+WHAT IS RIGHT: something that grew where a body was left, took what it found, and
+kept growing. It is still made of stem and leaf and thorn — but the arrangement is
+an animal's, not a plant's.
+
+APPLY ALL FOUR:
+
+1. IT HAS A FRONT. Real plants face every direction at once; this one is aimed. One
+   end is clearly the end that catches things — heavier, darker, opening. The rest
+   trails behind it. At 45 pixels this is what separates it from scenery.
+
+2. IT REACHES. At least one part is extended toward the player and does not belong
+   at that length — a runner, a tendril, a stalk that has stretched twice as far as
+   the body is wide. It is caught mid-reach in every cell, never at rest.
+
+3. SOMETHING IT ATE IS STILL IN IT. One hard pale shape held in the tangle: a rib,
+   a jawbone, a broken blade, a helm. ONE, not a pile — it reads as evidence, and a
+   pile reads as decoration. This is what says the plant is not just growing.
+
+4. THE OPENING IS NOT A FACE. Where it takes things in there is a split, a cup, or a
+   throat lined with INWARD-POINTING SPINES — four to six of them, big, uneven, some
+   snapped. Never lips, never a drawn smile, never petals arranged in a neat ring.
+
+EYES: MOSTLY NONE. Plants do not have them and the absence is unsettling — a thing
+that hunts you without looking at you. Where the description below asks for one, it
+is a single hard slit set somewhere wrong (in the stem, under the cup, on the
+underside of a leaf), never a pair in a face.
+
+BANNED: smiling flowers, potted plants, tidy symmetrical blooms, botanical accuracy,
+googly eyes on a stem, anything that would work as a garden centre logo."""
+
+
+WOOD = """IT IS OLD WOOD THAT MOVES. IT IS NOT AN ENT.
+
+Two failures to avoid, and the second is the common one.
+
+The first is a friendly tree-person: a trunk with a kind bearded face and two arm
+branches, standing straight. That is a storybook character, not an enemy.
+
+The second is a REAL TREE. Asked for a walking tree, every model draws a handsome
+oak with roots for feet. The player then fights forestry. A tree with legs is still
+a tree.
+
+WHAT IS RIGHT: wood that has been dead a long time and started moving anyway. It
+should look like something that fell over years ago and got back up wrong.
+
+APPLY ALL FOUR:
+
+1. IT IS BROKEN AND IT KEPT GOING. The trunk is snapped, split, or hollowed through,
+   and it did not heal — it grew around the damage. A hole you can see the black
+   through is the single strongest shape in this chapter; use it.
+
+2. IT LEANS. Nothing here stands straight. The mass is off its own centre, held up
+   by whatever is under it, so the silhouette is a diagonal rather than a column.
+   A straight upright trunk reads as scenery every time.
+
+3. THE ROOTS ARE THE LIMBS. What it moves on came out of the ground and is still
+   shaped like roots — thick, splayed, uneven in number, clotted with earth. Not
+   legs, not feet, never boots. Three or five, never a tidy pair.
+
+4. THE GRAIN IS TORN, NOT DRAWN. Bark shows as a few big hard splits and one or two
+   deep gouges. NEVER as fine parallel lines or surface texture — at 45 pixels that
+   turns to grey mush and the shape disappears with it.
+
+EYES: none, or holes. Knots and hollows in the wood do the looking. Where the
+description below asks for a light in one, it is a small hard shape deep inside a
+hole, not an eye drawn on the surface.
+
+IT IS TALLER THAN EVERYTHING BEFORE IT. This chapter follows the vine wood, where
+nothing rose above waist height. Here every mob stands over a person. That change in
+the height of the enemy line is how the player knows the chapter turned, and it is
+read before any individual creature is.
+
+BANNED: bearded tree faces, neat bark texture, healthy green canopies, symmetrical
+branching, anything that would pass in a woodland illustration."""
+
+
 BOSS = """IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 
 This is the one enemy the player fights alone, and it has ten times the health of
@@ -214,6 +307,30 @@ It did not dress up. It got old and it got fed.
 (Something it SWALLOWED and never dissolved is not a costume. A broken crown sunk
 half into the mass at a wrong angle is food that stayed, and that is allowed —
 encouraged, even. The test is whether it looks worn or looks eaten.)"""
+
+
+SPECIAL = """THE FOURTH CELL — THE SPECIAL ATTACK.
+
+The boss has two attacks the mobs do not have:
+one that hits the WHOLE party at once, and one that hits a single character very
+hard. Cell 3 is the pose for those.
+
+It must be readable as "something bigger is happening" from the silhouette alone,
+because the player sees it for about a fifth of a second at 60 pixels tall:
+
+- IT IS THE WIDEST OR THE TALLEST CELL. Whatever the creature normally occupies,
+  this pose breaks out of it in one direction. If the ordinary attack goes forward,
+  this one goes UP and OUT.
+- THE WHOLE BODY COMMITS. Not one limb — the mass itself is thrown into it, and the
+  parts that normally trail behind are flung wide.
+- SOMETHING LEAVES THE BODY. Three or four loose pieces (spores, splinters, thorns,
+  clods) in the air around it, clear of the outline. That is what says the attack
+  reaches past arm's length.
+- The pose is HELD, not mid-swing. It is one frame; a blur reads as nothing.
+
+Do NOT draw impact marks, shockwave rings, or the ground cracking. The game draws
+its own effects on top, and a ring drawn into the sprite lands on screen as a white
+smear that never goes away."""
 
 
 ALIVE = """IT IS ALIVE AND IT IS COMING FOR YOU.
@@ -559,6 +676,31 @@ def slimeboss(id_, name, role, job, lock, idle, attack, down, fill, intro):
         'field and must read as such next to a 45%% mob.' % fill + NL
         + '- Cell 2 is the widest. Size the sheet from it.',
         intro,
+    )
+
+
+def plantboss(id_, name, role, job, chapter, lock, idle, attack, special, down,
+              fill, intro):
+    """식물·나무 우두머리 한 마리. **네 칸**이다.
+
+    잡몹은 대기·공격·피격 셋인데, 우두머리는 그 사이에 **특수 동작**이 하나
+    더 들어간다 (`core/autoBattle` 의 `BOSS_PATTERNS`). 전원을 휩쓸거나 한
+    명을 내려찍을 때 쓰는 그림이다.
+
+    슬라임 우두머리(`slimeboss`)는 세 칸으로 남겨 둔다. 화면이 없는 칸을
+    같은 시트의 `attack` 으로 떨어뜨리므로, 이미 받은 시트를 다시 그릴
+    이유가 없다.
+    """
+    return foe(
+        id_, name, role, job, lock,
+        [('idle', '대기', idle), ('attack', '공격', attack),
+         ('special', '특수', special), ('down', '피격', down)],
+        '- It fills about %d%% of the cell height — it is the biggest thing on the '
+        'field and must read as such next to a 45%% mob.' % fill + NL
+        + '- Cell 3 (the special attack) is the widest or the tallest. Size the '
+        'sheet from it.',
+        intro,
+        chapter=chapter,
     )
 
 
@@ -1264,17 +1406,570 @@ FOES += [
 
 # ══ 배경 ═════════════════════════════════════════════════════
 
-# 슬라임은 슬라임 규칙을, 우두머리는 우두머리 규칙을 받는다.
+# ══ 덩굴 숲 ═══════════════════════════════════════════════════
 #
-# 항목마다 손으로 적게 두면 꼭 빠진다 — 실제로 초원의 열일곱이 전부 빠져서
-# `TWISTED`(짐승) 규칙을 받고 있었다. 슬라임한테 "굶주린 짐승의 갈비뼈" 와
-# "털은 뭉쳐서 늘어진다" 를 시켰으니 눈도 이빨도 없는 맨 덩어리가 나온 게
-# 당연하다. id 앞자리가 이미 종류를 말하고 있으니 그걸 쓴다.
-for _f in FOES:
-    if _f['id'][:3] in ('sl_', 'sg_', 'sb_'):
-        _f['family'] = 'slime'
-    if _f['id'][:3] == 'sb_' or _f['id'] == 'sl_boss':
-        _f['boss'] = True
+# 11~15 스테이지. 슬라임 다음 챕터다.
+#
+# **가르는 축이 바뀐다.** 슬라임은 덩어리 하나였으므로 높이와 윤곽으로
+# 갈랐는데, 식물은 **무엇이 어느 방향으로 뻗었나**로 갈린다 —
+#
+#   덩굴손   옆으로 길다 (기준)      아귀꽃   위가 무겁다
+#   가시덤불 사방으로 뾰족하다        이끼덩이 윤곽이 부드럽다
+#   홀씨대   곧게 서서 던진다        진액꽃   고개를 숙이고 던진다
+#
+# 여섯 중 넷은 붙어 싸우고 둘은 던진다. 붙는 놈만 나오면 뒷줄이 늘 비고
+# 파티를 어떻게 세우든 같아진다.
+
+FOES += [
+    mob3(
+        'pf_vine', '덩굴손', '근접 · 덩굴 숲 11~13', '바닥을 기어 와서 휘감는다. 이 지역의 기본형이다.',
+        'A creeper that learned to move toward warmth.' + NL
+        + 'BODY: LOW AND LONG — it lies along the ground and reaches forward, about three times as long as it is tall. It is the flattest thing in this chapter and every other plant here is measured against it.' + NL
+        + 'THE MASS is a tangle of four or five thick runners twisted together into one rope, thicker at the back and fraying into separate strands at the front.' + NL
+        + 'THE FRONT: the strands separate into three or four TENDRILS that lift clear of the ground and curl forward at different heights. That is the end that catches things, and it is where the eye goes.' + NL
+        + 'CAUGHT IN THE TANGLE, about a third of the way back: ONE PALE RIB, held crosswise, half wrapped. One. Not a pile.' + NL
+        + 'THE OPENING is where the runners meet at the front — a split in the rope lined with FOUR INWARD-POINTING SPINES, held slightly apart. No face, no eyes.' + NL
+        + 'LEAVES: five or six, small and hard-edged, all along the length, curling different ways.',
+        'gathered and low, the tendrils lifted and curling, the rope of runners drawn back behind them like something about to be let go.',
+        'the whip. The whole rope has snapped forward and straightened, the tendrils thrown out ahead at full length, the back end lifted off the ground by the pull. Two torn leaves in the air behind.',
+        'struck. The rope has buckled in the middle and the strands have come apart, three tendrils flung wide and one torn off entirely. The rib has come loose.',
+        '- It fills about 34% of the cell height. It is LOW — leave the space above it empty rather than scaling it up.' + NL
+        + '- Cell 2 is the longest. Size the sheet from it.',
+        """11~13 스테이지의 기본형입니다. 덩굴 숲 여섯의 **기준**이 되는 모양이라,
+이것부터 그리고 나머지를 여기에 견주세요.
+
+**제일 낮고 제일 깁니다.** 슬라임 챕터가 덩어리로 갈렸다면 이 챕터는 **뻗은
+것**으로 갈립니다 — 이놈은 옆으로, 아귀꽃은 위로, 가시덤불은 사방으로.""",
+    ),
+
+    mob3(
+        'pf_maw', '아귀꽃', '근접 · 덩굴 숲 12~13, 15', '고개를 숙였다가 통째로 문다.',
+        'A flower that stopped waiting for insects.' + NL
+        + 'BODY: TOP-HEAVY. A single thick stem, about as tall as a person\'s waist, carrying a HEAD far too big for it — the head is nearly half the whole height and visibly drags the stem over to one side. Nothing else in this chapter is top-heavy; that is its read.' + NL
+        + 'THE HEAD is a deep CUP, not a bloom. Four heavy petal-lobes fold around an opening, and they are thick and leathery, not thin. The rim is ragged.' + NL
+        + 'INSIDE THE CUP: SIX INWARD-POINTING SPINES, long and uneven, two of them crossing. They show even when the cup is only half open.' + NL
+        + 'A BROKEN BLADE is caught between two of the outer lobes, rusted, pointing down. It has been there a while.' + NL
+        + 'THE STEM is thick and fibrous with two or three small hard leaves low down, and it BENDS — never straight.' + NL
+        + 'ROOTS: a knot of short roots at the base, out of the ground, splayed. It walks on them.',
+        'the head hung forward and down, the cup half open and aimed at the ground ahead, the stem bowed under the weight. It is waiting for something to step under it.',
+        'the bite. The stem has whipped forward and the head is thrown out ahead of the roots, the cup opened WIDER THAN THE HEAD IS DEEP with every spine showing. The stem is stretched into a long shallow curve.',
+        'struck. The stem has snapped back and the head is thrown up and over, the cup wrenched open the wrong way, two lobes torn. The blade has come loose.',
+        '- It fills about 62% of the cell height. It is TALL and top-heavy.' + NL
+        + '- Cell 2 is the longest. Size the sheet from it.',
+        """**위가 무겁습니다.** 이 챕터에서 유일하게 머리가 큰 놈이라, 줄에 섞여
+서 있어도 그것만으로 구분됩니다.
+
+꽃처럼 예쁘게 그리면 실패입니다. 꽃잎은 얇지 않고 **가죽처럼 두껍고**, 안에는
+안으로 굽은 가시가 여섯 있습니다.""",
+    ),
+
+    mob3(
+        'pf_bramble', '가시덤불', '근접 · 덩굴 숲 13~15', '굴러와서 몸으로 긁는다. 만지면 아프다.',
+        'A thicket that rolled over something and kept the shape.' + NL
+        + 'BODY: a rough BALL of tangled thorny canes, about as wide as it is tall. The outline is spiky ALL THE WAY ROUND — twenty or more thorn tips break the silhouette in every direction. Nothing else in this chapter is spiky on every side.' + NL
+        + 'THE CANES are dark and hard where they cross, so the mass reads as dense at the centre and open at the edges.' + NL
+        + 'THE FRONT is where the canes have been forced apart into a low opening, lined with FIVE THORNS TURNED INWARD. That is the end that catches things.' + NL
+        + 'HELD IN THE CENTRE, visible through the tangle: ONE PALE JAWBONE. It does not move when the ball does.' + NL
+        + 'It has no eyes and no face at all.',
+        'settled, the canes bristling evenly, the front opening turned toward you. It is not still — one or two canes are flexing.',
+        'the roll. It has thrown itself forward and the whole ball is stretched into an oval along the direction of travel, the trailing canes swept back flat. Three broken thorns in the air behind.',
+        'struck. The ball has burst open on one side, canes splayed outward in a fan, six or seven thorns snapped off and flying. The jawbone shows through the gap.',
+        '- It fills about 46% of the cell height.' + NL
+        + '- Cell 2 is the longest. Size the sheet from it.',
+        """**사방이 뾰족합니다.** 덩굴 숲 여섯 중 유일하게 윤곽이 전 방향으로 튀는
+놈이라, 46px 로 줄여도 혼자만 실루엣이 다릅니다.
+
+가시 슬라임(`sg_thorn`)과 헷갈리면 안 됩니다. 그쪽은 **뜨고**, 가시가 몸에서
+곧게 뻗어 나옵니다. 이쪽은 **바닥에 있고**, 가시가 얽힌 줄기에 달려 있습니다.""",
+    ),
+
+    mob3(
+        'pf_moss', '이끼덩이', '근접 · 덩굴 숲 14~15', '느리게 다가와 짓누른다. 축축하다.',
+        'A mound of wet moss with something underneath holding it up.' + NL
+        + 'BODY: HEAVY AND SHAGGY, about as tall as it is wide, standing but losing to its own weight — the middle bulges out past the base and the top slumps over to one side.' + NL
+        + 'THE SURFACE is the read: the whole outline is FURRED with short ragged tufts, so the edge is soft and broken everywhere. Nothing else in this chapter has a soft outline — the others are all hard tendrils and thorns.' + NL
+        + 'HANGING OFF IT: five or six long wet strands from the underside and the slumped side, each a different length. They hang in empty black and simply stop.' + NL
+        + 'SHOWING THROUGH the moss on the front, where the tufts are thin: A HAND-SHAPED ARRANGEMENT OF PALE BONES, still gripping. Only that much of whatever is under there is visible.' + NL
+        + 'THE OPENING is a wet horizontal split low on the front, held apart, with FOUR BLUNT WORN SPINES inside. No eyes.',
+        'standing slumped and still, the top overhanging one side, strands hanging long and straight. It looks heavy even standing still.',
+        'the fall. It has toppled FORWARD to land on something, the mass stretched long as it goes, the tufts swept back and the strands flung out ahead. The bone hand is thrown forward with it.',
+        'struck. The mound has buckled sideways and split across the top, wet clumps thrown off in a spray, the tufts torn away in patches so the bones underneath show.',
+        '- It fills about 50% of the cell height.' + NL
+        + '- Cell 2 is the longest. Size the sheet from it.',
+        """**윤곽이 부드러운 유일한 놈**입니다. 나머지 다섯은 전부 덩굴이나 가시라
+가장자리가 딱딱한데, 이놈만 술이 나 있어 흐릿합니다.
+
+무게는 **낮이가 아니라 늘어짐**으로 말합니다 (`STANDS` 규칙). 서 있되 제
+무게에 못 이겨 주저앉는 모양입니다.""",
+    ),
+
+    mob3(
+        'pf_spore', '홀씨대', '원거리 · 덩굴 숲 11~13', '멀리서 홀씨를 쏜다. 무르고 아프다.',
+        'A stalk that grew straight up out of a body and started aiming.' + NL
+        + 'BODY: TALL AND THIN — a single stalk, three or four times as tall as it is wide, the narrowest silhouette in this chapter. It stands and does not lean much.' + NL
+        + 'THE HEAD is a hard closed POD at the top, blunt and heavy, with four seams down its sides. It is the only wide part and it sits right at the top.' + NL
+        + 'THE SEAMS open when it fires; closed, they read as four dark lines.' + NL
+        + 'THE BASE: three stiff roots out of the ground, splayed like a tripod. It braces rather than walks — that stillness is how the player learns it will not come over.' + NL
+        + 'LOW ON THE STALK, grown into it: ONE PALE RIB, held sideways, the stalk swollen around where it entered.' + NL
+        + 'EYE: ONE, a hard slit set in the STALK halfway up — nowhere near the pod. A thing that watches you from the wrong part of itself.',
+        'standing braced and still, the pod closed and turned toward you, the tripod set. It holds its ground.',
+        'the burst. The pod has SPLIT along all four seams and opened wide like a hand, and a tight clump of spores is LEAVING it, clear of the body, with two speed lines. The stalk is bowed back from the recoil.',
+        'struck. The stalk has snapped partway up and folded over, the pod hanging upside down, spores spilling loose. One root has torn out of the ground.',
+        '- It fills about 58% of the cell height and stands on the ground.' + NL
+        + '- Cell 2 is the widest. Size the sheet from it.',
+        """11~13 스테이지의 원거리입니다. 안 걸어오는 대신 체력이 낮고 더 아프게
+때립니다.
+
+**제일 가늡니다.** 덩굴손이 가로로 길다면 이놈은 세로로 깁니다 — 한 화면에
+둘이 같이 서면 그 대비만으로 갈립니다.
+
+포자 슬라임(`sg_spore`)과 달리 **뜨지 않습니다.** 삼발이 뿌리로 땅을 딛고
+버팁니다.""",
+    ),
+
+    mob3(
+        'pf_sap', '진액꽃', '원거리 · 덩굴 숲 14~15', '멀리서 진액을 뱉는다. 닿으면 녹는다.',
+        'A bloom that fills with something and spits it.' + NL
+        + 'BODY: a stalk of medium height that BENDS OVER at the top, so the head hangs forward and down — the silhouette is a hook. The spore stalk stands straight; this one is bent, and that is how the two ranged plants are told apart.' + NL
+        + 'THE HEAD is a heavy drooping SAC, wider than it is tall, sagging under what is inside it. Two or three thick drips hang off its underside and stop in empty black.' + NL
+        + 'THE MOUTH is at the low front of the sac: a round puckered opening ringed with FIVE SHORT INWARD SPINES, wet and never fully closed.' + NL
+        + 'THE STALK below is streaked where sap has run down it and eaten in — drawn as two or three hard gouges, not as texture.' + NL
+        + 'AT THE BASE, half dissolved and sunk into the ground it stands on: A HELM, pitted through. One object, clearly a helm.' + NL
+        + 'It has no eyes.',
+        'the head hung low and heavy, the sac full and sagging, drips hanging long. Nothing about it is moving and that is what makes it read as loaded.',
+        'the spit. The stalk has SNAPPED UPRIGHT and thrown the head back and up, the sac clenched narrow, and a blob of sap is LEAVING the mouth, clear of the body, with two speed lines.',
+        'struck. The sac has burst along one side and is collapsing, sap thrown out in a spray of four or five blobs, the stalk folded over double.',
+        '- It fills about 54% of the cell height and stands on the ground.' + NL
+        + '- Cell 2 is the tallest. Size the sheet from it.',
+        """14~15 스테이지의 원거리입니다.
+
+**홀씨대와 갈리는 것은 오직 기울기입니다.** 홀씨대는 곧게 서고 이놈은 고개를
+숙입니다 — 흑백 도트에서 둘을 가르는 것이 그것뿐이므로, 굽은 정도를 확실히
+그려야 합니다.""",
+    ),
+]
+
+
+# ══ 썩은 고목 숲 ══════════════════════════════════════════════
+#
+# 16~20 스테이지. 식물 챕터의 **높이를 올린 것**이 이 챕터의 정체다.
+#
+# 앞 챕터는 전부 사람 허리 아래였다. 여기는 제일 낮은 놈(그루터기)조차 앞
+# 챕터의 무엇보다 크다. 종을 하나하나 알아보기 전에 **줄의 높이**가 먼저
+# 눈에 들어오고, 그게 챕터가 넘어간 것을 말하는 제일 싼 방법이다.
+#
+#   그루터기 낮고 두껍다 (기준)      속빈나무 윤곽 안이 뚫렸다
+#   뿌리덩이 밑이 넓다               껍질갑옷 각진 판이 덮였다
+#   가지창   가늘고 직선이 뻗는다     꼬투리   위가 무겁다
+
+FOES += [
+    mob3(
+        'pw_stump', '걷는 그루터기', '근접 · 고목 숲 16~17', '느리게 걸어와서 짓밟는다. 이 지역의 기본형이다.',
+        'What is left after a tree was felled, walking on the roots it was cut from.' + NL
+        + 'BODY: LOW, THICK AND WIDE — a broad drum of trunk, cut off flat across the top, wider than it is tall. It is the shortest thing in this chapter and every other tree here is measured against it. Even so it stands taller than any plant from the chapter before.' + NL
+        + 'THE CUT TOP is the read: a flat disc, tilted, with the rings showing as THREE OR FOUR concentric hard lines — no more. Twenty rings turn to grey mush at this size.' + NL
+        + 'THE AXE IS STILL IN IT. A rusted axe head buried in the edge of the cut, haft snapped off short. One object, unmistakable.' + NL
+        + 'IT LEANS. The drum sits off its own centre, held up by what is under it.' + NL
+        + 'THE ROOTS ARE THE LIMBS: FIVE thick roots out of the ground, splayed unevenly, clotted with earth, different lengths. Never a tidy pair, never feet.' + NL
+        + 'EYES: none. A single deep KNOT-HOLE low on the front of the trunk, black all the way through, does the looking.',
+        'standing heavy and tilted, roots set wide, the cut top angled toward you. It has not moved yet and it does not look like it will move fast.',
+        'the stamp. It has heaved its whole mass UP and forward onto two front roots, the drum thrown ahead of the base, the back roots dragged off the ground. Clods of earth in the air below.',
+        'struck. The drum has split from the cut top downward, the crack running deep, two roots torn out and the whole thing folding sideways. Splinters thrown off.',
+        '- It fills about 52% of the cell height. It is LOW AND WIDE for this chapter.' + NL
+        + '- Cell 2 is the tallest. Size the sheet from it.',
+        """16~17 스테이지의 기본형입니다. 고목 숲 여섯의 **기준**이 되는 모양이라,
+이것부터 그리고 나머지를 여기에 견주세요.
+
+**이 챕터에서 제일 낮은 놈인데도 앞 챕터의 무엇보다 큽니다.** 그 높이 차이가
+"챕터가 넘어갔다" 를 말하는 제일 빠른 방법입니다 — 종을 알아보기 전에 줄의
+높이가 먼저 보입니다.""",
+    ),
+
+    mob3(
+        'pw_hollow', '속 빈 나무', '근접 · 고목 숲 17~18, 20', '가운데가 뚫려 있다. 거기로 문다.',
+        'A trunk that rotted through the middle and did not fall.' + NL
+        + 'BODY: TALL AND LEANING — half again as tall as it is wide, and the whole mass is tipped well off vertical.' + NL
+        + 'THE HOLE IS THE READ. A large opening goes CLEAN THROUGH the trunk at chest height — you can see black sky through it. It is nearly a third of the width of the body and it breaks the silhouette from the inside. Nothing else in this set has a hole through it; protect this above everything.' + NL
+        + 'THE RIM of the hole is ragged and splintered inward, and FIVE LONG SPLINTERS point in toward the middle of the opening like teeth. That is where it takes things in.' + NL
+        + 'CAUGHT ON THE LOWER RIM, hanging half inside: A RIBCAGE, pale, one side broken away.' + NL
+        + 'THE TOP is snapped off at an angle, not rounded, with three or four hard splinters standing up.' + NL
+        + 'ROOTS: three thick ones, splayed, one much longer than the others.' + NL
+        + 'EYES: none. Two smaller knot-holes above the big hole, uneven, black.',
+        'standing tilted and still, the hole facing you, the ribcage hanging in it. The stillness is what makes it read as waiting.',
+        'the lunge. The whole trunk has swung forward from the roots like a falling post, the hole thrown ahead and its splinters closing inward. The ribcage swings out.',
+        'struck. The trunk has cracked across at the hole, the opening torn wide and crooked, the upper half folding over. Splinters and the broken ribcage flying.',
+        '- It fills about 66% of the cell height.' + NL
+        + '- Cell 2 is the longest. Size the sheet from it.',
+        """**뚫린 구멍이 전부입니다.** 몸통 한가운데를 관통해서 검은 배경이 그대로
+비쳐 보여야 합니다 — 이 챕터에서 윤곽 **안쪽**이 뚫린 유일한 놈이라, 66px 로
+줄여도 혼자만 다르게 읽힙니다.
+
+구멍을 표면에 그린 어두운 자국으로 그리면 실패입니다. 진짜로 뚫려야 합니다.""",
+    ),
+
+    mob3(
+        'pw_root', '뿌리덩이', '근접 · 고목 숲 18~20', '아래가 넓다. 뿌리로 후려친다.',
+        'A root ball that came up out of the ground and left the tree behind.' + NL
+        + 'BODY: BOTTOM-HEAVY — a wide splayed knot of roots at the base narrowing to a short broken stub at the top. The silhouette is a triangle standing on its wide edge, and it is the only one in this set that is widest at the bottom.' + NL
+        + 'THE ROOTS: EIGHT OR NINE of them, thick and uneven, spreading out and down in every direction, clotted with hanging earth. Three of them are lifted clear of the ground and reaching forward — those are the ones it hits with.' + NL
+        + 'THE STUB at the top is snapped off jagged, no branches, no leaves. There is no tree left.' + NL
+        + 'HELD IN THE KNOT, gripped by two roots that grew around it: A SKULL, upside down. One.' + NL
+        + 'EARTH: clods hang off the underside of the ball at different lengths and stop in empty black.' + NL
+        + 'EYES: none anywhere.',
+        'settled wide and low on its root mass, three front roots lifted and curled back, the stub tilted. Braced, not resting.',
+        'the sweep. The three lifted roots have lashed FORWARD together, stretched out long and low ahead of the mass, and the whole ball has leaned after them. Clods flung off.',
+        'struck. The knot has burst open from the top, roots splayed outward in a fan, four of them snapped short. The skull has come free and is falling.',
+        '- It fills about 56% of the cell height. It is WIDEST AT THE BOTTOM.' + NL
+        + '- Cell 2 is the longest. Size the sheet from it.',
+        """**밑이 넓은 유일한 놈**입니다. 나머지는 전부 위로 서거나 균일한데, 이놈만
+아래로 퍼진 삼각형이라 줄에 섞여도 바로 갈립니다.
+
+나무가 남아 있으면 안 됩니다. 위쪽은 부러진 그루터기뿐이고 가지도 잎도
+없습니다 — 뿌리만 남아서 돌아다니는 것이 이놈의 전부입니다.""",
+    ),
+
+    mob3(
+        'pw_bark', '껍질갑옷', '근접 · 고목 숲 19~20', '두껍다. 잘 안 죽는다.',
+        'A tree that answered being cut by growing armour.' + NL
+        + 'BODY: a THICK COLUMN, taller than wide, leaning but massive — the heaviest silhouette in this chapter.' + NL
+        + 'THE PLATES ARE THE READ: SIX OR SEVEN slabs of bark, hard and STRAIGHT-EDGED, standing proud of the trunk and overlapping each other down the front and one shoulder. They are angular shapes on an otherwise round outline, and that contrast is the whole silhouette. One large plate at the top, the rest smaller and irregular.' + NL
+        + 'THE LARGEST PLATE IS SPLIT across, and has been GROWN BACK TOGETHER — a hard ridge along the join.' + NL
+        + 'BETWEEN TWO PLATES on the front, wedged where it could not be pushed out: A SPEARHEAD, snapped off at the socket.' + NL
+        + 'THE GAPS between plates show soft dark rot underneath. That is the only soft part of it.' + NL
+        + 'THE OPENING is a horizontal split between the two lowest plates, held apart, with FOUR HARD SPLINTERS inside.' + NL
+        + 'ROOTS: four, short and thick, barely clear of the ground. It does not move far.' + NL
+        + 'EYES: none. One knot-hole high on the trunk, half hidden behind the top plate.',
+        'standing braced behind its plates, the top plate tilted forward like a shield, leaning into it. Immovable rather than resting.',
+        'the shove. Driven forward with the plated side leading, the column compressed short and thick behind it, two straight speed lines. The plates do not deform.',
+        'struck. Two plates have been knocked loose and are spinning away, the rot underneath torn open, the column buckled at the gap.',
+        '- It fills about 64% of the cell height.' + NL
+        + '- Cell 2 is the widest. Size the sheet from it.',
+        """**딱딱한 판이 곡선 위에 얹힌 대비**가 실루엣의 전부입니다. 돌 슬라임
+(`sg_stone`)과 같은 원리인데, 이쪽은 돌이 아니라 **나무껍질**이고 훨씬
+큽니다.
+
+판 사이 틈으로 물러 썩은 속이 보여야 합니다. 그게 이놈의 유일한 무른
+부분이고, 갑옷이 통째가 아니라 **덧댄 것**이라는 표시입니다.""",
+    ),
+
+    mob3(
+        'pw_branch', '가지창', '원거리 · 고목 숲 16~17, 19', '멀리서 가지를 던진다. 무르고 아프다.',
+        'A thin dead tree that throws its own branches.' + NL
+        + 'BODY: TALL AND NARROW — the thinnest silhouette in this chapter, four times as tall as it is wide, standing nearly straight with only a slight lean.' + NL
+        + 'THE BRANCHES ARE THE READ: SIX OR SEVEN long bare branches, no leaves, angled sharply UPWARD and back from the upper half of the trunk, all at different heights. They are straight hard lines coming out of the outline — the only thing in this chapter with straight lines radiating from it.' + NL
+        + 'TWO OF THE BRANCHES are already broken off short, leaving pale stubs. It has been throwing them.' + NL
+        + 'ONE BRANCH, the longest, is held FORWARD and level rather than up — cocked, ready to go.' + NL
+        + 'LOW ON THE TRUNK, grown around and half swallowed: AN ARROW, snapped, only the fletching showing.' + NL
+        + 'ROOTS: three stiff ones, braced. It stands its ground and does not walk over.' + NL
+        + 'EYES: none. One narrow vertical crack high on the trunk.',
+        'standing braced and still, branches raised and spread, the long one held forward and level. It holds its height — that stillness says it will not come over.',
+        'the throw. The cocked branch HAS LEFT THE TRUNK and is in the air ahead of it, point-first, with two speed lines, and the trunk is bowed back from the recoil with a pale stub where the branch was.',
+        'struck. The trunk has snapped partway up and folded over, three branches breaking loose and scattering, the roots half torn out.',
+        '- It fills about 70% of the cell height and stands on the ground.' + NL
+        + '- Cell 2 is the widest. Size the sheet from it.',
+        """16~17 스테이지의 원거리입니다. 안 걸어오는 대신 체력이 낮고 더 아프게
+때립니다.
+
+**이 챕터에서 유일하게 직선이 뻗어 나오는 놈**입니다. 나머지는 두껍거나
+뭉툭한데 이놈만 가늘고, 위로 뻗은 가지가 실루엣을 만듭니다.
+
+가지 두 개는 **이미 부러져 있어야** 합니다 — 던지고 있다는 표시입니다.""",
+    ),
+
+    mob3(
+        'pw_pod', '꼬투리나무', '원거리 · 고목 숲 18~20', '멀리서 씨앗을 쏜다. 위가 무겁다.',
+        'A tree that grew heavy seed pods and learned to aim them.' + NL
+        + 'BODY: TOP-HEAVY. A medium trunk carrying a dense CLUSTER OF PODS at the top that is wider than the trunk is tall — it drags the whole thing over to one side.' + NL
+        + 'THE PODS: SEVEN OR EIGHT, big and hard, hanging in a heavy bunch, each a different size. Two have already SPLIT OPEN and hang empty and gaping. The branch-thrower is narrow and straight; this one is wide and heavy at the top, and that is how the two ranged trees are told apart.' + NL
+        + 'THE TRUNK below is bare and BENT under the load, curving away from the cluster.' + NL
+        + 'CAUGHT IN THE CLUSTER, hanging among the pods where it was left: A CRACKED HELM, upside down. From a distance it reads as one more pod, which is the idea.' + NL
+        + 'ROOTS: four, splayed and braced against the lean.' + NL
+        + 'EYES: none.',
+        'the cluster hung heavy and low to one side, pods still, the trunk bowed under them. The two empty pods gape.',
+        'the volley. Three seeds HAVE LEFT the cluster and are in the air ahead of it, travelling together with speed lines, and the pods they came from hang split and swinging. The trunk has whipped back.',
+        'struck. The cluster has burst apart, four pods torn loose and spinning away, seeds scattering, the trunk cracked at the bend.',
+        '- It fills about 62% of the cell height and stands on the ground.' + NL
+        + '- Cell 2 is the widest. Size the sheet from it.',
+        """18~20 스테이지의 원거리입니다.
+
+**가지창과 갈리는 것은 위쪽 무게입니다.** 가지창은 가늘고 곧고, 이놈은 위가
+무겁고 기울어 있습니다 — 흑백 도트에서 둘을 가르는 것이 그것뿐입니다.
+
+꼬투리 두 개는 **이미 벌어져 있어야** 합니다. 쏘고 있다는 표시입니다.""",
+    ),
+]
+
+
+# ══ 식물 · 나무 우두머리 열 ════════════════════════════════════
+#
+# 11~20 스테이지. 판마다 하나씩이다.
+#
+# **네 칸짜리다.** 잡몹은 대기·공격·피격 셋인데 우두머리는 그 사이에 특수
+# 동작이 하나 더 들어간다 — 전원을 휩쓸거나 한 명을 내려찍을 때 쓰는 그림
+# (`core/autoBattle` 의 `BOSS_PATTERNS`). 슬라임 우두머리는 세 칸 그대로
+# 두고, 없는 칸은 화면이 같은 시트의 `attack` 으로 떨어뜨린다.
+#
+# 잡몹과 갈리는 규칙은 `BOSS` 블록이 못 박는다 — 크기만 키우면 실패다.
+
+FOES += [
+    plantboss(
+        'pb_bramble', '가시덤불 군체', '우두머리 · 11스테이지', '덤불 여럿이 하나로 뭉쳤다.', 'plant',
+        'Every bramble in the clearing grew into one thing.' + NL
+        + 'BODY: a WALL of tangled thorny canes, much WIDER than it is tall — half again as wide. The mob bramble is a ball you could step around; this one is a hedge you cannot.' + NL
+        + 'IT IS MADE OF THREE LUMPS fused together at the base, each a different size, so the top edge is a jagged three-humped line rather than one dome. You can still see where the separate bushes were.' + NL
+        + 'THORNS break the outline all the way round, longest along the top.' + NL
+        + 'THREE OPENINGS, one per lump, at different heights — each a low gap in the canes lined with inward thorns. Where the mob has one mouth this has three, and they do not line up.' + NL
+        + 'HELD IN THE TANGLE: a RIBCAGE in the big lump, a SKULL in the middle one, and a BROKEN SPEAR through the small one. Three things, one per lump — that is what says it ate three times over.' + NL
+        + 'SCARS: two canes across the front are BURNT BLACK and snapped, grown around by new growth. Someone tried fire.',
+        'settled wide and low, all three lumps still, the three openings turned different ways. It fills the width of the field and does not need to move.',
+        'the lash. The middle lump has driven forward and a mass of canes is thrown out ahead of the hedge, stretched long and thin, thorns swept back. The outer lumps stay put — only the middle one commits.',
+        'THE SWEEP. All three lumps rear UP together and the entire hedge unfolds into a wide arc that reaches across the whole cell, canes fanned out like a net thrown open. It is the widest cell by far. Six or seven broken thorns hang in the air clear of the outline.',
+        'struck. The middle lump has burst open and the three are coming apart at the fused base, canes splayed, the skull knocked loose and falling.',
+        58,
+        """11스테이지 우두머리. 덩굴 숲의 첫 관문입니다.
+
+잡몹 가시덤불은 **공** 하나인데, 이놈은 **세 덩이가 붙은 울타리**입니다.
+키운 게 아니라 다른 모양이어야 합니다 — 위 가장자리가 세 봉우리로 울퉁불퉁
+해야 하고, 폭이 높이의 한 배 반입니다.
+
+3번 칸(특수)이 제일 넓습니다. 세 덩이가 **한꺼번에 일어나 부챗살처럼**
+펼쳐지는 순간이고, 그게 파티 전원을 한 번에 치는 그림입니다.""",
+    ),
+
+    plantboss(
+        'pb_bloom', '아귀꽃 여왕', '우두머리 · 12스테이지', '꽃 여럿을 달고 다닌다.', 'plant',
+        'The flower that all the other snapping flowers came off.' + NL
+        + 'BODY: TOP-HEAVY AND HUGE. One thick trunk-like stem carrying a MAIN HEAD twice the size of a mob flower, and around it FOUR SMALLER HEADS on their own shorter stems, all growing from the same base.' + NL
+        + 'THE MAIN HEAD is a deep cup of six heavy leathery lobes with EIGHT INWARD SPINES inside, long and uneven. The four small heads are the same shape, closed or half open, at different heights and facing different ways.' + NL
+        + 'That cluster of five is the read: the mob is one head on one stem, this is a crowd of heads on one body, and the outline is lumpy and crowded rather than clean.' + NL
+        + 'THE STEM is thick as a leg, bent hard under the load, with two heavy leaves low down.' + NL
+        + 'HANGING FROM THE MAIN HEAD, gripped by two lobes: A SWORD, point down, most of the blade gone.' + NL
+        + 'SCARS: the stem has been CUT THROUGH once and grown back — a thick swollen ring around the join.' + NL
+        + 'ROOTS: a wide knot, splayed, lifting clear of the ground on one side.',
+        'the main head hung forward and down, the four small heads turned outward around it like a watch being kept. Nothing moves and everything is aimed.',
+        'the bite. The main head has whipped forward on its stem, thrown out ahead of the roots with the cup wide open and every spine showing. The four small heads trail behind, dragged along by the lunge.',
+        'THE VOLLEY. The stem has REARED UP to full height and all five heads have opened at once, facing five different directions, the whole cluster spread wide like a hand. It is the tallest cell. Torn petals and one broken spine hang in the air.',
+        'struck. The main head is wrenched open the wrong way, two lobes torn, and two of the small heads have snapped off their stems and are falling. The sword is gone.',
+        72,
+        """12스테이지 우두머리.
+
+잡몹 아귀꽃은 **머리 하나**인데, 이놈은 **다섯**입니다. 큰 것 하나에 작은
+것 넷이 같은 밑동에서 나옵니다 — 윤곽이 깔끔한 하나가 아니라 울퉁불퉁한
+덩어리가 되어야 합니다.
+
+3번 칸(특수)이 제일 높습니다. 다섯 머리가 **한꺼번에 벌어지는** 순간이라,
+전원이 맞는 공격으로 읽힙니다.""",
+    ),
+
+    plantboss(
+        'pb_creeper', '덩굴 어미', '우두머리 · 13스테이지', '길다. 끝이 안 보인다.', 'plant',
+        'The root that every vine in this wood is a branch of.' + NL
+        + 'BODY: ENORMOUSLY LONG AND LOW — it crosses the entire width of the cell and both ends run off past the edges. It has no visible start or end, which is the point: the mob vine is a rope you can see all of, and this one is not.' + NL
+        + 'THE VISIBLE MIDDLE swells into a thick knotted MASS about a third of the way along, higher than the rest — that swelling is the part that is awake.' + NL
+        + 'FROM THE SWELLING rise SIX TENDRILS, much thicker and far longer than a mob has, curling up and forward at different heights. Two are as tall as the swelling is wide.' + NL
+        + 'THE OPENING is a long split down the top of the swelling, held apart, lined with SEVEN INWARD SPINES. It runs lengthwise, not across.' + NL
+        + 'CAUGHT ALONG THE LENGTH, spaced out: A SKULL near one edge, a RIBCAGE in the swelling, and A BOOT still laced, further along. Three, spread out — they mark how far it reaches.' + NL
+        + 'SCARS: the rope is SEVERED CLEAN just before the left edge and has grown back across the gap in a knotted lump. Someone cut it and it did not stop.',
+        'lying long and still across the field, the six tendrils raised and curling slowly, the split along the swelling half open. It reads as ground that has not noticed you yet.',
+        'the whip. Two tendrils have lashed forward together, stretched thin and long out ahead of the swelling, and the whole rope has been dragged after them so the swelling is off centre.',
+        'THE CAGE. All six tendrils have shot UP AND OUTWARD at once, arching high and curving inward at the tips, so the creature encloses the whole width and height of the cell. It is by far the widest and tallest cell. Torn leaves and two snapped tendril tips hang clear in the air.',
+        'struck. The swelling has split open along the top and three tendrils are torn off, the rope buckled into a kink. The ribcage shows through the gash.',
+        54,
+        """13스테이지 우두머리. **높이가 아니라 길이로 큽니다.**
+
+칸의 높이를 54%만 쓰지만 **가로는 칸을 넘어갑니다** — 양쪽 끝이 칸 밖으로
+빠져나가서 어디서 시작하고 끝나는지 안 보여야 합니다. 잡몹 덩굴손은 전부
+보이는 밧줄이고, 이놈은 안 보입니다.
+
+3번 칸(특수)에서 덩굴손 여섯이 **위로 솟아 우리처럼 감쌉니다.** 칸 전체를
+씁니다.""",
+    ),
+
+    plantboss(
+        'pb_spore', '홀씨 기둥', '우두머리 · 14스테이지', '높다. 사방으로 홀씨를 뿌린다.', 'plant',
+        'A spore stalk that never stopped growing upward.' + NL
+        + 'BODY: A TOWER. Far taller than anything else in this chapter — a single thick column, straight and vertical, with the pod cluster at the very top. It is the tallest silhouette in the set and that alone identifies it.' + NL
+        + 'THE CROWN: not one pod but SEVEN, packed into a heavy head at the top, each a different size, three already split open and gaping. The mob has one pod; this has a head full of them.' + NL
+        + 'THE COLUMN is ringed at three heights by collars of dead frayed growth, like places it stopped and started again.' + NL
+        + 'GROWN INTO THE COLUMN at eye height, the wood swollen around it: A SKULL, facing out, half absorbed.' + NL
+        + 'SCARS: one long split runs a third of the way up the column, closed over and ridged.' + NL
+        + 'THE BASE: five stiff roots braced wide. IT DOES NOT WALK — it stands and throws, and the width of that base is what says so.' + NL
+        + 'EYE: ONE, a hard slit set low in the column, far below the crown.',
+        'standing tall and straight, the crown still, three split pods gaping. A few loose spores drift down past the column. It has not moved and it does not need to.',
+        'the burst. The crown has CLENCHED — pulled in narrow — and a tight clump of spores is LEAVING it, clear of the body, with two speed lines. The column is bowed slightly back.',
+        'THE FALL. The entire column has BENT OVER FORWARD from the base like a felled tree, the crown swung down and out to the far side of the cell, and every one of the seven pods has burst at once — eight or nine loose spore clumps hang in the air along the arc. It is the widest cell.',
+        'struck. The column has snapped a third of the way up and folded, the crown hanging upside down, four pods torn loose and spilling.',
+        88,
+        """14스테이지 우두머리. **세트에서 제일 높습니다.**
+
+칸 높이의 88%를 씁니다. 다른 무엇보다 높다는 것 하나로 알아볼 수 있어야
+합니다 — 잡몹 홀씨대를 그대로 키운 게 아니라, 꼭대기에 **꼬투리 일곱**이
+뭉친 머리가 얹혀 있습니다.
+
+3번 칸(특수)에서 **기둥이 통째로 앞으로 넘어갑니다.** 서 있던 것이 쓰러지는
+그림이라 높이 차이가 그대로 위력이 됩니다.""",
+    ),
+
+    plantboss(
+        'pb_carrion', '시체꽃', '우두머리 · 15스테이지', '덩굴 숲의 끝. 이 숲이 먹은 것이 전부 여기 있다.', 'plant',
+        'The bloom this whole wood was feeding.' + NL
+        + 'BODY: a single ENORMOUS FLOWER opened flat and facing forward — the widest thing in this chapter, nearly filling the cell. Five heavy lobes spread open around a deep dark centre.' + NL
+        + 'IT IS THE ONLY THING HERE THAT FACES YOU. Every other plant in the wood is seen from the side; this one has turned to look, and the flat open disc of it is a shape nothing else in the set has.' + NL
+        + 'THE CENTRE is a deep pit ringed with NINE INWARD SPINES, long and uneven, three snapped. You cannot see the bottom of it.' + NL
+        + 'THE LOBES are ragged at the edges and sag under their own weight, the lower two drooping almost to the ground.' + NL
+        + 'AROUND THE RIM, held between the lobes where they meet: A SKULL, A HELM, and A SWORD HILT — evenly spaced, like things set out. This is the one place in the set where more than one is allowed; it is the end of the chapter and it has eaten all of it.' + NL
+        + 'SCARS: two lobes have been CUT THROUGH and grown back, thick ridges across them.' + NL
+        + 'THE STEM behind is short and thick, and the ROOTS spread wide and low.' + NL
+        + 'EYES: none. It does not need them.',
+        'opened flat and facing you, lobes spread and sagging, the pit black and still. Nothing moves. That stillness, at this size, is the whole idea.',
+        'the snap. The five lobes have FOLDED IN toward the centre like a closing hand, the whole flower pulled into a fist half its open width, the spines meshed together. It has caught something.',
+        'THE BLOOM. Every lobe thrown back FLAT AND WIDE past where they should go, the pit opened to its full depth and every spine standing out from the rim, so the creature is a huge open ring filling the cell edge to edge. It is the widest cell. A cloud of loose spores hangs clear all round it.',
+        'struck. Three lobes torn half off and curling back, the rim broken open on one side, the helm and the sword hilt knocked loose and falling.',
+        80,
+        """15스테이지 우두머리. **덩굴 숲의 끝**입니다.
+
+**정면을 보는 유일한 놈**입니다. 이 챕터의 나머지는 전부 옆에서 본 모습인데
+이놈만 몸을 돌려 이쪽을 봅니다 — 활짝 벌어진 원반은 세트의 다른 무엇과도
+안 겹치는 실루엣입니다.
+
+삼킨 것을 **셋** 둡니다. 다른 놈들은 하나뿐인데(더 두면 장식처럼 보여서),
+챕터의 끝이고 이 숲이 먹은 것을 전부 안고 있다는 뜻이라 여기서만 예외입니다.
+
+3번 칸(특수)에서 꽃잎이 **뒤로 완전히 젖혀지며** 칸을 가득 채웁니다.""",
+    ),
+
+    plantboss(
+        'pb_stump', '늙은 그루터기', '우두머리 · 16스테이지', '아주 오래됐다. 아주 두껍다.', 'wood',
+        'The stump of a tree that was old before the wood was.' + NL
+        + 'BODY: a MASSIVE drum of cut trunk, three times the width of a mob stump and half again as tall, cut flat across the top and TILTED hard to one side.' + NL
+        + 'THE CUT TOP shows FOUR concentric rings — no more; at this size more turns to grey mush.' + NL
+        + 'THREE AXES ARE IN IT, not one: buried at different points around the cut edge, all rusted, all with their hafts snapped off. Three separate attempts, none of them enough.' + NL
+        + 'GROWING OUT OF THE CUT TOP: five or six thin dead SHOOTS, bare, at odd angles. It tried to come back.' + NL
+        + 'SCARS: one deep vertical split down the front, closed over and ridged.' + NL
+        + 'ROOTS: SEVEN, enormous, splayed far wider than the drum, clotted with earth, two of them lifted and reaching forward.' + NL
+        + 'EYES: none. THREE knot-holes across the front at different heights, black through.',
+        'standing heavy and tilted, roots set wide, the three axe heads catching along the rim. It has not moved yet and it does not look like it will move fast.',
+        'the stamp. It has heaved forward onto two front roots, the drum thrown ahead of the base, the back roots dragged clear of the ground. Clods in the air below.',
+        'THE QUAKE. It has REARED UP onto its back roots so the whole drum is lifted high and tipped forward, all the front roots raised and spread, about to come down. It is the tallest cell by a long way. Six or seven clods and two broken shoots hang in the air beneath it.',
+        'struck. The drum has split from the cut top down through the front knot-hole, the crack running deep, three roots torn out, one axe knocked free.',
+        62,
+        """16스테이지 우두머리. 고목 숲의 첫 관문입니다.
+
+잡몹 그루터기에 도끼가 **하나** 박혀 있다면 이놈에게는 **셋**입니다. 세 번
+시도했고 세 번 다 모자랐다는 뜻입니다.
+
+3번 칸(특수)에서 **뒷뿌리로 곧추서서 몸통을 들어 올립니다.** 내려찍기 직전의
+자세이고, 이 칸이 제일 높습니다.""",
+    ),
+
+    plantboss(
+        'pb_hollow', '속 빈 거인', '우두머리 · 17스테이지', '구멍이 사람만 하다.', 'wood',
+        'A hollow tree big enough to walk into, that walks instead.' + NL
+        + 'BODY: a HUGE leaning trunk, twice the height of a mob and much thicker, tipped well off vertical.' + NL
+        + 'THE HOLE IS THE READ, and it is enormous — it goes CLEAN THROUGH the trunk and is nearly HALF the width of the body, tall enough for a person. Black shows through it. This is the strongest shape in the chapter; protect it above everything.' + NL
+        + 'THE RIM is splintered inward all the way round with EIGHT LONG SPLINTERS pointing in toward the middle, uneven, three snapped.' + NL
+        + 'INSIDE THE HOLE, wedged across it and filling part of the gap: A WHOLE RIBCAGE, upright, one side broken away. It hangs there in every cell.' + NL
+        + 'THE TOP is snapped off at a hard angle with four splinters standing up.' + NL
+        + 'SCARS: a second, smaller hole low on the trunk has been GROWN OVER — a puckered ring of scar wood where a hole used to be.' + NL
+        + 'ROOTS: five, splayed and uneven, one far longer and reaching forward.' + NL
+        + 'EYES: none. Four knot-holes above the big hole, uneven, black.',
+        'standing tilted and still, the great hole facing you with the ribcage in it. The stillness at this size is what makes it read as waiting.',
+        'the swing. The whole trunk has come forward from the roots like a falling post, the hole thrown ahead and its splinters closing inward across the gap.',
+        'THE ROAR. The trunk has arched BACK and OPENED — the hole is stretched wide and round, every splinter flared outward from the rim like a mouth thrown open, and the ribcage inside is pushed forward. It is the widest cell. Six splinters and a cloud of dust hang clear in the air around it.',
+        'struck. The trunk has cracked across at the hole, the opening torn into a crooked gash, the upper half folding over. The ribcage is falling out.',
+        78,
+        """17스테이지 우두머리.
+
+잡몹 속 빈 나무의 구멍이 몸통의 3분의 1이라면, 이놈은 **절반**입니다.
+사람이 걸어 들어갈 만한 크기라야 하고, 그 안에 **갈비뼈 한 벌이 통째로**
+걸려 있습니다.
+
+3번 칸(특수)에서 구멍이 **넓게 벌어지며 가시가 사방으로 젖혀집니다** — 입을
+벌린 것처럼 보여야 합니다. 이 칸이 제일 넓습니다.""",
+    ),
+
+    plantboss(
+        'pb_thornwood', '가시나무', '우두머리 · 18스테이지', '가지가 전부 창이다.', 'wood',
+        'A dead tree whose every branch sharpened itself.' + NL
+        + 'BODY: a tall trunk leaning hard, carrying TWELVE OR MORE long bare branches that radiate out in every direction — up, out and DOWN. The mob branch-thrower has six and they all point up; this one is a star of spikes and the outline breaks in every direction.' + NL
+        + 'EVERY BRANCH TAPERS TO A POINT. They are straight hard lines, different lengths, the longest as long as the trunk is tall.' + NL
+        + 'FOUR ARE ALREADY BROKEN, leaving pale stubs on the trunk.' + NL
+        + 'THREE ARE HELD FORWARD AND LEVEL, cocked together — that is the read of what it does.' + NL
+        + 'IMPALED ON ONE OF THE LOWER BRANCHES, slid halfway down it: A SKULL. It has been there long enough that the wood has grown through the eye socket.' + NL
+        + 'SCARS: the trunk has been split lengthwise and bound back together by its own growth, a ridge running its height.' + NL
+        + 'ROOTS: four, braced. It stands its ground.' + NL
+        + 'EYES: none. One long vertical crack up the trunk.',
+        'standing braced and still, branches out in every direction, the three cocked ones held level and forward. The skull hangs where it always hangs.',
+        'the throw. One cocked branch HAS LEFT the trunk and is in the air ahead, point-first with two speed lines, and the trunk is bowed back with a fresh pale stub where it was.',
+        'THE VOLLEY. SIX branches have left at once and are in the air spread across the whole cell in a fan, all point-first, all at different angles, and the trunk is bent hard back from the recoil with six pale stubs on it. It is the widest cell and most of it is the branches in flight.',
+        'struck. The trunk has snapped partway up and folded over, five branches breaking loose and scattering. The skull has slid off its branch and is falling.',
+        74,
+        """18스테이지 우두머리.
+
+잡몹 가지창은 가지가 여섯이고 전부 위를 향하는데, 이놈은 **열둘 이상이
+사방으로** 뻗습니다 — 위·옆·아래 전부입니다. 별처럼 보여야 합니다.
+
+3번 칸(특수)에서 **여섯 개가 한꺼번에 날아갑니다.** 칸의 대부분이 날아가는
+가지이고, 그게 전원을 치는 공격으로 읽힙니다.""",
+    ),
+
+    plantboss(
+        'pb_rot', '썩은 거목', '우두머리 · 19스테이지', '거의 다 썩었다. 그래서 더 크다.', 'wood',
+        'A great tree so far gone that the rot is holding it together.' + NL
+        + 'BODY: ENORMOUS AND SAGGING — the widest and heaviest thing in the chapter, a bloated trunk that bulges out at the middle past its own base and slumps over to one side at the top.' + NL
+        + 'IT IS FALLING APART AND STILL STANDING. Three deep SPLITS run down it at different angles, wide enough to see black through, and the wood between them is soft and swollen rather than hard.' + NL
+        + 'HANGING OFF IT: six or more long strands of rotted fibre from the underside and the slumped side, different lengths, stopping in empty black.' + NL
+        + 'MUSHROOM SHELVES: five hard flat brackets growing out of the trunk at different heights, the only straight-edged shapes on it. They stand out from the outline.' + NL
+        + 'SUNK INTO THE SOFT WOOD, half swallowed and clearly visible: A HELM. One.' + NL
+        + 'SCARS: the largest split has been GROWN ACROSS by a thick rope of new wood, holding the two halves together like a stitch.' + NL
+        + 'ROOTS: six, splayed and half rotted, two collapsed under the weight.' + NL
+        + 'EYES: none. Two deep holes where brackets fell off.',
+        'standing bloated and slumped, strands hanging long and still, the brackets catching along its side. It looks like it should have fallen already.',
+        'the fall. It has toppled FORWARD from the base, the whole mass stretched long as it goes, strands and two brackets flung out ahead of it.',
+        'THE BURST. The trunk has swollen and SPLIT OPEN along all three cracks at once, the halves forced apart so the creature is much wider than it stands, and a cloud of rot and eight or nine loose fragments hangs clear in the air around it. It is the widest cell.',
+        'struck. The bloated middle has burst and collapsed inward, two brackets snapped off, the top half folding over sideways. The helm is falling out.',
+        84,
+        """19스테이지 우두머리. **제일 넓고 제일 무겁습니다.**
+
+`STANDS` 규칙대로 **서 있되 제 무게에 지고 있어야** 합니다 — 가운데가 밑보다
+옆으로 불거지고 위가 한쪽으로 흘러내립니다. 눕히면 안 됩니다.
+
+세로로 갈라진 틈 셋으로 검은 배경이 비쳐야 하고, 그중 제일 큰 것은 새 나무가
+**꿰맨 것처럼** 가로질러 붙잡고 있습니다.
+
+3번 칸(특수)에서 그 틈 셋이 **한꺼번에 벌어집니다.**""",
+    ),
+
+    plantboss(
+        'pb_elder', '숲의 어른', '우두머리 · 20스테이지', '이 숲이 자란 자리에 원래 있던 것.', 'wood',
+        'The thing the whole forest grew out from.' + NL
+        + 'BODY: the LARGEST creature in the game so far — a vast trunk filling most of the cell, leaning, its top broken off flat above the frame so you cannot see where it ends.' + NL
+        + 'IT CONTAINS THE CHAPTER. Grown into the trunk at different heights and clearly visible: A SMALLER STUMP, A BRACKET OF MUSHROOMS, A KNOT OF THORN BRANCHES, and A HOLLOW WITH A RIBCAGE IN IT. Each recognisable as one of the mobs, absorbed into it. This is the one place more than one is allowed — it is the end of the chapter.' + NL
+        + 'THE FACE, AND IT IS NOT A FACE: a single vast HOLLOW low on the front, wider than a person, ringed with TEN LONG SPLINTERS pointing inward. Everything it took went in there.' + NL
+        + 'DEEP INSIDE THE HOLLOW, small and hard and far back: ONE PALE LIGHT. That is the only thing in this chapter that could be called an eye, and it is barely one.' + NL
+        + 'THE ROOTS: NINE, enormous, splayed across the whole base and lifting the trunk clear of the ground at the front. Earth and stones hang off them.' + NL
+        + 'SCARS: four long healed splits up the flanks, each closed over and ridged. Everything in this wood has already tried.',
+        'standing vast and leaning, the great hollow turned toward you, the pale light deep inside it. Nothing moves. It has been here longer than the forest.',
+        'the reach. Three front roots have torn UP out of the ground and lashed forward ahead of the trunk, stretched long, earth falling from them, and the whole mass has leaned after them.',
+        'THE WAKING. The trunk has straightened to its full height for the first time and ALL NINE ROOTS have come up out of the ground at once, spread wide beneath it, so the creature is lifted clear and fills the cell corner to corner. The hollow is stretched open and the pale light inside it is bright. It is by far the largest cell. A dozen clods, stones and splinters hang clear in the air.',
+        'struck. The trunk has cracked from the hollow upward, the split running out of frame, four roots torn away and the whole mass tipping sideways. The absorbed stump has broken loose.',
+        92,
+        """20스테이지 우두머리. **지금까지 중 제일 큽니다.**
+
+칸 높이의 92%를 쓰고, 위쪽은 **잘려 나가도 됩니다** — 어디서 끝나는지 안
+보이는 편이 더 큽니다.
+
+**챕터를 통째로 안고 있습니다.** 그루터기 하나, 버섯 선반, 가시가지 뭉치,
+갈비뼈가 든 구멍 — 넷이 몸에 박혀서 각각 알아볼 수 있어야 합니다. 삼킨 것을
+하나만 두는 규칙의 유일한 예외가 시체꽃과 이놈입니다.
+
+**눈이라 할 만한 것이 이 챕터에 딱 하나 있는데** 그게 이놈의 구멍 깊숙한
+곳에 있는 창백한 빛입니다.
+
+3번 칸(특수)에서 **뿌리 아홉이 전부 땅에서 올라오고** 몸통이 처음으로
+곧게 섭니다. 칸을 모서리까지 채웁니다.""",
+    ),
+]
 
 
 BACKGROUNDS = [
@@ -1293,6 +1988,46 @@ BACKGROUNDS = [
             'quarter of the strip.' + NL
             + 'No grass, no field, no path. The plain between you and the horizon is '
             'not in this image — the game draws it.',
+    },
+    {
+        'id': '03', 'name': '덩굴 숲', 'stages': '11~15',
+        'scene':
+            'The edge of a wood seen from OUTSIDE it, from a long way off, looking '
+            'across at the tree line. The horizon runs the WHOLE WIDTH along the very '
+            'bottom edge.' + NL
+            + 'UPPER HALF — sky, but LESS of it than the plain had. Two cloud banks '
+            'only, high and thin, and the top of the wood eats into the lower part of '
+            'this half. The plain was open; this is closing in, and that is the whole '
+            'difference between the two chapters.' + NL
+            + 'LOWER HALF — a WALL OF WOOD along the bottom edge, spread across the '
+            'full width: eight or ten trunks in silhouette at different thicknesses '
+            'and spacings, close enough together that you cannot see between them. '
+            'They stand about half the height of the strip — much taller than the lone '
+            'trees of the plain.' + NL
+            + 'STRUNG BETWEEN THEM, and this is what names the place: four or five '
+            'long sagging VINE ROPES hanging from trunk to trunk at different heights, '
+            'and two hanging straight down. Draw them as clean hanging curves, not as '
+            'texture.' + NL
+            + 'No ground, no path, no undergrowth in front. The floor between you and '
+            'the tree line is not in this image — the game draws it.',
+    },
+    {
+        'id': '04', 'name': '썩은 고목 숲', 'stages': '16~20',
+        'scene':
+            'Deep inside the same wood, where the trees are far older and mostly dead. '
+            'Seen from a long way off, looking through.' + NL
+            + 'UPPER HALF — almost no sky. A CANOPY presses down across the full width '
+            'from the top edge, drawn as a heavy dark irregular mass with three or '
+            'four ragged gaps where pale light comes through. Where the vine wood had '
+            'two clouds, this has a lid. That closing-over is how the player knows the '
+            'chapter turned.' + NL
+            + 'LOWER HALF — six or seven ENORMOUS trunks in silhouette, far thicker '
+            'and further apart than the vine wood, running from the bottom edge up '
+            'into the canopy so they cross both halves. Two of them are BROKEN OFF '
+            'partway up, snapped at an angle, and one has a large hole through it.' + NL
+            + 'Between and behind them, small and far: three or four leaning dead '
+            'stumps along the bottom edge.' + NL
+            + 'No ground, no path, no leaf litter in front — the game draws the floor.',
     },
     {
         'id': '02', 'name': '슬라임 초원 깊숙한 곳', 'stages': '6~10',
@@ -1497,16 +2232,29 @@ MARKS = {
 }
 
 
+# 종류 → 그 종류에만 주는 규칙. 없는 종류는 짐승 규칙을 받는다.
+#
+# 항목마다 손으로 적게 두면 꼭 빠진다 — 실제로 초원의 열일곱이 전부 빠져서
+# 슬라임에게 "굶주린 짐승의 갈비뼈" 가 나갔다. 그래서 id 앞자리로 건다
+# (`BACKGROUNDS` 앞의 반복문).
+FAMILY_RULE = {
+    'slime': lambda: SLIME,
+    'plant': lambda: PLANT,
+    'wood': lambda: WOOD,
+}
+
+
 def page(f):
+    cells = len(f['frames'])
     prompt = block(
         NOTEXT,
-        'SUBJECT: a 3-frame animation sheet of ONE single creature, left to right. '
-        'The creature is in every cell.' + NL + NL
-        + 'THE CREATURE (the same one in all 3 cells):' + NL + f['lock']
+        'SUBJECT: a %d-frame animation sheet of ONE single creature, left to right. '
+        'The creature is in every cell.' % cells + NL + NL
+        + 'THE CREATURE (the same one in all %d cells):' % cells + NL + f['lock']
         + (NL + NL + 'MONSTER MARK — this is the one thing that makes it not an '
            'animal. Draw it in every cell:' + NL + MARKS[f['id']]
            if f['id'] in MARKS else '') + NL + NL
-        + rows_of(f['frames'], 'The 3 cells, in this exact order:'),
+        + rows_of(f['frames'], 'The %d cells, in this exact order:' % cells),
         PIXEL_STYLE,
         QUARTER,
         NO_GROUND,
@@ -1515,16 +2263,18 @@ def page(f):
         SILHOUETTE,
         NOT_CUTE,
         # 종류에 맞는 규칙만 붙인다 — 슬라임에게 "굶주린 짐승" 을 시키면 안 된다
-        SLIME if f.get('family') == 'slime' else TWISTED,
+        FAMILY_RULE.get(f.get('family'), lambda: TWISTED)(),
         # 우두머리는 "잡몹을 키운 것" 으로 나오기 쉽다 — 뭐가 다른지 못 박는다
         BOSS if f.get('boss') else '',
+        # 특수 동작 칸이 있는 우두머리에게만 — 그 칸을 어떻게 그리는지
+        SPECIAL if cells > 3 else '',
         ALIVE,
         'NOTHING MAY BE CUT OFF.' + NL + f['rules'] + NL
         + '- Every cell holds the WHOLE creature plus every loose droplet and speed '
         'line. If any of it touches a magenta line, that cell has failed.' + NL
         + '- Leave at least 8px of empty black between the outermost pixel and every '
         'magenta line.',
-        grid(3, 1),
+        grid(cells, 1),
     )
     fill = ('45%' if f['id'] == 'sl_melee'
             else '65%' if f['id'] == 'sl_ranged' else '80%')
@@ -1605,7 +2355,14 @@ INDEX = """# 적 이미지 프롬프트
 스타일 규칙은 캐릭터 쪽과 **같은 것**을 씁니다 (`tools/artstyle.py`).
 같은 화면에 나란히 서는 그림이라 규칙이 갈리면 그 차이가 보입니다.
 
-[배경 프롬프트는 따로 있습니다](FOE_BG_PROMPTS.md) — 세 장으로 아홉 판을 돌립니다.
+[배경 프롬프트는 따로 있습니다](FOE_BG_PROMPTS.md) — 네 장으로 스무 판을 돌립니다.
+
+프롬프트는 **챕터별로 폴더가 나뉘어 있습니다.**
+
+| 폴더 | 챕터 |
+|---|---|
+| `docs/foe-art/` | 1~10 · 슬라임 |
+| `docs/foe-art2/` | 11~20 · 식물 · 나무 |
 
 ## 스테이지 구성
 
@@ -1614,29 +2371,41 @@ INDEX = """# 적 이미지 프롬프트
 
 %(stages)s
 
-## 목록
+## 목록 — 1~10 · 슬라임 (`docs/foe-art/`)
 
-| 파일 | 이름 | 등장 | 상태 |
-|---|---|---|---|
-%(rows)s
+%(rows1)s
+
+## 목록 — 11~20 · 식물 · 나무 (`docs/foe-art2/`)
+
+우두머리는 **네 칸**입니다. 잡몹의 대기·공격·피격에 더해 **특수 동작** 칸이
+하나 더 있습니다 — 전원을 휩쓸거나 한 명을 내려찍을 때 쓰는 그림입니다
+(`core/autoBattle` 의 `BOSS_PATTERNS`). 슬라임 우두머리는 세 칸 그대로 두고,
+없는 칸은 화면이 같은 시트의 `attack` 으로 떨어뜨립니다.
+
+%(rows2)s
 
 ## 실루엣이 겹치면 안 된다
 
 한 화면에 넷이 40~52px 로 겹쳐 섭니다. 그 크기에서 남는 것은 **윤곽뿐**이라,
-색도 무늬도 도움이 안 됩니다. 그래서 여덟 잡몹을 이렇게 갈랐습니다 —
+색도 무늬도 도움이 안 됩니다. 그래서 챕터마다 **가르는 축을 하나 정하고**
+그 축 위에서 갈라 놓았습니다.
 
-| | 가르는 것 |
-|---|---|
-| 들쥐 · 멧돼지 · 늑대 | 네발이지만 **높이가 다르다** (기고 / 머리 숙이고 / 서고) |
-| 들개 | 짐승 위에 **사람이 만든 것** (목줄과 끊어진 사슬) |
-| 초원 오우거 | **두 발로 선다** — 잡몹 중 유일하다 |
-| 말벌 · 까마귀 | 둘 다 뜨지만 **기울어진 덩어리**와 **수평 십자꼴** |
-| 엉겅퀴 | 짐승이 아니다. **뿌리내려 안 움직인다** |
+| 챕터 | 가르는 축 | 갈래 |
+|---|---|---|
+| 슬라임 | 덩어리의 **모양** | 낮다 / 각진 것이 박혔다 / 뾰족한 것이 뻗었다 / 둘이다 |
+| 식물 | **무엇이 어느 쪽으로 뻗었나** | 옆으로 길다 / 위가 무겁다 / 사방이 뾰족하다 / 윤곽이 부드럽다 |
+| 나무 | **어디가 부러졌나** | 낮고 두껍다 / 안이 뚫렸다 / 밑이 넓다 / 각진 판이 덮였다 |
 
-우두머리 아홉도 같은 규칙입니다. 잡몹을 키운 것으로 보이면 안 되므로
-(1스테이지에서 겪었습니다) 저마다 **잡몹에 없는 요소**를 하나씩 가집니다 —
-업고 있다 · 뿔이 하나다 · 알을 달았다 · 눈이 멀었다 · 덤불이다 · 갑옷을 입었다 ·
-왕관을 썼다 · 두개골을 썼다 · 나무가 되었다.
+챕터끼리도 겹치면 안 됩니다. 식물은 전부 사람 허리 아래, 나무는 전부 사람보다
+큽니다 — 종을 하나하나 알아보기 전에 **줄의 높이**가 먼저 눈에 들어오고, 그게
+챕터가 넘어간 것을 말하는 제일 싼 방법입니다.
+
+우두머리도 같은 규칙입니다. 잡몹을 키운 것으로 보이면 체력 열 배가 아무 뜻이
+없으므로 (1스테이지에서 겪었습니다) 저마다 **잡몹에 없는 구조**를 하나씩
+가집니다 — 덤불을 이고 있다 · 팔이 솟았다 · 셋으로 나뉘었다 · 해골이 셋이다 ·
+왕관을 삼켰다 · 세 덩이가 붙었다 · 머리가 다섯이다 · 끝이 안 보인다 ·
+정면을 본다 · 도끼가 셋이다 · 구멍이 사람만 하다 · 가지가 열둘이다 ·
+갈라져도 서 있다 · 챕터를 통째로 안았다.
 """
 
 
@@ -1686,20 +2455,84 @@ STAGE_TABLE = [
     ('슬라임 초원 깊숙한 곳', ['뼈 슬라임', '쌍둥이 슬라임', '산성 슬라임'], '녹이는 슬라임'),
     ('슬라임 초원 깊숙한 곳', ['뼈 슬라임', '쌍둥이 슬라임', '산성 슬라임', '가시 슬라임'], '뼈무덤 슬라임'),
     ('슬라임 초원 깊숙한 곳', ['돌 슬라임', '뼈 슬라임', '쌍둥이 슬라임', '산성 슬라임'], '슬라임 군주'),
+    ('덩굴 숲', ['덩굴손', '홀씨대'], '가시덤불 군체'),
+    ('덩굴 숲', ['덩굴손', '아귀꽃', '홀씨대'], '아귀꽃 여왕'),
+    ('덩굴 숲', ['아귀꽃', '가시덤불', '홀씨대'], '덩굴 어미'),
+    ('덩굴 숲', ['가시덤불', '이끼덩이', '진액꽃'], '홀씨 기둥'),
+    ('덩굴 숲', ['아귀꽃', '가시덤불', '이끼덩이', '진액꽃'], '시체꽃'),
+    ('썩은 고목 숲', ['걷는 그루터기', '가지창'], '늙은 그루터기'),
+    ('썩은 고목 숲', ['걷는 그루터기', '속 빈 나무', '가지창'], '속 빈 거인'),
+    ('썩은 고목 숲', ['속 빈 나무', '뿌리덩이', '꼬투리나무'], '가시나무'),
+    ('썩은 고목 숲', ['뿌리덩이', '껍질갑옷', '가지창', '꼬투리나무'], '썩은 거목'),
+    ('썩은 고목 숲', ['속 빈 나무', '뿌리덩이', '껍질갑옷', '꼬투리나무'], '숲의 어른'),
 ]
 
+def tag_families():
+    """id 앞자리를 보고 종류와 우두머리 여부를 건다.
+
+    ## 왜 손으로 안 적나
+
+    항목마다 `family` 를 적게 해 뒀더니 꼭 빠진다. 초원의 열일곱이 전부
+    빠져서 슬라임이 `TWISTED`(짐승) 규칙을 받았고 — "굶주린 짐승의 갈비뼈",
+    "털은 뭉쳐서 늘어진다" — 눈도 이빨도 없는 맨 덩어리가 나왔다. id 앞자리가
+    이미 종류를 말하고 있으니 그걸 쓴다.
+
+    ## 왜 함수인가
+
+    처음엔 모듈 맨 위에서 한 번 도는 반복문이었다. 그러면 그 아래에
+    `FOES += [...]` 를 하나 더 붙이는 순간 새 항목들은 안 걸린다 — 식물·나무
+    스물둘을 넣자마자 그대로 당했다.
+
+    반복문을 목록 아래로 옮기는 것은 "다음 사람도 아래에 붙이겠지" 에
+    기대는 것이라 또 터진다. **쓰기 직전에 부르면** 목록에 뭘 언제 더하든
+    상관없어진다.
+    """
+    for f in FOES:
+        head = f['id'][:3]
+        if head in ('sl_', 'sg_', 'sb_'):
+            f['family'] = 'slime'
+        elif head == 'pf_':
+            f['family'] = 'plant'
+        elif head == 'pw_':
+            f['family'] = 'wood'
+        elif head == 'pb_':
+            # 식물 우두머리(11~15)는 식물 규칙, 나무 우두머리(16~20)는 나무 규칙
+            f['family'] = f.get('chapter', 'wood')
+        if head in ('sb_', 'pb_') or f['id'] == 'sl_boss':
+            f['boss'] = True
+
+
 os.makedirs(OUT_DIR, exist_ok=True)
-rows = []
+os.makedirs(OUT_DIR2, exist_ok=True)
+tag_families()
+
+# 챕터별로 나눠 적는다 — 색인의 표도 그 순서 그대로다
+rows = {OUT_DIR: [], OUT_DIR2: []}
 for _f in FOES:
-    _p = os.path.join(OUT_DIR, _f['id'] + '.md')
+    _dir = out_dir_of(_f)
+    _p = os.path.join(_dir, _f['id'] + '.md')
     open(_p, 'w', encoding='utf-8').write(page(_f))
     print('%s (%s)' % (_p, _f['name']))
     _done = os.path.isdir(os.path.join('assets/sprites', _f['set']))
-    rows.append('| [%s](foe-art/%s.md) | %s | %s | %s |'
-                % (_f['name'], _f['id'], _f['name'], _f['role'],
-                   '들어옴' if _done else '프롬프트만'))
+    rows[_dir].append(
+        '| [%s](%s/%s.md) | %s | %s | %s |'
+        % (_f['name'], os.path.basename(_dir), _f['id'], _f['name'], _f['role'],
+           '들어옴' if _done else '프롬프트만'))
+
+# 옮기기 전에 있던 파일이 옛 폴더에 남아 있으면 지운다 — 두 벌이 갈라진다
+for _stale in os.listdir(OUT_DIR):
+    if _stale[:3] in ('pf_', 'pw_', 'pb_'):
+        os.remove(os.path.join(OUT_DIR, _stale))
+        print('옛 자리에서 지움: %s/%s' % (OUT_DIR, _stale))
+
+HEAD = '| 파일 | 이름 | 등장 | 상태 |' + NL + '|---|---|---|---|'
 open('docs/FOE_ART_PROMPTS.md', 'w', encoding='utf-8').write(
-    INDEX % {'rows': NL.join(rows), 'stages': stage_table()})
+    INDEX % {
+        'rows1': HEAD + NL + NL.join(rows[OUT_DIR]),
+        'rows2': HEAD + NL + NL.join(rows[OUT_DIR2]),
+        'stages': stage_table(),
+    })
 open('docs/FOE_BG_PROMPTS.md', 'w', encoding='utf-8').write(bg_page())
 print('배경 %d장 · docs/FOE_BG_PROMPTS.md' % len(BACKGROUNDS))
-print('%d종 · docs/FOE_ART_PROMPTS.md' % len(FOES))
+print('%d종 (%s %d · %s %d) · docs/FOE_ART_PROMPTS.md'
+      % (len(FOES), OUT_DIR, len(rows[OUT_DIR]), OUT_DIR2, len(rows[OUT_DIR2])))

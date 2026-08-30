@@ -21,14 +21,24 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, View } from 'react-native';
 import {
-  BattleState, CLEAR_MS, OPEN_MS, OPEN_WALK_MS, stageOf,
+  BattleState, CLEAR_MS, MOVE_MS, OPEN_MS, OPEN_WALK_MS, stageOf,
 } from '@/core/autoBattle';
 import { Row, T } from '@/ui/atoms';
 import { sfx } from '@/ui/sfx';
-import { MONO, WHITE } from '@/ui/theme';
+import { MONO, SP, WHITE } from '@/ui/theme';
 
-/** 지금 무슨 연출 중인가 */
-export type StagePhase = 'none' | 'open' | 'clear';
+/**
+ * 지금 무슨 연출 중인가.
+ *
+ *   open   판이 열린다 — 막이 걷히고 이름이 뜨고 양쪽에서 걸어 들어온다
+ *   clear  우두머리를 잡았다 — `Clear` 가 뜨고 어두워진다
+ *   move   `< >` 로 옮긴다 — 아무 말 없이 짧게 어두워진다
+ *
+ * `clear` 와 `move` 는 **같은 일**을 한다 (덮은 뒤에 판을 옮긴다). 띄우는
+ * 글씨와 길이만 다르다 — 클리어는 보여 줄 것이 있어서 길고, 옮기기는
+ * 사용자가 방금 누른 일이라 설명할 것이 없어서 짧다.
+ */
+export type StagePhase = 'none' | 'open' | 'clear' | 'move';
 
 /**
  * 시작 연출 안에서 **글씨가 차지하는 몫**.
@@ -66,8 +76,10 @@ export function useStageStaging(battle: BattleState): {
   fromClear: boolean;
 } {
   const opening = (battle.openIn ?? 0) > 0;
-  const clearing = (battle.clearIn ?? 0) > 0;
-  const phase: StagePhase = clearing ? 'clear' : opening ? 'open' : 'none';
+  const shutting = (battle.clearIn ?? 0) > 0;
+  const phase: StagePhase = shutting
+    ? (battle.clearKind === 'move' ? 'move' : 'clear')
+    : opening ? 'open' : 'none';
 
   /*
     같은 연출이 다시 시작된 것을 알아보려면 "지금 몇 판째 여느냐" 가 있어야
@@ -84,7 +96,8 @@ export function useStageStaging(battle: BattleState): {
   const [fromClear, setFromClear] = useState(false);
   useEffect(() => {
     if (phase !== 'none' && was.current !== phase) {
-      setFromClear(was.current === 'clear');
+      /* 덮고 온 것이면 이미 까맣다 — `clear` 든 `move` 든 마찬가지다 */
+      setFromClear(was.current === 'clear' || was.current === 'move');
       setNonce((n) => n + 1);
     }
     was.current = phase;
@@ -96,7 +109,7 @@ export function useStageStaging(battle: BattleState): {
     t.setValue(0);
     const a = Animated.timing(t, {
       toValue: 1,
-      duration: phase === 'clear' ? CLEAR_MS : OPEN_MS,
+      duration: phase === 'clear' ? CLEAR_MS : phase === 'move' ? MOVE_MS : OPEN_MS,
       easing: Easing.linear,
       /* 웹에서는 어차피 JS 로 떨어진다 — 켜 두면 경고만 는다 */
       useNativeDriver: false,
@@ -152,6 +165,8 @@ export function StageVeil({
     갔을 때)는 0 에서 서서히 덮는다.
   */
   const from = phase === 'open' && fromClear ? 1 : 0;
+  /* 옮기는 중에는 글씨가 없다 — 덮기만 한다 */
+  const quiet = phase === 'move';
   /*
     ── 왜 `useMemo` 인가 ──
 
@@ -160,7 +175,10 @@ export function StageVeil({
     끝없이 쌓이고 시간에 비례해 느려진다. 전에 `HitBurst` 에서 정확히 이걸로
     렉이 났다.
   */
-  const veil = useMemo(() => (phase === 'clear'
+  const veil = useMemo(() => (phase === 'move'
+    /* 옮기기 — 짧게, 곧장 까맣게 */
+    ? t.interpolate({ inputRange: [0, 1], outputRange: [0, 1] })
+    : phase === 'clear'
     /* 클리어 — 글씨가 먼저 뜨고, 그 뒤로 서서히 어두워진다 */
     ? t.interpolate({
       inputRange: [0, 0.35, 1], outputRange: [0, 0.2, 1],
@@ -215,7 +233,7 @@ export function StageVeil({
           transform: [{ scale: zoom }],
         }}
       >
-        {phase === 'clear' ? (
+        {quiet ? null : phase === 'clear' ? (
           <Animated.Text
             style={{
               color: WHITE, fontFamily: MONO, fontSize: 22, fontWeight: '700',
@@ -245,6 +263,67 @@ export function StageVeil({
         )}
       </Animated.View>
     </>
+  );
+}
+
+/** 한 번 빤짝이는 데 걸리는 시간 (ms) */
+const GLOW_MS = 1100;
+
+/**
+ * "우두머리 토벌" — 1분을 사냥하면 나오는 단추.
+ *
+ * **빤짝인다.** 이 화면은 켜 두고 딴 데 보는 화면이라, 가만히 있는 단추는
+ * 배경이 된다. 판이 끝없이 굴러가는 중에 "이제 여기서 멈추고 눌러라" 를
+ * 말하려면 움직이는 것 하나가 필요하다.
+ *
+ * 빛은 **테두리와 글씨의 투명도**로만 낸다. 흑백 2색이라 색으로 강조할
+ * 방법이 없고, 크기를 흔들면 옆의 진행 막대가 같이 밀린다.
+ */
+export function BossCallBtn({ onPress }: { onPress: () => void }) {
+  const t = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    /*
+      끝없이 왕복한다. `Animated.loop` 은 멈추라고 할 때까지 도는데, 화면을
+      떠날 때 안 멈추면 사라진 화면의 값을 계속 건드린다.
+    */
+    const a = Animated.loop(Animated.sequence([
+      Animated.timing(t, {
+        toValue: 1, duration: GLOW_MS / 2, easing: Easing.inOut(Easing.quad),
+        useNativeDriver: false,
+      }),
+      Animated.timing(t, {
+        toValue: 0, duration: GLOW_MS / 2, easing: Easing.inOut(Easing.quad),
+        useNativeDriver: false,
+      }),
+    ]));
+    a.start();
+    return () => a.stop();
+  }, [t]);
+
+  /*
+    `interpolate()` 는 부를 때마다 `t` 에 자식 노드를 매단다. `t` 가 이
+    컴포넌트만큼 오래 사는데 그리기마다 부르면 노드가 끝없이 쌓인다
+    (`HitBurst` 에서 겪은 그것) — 여기는 계속 도는 값이라 더 위험하다.
+  */
+  const glow = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [0.35, 1],
+  }), [t]);
+
+  return (
+    <Pressable onPress={() => { sfx('tap'); onPress(); }} style={{ marginTop: SP.sm }}>
+      <Animated.View
+        style={{
+          borderWidth: 1,
+          borderColor: WHITE,
+          opacity: glow,
+          paddingVertical: SP.xs + 2,
+          alignItems: 'center',
+        }}
+      >
+        <T size={12} bold>우두머리 토벌</T>
+      </Animated.View>
+    </Pressable>
   );
 }
 

@@ -31,8 +31,8 @@ import { Animated, Easing, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  MOB_CAP, STAGE_MS, fightHeld, foeOf, healPlan, pickAim, skillDamage, skillTargets,
-  stageOf, targetOf,
+  MOB_CAP, STAGE_MS, bossReady, fightHeld, foeOf, healPlan, pickAim, skillDamage,
+  skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf } from '@/core/chars';
 import { hpOf, members, partyStat, supportMul } from '@/core/party';
@@ -41,13 +41,16 @@ import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
 import { BORDER, SP, WHITE } from '@/ui/theme';
 import {
-  BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, useShake,
+  BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, PatternCall,
+  useShake,
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
   BOSS_W, DEPTH_LIFT, EDGE, FOE_W, GROUND_H, Ground, PARTY_W, STAGE_H, ZOOM, depthAt,
 } from './Ground';
-import { StagePicker, StageVeil, useStageStaging, walkInX } from './StageIntro';
+import {
+  BossCallBtn, StagePicker, StageVeil, useStageStaging, walkInX,
+} from './StageIntro';
 
 /** 무대 높이 */
 /** 아무것도 안 하는 콜백 — 매 렌더마다 새로 만들면 애니메이션이 되감긴다 */
@@ -322,6 +325,7 @@ export function BattleView() {
   const strikeFoe = useGame((s) => s.strikeFoe);
   const skillFoe = useGame((s) => s.skillFoe);
   const goStage = useGame((s) => s.goStage);
+  const callBossNow = useGame((s) => s.callBossNow);
 
   const mob = foeOf(battle.stage, false);
   /*
@@ -503,6 +507,35 @@ export function BattleView() {
     그동안 틱이 안 싸우기 때문이다. 여기서는 그림만 그린다.
   */
   const staging = useStageStaging(battle);
+
+  /*
+    우두머리 특수기가 방금 나갔나.
+
+    `battle.patSeq` 는 특수기가 나갈 때마다 하나씩 오른다. 이름만 보면
+    휩쓸기 다음에 또 휩쓸기가 나올 때 안 바뀐 것으로 읽히므로 번호를 본다 —
+    `bossCall` 이 `battle.boss` 의 거짓→참을 보는 것과 같은 얼개다.
+  */
+  const [patCall, setPatCall] = useState(0);
+  /*
+    특수기 동작 칸(`special`)을 언제까지 쓰나.
+
+    적이 팔을 휘두르는 표시(`foeSwing`)는 피해를 모아 두었다가 제 박자에
+    한 번 터뜨린다 (`FOE_BEAT_MS`). 그 박자는 특수기가 나간 틱보다 늦게
+    올 수 있으므로, 잠깐(한 박자보다 조금 길게) 켜 두고 그 사이에 오는
+    휘두름이 특수 동작을 쓰게 한다.
+  */
+  const [patShown, setPatShown] = useState(false);
+  const lastPat = useRef(battle.patSeq ?? 0);
+  useEffect(() => {
+    const now2 = battle.patSeq ?? 0;
+    if (now2 <= lastPat.current) { lastPat.current = now2; return undefined; }
+    lastPat.current = now2;
+    setPatCall((n) => n + 1);
+    setPatShown(true);
+    /* 치우고 나간다 — 화면을 떠난 뒤에 상태를 건드리면 안 된다 */
+    const off = setTimeout(() => setPatShown(false), FOE_BEAT_MS + 300);
+    return () => clearTimeout(off);
+  }, [battle.patSeq]);
 
   const [bossCall, setBossCall] = useState(0);
   const wasBoss = useRef(battle.boss);
@@ -1264,8 +1297,15 @@ export function BattleView() {
                   봐야 하는데(칸마다 세로 비율이 다르다), 두 군데서 따로 고르면
                   맞을 이유가 없다.
                 */
+                /*
+                  특수기를 쓰는 중이면 **`special` 칸**을 쓴다.
+
+                  시트에 그 칸이 없으면(슬라임 우두머리는 세 칸짜리다)
+                  `Sprite` 가 같은 세트의 `attack` 으로 떨어뜨린다 — 챕터마다
+                  시트를 다시 그리지 않아도 되도록 아래에 fallback 을 걸어 뒀다.
+                */
                 const foeFrame = flinch.includes(back) && !down ? 'down'
-                  : foeSwing ? 'attack'
+                  : foeSwing ? (battle.boss && patShown ? 'special' : 'attack')
                     : 'idle';
                 return (
                   <View
@@ -1370,8 +1410,15 @@ export function BattleView() {
                           { translateY: Math.round(foeSize * spriteGap(kf.art, foeFrame)) },
                         ],
                       }}
-                      fallbackSet="creature"
-                      fallbackName="slime"
+                      /*
+                        **같은 세트의 `attack` 으로 먼저 떨어진다.**
+
+                        `special` 칸은 새 챕터의 우두머리 시트에만 있다. 없는
+                        시트에서 곧장 `creature/slime` 으로 떨어지면 우두머리가
+                        특수기를 쓸 때만 갑자기 다른 생물이 된다.
+                      */
+                      fallbackSet={foeFrame === 'special' ? kf.art : 'creature'}
+                      fallbackName={foeFrame === 'special' ? 'attack' : 'slime'}
                     />
                   </View>
                 );
@@ -1481,6 +1528,14 @@ export function BattleView() {
         {!down && <BossCall nonce={bossCall} name={cur.name} />}
 
         {/*
+          우두머리 특수기 이름 — 무대 **위쪽**.
+
+          `BossCall` 이 쓰는 한가운데를 피한다. 우두머리가 나오는 순간
+          등장 이름과 겹쳐 두면 둘 다 안 읽힌다.
+        */}
+        {!down && <PatternCall nonce={patCall} name={battle.pat ?? ''} />}
+
+        {/*
           판이 열리고 닫히는 막 — 무대 안의 맨 위 층.
 
           화면 전체가 아니라 **무대만** 덮는다. 머리말과 파티 칸까지
@@ -1520,9 +1575,11 @@ export function BattleView() {
         <T size={9} dim="sub">
           {battle.boss
             ? '우두머리와 싸우는 중'
-            : battle.msLeft > 0
-              ? `우두머리까지 ${secLeft}초`
-              : '남은 적을 정리하는 중'}
+            : battle.called
+              ? '남은 적을 정리하면 우두머리가 나온다'
+              : battle.msLeft > 0
+                ? `우두머리 토벌까지 ${secLeft}초`
+                : '우두머리를 부를 수 있다'}
         </T>
       </Row>
       <Bar
@@ -1531,6 +1588,18 @@ export function BattleView() {
         blocks={MOB_CAP * 8}
         height={5}
       />
+
+      {/*
+        ── 우두머리 토벌 ──
+
+        1분을 사냥하면 나온다 (`bossReady`). **저절로 안 나온다** — 언제
+        들어갈지는 사람이 정한다. 더 사냥해서 골드를 모으고 들어가도 되고,
+        바로 눌러도 된다.
+
+        자리를 미리 안 비워 둔다. 안 보일 때 빈 칸이 남아 있으면 화면 아래가
+        늘 허전하고, 나타났을 때 "생겼다" 가 안 읽힌다.
+      */}
+      {bossReady(battle) && <BossCallBtn onPress={callBossNow} />}
 
       {/*
         ── 처음부터 ──

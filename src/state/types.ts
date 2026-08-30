@@ -440,6 +440,13 @@ export interface GameActions {
    * 오는 것이 회복 수단이 된다.
    */
   goStage: (stage: number) => boolean;
+  /**
+   * 우두머리를 부른다 — "우두머리 토벌" 단추.
+   *
+   * 1분을 사냥해야 부를 수 있다 (`bossReady`). 누르는 순간 나오지는 않고,
+   * 서 있던 잡몹을 마저 잡으면 그때 걸어 나온다.
+   */
+  callBossNow: () => boolean;
   /** 한 명이 검을 내려친 순간. 화면이 부른다 */
   /** @param aim 화면이 이미 고른 자리. 없으면 확률대로 고른다 */
   strikeFoe: (who: string, aim?: number) => void;

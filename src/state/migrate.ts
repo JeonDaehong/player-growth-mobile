@@ -283,6 +283,13 @@ export function migrateState(persisted: unknown): GameState {
     */
     openIn: OPEN_MS,
     clearIn: 0,
+    clearKind: null,
+    goTo: null,
+    /* 이어서 켜도 우두머리는 다시 불러야 한다 — 1분을 새로 사냥한다 */
+    called: false,
+    /* 지난 판에 나갔던 특수기 이름을 이어받을 이유가 없다 */
+    pat: null,
+    patSeq: 0,
   };
 
   return {
