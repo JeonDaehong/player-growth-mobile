@@ -221,30 +221,32 @@ export const createRosterSlice = (
       아무것도 안 바뀌었으면 `set` 을 부르지 않는다 — 파티가 비어 있을 때
       0.5초마다 리렌더가 돌면 안 된다.
 
-      적 목록은 배열이라 매 틱 새 배열이 나온다. 참조로 비교하면 항상
-      "바뀌었다" 가 되므로 **내용으로** 본다.
+      ── 왜 통째로 비교하나 (우두머리가 공격을 안 하던 버그) ──
+
+      여기는 원래 볼 칸을 **하나씩 나열**하고 있었다. `stage`, `boss`,
+      `msLeft`, `hp`, `down`, `slain`, 적의 `hp`/`k`/`id`... 그런데 적 시계
+      (`FoeSlot.cd`) 가 빠져 있었다.
+
+      잡몹 구간에서는 안 드러난다. `msLeft` 가 매 틱 줄어들어서 언제나
+      "바뀌었다" 가 되기 때문이다. 그런데 **우두머리 구간에서는 시간이
+      멈춘다** (`battleTick` 의 `if (!isBoss) msLeft = ...`). 적도 한 마리라
+      수가 안 변하고, 체력은 우두머리가 실제로 때려야 변한다.
+
+      그래서 우두머리가 치지 않는 틱에는 바뀌는 것이 `cd` 하나뿐인데, 그걸
+      안 보니 "안 바뀌었다" 가 되어 **줄어든 시계가 통째로 버려졌다.** 시계는
+      매 틱 1500 에서 1000 으로 줄었다가 1500 으로 되돌아갔고, 영영 0 에
+      못 닿았다. 화면에서는 우두머리가 가만히 서 있기만 했다.
+
+      나열해서 비교하는 방식이면 칸을 더할 때마다 여기도 같이 고쳐야 하고,
+      안 고쳐도 아무 데서도 안 터진다 — 그냥 그 칸의 변화가 조용히 사라진다.
+      그래서 나열을 그만두고 통째로 비교한다. 빠뜨릴 칸이 없다.
+
+      비용은 쟀다: `battle` 은 327바이트고 한 번 비교에 0.0027ms, 0.5초에 한
+      번이니 초당 0.005ms 다. 틀리는 방향도 안전하다 — 키 순서가 달라 다르게
+      보이면 리렌더가 한 번 더 돌 뿐, 상태를 버리지는 않는다. 반대 방향으로
+      틀리는 것(안 바뀐 걸로 보고 버리는 것)이 방금 그 버그였다.
     */
-    const same = battle.stage === st.battle.stage
-      && battle.boss === st.battle.boss
-      && battle.best === st.battle.best
-      && battle.msLeft === st.battle.msLeft
-      /*
-        연출 시계도 본다. 이 둘이 빠져 있으면 검은 막이 덮인 동안은 다른
-        게 아무것도 안 바뀌므로 `same` 이 참이 되고, 줄어든 값이 버려져서
-        연출이 영영 안 끝난다.
-      */
-      && battle.openIn === st.battle.openIn
-      && battle.clearIn === st.battle.clearIn
-      && Object.keys(battle.hp).length === Object.keys(st.battle.hp).length
-      && Object.entries(battle.hp).every(([k, v]) => v === st.battle.hp[k])
-      && battle.down === st.battle.down
-      && battle.slain === st.battle.slain
-      && battle.foes.length === st.battle.foes.length
-      && battle.foes.every((f, i) => f.hp === st.battle.foes[i].hp
-        && f.k === st.battle.foes[i].k
-        /* 번호까지 봐야 한다 — 한 마리가 죽고 한 마리가 들어오면 나머지가 같다 */
-        && f.id === st.battle.foes[i].id);
-    if (same) return;
+    if (JSON.stringify(battle) === JSON.stringify(st.battle)) return;
 
     if (!ev.killed) {
       set({ battle });

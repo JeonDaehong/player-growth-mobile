@@ -36,7 +36,7 @@ import {
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf } from '@/core/chars';
 import { hpOf, members, partyStat, supportMul } from '@/core/party';
-import { Bar, Row, T, Tag } from '@/ui/atoms';
+import { Bar, Btn, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
 import { BORDER, SP, WHITE } from '@/ui/theme';
@@ -1530,6 +1530,24 @@ export function BattleView() {
         max={STAGE_MS}
         blocks={MOB_CAP * 8}
         height={5}
+      />
+
+      {/*
+        ── 처음부터 ──
+
+        머리말의 `< >` 는 한 판씩 옮긴다. 10판에서 1판으로 가려면 아홉 번을
+        눌러야 하고, 그때마다 판이 열리는 연출이 한 번씩 돈다. 시험하는
+        동안에는 그 길이 제일 많이 쓰이므로 한 번에 가는 길을 따로 둔다.
+
+        1판에 있을 때는 눌러도 할 일이 없으므로 잠근다 (`goStage` 도 같은
+        자리를 거절한다). 지우지 않고 잠그는 쪽이 자리가 안 흔들린다.
+      */}
+      <Btn
+        label="1스테이지부터 시작"
+        size="sm"
+        disabled={battle.stage === 1}
+        onPress={() => goStage(1)}
+        style={{ marginTop: SP.sm }}
       />
     </View>
   );

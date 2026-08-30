@@ -965,7 +965,14 @@ export function battleTick(
 
   /* 시계가 줄어든 새 목록 — 원본을 안 건드린다 */
   const ticked = foes.map((f) => {
-    const kind = foeOf(st.stage, false, f.k);
+    /*
+      **우두머리는 우두머리의 수치로 읽는다.**
+
+      `false` 로 박혀 있었다. 지금은 열 판 수치를 다 같게 맞춰 둬서 눈에
+      안 띄지만, 우두머리 공격속도를 따로 잡는 순간 우두머리가 잡몹 박자로
+      치게 된다 — 그리고 그건 표를 아무리 들여다봐도 안 보인다.
+    */
+    const kind = foeOf(st.stage, isBoss, f.k);
     /*
       **없는 시계는 0 으로 친다.**
 
@@ -986,13 +993,16 @@ export function battleTick(
   /* 줄어든 시계를 실제로 들고 나간다 — 안 그러면 시계가 영영 안 준다 */
   foes = ticked.map((t) => t.slot);
 
-  /* 우두머리는 한 마리뿐이라 목록 대신 제 시계 하나를 쓴다 */
+  /*
+    친 만큼 한 대씩 늘어놓는다.
+
+    우두머리와 잡몹을 갈라 놓았었다 (`isBoss` 면 `bossFoe.atk`). 이제 위에서
+    제 종을 제대로 읽으므로 `t.atk` 하나면 된다 — 갈래가 둘이면 한쪽만 고치는
+    일이 생기고, 실제로 시계는 잡몹 것을 쓰면서 공격력만 우두머리 것을 쓰고
+    있었다.
+  */
   const hits: number[] = [];
-  if (isBoss) {
-    for (const t of ticked) for (let n = 0; n < t.swings; n++) hits.push(bossFoe.atk);
-  } else {
-    for (const t of ticked) for (let n = 0; n < t.swings; n++) hits.push(t.atk);
-  }
+  for (const t of ticked) for (let n = 0; n < t.swings; n++) hits.push(t.atk);
 
   for (const atk of hits) {
     const alive = line.filter((c) => hp[c.id] > 0);
