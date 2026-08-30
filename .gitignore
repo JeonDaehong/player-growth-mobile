@@ -12,11 +12,6 @@ expo-env.d.ts
 # Native
 .kotlin/
 *.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
 
 # Metro
 .metro-health-check*
@@ -28,10 +23,6 @@ yarn-error.*
 
 # macOS
 .DS_Store
-*.pem
-
-# local env files
-.env*.local
 
 # typescript
 *.tsbuildinfo
@@ -40,8 +31,30 @@ yarn-error.*
 /ios
 /android
 
-# 로컬 자격증명
-.env
+# ── 자격증명 ──────────────────────────────────────────────
+#
+# **`.env*` 를 통째로 막고 예시만 되살린다.**
+#
+# 예전에는 `.env` 와 `.env*.local` 두 줄이었다. 그러면 `.env.production`,
+# `.env.bak`, `.env.old` 같은 이름은 그물을 그냥 빠져나간다 — 급할 때 만드는
+# 이름이 하필 그런 것들이다. 저장소가 공개라 한 번 새면 되돌릴 수가 없으므로,
+# 막는 쪽을 넓게 잡고 올릴 것만 하나씩 되살린다.
+.env*
+!.env.example
+
+# 키 파일은 확장자로 막는다 — 이름은 사람마다 다르지만 확장자는 안 변한다
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.jks
+*.mobileprovision
+id_rsa*
+# 파이어베이스/구글 서비스 계정 (엑스포가 네이티브 빌드에서 쓴다)
+google-services.json
+GoogleService-Info.plist
+service-account*.json
 
 # ── 여기서부터: 저장소에 안 올리는 것 ──
 
