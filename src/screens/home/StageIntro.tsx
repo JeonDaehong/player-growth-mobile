@@ -42,6 +42,15 @@ const OPEN_VEIL = OPEN_MS - OPEN_WALK_MS;
 const IN_DONE = (OPEN_VEIL * 0.34) / OPEN_MS;   // 검게 덮이고 글씨가 뜬다
 const HOLD_DONE = (OPEN_VEIL * 0.66) / OPEN_MS; // 읽는 동안
 const VEIL_DONE = OPEN_VEIL / OPEN_MS;          // 막이 걷힌다 (여기서부터 걸어옴)
+/*
+  다 모이는 지점 — 끝(1.0)이 아니라 조금 앞이다.
+
+  엔진은 0.5초 틱으로 `openIn` 을 0 까지 내리고 거기서 싸움을 푼다. 화면의
+  애니메이션은 그것과 위상이 안 맞아 최대 반 틱 어긋나므로, 미끄러짐을 정확히
+  끝에 맞추면 아직 움직이는 중에 첫 타격이 나갈 수 있다. 먼저 다 서 있는 건
+  아무도 눈치 못 채지만, 미끄러지면서 치는 건 바로 보인다.
+*/
+const WALK_DONE = 0.93;
 
 /**
  * 연출 한 판을 0 → 1 로 끌고 가는 값.
@@ -114,8 +123,8 @@ export function walkInX(
 ): Animated.AnimatedInterpolation<number> | number {
   if (phase !== 'open') return 0;
   return t.interpolate({
-    inputRange: [0, VEIL_DONE, 1],
-    outputRange: [dir * span, dir * span, 0],
+    inputRange: [0, VEIL_DONE, WALK_DONE, 1],
+    outputRange: [dir * span, dir * span, 0, 0],
     extrapolate: 'clamp',
   });
 }

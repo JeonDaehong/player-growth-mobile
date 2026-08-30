@@ -58,8 +58,14 @@ import {
 /** 한 틱의 길이 */
 export const TICK_MS = 500;
 
-/** 한 스테이지에서 잡몹이 몰려오는 시간 */
-export const STAGE_MS = 120_000;
+/**
+ * 한 스테이지에서 잡몹이 몰려오는 시간 — 이 시간이 지나면 우두머리가 나온다.
+ *
+ * ⚠ **지금은 시험용으로 30초다.** 원래 값은 2분(`120_000`)이었다. 열 판의
+ * 우두머리 그림과 판 연출을 눈으로 확인하려면 한 판에 2분씩 기다려야 하는데,
+ * 열 판이면 20분이다. 확인이 끝나면 되돌린다.
+ */
+export const STAGE_MS = 30_000;
 
 /**
  * 판이 열릴 때 검은 막이 떴다 걷히고 양쪽에서 걸어 들어오기까지 (ms).
@@ -72,10 +78,14 @@ export const STAGE_MS = 120_000;
 export const OPEN_MS = 2000;
 
 /**
- * 그중 **마지막 한 틱**은 걸어 들어오는 시간이다.
+ * 그중 **마지막 한 틱**이 양쪽에서 걸어 들어오는 시간이다.
  *
- * 여기서부터는 싸움이 다시 돈다. 다 들어와서 멈춘 뒤에 시작하면 한 박자
- * 비는데, 들어오면서 붙는 편이 "판이 시작됐다" 로 읽힌다.
+ * 여기는 **화면이 얼마나 미끄러지느냐**만 정한다. 싸움은 그동안에도 안 돈다 —
+ * `openIn` 이 0 이 되고 **다 모인 뒤에** 시작한다.
+ *
+ * 처음에는 들어오면서 붙게 해 뒀다. 화면에서 보니 어색했다: 몸은 옆으로
+ * 미끄러지는데 검기와 화살은 제자리 기준으로 날아가므로, 쏜 자리와 몸이
+ * 어긋난 채로 날아간다. 다 서고 나서 치는 편이 훨씬 낫다.
  */
 export const OPEN_WALK_MS = TICK_MS;
 
@@ -667,7 +677,7 @@ export { startFoes };
  */
 export const fightHeld = (st: BattleState): boolean => (
   (Number.isFinite(st.clearIn) && st.clearIn > 0)
-  || (Number.isFinite(st.openIn) && st.openIn > OPEN_WALK_MS)
+  || (Number.isFinite(st.openIn) && st.openIn > 0)
 );
 
 /** 다음 판. `STAGE_CAP` 에 걸리면 그 자리에 머문다 */
@@ -839,17 +849,14 @@ export function battleTick(
   }
 
   const openIn = Number.isFinite(st.openIn) ? st.openIn : 0;
-  if (fightHeld({ ...st, clearIn: 0 })) {
-    /* 검은 막이 덮여 있다 — 시간만 흐른다 */
-    return { battle: { ...st, openIn: openIn - TICK_MS }, ev: NOTHING };
-  }
   if (openIn > 0) {
     /*
-      마지막 한 틱 — **걸어 들어오면서 싸운다.** 표시만 끄고 평소대로 한 틱
-      돌린다. 여기서 다시 부르는 자신은 `openIn` 이 0 이라 더 안 들어온다.
+      막이 덮여 있거나 걸어 들어오는 중이다 — **시간만 흐른다.**
+
+      다 모일 때까지 아무도 안 친다. 들어오면서 치게 해 봤는데, 몸은 옆으로
+      미끄러지고 투사체는 제자리 기준으로 날아가서 쏜 자리와 몸이 어긋났다.
     */
-    const r = battleTick({ ...st, openIn: 0 }, party, chars, rand);
-    return { battle: { ...r.battle, openIn: 0 }, ev: r.ev };
+    return { battle: { ...st, openIn: Math.max(0, openIn - TICK_MS) }, ev: NOTHING };
   }
 
   const mob = foeOf(st.stage, false);
