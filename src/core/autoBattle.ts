@@ -377,18 +377,21 @@ export interface StageDef {
  */
 const SLIME = {
   /* ── 붙어서 싸운다 ── */
-  grass: { art: 'sg_grass', name: '풀슬라임', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  mud: { art: 'sg_mud', name: '진흙 슬라임', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  stone: { art: 'sg_stone', name: '돌 슬라임', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  bone: { art: 'sg_bone', name: '뼈 슬라임', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  twin: { art: 'sg_twin', name: '쌍둥이 슬라임', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  grass: { art: 'sg_grass', name: '풀슬라임', bg: '', melee: true, dmg: 'phys' },
+  mud: { art: 'sg_mud', name: '진흙 슬라임', bg: '', melee: true, dmg: 'phys' },
+  stone: { art: 'sg_stone', name: '돌 슬라임', bg: '', melee: true, dmg: 'phys' },
+  bone: { art: 'sg_bone', name: '뼈 슬라임', bg: '', melee: true, dmg: 'phys' },
+  twin: { art: 'sg_twin', name: '쌍둥이 슬라임', bg: '', melee: true, dmg: 'phys' },
   /* ── 떨어져서 던진다 — 무르고 아프다 ── */
-  spore: { art: 'sg_spore', name: '포자 슬라임', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
-  thorn: { art: 'sg_thorn', name: '가시 슬라임', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
-  acid: { art: 'sg_acid', name: '산성 슬라임', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
+  spore: { art: 'sg_spore', name: '포자 슬라임', bg: '', melee: false, dmg: 'phys' },
+  thorn: { art: 'sg_thorn', name: '가시 슬라임', bg: '', melee: false, dmg: 'phys' },
+  /* 슬라임 중 유일하게 **마법**으로 때린다 — 7판부터 나온다 */
+  acid: { art: 'sg_acid', name: '산성 슬라임', bg: '', melee: false, dmg: 'magic' },
 } as const;
 
-const g = (k: keyof typeof SLIME): FoeKind => ({ ...SLIME[k] });
+const g = (
+  k: keyof typeof SLIME, atk: number, hp: number, spd: number, def = 0, res = 0,
+): FoeKind => ({ ...SLIME[k], atk, hp, spd, def, res });
 
 /**
  * 오염된 잔재들의 숲의 식물들 — 11~15 스테이지.
@@ -407,13 +410,13 @@ const g = (k: keyof typeof SLIME): FoeKind => ({ ...SLIME[k] });
  */
 const PLANT = {
   /* ── 붙어서 싸운다 ── */
-  vine: { art: 'pf_vine', name: '덩굴손', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  maw: { art: 'pf_maw', name: '아귀꽃', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  bramble: { art: 'pf_bramble', name: '가시덤불', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  moss: { art: 'pf_moss', name: '이끼덩이', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  /* ── 떨어져서 던진다 ── */
-  spore: { art: 'pf_spore', name: '홀씨대', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
-  sap: { art: 'pf_sap', name: '진액꽃', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
+  vine: { art: 'pf_vine', name: '덩굴손', bg: '', melee: true, dmg: 'phys' },
+  maw: { art: 'pf_maw', name: '아귀꽃', bg: '', melee: true, dmg: 'phys' },
+  bramble: { art: 'pf_bramble', name: '가시덤불', bg: '', melee: true, dmg: 'phys' },
+  moss: { art: 'pf_moss', name: '이끼덩이', bg: '', melee: true, dmg: 'phys' },
+  /* ── 떨어져서 던진다. 둘 다 **마법**이다 ── */
+  spore: { art: 'pf_spore', name: '홀씨대', bg: '', melee: false, dmg: 'magic' },
+  sap: { art: 'pf_sap', name: '진액꽃', bg: '', melee: false, dmg: 'magic' },
 } as const;
 
 /**
@@ -433,150 +436,290 @@ const PLANT = {
  */
 const WOOD = {
   /* ── 붙어서 싸운다 ── */
-  stump: { art: 'pw_stump', name: '걷는 그루터기', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  hollow: { art: 'pw_hollow', name: '속 빈 나무', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  root: { art: 'pw_root', name: '뿌리덩이', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
-  bark: { art: 'pw_bark', name: '껍질갑옷', bg: '', melee: true, atk: 8, hp: 40, spd: 0.8 },
+  stump: { art: 'pw_stump', name: '걷는 그루터기', bg: '', melee: true, dmg: 'phys' },
+  hollow: { art: 'pw_hollow', name: '속 빈 나무', bg: '', melee: true, dmg: 'phys' },
+  root: { art: 'pw_root', name: '뿌리덩이', bg: '', melee: true, dmg: 'phys' },
+  bark: { art: 'pw_bark', name: '껍질갑옷', bg: '', melee: true, dmg: 'phys' },
   /* ── 떨어져서 던진다 ── */
-  branch: { art: 'pw_branch', name: '가지창', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
-  pod: { art: 'pw_pod', name: '꼬투리나무', bg: '', melee: false, atk: 10, hp: 30, spd: 1.0 },
+  branch: { art: 'pw_branch', name: '가지창', bg: '', melee: false, dmg: 'phys' },
+  /* 나무 중 유일하게 **마법**이다 — 18판부터 나온다 */
+  pod: { art: 'pw_pod', name: '꼬투리나무', bg: '', melee: false, dmg: 'magic' },
 } as const;
 
-const p = (k: keyof typeof PLANT): FoeKind => ({ ...PLANT[k] });
-const w = (k: keyof typeof WOOD): FoeKind => ({ ...WOOD[k] });
+const p = (
+  k: keyof typeof PLANT, atk: number, hp: number, spd: number, def = 0, res = 0,
+): FoeKind => ({ ...PLANT[k], atk, hp, spd, def, res });
+const w = (
+  k: keyof typeof WOOD, atk: number, hp: number, spd: number, def = 0, res = 0,
+): FoeKind => ({ ...WOOD[k], atk, hp, spd, def, res });
 
 /*
-  ── 수치는 열 판이 전부 같다 (임시) ──
+  ── 손으로 짠 레벨 디자인 ──
 
-  근접 8/40/0.8 · 원거리 10/30/1.0 · 우두머리 20/500/0.8 — 잡몹은 1스테이지
-  값 그대로고 우두머리만 체력 500 이다. `STAGE_HP_POW`/`STAGE_ATK_POW` 도
-  0 이라 판이 올라도 안 세진다.
+  **수치를 종이 아니라 판이 들고 있다.** 같은 진흙 슬라임이 3판에서 12/80 이고
+  5판에서 16/125 다 — 종 표(`SLIME`·`PLANT`·`WOOD`)에는 정체만 남기고(그림 ·
+  이름 · 사거리 · 피해 종류) 수치는 여기서 준다.
 
-  **레벨 디자인은 손으로 할 예정이다.** 그때까지 판을 가르는 것은 수치가
-  아니라 **어떤 종이 나오느냐**다. 여기 표에서 한 판의 숫자를 고치면 화면에
-  그 숫자가 그대로 나온다 — 곱해지는 것이 아무것도 없다.
+      g('mud', 12, 80, 0.75, 1)
+            공격 ─┘   │    │  └─ 방어력 (마법저항력은 그 뒤, 안 적으면 0)
+                 체력 ┘  공격속도
+
+  `STAGE_HP_POW`/`STAGE_ATK_POW` 는 여전히 0 이다. 곱해지는 것이 하나도 없고,
+  여기 적힌 값이 화면에 그대로 나온다 (`docs/FOE_TABLE.md`).
+
+  ## 판이 올라가면 무엇이 달라지나
+
+  셋이 같이 오른다 — **수치 · 종 수 · 막는 것**. 1판은 두 종에 방어 0 이고,
+  20판은 네 종에 방어 28 이다. 그래서 20판의 껍질갑옷(체력 1500 · 방어 28)은
+  1판 슬라임의 서른일곱 배가 아니라 그보다 훨씬 두껍다 — 방어가 뺄셈이라
+  약한 공격일수록 많이 깎이기 때문이다 (`core/chars` 의 `Armor`).
+
+  ## 마법으로 때리는 놈이 넷 있다
+
+  산성 슬라임(7판~) · 홀씨대(11판~) · 진액꽃(14판~) · 꼬투리나무(18판~).
+  전부 원거리다. 이들이 나오는 판부터 **마법저항력이 값을 갖는다** — 그
+  전까지 이졸데의 마저 1 은 아무 일도 안 한다.
 */
 /**
- * 열 스테이지.
+ * 스무 스테이지.
  *
- * 1~5 는 **슬라임초원**, 6~10 은 **슬라임 초원 깊숙한 곳**이다. 배경 두 장으로
- * 다섯 판씩 돈다 — 판마다 그리면 그릴 것이 너무 많고, 한 장으로 열 판을 돌리면
- * 어디까지 왔는지 알 수 없다.
+ * 지역은 **열 판마다**, 배경은 **다섯 판마다** 바뀐다. 지역 이름이 더 크게
+ * 묶는 단위이고, 그 안에서 배경이 한 번 바뀌며 "더 깊이 들어왔다" 를 말한다.
  *
- * 판이 넘어갈 때 **한 종씩만 바뀐다.** 통째로 갈면 매번 처음부터 다시 보게 되고,
- * 안 갈면 넘어간 줄을 모른다. 하나만 바뀌면 "뭔가 새로 왔다" 가 보이면서 나머지
- * 둘은 이미 아는 놈이다.
+ * 판이 넘어갈 때 **한 종씩만 바뀐다.** 통째로 갈면 매번 처음부터 다시 보게
+ * 되고, 안 갈면 넘어간 줄을 모른다. 하나만 바뀌면 "뭔가 새로 왔다" 가
+ * 보이면서 나머지는 이미 아는 놈이다.
  */
 export const STAGES: StageDef[] = [
-  /* ── 1~5 · 슬라임초원 ── */
+  /* ── 1~10 · 오염된 응집체들의 평원 ── */
   {
-    bg: '01', zone: '슬라임초원',
+    bg: '01', zone: '오염된 응집체들의 평원',
     kinds: [
-      { art: 'sl_melee', name: '슬라임', bg: '01', melee: true, atk: 8, hp: 40, spd: 0.8 },
-      { art: 'sl_ranged', name: '뱉는 슬라임', bg: '01', melee: false, atk: 10, hp: 30, spd: 1.0 },
+      { art: 'sl_melee', name: '슬라임', bg: '01', melee: true, dmg: 'phys', atk: 8, hp: 40, spd: 0.8, def: 0, res: 0 },
+      { art: 'sl_ranged', name: '뱉는 슬라임', bg: '01', melee: false, dmg: 'phys', atk: 10, hp: 30, spd: 1.0, def: 0, res: 0 },
     ],
-    boss: { art: 'sl_boss', name: '빅 슬라임', bg: '01', melee: true, atk: 20, hp: 500, spd: 0.8 },
+    boss: {
+      art: 'b01_gelatus', name: '빅 슬라임', bg: '01', melee: true, dmg: 'phys',
+      atk: 20, hp: 500, spd: 0.8, def: 0, res: 0,
+    },
   },
   {
-    bg: '01', zone: '슬라임초원',
-    kinds: [g('grass'), g('spore')],
-    boss: { art: 'sb_grass', name: '풀무더기 슬라임', bg: '01', melee: true , atk: 20, hp: 500, spd: 0.8 },
+    bg: '01', zone: '오염된 응집체들의 평원',
+    kinds: [g('grass', 10, 55, 0.8, 0, 0), g('spore', 12, 40, 1.0, 0, 0)],
+    boss: {
+      art: 'b02_floratus', name: '풀무더기 슬라임', bg: '01', melee: true, dmg: 'phys',
+      atk: 24, hp: 650, spd: 0.8, def: 1, res: 0,
+    },
   },
   {
-    bg: '01', zone: '슬라임초원',
-    kinds: [g('grass'), g('mud'), g('spore')],
-    boss: { art: 'sb_mud', name: '수렁 슬라임', bg: '01', melee: true , atk: 20, hp: 500, spd: 0.8 },
+    bg: '01', zone: '오염된 응집체들의 평원',
+    kinds: [g('mud', 12, 80, 0.75, 1, 0), g('spore', 13, 45, 1.0, 0, 0)],
+    boss: {
+      art: 'b03_acidus', name: '수렁 슬라임', bg: '01', melee: true, dmg: 'phys',
+      atk: 28, hp: 850, spd: 0.8, def: 2, res: 1,
+    },
   },
   {
-    bg: '01', zone: '슬라임초원',
-    kinds: [g('mud'), g('spore'), g('thorn')],
-    boss: { art: 'sb_spore', name: '홀씨 슬라임', bg: '01', melee: false , atk: 20, hp: 500, spd: 0.8 },
+    bg: '01', zone: '오염된 응집체들의 평원',
+    kinds: [
+      g('mud', 14, 100, 0.75, 1, 0),
+      g('spore', 15, 50, 1.0, 0, 0),
+      g('thorn', 17, 45, 1.0, 0, 0),
+    ],
+    boss: {
+      art: 'b04_sporia', name: '홀씨 슬라임', bg: '01', melee: true, dmg: 'phys',
+      atk: 32, hp: 1050, spd: 0.8, def: 2, res: 3,
+    },
   },
   {
-    bg: '01', zone: '슬라임초원',
-    kinds: [g('mud'), g('stone'), g('thorn')],
-    boss: { art: 'sb_thorn', name: '가시덩이 슬라임', bg: '01', melee: false , atk: 20, hp: 500, spd: 0.8 },
-  },
-
-  /* ── 6~10 · 슬라임 초원 깊숙한 곳 ── */
-  {
-    bg: '02', zone: '슬라임 초원 깊숙한 곳',
-    kinds: [g('stone'), g('twin'), g('thorn')],
-    boss: { art: 'sb_stone', name: '바위 슬라임', bg: '02', melee: true , atk: 20, hp: 500, spd: 0.8 },
-  },
-  {
-    bg: '02', zone: '슬라임 초원 깊숙한 곳',
-    kinds: [g('stone'), g('bone'), g('acid')],
-    boss: { art: 'sb_twin', name: '가르는 슬라임', bg: '02', melee: true , atk: 20, hp: 500, spd: 0.8 },
+    bg: '01', zone: '오염된 응집체들의 평원',
+    kinds: [
+      g('mud', 16, 125, 0.75, 2, 0),
+      g('stone', 12, 170, 0.65, 5, 0),
+      g('thorn', 19, 55, 1.0, 0, 0),
+    ],
+    boss: {
+      art: 'b05_spinatus', name: '가시덩이 슬라임', bg: '01', melee: true, dmg: 'phys',
+      atk: 36, hp: 1300, spd: 0.8, def: 4, res: 2,
+    },
   },
   {
-    bg: '02', zone: '슬라임 초원 깊숙한 곳',
-    kinds: [g('bone'), g('twin'), g('acid')],
-    boss: { art: 'sb_acid', name: '녹이는 슬라임', bg: '02', melee: false , atk: 20, hp: 500, spd: 0.8 },
+    bg: '02', zone: '오염된 응집체들의 평원',
+    kinds: [
+      g('stone', 14, 200, 0.65, 6, 0),
+      g('twin', 17, 105, 0.9, 2, 0),
+      g('thorn', 21, 65, 1.0, 0, 0),
+    ],
+    boss: {
+      art: 'b06_petros', name: '바위 슬라임', bg: '02', melee: true, dmg: 'phys',
+      atk: 42, hp: 1600, spd: 0.75, def: 8, res: 2,
+    },
   },
   {
-    bg: '02', zone: '슬라임 초원 깊숙한 곳',
-    kinds: [g('bone'), g('twin'), g('acid'), g('thorn')],
-    boss: { art: 'sb_bone', name: '뼈무덤 슬라임', bg: '02', melee: true , atk: 20, hp: 500, spd: 0.8 },
+    bg: '02', zone: '오염된 응집체들의 평원',
+    kinds: [
+      g('stone', 16, 230, 0.65, 7, 0),
+      g('bone', 19, 135, 0.85, 3, 0),
+      g('acid', 24, 70, 1.0, 0, 2),
+    ],
+    boss: {
+      art: 'b07_idolatus', name: '가르는 슬라임', bg: '02', melee: true, dmg: 'phys',
+      atk: 48, hp: 1900, spd: 0.75, def: 7, res: 3,
+    },
   },
   {
-    bg: '02', zone: '슬라임 초원 깊숙한 곳',
-    kinds: [g('stone'), g('bone'), g('twin'), g('acid')],
-    boss: { art: 'sb_king', name: '슬라임 군주', bg: '02', melee: true , atk: 20, hp: 500, spd: 0.8 },
-  },
-
-  /* ── 11~15 · 오염된 잔재들의 숲 ── */
-  {
-    bg: '03', zone: '오염된 잔재들의 숲',
-    kinds: [p('vine'), p('spore')],
-    boss: { art: 'pb_bramble', name: '가시덤불 군체', bg: '03', melee: true, atk: 20, hp: 500, spd: 0.8 },
-  },
-  {
-    bg: '03', zone: '오염된 잔재들의 숲',
-    kinds: [p('vine'), p('maw'), p('spore')],
-    boss: { art: 'pb_bloom', name: '아귀꽃 여왕', bg: '03', melee: true, atk: 20, hp: 500, spd: 0.8 },
+    bg: '02', zone: '오염된 응집체들의 평원',
+    kinds: [
+      g('bone', 21, 165, 0.85, 4, 0),
+      g('twin', 20, 125, 0.9, 2, 0),
+      g('acid', 27, 80, 1.0, 0, 3),
+    ],
+    boss: {
+      art: 'b08_solvenus', name: '녹이는 슬라임', bg: '02', melee: true, dmg: 'phys',
+      atk: 54, hp: 2250, spd: 0.75, def: 5, res: 7,
+    },
   },
   {
-    bg: '03', zone: '오염된 잔재들의 숲',
-    kinds: [p('maw'), p('bramble'), p('spore')],
-    boss: { art: 'pb_creeper', name: '덩굴 어미', bg: '03', melee: true, atk: 20, hp: 500, spd: 0.8 },
+    bg: '02', zone: '오염된 응집체들의 평원',
+    kinds: [
+      g('bone', 23, 195, 0.85, 4, 0),
+      g('twin', 22, 145, 0.9, 3, 0),
+      g('acid', 30, 90, 1.0, 0, 4),
+      g('thorn', 27, 75, 1.0, 0, 0),
+    ],
+    boss: {
+      art: 'b09_osseus', name: '뼈무덤 슬라임', bg: '02', melee: true, dmg: 'phys',
+      atk: 60, hp: 2650, spd: 0.7, def: 9, res: 5,
+    },
   },
   {
-    bg: '03', zone: '오염된 잔재들의 숲',
-    kinds: [p('bramble'), p('moss'), p('sap')],
-    boss: { art: 'pb_spore', name: '홀씨 기둥', bg: '03', melee: false, atk: 20, hp: 500, spd: 0.8 },
+    bg: '02', zone: '오염된 응집체들의 평원',
+    kinds: [
+      g('stone', 20, 300, 0.65, 9, 0),
+      g('bone', 25, 220, 0.85, 5, 0),
+      g('twin', 24, 170, 0.9, 3, 0),
+      g('acid', 33, 100, 1.0, 0, 5),
+    ],
+    boss: {
+      art: 'b10_sludginus', name: '슬라임 군주', bg: '02', melee: true, dmg: 'phys',
+      atk: 68, hp: 3200, spd: 0.7, def: 11, res: 8,
+    },
+  },
+  /* ── 11~20 · 타락한 군락의 정원 ── */
+  {
+    bg: '03', zone: '타락한 군락의 정원',
+    kinds: [p('vine', 25, 350, 0.8, 6, 0), p('spore', 32, 160, 1.0, 2, 5)],
+    boss: {
+      art: 'b11_acanthus', name: '가시덤불 군체', bg: '03', melee: true, dmg: 'phys',
+      atk: 75, hp: 3600, spd: 0.7, def: 13, res: 7,
+    },
   },
   {
-    bg: '03', zone: '오염된 잔재들의 숲',
-    kinds: [p('maw'), p('bramble'), p('moss'), p('sap')],
-    boss: { art: 'pb_carrion', name: '시체꽃', bg: '03', melee: false, atk: 20, hp: 500, spd: 0.8 },
-  },
-
-  /* ── 16~20 · 타락한 잔재들의 숲 ── */
-  {
-    bg: '04', zone: '타락한 잔재들의 숲',
-    kinds: [w('stump'), w('branch')],
-    boss: { art: 'pb_stump', name: '늙은 그루터기', bg: '04', melee: true, atk: 20, hp: 500, spd: 0.8 },
-  },
-  {
-    bg: '04', zone: '타락한 잔재들의 숲',
-    kinds: [w('stump'), w('hollow'), w('branch')],
-    boss: { art: 'pb_hollow', name: '속 빈 거인', bg: '04', melee: true, atk: 20, hp: 500, spd: 0.8 },
+    bg: '03', zone: '타락한 군락의 정원',
+    kinds: [
+      p('vine', 27, 390, 0.8, 7, 0),
+      p('maw', 32, 330, 0.8, 5, 2),
+      p('spore', 35, 180, 1.0, 2, 6),
+    ],
+    boss: {
+      art: 'b12_nepenthia', name: '아귀꽃 여왕', bg: '03', melee: true, dmg: 'phys',
+      atk: 82, hp: 4000, spd: 0.7, def: 11, res: 10,
+    },
   },
   {
-    bg: '04', zone: '타락한 잔재들의 숲',
-    kinds: [w('hollow'), w('root'), w('pod')],
-    boss: { art: 'pb_thornwood', name: '가시나무', bg: '04', melee: true, atk: 20, hp: 500, spd: 0.8 },
+    bg: '03', zone: '타락한 군락의 정원',
+    kinds: [
+      p('maw', 35, 370, 0.8, 6, 2),
+      p('bramble', 30, 450, 0.75, 9, 0),
+      p('spore', 38, 200, 1.0, 2, 7),
+    ],
+    boss: {
+      art: 'b13_matrona', name: '덩굴 어미', bg: '03', melee: true, dmg: 'phys',
+      atk: 90, hp: 4450, spd: 0.65, def: 15, res: 9,
+    },
   },
   {
-    bg: '04', zone: '타락한 잔재들의 숲',
-    kinds: [w('root'), w('bark'), w('branch'), w('pod')],
-    boss: { art: 'pb_rot', name: '썩은 거목', bg: '04', melee: true, atk: 20, hp: 500, spd: 0.8 },
+    bg: '03', zone: '타락한 군락의 정원',
+    kinds: [
+      p('bramble', 33, 500, 0.75, 10, 0),
+      p('moss', 29, 570, 0.7, 12, 3),
+      p('sap', 42, 210, 1.0, 2, 8),
+    ],
+    boss: {
+      art: 'b14_columna', name: '홀씨 기둥', bg: '03', melee: true, dmg: 'phys',
+      atk: 98, hp: 4950, spd: 0.65, def: 12, res: 15,
+    },
   },
   {
-    bg: '04', zone: '타락한 잔재들의 숲',
-    kinds: [w('hollow'), w('root'), w('bark'), w('pod')],
-    boss: { art: 'pb_elder', name: '숲의 어른', bg: '04', melee: true, atk: 20, hp: 500, spd: 0.8 },
+    bg: '03', zone: '타락한 군락의 정원',
+    kinds: [
+      p('maw', 38, 430, 0.8, 7, 3),
+      p('bramble', 36, 550, 0.75, 11, 0),
+      p('moss', 32, 650, 0.7, 13, 4),
+      p('sap', 47, 230, 1.0, 2, 9),
+    ],
+    boss: {
+      art: 'b15_cadavera', name: '시체꽃', bg: '03', melee: true, dmg: 'phys',
+      atk: 108, hp: 5500, spd: 0.65, def: 16, res: 13,
+    },
+  },
+  {
+    bg: '04', zone: '타락한 군락의 정원',
+    kinds: [w('stump', 40, 700, 0.75, 14, 2), w('branch', 52, 300, 1.0, 5, 0)],
+    boss: {
+      art: 'b16_truncus', name: '늙은 그루터기', bg: '04', melee: true, dmg: 'phys',
+      atk: 118, hp: 6200, spd: 0.6, def: 20, res: 12,
+    },
+  },
+  {
+    bg: '04', zone: '타락한 군락의 정원',
+    kinds: [
+      w('stump', 43, 760, 0.75, 15, 2),
+      w('hollow', 45, 850, 0.7, 17, 3),
+      w('branch', 56, 320, 1.0, 5, 0),
+    ],
+    boss: {
+      art: 'b17_cavus', name: '속 빈 거인', bg: '04', melee: true, dmg: 'phys',
+      atk: 128, hp: 6900, spd: 0.6, def: 23, res: 14,
+    },
+  },
+  {
+    bg: '04', zone: '타락한 군락의 정원',
+    kinds: [
+      w('hollow', 48, 950, 0.7, 18, 3),
+      w('root', 43, 1050, 0.65, 21, 5),
+      w('pod', 62, 350, 1.0, 5, 10),
+    ],
+    boss: {
+      art: 'b18_spinosa', name: '가시나무', bg: '04', melee: true, dmg: 'phys',
+      atk: 140, hp: 7700, spd: 0.6, def: 26, res: 16,
+    },
+  },
+  {
+    bg: '04', zone: '타락한 군락의 정원',
+    kinds: [
+      w('root', 47, 1150, 0.65, 22, 5),
+      w('bark', 42, 1350, 0.6, 26, 8),
+      w('branch', 60, 360, 1.0, 6, 0),
+      w('pod', 68, 390, 1.0, 5, 11),
+    ],
+    boss: {
+      art: 'b19_putridus', name: '썩은 거목', bg: '04', melee: true, dmg: 'phys',
+      atk: 152, hp: 8600, spd: 0.55, def: 29, res: 18,
+    },
+  },
+  {
+    bg: '04', zone: '타락한 군락의 정원',
+    kinds: [
+      w('hollow', 52, 1050, 0.7, 20, 4),
+      w('root', 50, 1250, 0.65, 24, 6),
+      w('bark', 45, 1500, 0.6, 28, 9),
+      w('pod', 75, 420, 1.0, 6, 12),
+    ],
+    boss: {
+      art: 'b20_silvanus', name: '숲의 어른', bg: '04', melee: true, dmg: 'phys',
+      atk: 170, hp: 10000, spd: 0.55, def: 33, res: 21,
+    },
   },
 ];
 

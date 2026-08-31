@@ -220,6 +220,10 @@ function blockPinch() {
  * 질문에 정확히 답하는 값이고, 다른 입력 장치가 뭐가 붙어 있든 안 흔들린다.
  * `any-pointer` 는 그게 없는 옛 브라우저용 대비책이다.
  */
+export function touchDevice(): boolean {
+  return touchable();
+}
+
 function touchable(): boolean {
   if (typeof navigator !== 'undefined' && typeof navigator.maxTouchPoints === 'number') {
     if (navigator.maxTouchPoints > 0) return true;

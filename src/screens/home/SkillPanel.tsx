@@ -146,7 +146,7 @@ export function SkillPanel({
                         ? `공격력의 ${Math.round(sk.mul * 100)}% + 방어력의 ${Math.round(sk.defMul * 100)}%`
                         : `공격력의 ${Math.round(sk.mul * 100)}%`}
                     />
-                    <KV k="피해 종류" v={`${DMG_NAME[sk.dmg]} 피해`} />
+                    <KV k="피해 종류" v={`(${DMG_NAME[sk.dmg]})`} />
                     {!!pierce && <KV k="관통" v={pierce} />}
                     <KV k="한 대" v={`${hit}`} />
                     {sk.hits > 1 && <KV k="발수" v={`${sk.hits}발`} />}

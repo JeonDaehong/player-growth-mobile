@@ -37,11 +37,13 @@ import {
 
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap } from '@/ui/spriteAssets';
+import { StatusId } from '@/core/status';
 import { WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import { DamageNumber, HealMarks, HitBurst, SkillShout } from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
+import { StatusRow } from './StatusRow';
 
 /**
  * 베는 동작 세 칸의 길이 (ms).
@@ -141,7 +143,7 @@ type Frame = 'guard' | 'lose'
 
 function FighterView({
   ch, back, down, hp, damage, bless, advance, leapTo,
-  squeeze, width, lap, onAim, onSwing, onSkill,
+  squeeze, width, lap, status, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
   /** 0 이 맨 앞 */
@@ -208,6 +210,12 @@ function FighterView({
    */
   onAim: (id: string, skill: boolean) => number;
   onSwing: (s: Swing) => void;
+  /**
+   * 지금 이 사람에게 걸려 있는 상태들 (`core/status`).
+   *
+   * 머리 위에 로고로 뜬다 (`StatusRow`). 빈 배열이면 아무것도 안 그린다.
+   */
+  status: readonly StatusId[];
   /**
    * 스킬을 쓸 때 — 검기가 떠나는 순간에 불린다.
    *
@@ -695,6 +703,9 @@ function FighterView({
         </View>
       ))}
 
+      {/* 걸려 있는 것들 — 머리 바로 위 (`StatusRow`) */}
+      <StatusRow status={status} size={size} />
+
       {/*
         기술 이름 — **머리 위 말풍선** (`SkillShout`).
 
@@ -713,7 +724,8 @@ function FighterView({
         pointerEvents="none"
         style={{
           position: 'absolute',
-          bottom: size + 4,
+          /* 상태 로고 줄(`StatusRow`) 위에 앉는다 — 둘이 겹치면 안 된다 */
+          bottom: size + 17,
           left: -16,
           right: -16,
           alignItems: 'center',
@@ -808,6 +820,8 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.down === b.down
   && a.hp === b.hp
   && a.bless === b.bless
+  /* 배열이라 참조로 비교하면 늘 다르다 — 내용을 이어 붙여 본다 (많아야 넷이다) */
+  && a.status.join() === b.status.join()
   && a.squeeze === b.squeeze
   && a.width === b.width
   && a.lap === b.lap

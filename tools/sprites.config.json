@@ -3142,10 +3142,461 @@
         "alt3",
         "down"
       ]
+    },
+    {
+      "file": "boss-1.jpg",
+      "name": "b01_gelatus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "1스테이지 우두머리 (docs/boss-art/b01_gelatus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-2.jpg",
+      "name": "b02_floratus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "2스테이지 우두머리 (docs/boss-art/b02_floratus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-3.jpg",
+      "name": "b03_acidus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "3스테이지 우두머리 (docs/boss-art/b03_acidus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-4.jpg",
+      "name": "b04_sporia",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "4스테이지 우두머리 (docs/boss-art/b04_sporia.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-5.jpg",
+      "name": "b05_spinatus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "5스테이지 우두머리 (docs/boss-art/b05_spinatus.md). 평타와 기술의 동작이 각각 다른 칸이다. 흰 바탕에 검은 선으로 와서 뒤집는다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ],
+      "invert": true
+    },
+    {
+      "file": "boss-6.jpg",
+      "name": "b06_petros",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "6스테이지 우두머리 (docs/boss-art/b06_petros.md). 평타와 기술의 동작이 각각 다른 칸이다. 흰 바탕에 검은 선으로 와서 뒤집는다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ],
+      "invert": true,
+      "inset": 0.06
+    },
+    {
+      "file": "boss-7.jpg",
+      "name": "b07_idolatus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "7스테이지 우두머리 (docs/boss-art/b07_idolatus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-8.jpg",
+      "name": "b08_solvenus",
+      "floor": true,
+      "note": "8스테이지 우두머리 (docs/boss-art/b08_solvenus.md). 평타와 기술의 동작이 각각 다른 칸이다. 구분선이 바래서 격자 자동인식이 안 된다 — 균등분할",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ],
+      "grid": [
+        4,
+        1
+      ],
+      "inset": 0.02
+    },
+    {
+      "file": "boss-9.jpg",
+      "name": "b09_osseus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "9스테이지 우두머리 (docs/boss-art/b09_osseus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-10.jpg",
+      "name": "b10_sludginus",
+      "expect": [
+        5,
+        1
+      ],
+      "floor": true,
+      "note": "10스테이지 우두머리 (docs/boss-art/b10_sludginus.md). 평타와 기술의 동작이 각각 다른 칸이다 — 기술이 둘이라 다섯 칸",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "skill2",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-11.jpg",
+      "name": "b11_acanthus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "11스테이지 우두머리 (docs/boss-art/b11_acanthus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-12.jpg",
+      "name": "b12_nepenthia",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "12스테이지 우두머리 (docs/boss-art/b12_nepenthia.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-13.jpg",
+      "name": "b13_matrona",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "13스테이지 우두머리 (docs/boss-art/b13_matrona.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-14.jpg",
+      "name": "b14_columna",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "14스테이지 우두머리 (docs/boss-art/b14_columna.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-15.jpg",
+      "name": "b15_cadavera",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "15스테이지 우두머리 (docs/boss-art/b15_cadavera.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-16.jpg",
+      "name": "b16_truncus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "16스테이지 우두머리 (docs/boss-art/b16_truncus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-17.jpg",
+      "name": "b17_cavus",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "17스테이지 우두머리 (docs/boss-art/b17_cavus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-18.jpg",
+      "name": "b18_spinosa",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "18스테이지 우두머리 (docs/boss-art/b18_spinosa.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "boss-19.jpg",
+      "name": "b19_putridus",
+      "floor": true,
+      "note": "19스테이지 우두머리 (docs/boss-art/b19_putridus.md). 평타와 기술의 동작이 각각 다른 칸이다. 구분선이 바래서 격자 자동인식이 안 된다 — 균등분할",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ],
+      "grid": [
+        4,
+        1
+      ],
+      "inset": 0.02
+    },
+    {
+      "file": "boss-20.jpg",
+      "name": "b20_silvanus",
+      "expect": [
+        5,
+        1
+      ],
+      "floor": true,
+      "note": "20스테이지 우두머리 (docs/boss-art/b20_silvanus.md). 평타와 기술의 동작이 각각 다른 칸이다 — 기술이 둘이라 다섯 칸. 흰 바탕에 검은 선으로 와서 뒤집는다",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "skill2",
+        "down"
+      ],
+      "invert": true,
+      "inset": 0.06
+    },
+    {
+      "file": "bfx_rock.jpg",
+      "name": "bfx_rock",
+      "expect": [
+        3,
+        1
+      ],
+      "note": "보스 공격 이펙트 — 날아가는 것 (docs/BOSS_FX_PROMPTS.md). 생물이 아니라 허공에 뜨는 것이라 floor 를 안 건다",
+      "labels": [
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "file": "bfx_thorn.jpg",
+      "name": "bfx_thorn",
+      "expect": [
+        3,
+        1
+      ],
+      "note": "보스 공격 이펙트 — 날아가는 것 (docs/BOSS_FX_PROMPTS.md). 생물이 아니라 허공에 뜨는 것이라 floor 를 안 건다",
+      "labels": [
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "file": "bfx_glob.jpg",
+      "name": "bfx_glob",
+      "expect": [
+        3,
+        1
+      ],
+      "note": "보스 공격 이펙트 — 날아가는 것 (docs/BOSS_FX_PROMPTS.md). 생물이 아니라 허공에 뜨는 것이라 floor 를 안 건다",
+      "labels": [
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "file": "bfx_spore.jpg",
+      "name": "bfx_spore",
+      "expect": [
+        5,
+        1
+      ],
+      "note": "보스 공격 이펙트 — 자리에서 터지는 것 (docs/BOSS_FX_PROMPTS.md). 생물이 아니라 허공에 뜨는 것이라 floor 를 안 건다",
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "file": "bfx_drip.jpg",
+      "name": "bfx_drip",
+      "expect": [
+        5,
+        1
+      ],
+      "note": "보스 공격 이펙트 — 자리에서 터지는 것 (docs/BOSS_FX_PROMPTS.md). 생물이 아니라 허공에 뜨는 것이라 floor 를 안 건다",
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "file": "bfx_miasma.jpg",
+      "name": "bfx_miasma",
+      "expect": [
+        5,
+        1
+      ],
+      "note": "보스 공격 이펙트 — 자리에서 터지는 것 (docs/BOSS_FX_PROMPTS.md). 생물이 아니라 허공에 뜨는 것이라 floor 를 안 건다",
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "file": "bfx_bolt.jpg",
+      "name": "bfx_bolt",
+      "expect": [
+        5,
+        1
+      ],
+      "note": "보스 공격 이펙트 — 자리에서 터지는 것 (docs/BOSS_FX_PROMPTS.md). 생물이 아니라 허공에 뜨는 것이라 floor 를 안 건다",
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "file": "passive.jpg",
+      "name": "boss_passive",
+      "expect": [
+        4,
+        1
+      ],
+      "note": "보스 패시브 로고 넷 (docs/BOSS_PASSIVE_PROMPTS.md). 싸우는 내내 화면 위쪽에 뜬다",
+      "labels": [
+        "bp_thorn",
+        "bp_viscous",
+        "bp_rot",
+        "bp_ward"
+      ]
     }
   ],
   "_srcDirs": [
     "assets/2026-08-29-001",
-    "assets/2026-08-30-001"
+    "assets/2026-08-30-001",
+    "assets/2026-08-31-001"
   ]
 }

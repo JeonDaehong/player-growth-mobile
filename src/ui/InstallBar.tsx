@@ -12,18 +12,27 @@
  * 순간부터 적용되므로, 홈 화면 아이콘으로 들어가면 첫 프레임부터 바가 없다.
  * 탭 하나 없이. 그게 이 줄이 존재하는 이유 전부다.
  *
+ * ## 브라우저가 제안을 안 줘도 뜬다
+ *
+ * 처음엔 크롬의 `beforeinstallprompt` 가 왔을 때만 띄웠다. 그런데 그 이벤트는
+ * **안 오는 경우가 흔하다** — 사파리에는 아예 없고, 크롬도 제 판단으로 안 줄
+ * 때가 있다. 그러면 설치가 유일한 답인 상황에서 안내가 통째로 사라진다.
+ *
+ * 그래서 손가락 기기이고 · 설치된 채가 아니고 · 닫지 않았으면 **언제나**
+ * 띄운다. 제안이 잡혀 있으면 단추 한 번으로 끝나고, 없으면 메뉴에서 어떻게
+ * 하는지를 적어 준다.
+ *
  * ## 언제 안 뜨나
  *
- *   이미 설치해서 실행 중       — 할 일이 끝났다
- *   브라우저가 제안을 안 준다   — 사파리, 또는 이미 설치된 크롬
- *   사용자가 닫았다             — 다시 안 띄운다 (기기에 기억한다)
- *
- * 즉 **대개 안 뜬다.** 뜨는 것이 예외이고, 그래서 게임 화면을 가리지 않는
- * 자리에 얇게 놓는다.
+ *   이미 설치해서 실행 중   — 할 일이 끝났다. 바가 이미 없다
+ *   손가락 기기가 아니다     — 데스크톱에는 없앨 바가 없다
+ *   사용자가 닫았다         — 다시 안 띄운다 (기기에 기억한다)
  */
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { askInstall, canInstall, installed, watchInstall } from './webViewport';
+import {
+  askInstall, canInstall, installed, touchDevice, watchInstall,
+} from './webViewport';
 import { T } from './atoms';
 import { BLACK, SP, WHITE } from './theme';
 
@@ -62,8 +71,11 @@ export function InstallBar() {
 
   useEffect(() => watchInstall(() => setCan(canInstall())), []);
 
-  /* 이미 설치돼서 실행 중이면 할 일이 없다 — 바가 이미 없다 */
-  if (gone || !can || installed()) return null;
+  /*
+    설치할 수 있느냐와 **상관없이** 띄운다. 제안이 없으면 메뉴 안내를 적는다 —
+    설치가 유일한 답인데 안내가 없으면 사용자는 계속 탭을 한 번씩 하게 된다.
+  */
+  if (gone || !touchDevice() || installed()) return null;
 
   return (
     <View
@@ -86,22 +98,30 @@ export function InstallBar() {
       <View style={{ flex: 1 }}>
         <T size={10} bold>홈 화면에 추가</T>
         <T size={9} dim="sub">
-          위아래 바 없이 전체 화면으로 열립니다
+          {can
+            ? '켜자마자 위아래 바 없이 전체 화면으로 열립니다'
+            : '브라우저 메뉴 → "홈 화면에 추가". 그 아이콘으로 열면 바가 없습니다'}
         </T>
       </View>
 
-      <Pressable
-        onPress={askInstall}
-        hitSlop={8}
-        style={({ pressed }) => ({
-          backgroundColor: WHITE,
-          paddingVertical: 5,
-          paddingHorizontal: SP.sm,
-          opacity: pressed ? 0.6 : 1,
-        })}
-      >
-        <T size={10} bold style={{ color: BLACK }}>추가</T>
-      </Pressable>
+      {/*
+        제안이 잡혀 있을 때만 단추를 낸다. 없는데 단추를 두면 눌러도 아무 일이
+        안 일어나고, 그건 안내가 없는 것보다 나쁘다.
+      */}
+      {can && (
+        <Pressable
+          onPress={askInstall}
+          hitSlop={8}
+          style={({ pressed }) => ({
+            backgroundColor: WHITE,
+            paddingVertical: 5,
+            paddingHorizontal: SP.sm,
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <T size={10} bold style={{ color: BLACK }}>추가</T>
+        </Pressable>
+      )}
 
       <Pressable
         onPress={() => { stow(); setGone(true); }}

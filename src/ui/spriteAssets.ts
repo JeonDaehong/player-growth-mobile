@@ -1389,7 +1389,206 @@ export const PB_CREEPER_SPRITES = {
   'special': require('../../assets/sprites/pb_creeper/special.png'),
 } as const;
 
-export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper';
+export const B01_GELATUS_SPRITES = {
+  'attack': require('../../assets/sprites/b01_gelatus/attack.png'),
+  'down': require('../../assets/sprites/b01_gelatus/down.png'),
+  'idle': require('../../assets/sprites/b01_gelatus/idle.png'),
+  'skill1': require('../../assets/sprites/b01_gelatus/skill1.png'),
+} as const;
+
+export const B02_FLORATUS_SPRITES = {
+  'attack': require('../../assets/sprites/b02_floratus/attack.png'),
+  'down': require('../../assets/sprites/b02_floratus/down.png'),
+  'idle': require('../../assets/sprites/b02_floratus/idle.png'),
+  'skill1': require('../../assets/sprites/b02_floratus/skill1.png'),
+} as const;
+
+export const B03_ACIDUS_SPRITES = {
+  'attack': require('../../assets/sprites/b03_acidus/attack.png'),
+  'down': require('../../assets/sprites/b03_acidus/down.png'),
+  'idle': require('../../assets/sprites/b03_acidus/idle.png'),
+  'skill1': require('../../assets/sprites/b03_acidus/skill1.png'),
+} as const;
+
+export const B04_SPORIA_SPRITES = {
+  'attack': require('../../assets/sprites/b04_sporia/attack.png'),
+  'down': require('../../assets/sprites/b04_sporia/down.png'),
+  'idle': require('../../assets/sprites/b04_sporia/idle.png'),
+  'skill1': require('../../assets/sprites/b04_sporia/skill1.png'),
+} as const;
+
+export const B05_SPINATUS_SPRITES = {
+  'attack': require('../../assets/sprites/b05_spinatus/attack.png'),
+  'down': require('../../assets/sprites/b05_spinatus/down.png'),
+  'idle': require('../../assets/sprites/b05_spinatus/idle.png'),
+  'skill1': require('../../assets/sprites/b05_spinatus/skill1.png'),
+} as const;
+
+export const B06_PETROS_SPRITES = {
+  'attack': require('../../assets/sprites/b06_petros/attack.png'),
+  'down': require('../../assets/sprites/b06_petros/down.png'),
+  'idle': require('../../assets/sprites/b06_petros/idle.png'),
+  'skill1': require('../../assets/sprites/b06_petros/skill1.png'),
+} as const;
+
+export const B07_IDOLATUS_SPRITES = {
+  'attack': require('../../assets/sprites/b07_idolatus/attack.png'),
+  'down': require('../../assets/sprites/b07_idolatus/down.png'),
+  'idle': require('../../assets/sprites/b07_idolatus/idle.png'),
+  'skill1': require('../../assets/sprites/b07_idolatus/skill1.png'),
+} as const;
+
+export const B08_SOLVENUS_SPRITES = {
+  'attack': require('../../assets/sprites/b08_solvenus/attack.png'),
+  'down': require('../../assets/sprites/b08_solvenus/down.png'),
+  'idle': require('../../assets/sprites/b08_solvenus/idle.png'),
+  'skill1': require('../../assets/sprites/b08_solvenus/skill1.png'),
+} as const;
+
+export const B09_OSSEUS_SPRITES = {
+  'attack': require('../../assets/sprites/b09_osseus/attack.png'),
+  'down': require('../../assets/sprites/b09_osseus/down.png'),
+  'idle': require('../../assets/sprites/b09_osseus/idle.png'),
+  'skill1': require('../../assets/sprites/b09_osseus/skill1.png'),
+} as const;
+
+export const B10_SLUDGINUS_SPRITES = {
+  'attack': require('../../assets/sprites/b10_sludginus/attack.png'),
+  'down': require('../../assets/sprites/b10_sludginus/down.png'),
+  'idle': require('../../assets/sprites/b10_sludginus/idle.png'),
+  'skill1': require('../../assets/sprites/b10_sludginus/skill1.png'),
+  'skill2': require('../../assets/sprites/b10_sludginus/skill2.png'),
+} as const;
+
+export const B11_ACANTHUS_SPRITES = {
+  'attack': require('../../assets/sprites/b11_acanthus/attack.png'),
+  'down': require('../../assets/sprites/b11_acanthus/down.png'),
+  'idle': require('../../assets/sprites/b11_acanthus/idle.png'),
+  'skill1': require('../../assets/sprites/b11_acanthus/skill1.png'),
+} as const;
+
+export const B12_NEPENTHIA_SPRITES = {
+  'attack': require('../../assets/sprites/b12_nepenthia/attack.png'),
+  'down': require('../../assets/sprites/b12_nepenthia/down.png'),
+  'idle': require('../../assets/sprites/b12_nepenthia/idle.png'),
+  'skill1': require('../../assets/sprites/b12_nepenthia/skill1.png'),
+} as const;
+
+export const B13_MATRONA_SPRITES = {
+  'attack': require('../../assets/sprites/b13_matrona/attack.png'),
+  'down': require('../../assets/sprites/b13_matrona/down.png'),
+  'idle': require('../../assets/sprites/b13_matrona/idle.png'),
+  'skill1': require('../../assets/sprites/b13_matrona/skill1.png'),
+} as const;
+
+export const B14_COLUMNA_SPRITES = {
+  'attack': require('../../assets/sprites/b14_columna/attack.png'),
+  'down': require('../../assets/sprites/b14_columna/down.png'),
+  'idle': require('../../assets/sprites/b14_columna/idle.png'),
+  'skill1': require('../../assets/sprites/b14_columna/skill1.png'),
+} as const;
+
+export const B15_CADAVERA_SPRITES = {
+  'attack': require('../../assets/sprites/b15_cadavera/attack.png'),
+  'down': require('../../assets/sprites/b15_cadavera/down.png'),
+  'idle': require('../../assets/sprites/b15_cadavera/idle.png'),
+  'skill1': require('../../assets/sprites/b15_cadavera/skill1.png'),
+} as const;
+
+export const B16_TRUNCUS_SPRITES = {
+  'attack': require('../../assets/sprites/b16_truncus/attack.png'),
+  'down': require('../../assets/sprites/b16_truncus/down.png'),
+  'idle': require('../../assets/sprites/b16_truncus/idle.png'),
+  'skill1': require('../../assets/sprites/b16_truncus/skill1.png'),
+} as const;
+
+export const B17_CAVUS_SPRITES = {
+  'attack': require('../../assets/sprites/b17_cavus/attack.png'),
+  'down': require('../../assets/sprites/b17_cavus/down.png'),
+  'idle': require('../../assets/sprites/b17_cavus/idle.png'),
+  'skill1': require('../../assets/sprites/b17_cavus/skill1.png'),
+} as const;
+
+export const B18_SPINOSA_SPRITES = {
+  'attack': require('../../assets/sprites/b18_spinosa/attack.png'),
+  'down': require('../../assets/sprites/b18_spinosa/down.png'),
+  'idle': require('../../assets/sprites/b18_spinosa/idle.png'),
+  'skill1': require('../../assets/sprites/b18_spinosa/skill1.png'),
+} as const;
+
+export const B19_PUTRIDUS_SPRITES = {
+  'attack': require('../../assets/sprites/b19_putridus/attack.png'),
+  'down': require('../../assets/sprites/b19_putridus/down.png'),
+  'idle': require('../../assets/sprites/b19_putridus/idle.png'),
+  'skill1': require('../../assets/sprites/b19_putridus/skill1.png'),
+} as const;
+
+export const B20_SILVANUS_SPRITES = {
+  'attack': require('../../assets/sprites/b20_silvanus/attack.png'),
+  'down': require('../../assets/sprites/b20_silvanus/down.png'),
+  'idle': require('../../assets/sprites/b20_silvanus/idle.png'),
+  'skill1': require('../../assets/sprites/b20_silvanus/skill1.png'),
+  'skill2': require('../../assets/sprites/b20_silvanus/skill2.png'),
+} as const;
+
+export const BFX_ROCK_SPRITES = {
+  '1': require('../../assets/sprites/bfx_rock/1.png'),
+  '2': require('../../assets/sprites/bfx_rock/2.png'),
+  '3': require('../../assets/sprites/bfx_rock/3.png'),
+} as const;
+
+export const BFX_THORN_SPRITES = {
+  '1': require('../../assets/sprites/bfx_thorn/1.png'),
+  '2': require('../../assets/sprites/bfx_thorn/2.png'),
+  '3': require('../../assets/sprites/bfx_thorn/3.png'),
+} as const;
+
+export const BFX_GLOB_SPRITES = {
+  '1': require('../../assets/sprites/bfx_glob/1.png'),
+  '2': require('../../assets/sprites/bfx_glob/2.png'),
+  '3': require('../../assets/sprites/bfx_glob/3.png'),
+} as const;
+
+export const BFX_SPORE_SPRITES = {
+  '1': require('../../assets/sprites/bfx_spore/1.png'),
+  '2': require('../../assets/sprites/bfx_spore/2.png'),
+  '3': require('../../assets/sprites/bfx_spore/3.png'),
+  '4': require('../../assets/sprites/bfx_spore/4.png'),
+  '5': require('../../assets/sprites/bfx_spore/5.png'),
+} as const;
+
+export const BFX_DRIP_SPRITES = {
+  '1': require('../../assets/sprites/bfx_drip/1.png'),
+  '2': require('../../assets/sprites/bfx_drip/2.png'),
+  '3': require('../../assets/sprites/bfx_drip/3.png'),
+  '4': require('../../assets/sprites/bfx_drip/4.png'),
+  '5': require('../../assets/sprites/bfx_drip/5.png'),
+} as const;
+
+export const BFX_MIASMA_SPRITES = {
+  '1': require('../../assets/sprites/bfx_miasma/1.png'),
+  '2': require('../../assets/sprites/bfx_miasma/2.png'),
+  '3': require('../../assets/sprites/bfx_miasma/3.png'),
+  '4': require('../../assets/sprites/bfx_miasma/4.png'),
+  '5': require('../../assets/sprites/bfx_miasma/5.png'),
+} as const;
+
+export const BFX_BOLT_SPRITES = {
+  '1': require('../../assets/sprites/bfx_bolt/1.png'),
+  '2': require('../../assets/sprites/bfx_bolt/2.png'),
+  '3': require('../../assets/sprites/bfx_bolt/3.png'),
+  '4': require('../../assets/sprites/bfx_bolt/4.png'),
+  '5': require('../../assets/sprites/bfx_bolt/5.png'),
+} as const;
+
+export const BOSS_PASSIVE_SPRITES = {
+  'bp_rot': require('../../assets/sprites/boss_passive/bp_rot.png'),
+  'bp_thorn': require('../../assets/sprites/boss_passive/bp_thorn.png'),
+  'bp_viscous': require('../../assets/sprites/boss_passive/bp_viscous.png'),
+  'bp_ward': require('../../assets/sprites/boss_passive/bp_ward.png'),
+} as const;
+
+export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'boss_passive';
 
 export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   scroll: SCROLL_SPRITES,
@@ -1529,6 +1728,34 @@ export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   pb_rot: PB_ROT_SPRITES,
   pb_elder: PB_ELDER_SPRITES,
   pb_creeper: PB_CREEPER_SPRITES,
+  b01_gelatus: B01_GELATUS_SPRITES,
+  b02_floratus: B02_FLORATUS_SPRITES,
+  b03_acidus: B03_ACIDUS_SPRITES,
+  b04_sporia: B04_SPORIA_SPRITES,
+  b05_spinatus: B05_SPINATUS_SPRITES,
+  b06_petros: B06_PETROS_SPRITES,
+  b07_idolatus: B07_IDOLATUS_SPRITES,
+  b08_solvenus: B08_SOLVENUS_SPRITES,
+  b09_osseus: B09_OSSEUS_SPRITES,
+  b10_sludginus: B10_SLUDGINUS_SPRITES,
+  b11_acanthus: B11_ACANTHUS_SPRITES,
+  b12_nepenthia: B12_NEPENTHIA_SPRITES,
+  b13_matrona: B13_MATRONA_SPRITES,
+  b14_columna: B14_COLUMNA_SPRITES,
+  b15_cadavera: B15_CADAVERA_SPRITES,
+  b16_truncus: B16_TRUNCUS_SPRITES,
+  b17_cavus: B17_CAVUS_SPRITES,
+  b18_spinosa: B18_SPINOSA_SPRITES,
+  b19_putridus: B19_PUTRIDUS_SPRITES,
+  b20_silvanus: B20_SILVANUS_SPRITES,
+  bfx_rock: BFX_ROCK_SPRITES,
+  bfx_thorn: BFX_THORN_SPRITES,
+  bfx_glob: BFX_GLOB_SPRITES,
+  bfx_spore: BFX_SPORE_SPRITES,
+  bfx_drip: BFX_DRIP_SPRITES,
+  bfx_miasma: BFX_MIASMA_SPRITES,
+  bfx_bolt: BFX_BOLT_SPRITES,
+  boss_passive: BOSS_PASSIVE_SPRITES,
 };
 
 /** 세트에서 키를 안전하게 꺼낸다. 없으면 undefined — 호출부가 대체 렌더를 하도록. */
@@ -1589,6 +1816,117 @@ export const SPRITE_RATIO: Record<string, number> = {
   'avatar/spearman': 0.9115,
   'avatar/swordsman': 0.8073,
   'avatar/witchgirl': 0.9792,
+  'b01_gelatus/attack': 0.5729,
+  'b01_gelatus/down': 0.9219,
+  'b01_gelatus/idle': 0.901,
+  'b01_gelatus/skill1': 1.2549,
+  'b02_floratus/attack': 0.9479,
+  'b02_floratus/down': 0.8958,
+  'b02_floratus/idle': 1.0213,
+  'b02_floratus/skill1': 0.901,
+  'b03_acidus/attack': 0.7969,
+  'b03_acidus/down': 0.9427,
+  'b03_acidus/idle': 0.8854,
+  'b03_acidus/skill1': 0.8073,
+  'b04_sporia/attack': 0.8542,
+  'b04_sporia/down': 0.9167,
+  'b04_sporia/idle': 1.0971,
+  'b04_sporia/skill1': 0.8333,
+  'b05_spinatus/attack': 0.9844,
+  'b05_spinatus/down': 1.0,
+  'b05_spinatus/idle': 1.1098,
+  'b05_spinatus/skill1': 1.0159,
+  'b06_petros/attack': 0.8021,
+  'b06_petros/down': 0.8333,
+  'b06_petros/idle': 0.8594,
+  'b06_petros/skill1': 1.0052,
+  'b07_idolatus/attack': 0.9635,
+  'b07_idolatus/down': 1.0159,
+  'b07_idolatus/idle': 1.1034,
+  'b07_idolatus/skill1': 1.3714,
+  'b08_solvenus/attack': 0.9271,
+  'b08_solvenus/down': 0.7917,
+  'b08_solvenus/idle': 1.0323,
+  'b08_solvenus/skill1': 1.0378,
+  'b09_osseus/attack': 0.9948,
+  'b09_osseus/down': 0.7135,
+  'b09_osseus/idle': 1.1566,
+  'b09_osseus/skill1': 0.5469,
+  'b10_sludginus/attack': 0.9817,
+  'b10_sludginus/down': 0.8021,
+  'b10_sludginus/idle': 0.9479,
+  'b10_sludginus/skill1': 1.0216,
+  'b10_sludginus/skill2': 0.9115,
+  'b11_acanthus/attack': 0.6667,
+  'b11_acanthus/down': 0.8125,
+  'b11_acanthus/idle': 0.6875,
+  'b11_acanthus/skill1': 0.4062,
+  'b12_nepenthia/attack': 0.9531,
+  'b12_nepenthia/down': 1.0971,
+  'b12_nepenthia/idle': 1.1098,
+  'b12_nepenthia/skill1': 1.0159,
+  'b13_matrona/attack': 0.8125,
+  'b13_matrona/down': 0.8698,
+  'b13_matrona/idle': 1.0105,
+  'b13_matrona/skill1': 1.1098,
+  'b14_columna/attack': 1.2886,
+  'b14_columna/down': 1.4769,
+  'b14_columna/idle': 1.8462,
+  'b14_columna/skill1': 0.9948,
+  'b15_cadavera/attack': 0.8404,
+  'b15_cadavera/down': 0.7344,
+  'b15_cadavera/idle': 0.9873,
+  'b15_cadavera/skill1': 0.9375,
+  'b16_truncus/attack': 0.8333,
+  'b16_truncus/down': 0.625,
+  'b16_truncus/idle': 0.8229,
+  'b16_truncus/skill1': 1.0787,
+  'b17_cavus/attack': 1.2152,
+  'b17_cavus/down': 1.4884,
+  'b17_cavus/idle': 1.6271,
+  'b17_cavus/skill1': 1.0,
+  'b18_spinosa/attack': 0.8906,
+  'b18_spinosa/down': 0.875,
+  'b18_spinosa/idle': 0.8958,
+  'b18_spinosa/skill1': 0.7812,
+  'b19_putridus/attack': 1.0549,
+  'b19_putridus/down': 0.9583,
+  'b19_putridus/idle': 1.2,
+  'b19_putridus/skill1': 0.9115,
+  'b20_silvanus/attack': 1.0462,
+  'b20_silvanus/down': 1.1313,
+  'b20_silvanus/idle': 1.1677,
+  'b20_silvanus/skill1': 1.0112,
+  'b20_silvanus/skill2': 1.0343,
+  'bfx_bolt/1': 1.3889,
+  'bfx_bolt/2': 2.0423,
+  'bfx_bolt/3': 1.28,
+  'bfx_bolt/4': 2.9091,
+  'bfx_bolt/5': 2.7042,
+  'bfx_drip/1': 0.3022,
+  'bfx_drip/2': 0.9231,
+  'bfx_drip/3': 0.9684,
+  'bfx_drip/4': 0.9611,
+  'bfx_drip/5': 0.25,
+  'bfx_glob/1': 0.6198,
+  'bfx_glob/2': 0.5104,
+  'bfx_glob/3': 0.4323,
+  'bfx_miasma/1': 0.1026,
+  'bfx_miasma/2': 0.3838,
+  'bfx_miasma/3': 0.9839,
+  'bfx_miasma/4': 0.7857,
+  'bfx_miasma/5': 0.4204,
+  'bfx_rock/1': 0.9635,
+  'bfx_rock/2': 0.9479,
+  'bfx_rock/3': 1.0,
+  'bfx_spore/1': 0.9315,
+  'bfx_spore/2': 0.9603,
+  'bfx_spore/3': 0.9734,
+  'bfx_spore/4': 0.9789,
+  'bfx_spore/5': 1.0702,
+  'bfx_thorn/1': 0.7396,
+  'bfx_thorn/2': 0.7396,
+  'bfx_thorn/3': 0.7396,
   'bg_chapter/01': 0.4688,
   'bg_chapter/02': 0.5938,
   'bg_chapter/03': 0.2344,
@@ -1615,6 +1953,10 @@ export const SPRITE_RATIO: Record<string, number> = {
   'bg_place/shop': 1.3617,
   'bg_place/tavern': 0.9896,
   'bg_place/tower': 1.3617,
+  'boss_passive/bp_rot': 0.9792,
+  'boss_passive/bp_thorn': 0.9896,
+  'boss_passive/bp_viscous': 1.4769,
+  'boss_passive/bp_ward': 1.1925,
   'bubble/conversation': 1.0667,
   'bubble/empty': 1.1034,
   'bubble/message': 1.1034,

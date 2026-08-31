@@ -15,6 +15,7 @@ import { useGame } from '@/state/store';
 import {
   BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId, DMG_NAME, MAX_GEAR_LV,
   anyPierce, battleTypeOf, blowOf, charPower, gearCost, gearOdds, statOf,
+  swingMs,
 } from '@/core/chars';
 import { fmt } from '@/core/currency';
 import { Bar, Btn, KV, ListItem, Row, Sep, T, Tag } from '@/ui/atoms';
@@ -151,10 +152,28 @@ export function CharPopup({
             평타 옆에 종류를 붙이는 것도 같은 이유다 — "공격력 15" 만 있으면
             그게 어느 쪽 방어에 막히는지 알 길이 없다.
           */}
-          <KV k="공격력" v={`${statOf(c).atk} (${DMG_NAME[blowOf(c.id).type]} 피해)`} />
+          <KV k="공격력" v={`${statOf(c).atk} (${DMG_NAME[blowOf(c.id).type]})`} />
+          {/*
+            공격속도가 빠져 있었다. 이 게임에서 **스킬 주기까지 정하는 값**이라
+            (`SkillDef.every` 가 횟수로 도므로) 없으면 왜 어떤 사람이 기술을
+            자주 쓰는지 설명이 안 된다.
+
+            배수만 적으면 "0.8" 이 빠른 건지 느린 건지 알 수 없어서 실제 간격을
+            같이 적는다 — `core/chars` 의 `swingMs` 와 같은 값이다.
+          */}
+          <KV
+            k="공격속도"
+            v={`${statOf(c).spd} (${swingMs(statOf(c).spd)}ms 마다)`}
+          />
           <KV k="체력" v={String(statOf(c).hp)} />
           <KV k="방어력" v={`${statOf(c).def} (물리 피해를 막는다)`} />
           <KV k="마법저항력" v={`${statOf(c).res} (마법 피해를 막는다)`} />
+          {statOf(c).crit > 0 && (
+            <KV
+              k="치명타"
+              v={`${Math.round(statOf(c).crit * 100)}% · 피해 ${Math.round(statOf(c).critDmg * 100)}%`}
+            />
+          )}
           {(() => {
             /* 관통은 **가진 사람에게만** 뜬다 — 0 짜리 줄이 넷에게 다 붙으면 잡음이다 */
             const p = anyPierce(c.id);

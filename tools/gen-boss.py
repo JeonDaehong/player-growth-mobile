@@ -1592,19 +1592,18 @@ PASSIVE_ICONS = [
      'each spike as long as the core is wide and wide at its base. The outline is '
      'a fat six-pointed star with no thin parts anywhere. Squint test: a star.'),
     ('bp_viscous', '오염된 점성', 'b10 슬러지누스',
-     'A HANGING FRINGE. One solid horizontal bar across the TOP of the cell, full '
-     'width and a fifth of the height, with THREE thick strands hanging straight '
-     'down from it to different depths — the middle one reaching the bottom edge, '
-     'the outer two stopping short at different heights. Each strand is as wide as '
-     'the gaps between them and ends in a blunt flat cut, not a point. The whole '
-     'thing is one connected solid mass hanging from the top. Squint test: a comb.'),
+     'A HEAVY FALLING DROP. One solid teardrop filling most of the cell — a fat '
+     'round bottom taking two-thirds of the height, narrowing upward into a thick '
+     'neck that reaches the top edge, plus ONE smaller round drop already '
+     'separated and sitting just below it in the lower corner. Two solid shapes, '
+     'one big one small. The outline is smooth and bulging with no points at all. '
+     'Squint test: a drip.'),
     ('bp_rot', '부패의 오라', 'b15 카다베라',
-     'A ROTTED THROUGH DISC. One solid circle filling the whole cell, with a '
-     'single enormous ragged BITE eaten out of its right side — the bite is a '
-     'third of the diameter deep and reaches nearly to the centre, with a coarse '
-     'uneven edge of three or four big rounded scallops (not a clean crescent, and '
-     'not fine serration). Everything else is solid fill. The circle must still '
-     'read as a circle. Squint test: a circle with a chunk gone.'),
+     'A RISING PLUME. A wide solid mound along the bottom third of the cell with '
+     'THREE thick stalks rising out of it to different heights, each ending in a '
+     'heavy rounded head, the middle one tallest and reaching the top edge. The '
+     'stalks are as wide as the gaps between them. Squint test: three stalks on a '
+     'mound.'),
     ('bp_ward', '수호수의 가호', 'b20 실바누스',
      'A SHIELD-LEAF. One solid shape combining both: a broad flat straight top '
      'edge running the full width of the cell, sides dropping straight down and '
@@ -1915,7 +1914,8 @@ def passive_page():
         'THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and '
         'squint. If any two have a similar outline, redraw the weaker one — the '
         'outline is the only thing that survives at 14 pixels. These four are '
-        'deliberately a STAR, a COMB, a BITTEN CIRCLE and a SHIELD; if any of them '
+        'deliberately a STAR, a DRIP, a THREE-STALK MOUND and a SHIELD; if any of '
+        'them '
         'has drifted toward another, pull it back.',
         grid(4, 1),
     )

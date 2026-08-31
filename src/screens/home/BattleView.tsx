@@ -35,6 +35,7 @@ import {
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf, skillsOf } from '@/core/chars';
+import { statusOf } from '@/core/status';
 import { hpOf, members, partyStat, supportMul } from '@/core/party';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
@@ -517,7 +518,7 @@ export function BattleView() {
   */
   const [patCall, setPatCall] = useState(0);
   /*
-    특수기 동작 칸(`special`)을 언제까지 쓰나.
+    특수기 동작 칸(`skill1`)을 언제까지 쓰나.
 
     적이 팔을 휘두르는 표시(`foeSwing`)는 피해를 모아 두었다가 제 박자에
     한 번 터뜨린다 (`FOE_BEAT_MS`). 그 박자는 특수기가 나간 틱보다 늦게
@@ -1231,6 +1232,11 @@ export function BattleView() {
                     down={down}
                     hp={hpOf(c, battle.hp)}
                     damage={pops.filter((pp) => pp.who === c.id)}
+                    /*
+                      걸려 있는 것들. 지금은 보조의 격노 하나뿐이지만
+                      (`core/status`), 우두머리 기술이 들어오면 여기로 온다.
+                    */
+                    status={statusOf(c.id, party, chars)}
                     bless={bless}
                     /*
                       근접만 나간다. 뒤에 선 사람은 조금 덜 나가서 앞사람과
@@ -1305,14 +1311,14 @@ export function BattleView() {
                   맞을 이유가 없다.
                 */
                 /*
-                  특수기를 쓰는 중이면 **`special` 칸**을 쓴다.
+                  특수기를 쓰는 중이면 **`skill1` 칸**을 쓴다.
 
                   시트에 그 칸이 없으면(슬라임 우두머리는 세 칸짜리다)
                   `Sprite` 가 같은 세트의 `attack` 으로 떨어뜨린다 — 챕터마다
                   시트를 다시 그리지 않아도 되도록 아래에 fallback 을 걸어 뒀다.
                 */
                 const foeFrame = flinch.includes(back) && !down ? 'down'
-                  : foeSwing ? (battle.boss && patShown ? 'special' : 'attack')
+                  : foeSwing ? (battle.boss && patShown ? 'skill1' : 'attack')
                     : 'idle';
                 return (
                   <View
@@ -1420,12 +1426,12 @@ export function BattleView() {
                       /*
                         **같은 세트의 `attack` 으로 먼저 떨어진다.**
 
-                        `special` 칸은 새 챕터의 우두머리 시트에만 있다. 없는
+                        `skill1` 칸은 새 우두머리 시트에만 있다. 없는
                         시트에서 곧장 `creature/slime` 으로 떨어지면 우두머리가
                         특수기를 쓸 때만 갑자기 다른 생물이 된다.
                       */
-                      fallbackSet={foeFrame === 'special' ? kf.art : 'creature'}
-                      fallbackName={foeFrame === 'special' ? 'attack' : 'slime'}
+                      fallbackSet={foeFrame === 'skill1' ? kf.art : 'creature'}
+                      fallbackName={foeFrame === 'skill1' ? 'attack' : 'slime'}
                     />
                   </View>
                 );
