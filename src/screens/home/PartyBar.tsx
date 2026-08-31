@@ -18,7 +18,9 @@ import {
 import {
   MAX_PARTY_GEAR, PARTY_SIZE, hpOf, partyGear, partyPower,
 } from '@/core/party';
+import { statusOf } from '@/core/status';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
+import { StatusRow } from './StatusRow';
 import { Sprite } from '@/ui/Sprite';
 import { BORDER, SP, WHITE } from '@/ui/theme';
 
@@ -36,9 +38,11 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
   /*
     스킬이 몇 칸 찼나.
 
-    무대 머리 위에 있던 것을 여기로 옮겼다 (`Fighter`). 머리 위는 앞으로
-    버프·디버프 아이콘이 쓸 자리고, 기술이 한 명당 여러 개가 되면 점 몇 줄로는
-    무엇이 차고 있는지 말할 수 없다.
+    무대 머리 위에 있던 것을 여기로 옮겼다 (`Fighter`). 기술이 한 명당 여러
+    개가 되면 점 몇 줄로는 무엇이 차고 있는지 말할 수 없어서다.
+
+    버프·디버프 로고도 같은 이유로 여기로 왔다 (`StatusRow`) — 머리 위는
+    피해 숫자와 말풍선이 이미 쓰는 자리다.
   */
   const charge = useBattleUi((s) => s.charge);
 
@@ -111,6 +115,19 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                         : `${Math.ceil(hpOf(c, hpMap))} / ${statOf(c).hp}`}
                     </T>
                   </View>
+                  {/*
+                    걸려 있는 것들 — 체력 바로 아래 (`StatusRow`).
+
+                    무대 머리 위에서 여기로 옮겼다. 40~52px 인물 위에 얹으면
+                    인물을 가리고 피해 숫자·말풍선과 자리를 다툰다. 파티 칸에는
+                    이미 그 사람의 지금 상태가 모여 있으므로(남은 체력, 스킬이
+                    몇 칸 찼나) 걸려 있는 것도 같은 자리에 있는 게 맞다.
+
+                    **비어 있어도 높이를 지킨다** — 지우면 상태가 붙었다 풀릴
+                    때마다 네 칸이 위아래로 들썩인다.
+                  */}
+                  <StatusRow status={statusOf(c.id, party, chars)} />
+
                   {/*
                     스킬 쿨 — 기술마다 한 줄.
 

@@ -24,6 +24,8 @@ import { Sprite } from '@/ui/Sprite';
 import { Money } from '@/ui/Money';
 import { BORDER, SP } from '@/ui/theme';
 import { SkillPanel } from './SkillPanel';
+import { WallpaperPopup } from './WallpaperPopup';
+import { hasWallpaper } from '@/ui/wallpapers';
 
 export function CharPopup({
   slot, onClose,
@@ -38,6 +40,8 @@ export function CharPopup({
 
   /** 방금 두들긴 결과 — 창을 닫으면 사라진다 */
   const [last, setLast] = useState<'up' | 'fail' | null>(null);
+  /** 월페이퍼를 보고 있나 */
+  const [paper, setPaper] = useState(false);
 
   if (slot === null) return null;
 
@@ -64,9 +68,15 @@ export function CharPopup({
     }
   };
 
-  const close = () => { setLast(null); onClose(); };
+  const close = () => { setLast(null); setPaper(false); onClose(); };
 
   return (
+    <>
+    <WallpaperPopup
+      charId={paper && c ? c.id : null}
+      name={d?.name}
+      onClose={() => setPaper(false)}
+    />
     <Popup
       visible
       title={`${slot + 1}번 자리`}
@@ -90,6 +100,19 @@ export function CharPopup({
               </Row>
               <T size={10} dim="sub">강화 +{c.gearLv} / {MAX_GEAR_LV}</T>
               <T size={10} dim="dim">전투력 {charPower(c).toLocaleString()}</T>
+              {/*
+                월페이퍼 — **그림이 있는 사람에게만** 뜬다 (`hasWallpaper`).
+                없는 사람에게 눌리지 않는 단추를 남겨 두면, 그게 "아직 안
+                나왔다" 인지 "고장" 인지 알 수가 없다.
+              */}
+              {hasWallpaper(c.id) && (
+                <Btn
+                  label="월페이퍼 보기"
+                  size="sm"
+                  style={{ marginTop: SP.xs, alignSelf: 'flex-start' }}
+                  onPress={() => setPaper(true)}
+                />
+              )}
             </View>
           </Row>
 
@@ -278,5 +301,6 @@ export function CharPopup({
         );
       })}
     </Popup>
+    </>
   );
 }

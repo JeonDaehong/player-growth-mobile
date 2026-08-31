@@ -35,7 +35,6 @@ import {
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf, skillsOf } from '@/core/chars';
-import { statusOf } from '@/core/status';
 import { hpOf, members, partyStat, supportMul } from '@/core/party';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
@@ -1218,11 +1217,6 @@ export function BattleView() {
                     down={down}
                     hp={hpOf(c, battle.hp)}
                     damage={pops.filter((pp) => pp.who === c.id)}
-                    /*
-                      걸려 있는 것들. 지금은 보조의 격노 하나뿐이지만
-                      (`core/status`), 우두머리 기술이 들어오면 여기로 온다.
-                    */
-                    status={statusOf(c.id, party, chars)}
                     bless={bless}
                     /*
                       근접만 나간다. 뒤에 선 사람은 조금 덜 나가서 앞사람과
