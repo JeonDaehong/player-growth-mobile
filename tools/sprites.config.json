@@ -3661,11 +3661,27 @@
         "st_slow",
         "st_haste"
       ]
+    },
+    {
+      "file": "13.jpg",
+      "name": "passive_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "note": "캐릭터 패시브 로고 (docs/PASSIVE_ICON_PROMPTS.md). 캐릭터 창에 22px 로 뜬다 — 상태 로고와 같은 이유로 floor 를 안 건다",
+      "labels": [
+        "pv_oath",
+        "pv_encore",
+        "pv_tempo",
+        "pv_ash"
+      ]
     }
   ],
   "_srcDirs": [
     "assets/2026-08-29-001",
     "assets/2026-08-30-001",
-    "assets/2026-08-31-001"
+    "assets/2026-08-31-001",
+    "assets/2026-09-01-001"
   ]
 }

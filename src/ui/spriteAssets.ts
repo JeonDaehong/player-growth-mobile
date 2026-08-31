@@ -1603,7 +1603,14 @@ export const STATUS_ICON_SPRITES = {
   'st_wither': require('../../assets/sprites/status_icon/st_wither.png'),
 } as const;
 
-export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'boss_passive' | 'status_icon';
+export const PASSIVE_ICON_SPRITES = {
+  'pv_ash': require('../../assets/sprites/passive_icon/pv_ash.png'),
+  'pv_encore': require('../../assets/sprites/passive_icon/pv_encore.png'),
+  'pv_oath': require('../../assets/sprites/passive_icon/pv_oath.png'),
+  'pv_tempo': require('../../assets/sprites/passive_icon/pv_tempo.png'),
+} as const;
+
+export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'boss_passive' | 'status_icon' | 'passive_icon';
 
 export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   scroll: SCROLL_SPRITES,
@@ -1772,6 +1779,7 @@ export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   bfx_bolt: BFX_BOLT_SPRITES,
   boss_passive: BOSS_PASSIVE_SPRITES,
   status_icon: STATUS_ICON_SPRITES,
+  passive_icon: PASSIVE_ICON_SPRITES,
 };
 
 /** 세트에서 키를 안전하게 꺼낸다. 없으면 undefined — 호출부가 대체 렌더를 하도록. */
@@ -2515,6 +2523,10 @@ export const SPRITE_RATIO: Record<string, number> = {
   'nun_wave/wave_1': 1.4615,
   'nun_wave/wave_2': 1.7143,
   'nun_wave/wave_3': 4.2414,
+  'passive_icon/pv_ash': 1.0909,
+  'passive_icon/pv_encore': 1.1636,
+  'passive_icon/pv_oath': 1.4015,
+  'passive_icon/pv_tempo': 1.0213,
   'pb_bloom/attack': 0.8333,
   'pb_bloom/down': 0.974,
   'pb_bloom/idle': 1.0213,
