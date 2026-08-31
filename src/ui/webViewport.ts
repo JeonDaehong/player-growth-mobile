@@ -34,6 +34,13 @@ const STYLE_ID = 'pg-viewport';
 let styled = false;
 let pinchBlocked = false;
 let armed = false;
+/**
+ * 한 번이라도 전체 화면에 들어간 적이 있나.
+ *
+ * 들어갔다 나왔다면 그건 **사용자가 나간 것**이므로 다시 안 민다. 이게
+ * 없으면 끄려는 사람과 켜려는 코드가 탭마다 싸운다.
+ */
+let wentFull = false;
 
 const web = () => Platform.OS === 'web' && typeof document !== 'undefined';
 
@@ -119,21 +126,53 @@ function blockPinch() {
 }
 
 /**
+ * 손가락으로 만지는 기기인가.
+ *
+ * **`(pointer: coarse)` 로 보면 안 된다.** 그건 *주* 입력 장치를 말하는데,
+ * S펜이 붙은 갤럭시는 디지타이저가 주 입력으로 잡혀 `fine` 이 나온다.
+ * 갤럭시에서 전체 화면이 통째로 안 걸리던 것이 이것이었다 — 손가락 기기가
+ * 아니라고 판단하고 리스너를 아예 안 달았다.
+ *
+ * `maxTouchPoints` 를 먼저 본다. "화면을 손가락으로 만질 수 있나" 라는
+ * 질문에 정확히 답하는 값이고, 다른 입력 장치가 뭐가 붙어 있든 안 흔들린다.
+ * `any-pointer` 는 그게 없는 옛 브라우저용 대비책이다.
+ */
+function touchable(): boolean {
+  if (typeof navigator !== 'undefined' && typeof navigator.maxTouchPoints === 'number') {
+    if (navigator.maxTouchPoints > 0) return true;
+  }
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    /* `any-pointer` 는 **붙어 있는 것 중 하나라도** 굵으면 참이다 */
+    return window.matchMedia('(any-pointer: coarse)').matches;
+  }
+  return false;
+}
+
+/**
  * **전체 화면** — 위아래 시스템 바를 치운다.
  *
  * ## 왜 첫 탭을 기다리나
  *
  * 전체 화면은 사용자가 뭔가를 눌러야만 들어갈 수 있다. 브라우저가 그렇게
  * 정해 놓았다 — 안 그러면 어느 페이지든 열자마자 화면을 통째로 가져갈 수
- * 있게 된다. 그래서 여는 순간에는 못 하고, **첫 탭에 얹어서** 들어간다.
+ * 있게 된다. **그래서 켜자마자는 시스템 바가 보이고, 화면을 한 번 건드리는
+ * 순간 사라진다.** 이건 우회할 수 있는 종류의 제약이 아니다.
  *
- * 한 번만 시도한다 (`once`). 나갔다면 그건 사용자가 나간 것이므로, 다음
- * 탭에 다시 밀어 넣으면 끄려는 사람과 켜려는 코드가 싸운다.
+ * ## 성공할 때까지 듣는다
+ *
+ * 처음엔 `click` 하나를 `once` 로 들었다. 그런데 react-native-web 의 터치
+ * 처리가 중간에서 기본 동작을 막으면 합성 `click` 이 아예 안 오고, `once`
+ * 라 그 한 번으로 기회가 사라진다 — 눌러도 눌러도 안 걸린다.
+ *
+ * 그래서 셋을 **캡처 단계**로 듣는다. 캡처는 목표 요소보다 먼저 도므로
+ * 화면 쪽 처리가 무엇을 막든 여기까지는 온다. 그리고 실제로 들어갈 때까지
+ * 안 뗀다 — 한 번 들어가면 `wentFull` 이 서서 다시 안 민다.
  *
  * ## 어디서 듣나
  *
- *   안드로이드 크롬   주소창과 아래 네비게이션 바가 같이 사라진다
- *   홈 화면에 추가    `manifest` 의 `display: fullscreen` 이 이미 해 준다
+ *   안드로이드 크롬   주소창 · 상태바 · 아래 네비게이션 바가 같이 사라진다
+ *   홈 화면에 추가    `manifest` 의 `display: fullscreen` 이 처음부터 해 준다
+ *                     — 탭을 기다릴 필요도 없으니 이쪽이 제일 깔끔하다
  *   아이폰 사파리     **안 된다** — 아이폰에는 전체 화면 API 자체가 없다.
  *                     거기서 바를 없애려면 "홈 화면에 추가" 뿐이다
  *
@@ -141,9 +180,7 @@ function blockPinch() {
  * 브라우저가 전체 화면이 되면 그건 고장으로 보인다.
  */
 export function armImmersive() {
-  if (!web() || armed) return;
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-  if (!window.matchMedia('(pointer: coarse)').matches) return;
+  if (!web() || armed || !touchable()) return;
 
   const el = document.documentElement as HTMLElement & {
     webkitRequestFullscreen?: () => Promise<void> | void;
@@ -153,13 +190,50 @@ export function armImmersive() {
   if (typeof req !== 'function') return;
 
   armed = true;
-  document.addEventListener('click', () => {
-    if (document.fullscreenElement) return;
+
+  const full = () => !!(document.fullscreenElement
+    ?? (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement);
+
+  const go = (e: Event) => {
+    /* 이미 들어와 있거나, 들어갔다 나온 뒤면 아무것도 안 한다 */
+    if (wentFull || full()) return;
+    /*
+      **손가락으로 누른 것만 센다.**
+
+      `maxTouchPoints > 0` 은 터치스크린 노트북에서도 참이라, 기기만 보고
+      걸면 거기서 마우스로 클릭했을 때 화면이 통째로 넘어간다. 누른 방식을
+      보면 그 자리가 없어진다 — 같은 기기에서 손가락은 되고 마우스는 안 된다.
+    */
+    const how = (e as PointerEvent).pointerType;
+    if (e.type !== 'touchend' && how === 'mouse') return;
     try {
       /* 막혀도 게임은 그대로 돈다 — 바가 남아 있을 뿐이다 */
       void Promise.resolve(req.call(el)).catch(() => {});
     } catch {
       /* 위와 같다 */
     }
-  }, { once: true });
+  };
+
+  /*
+    둘을 다 듣는 이유는 어느 것이 올지 기기마다 다르기 때문이다. 먼저 오는
+    것이 성공시키고, 나머지는 `wentFull` 에 걸려 아무 일도 안 한다.
+
+    둘 다 **사용자 조작으로 인정되는 이벤트**여야 한다 (그래야 브라우저가
+    전체 화면을 내준다). `pointerdown`·`touchstart` 는 인정 안 되는 경우가
+    있어서 뺐다 — 손을 뗀 쪽만 쓴다.
+
+    `click` 도 뺐다. 저기엔 무엇으로 눌렀는지가 안 실려 있어서
+    (`pointerType` 이 없다) 마우스를 걸러 낼 방법이 없다.
+  */
+  for (const name of ['touchend', 'pointerup']) {
+    document.addEventListener(name, go, true);
+  }
+
+  /*
+    들어간 순간에 표시해 둔다. 그 뒤에 나가는 것은 사용자가 나가는 것이므로
+    다시 안 민다 — 뒤로가기로 빠져나왔는데 다음 탭에 또 들어가면 갇힌다.
+  */
+  const mark = () => { if (full()) wentFull = true; };
+  document.addEventListener('fullscreenchange', mark);
+  document.addEventListener('webkitfullscreenchange', mark);
 }
