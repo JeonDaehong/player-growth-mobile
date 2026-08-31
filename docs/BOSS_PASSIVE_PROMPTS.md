@@ -17,8 +17,8 @@
 | 로고 | 우두머리 | 윤곽 |
 |---|---|---|
 | `bp_thorn` | b05 스피나투스 · 가시 갑옷 | A SPIKED BALL |
-| `bp_viscous` | b10 슬러지누스 · 오염된 점성 | A HEAVY FALLING DROP |
-| `bp_rot` | b15 카다베라 · 부패의 오라 | A RISING PLUME |
+| `bp_viscous` | b10 슬러지누스 · 오염된 점성 | A HANGING FRINGE |
+| `bp_rot` | b15 카다베라 · 부패의 오라 | A ROTTED THROUGH DISC |
 | `bp_ward` | b20 실바누스 · 수호수의 가호 | A SHIELD-LEAF |
 
 ## 셀 순서
@@ -43,8 +43,8 @@ SUBJECT: a single sheet of 4 ICONS in one row, left to right. They are a matched
 The 4 cells, in this exact order:
 
 Cell 1 — A SPIKED BALL. A solid round core filling the middle of the cell with SIX thick triangular spikes radiating from it — up, down, and four diagonals — each spike as long as the core is wide and wide at its base. The outline is a fat six-pointed star with no thin parts anywhere. Squint test: a star.
-Cell 2 — A HEAVY FALLING DROP. One solid teardrop filling the cell — a fat round bottom taking two-thirds of the height, narrowing upward into a THICK neck that reaches the top edge, plus ONE smaller round drop already separated and sitting just below it in the lower corner. Two solid shapes, one big one small, no thin strand between them. The outline is smooth and bulging with no points at all — the opposite of the spiked ball. Squint test: a drip.
-Cell 3 — A RISING PLUME. A wide solid mound along the bottom third of the cell with THREE thick blunt-topped stalks rising out of it to different heights, the middle one tallest and reaching the top edge. The stalks are as wide as the gaps between them, so the whole thing reads as one solid mass with two square notches cut down into it from the top. Flat-topped, not pointed. Squint test: a three-pronged block.
+Cell 2 — A HANGING FRINGE. One solid horizontal bar across the TOP of the cell, full width and a fifth of the height, with THREE thick strands hanging straight down from it to different depths — the middle one reaching the bottom edge, the outer two stopping short at different heights. Each strand is as wide as the gaps between them and ends in a blunt flat cut, not a point. The whole thing is one connected solid mass hanging from the top. Squint test: a comb.
+Cell 3 — A ROTTED THROUGH DISC. One solid circle filling the whole cell, with a single enormous ragged BITE eaten out of its right side — the bite is a third of the diameter deep and reaches nearly to the centre, with a coarse uneven edge of three or four big rounded scallops (not a clean crescent, and not fine serration). Everything else is solid fill. The circle must still read as a circle. Squint test: a circle with a chunk gone.
 Cell 4 — A SHIELD-LEAF. One solid shape combining both: a broad flat straight top edge running the full width of the cell, sides dropping straight down and then curving in to meet at a single point at the bottom. Cut into it from the bottom point, running a third of the way up the middle, is ONE straight notch as wide as a fifth of the shape — the leaf midrib. No other detail. Squint test: a shield.
 
 STYLE (strict, non-negotiable):
@@ -84,7 +84,7 @@ Everything below follows from that one fact.
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
 
-THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and squint. If any two have a similar outline, redraw the weaker one — the outline is the only thing that survives at 14 pixels. These four are deliberately a star, a drip, a notched block and a shield; if any of them has drifted toward another, pull it back.
+THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and squint. If any two have a similar outline, redraw the weaker one — the outline is the only thing that survives at 14 pixels. These four are deliberately a STAR, a COMB, a BITTEN CIRCLE and a SHIELD; if any of them has drifted toward another, pull it back.
 
 SHEET LAYOUT:
 - Arrange the cells in an exact uniform grid: 4 columns x 1 row.
