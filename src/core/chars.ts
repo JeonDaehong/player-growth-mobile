@@ -122,6 +122,82 @@ export const GRADE_GROWTH: Record<Grade, number> = {
   S: 0.11,
 };
 
+/**
+ * 피해의 종류.
+ *
+ * **둘뿐이다.** 속성을 넷 다섯으로 늘리면 파티를 짤 때 "이 판에는 무슨
+ * 속성이 나오나" 를 외워야 하고, 흑백 2색 화면에서 그 넷을 구분해 보여 줄
+ * 방법도 없다. 둘이면 방어 한 줄과 저항 한 줄로 화면에 다 들어간다.
+ *
+ *   phys   물리 피해 — **방어력**이 막는다
+ *   magic  마법 피해 — **마법저항력**이 막는다
+ *
+ * 막는 쪽이 서로 다른 스탯이라, 한쪽만 올린 상대에게는 다른 쪽이 통한다.
+ * 그게 이 갈래를 두는 유일한 이유다 — 갈라 놓고 둘 다 같은 스탯이 막으면
+ * 이름만 둘이다.
+ */
+export type DmgType = 'phys' | 'magic';
+
+/** 화면에 적는 이름 */
+export const DMG_NAME: Record<DmgType, string> = {
+  phys: '물리',
+  magic: '마법',
+};
+
+/**
+ * 관통 — **막는 겹을 통째로 건너뛴다.**
+ *
+ * 비율이 아니라 있고 없고다. 방어가 뺄셈이라(`Armor`) 관통도 뺄셈의 언어로
+ * 말해야 읽힌다 — "30% 관통" 은 방어력 5 앞에서 1.5 를 무시한다는 뜻인데,
+ * 그 1.5 는 화면에 뜨는 숫자를 하나도 안 바꾼다.
+ *
+ * 종류마다 따로다. 물리관통은 방어력만, 마법관통은 마법저항력만 건너뛴다 —
+ * 물리로 때리는 사람에게 마법관통을 줘 봐야 아무 일도 안 일어난다.
+ *
+ * **기술에도 붙고 패시브에도 붙는다.** 둘이 겹치면 OR 다 (`blowOf`).
+ */
+export interface Pierce {
+  /** 물리관통 — 상대 방어력을 무시한다 */
+  phys: boolean;
+  /** 마법관통 — 상대 마법저항력을 무시한다 */
+  magic: boolean;
+}
+
+/** 아무것도 안 뚫는다 — 지금 대부분이 이것이다 */
+export const NO_PIERCE: Pierce = { phys: false, magic: false };
+
+/**
+ * 맞는 쪽이 들고 있는 것 — **두 겹의 방어.**
+ *
+ * `Stat`(파티)과 `Foe`(적)가 둘 다 이 모양이라, 피해 계산은 누가 누구를
+ * 때리는지 몰라도 된다 (`autoBattle` 의 `strikeFor`). 예전에는 아군이 적을
+ * 때리는 식과 적이 아군을 때리는 식이 따로 있었다.
+ */
+export interface Armor {
+  /** 방어력 — **물리** 피해를 그 수만큼 깎는다 */
+  def: number;
+  /** 마법저항력 — **마법** 피해를 그 수만큼 깎는다 */
+  res: number;
+}
+
+/** 아무것도 안 막는다 — 화면이 "맨몸에 몇 들어가나" 를 적을 때 쓴다 */
+export const NO_ARMOR: Armor = { def: 0, res: 0 };
+
+/**
+ * 때리는 쪽이 들고 나가는 것 — **무슨 피해이고 무엇을 무시하는가.**
+ *
+ * 한 대를 계산하는 데 필요한 정보가 이 둘뿐이라 한 덩어리로 묶었다. 따로
+ * 넘기면 어느 호출에서 종류만 넘기고 관통을 빠뜨리기 쉽다 — 그렇게 빠지면
+ * 조용히 안 뚫릴 뿐이라 아무도 모른다.
+ */
+export interface Blow {
+  type: DmgType;
+  pierce: Pierce;
+}
+
+/** 관통 없는 물리 한 대 — 적 대부분과 옛 계산이 이것이다 */
+export const PHYS_BLOW: Blow = { type: 'phys', pierce: NO_PIERCE };
+
 export interface CharDef {
   id: CharId;
   name: string;
@@ -146,6 +222,39 @@ export interface CharDef {
    * 아무리 깎여도 **최소 1** 은 들어간다. 0 이 되면 그 적은 영원히 못 이긴다.
    */
   def: number;
+  /**
+   * 마법저항력 — 맞는 **마법** 피해를 그 수만큼 깎는다.
+   *
+   * `def` 와 완전히 같은 뺄셈이고, 다른 것은 **무엇을 막느냐** 하나다
+   * (`Armor`).
+   *
+   * 지금은 이졸데만 1 이고 나머지는 0 이다. 흔한 값이 아니어야 하는 스탯
+   * 이라서다 — 넷이 다 조금씩 갖고 있으면 "마법 피해" 라는 갈래가 그냥
+   * 모두에게 조금 덜 아픈 것이 되고, 누구를 앞에 세울지가 안 갈린다.
+   *
+   * 여기 적는 것은 **강화 +0 일 때**의 값이다. 강화로 방어와 같은 기울기로
+   * 자라지만(`statOf`) 밑값이 작아서 실제로 오르는 폭도 작다 — 1 이 최대
+   * 강화에서 2 가 되고, 0 은 영영 0 이다.
+   */
+  res: number;
+  /**
+   * **평타**가 무슨 피해인가.
+   *
+   * 스킬은 제 것을 따로 갖는다 (`SkillDef.dmg`). 갈라 둔 이유는 실제로
+   * 갈리기 때문이다 — 아녜스는 평타가 마법이지만 기도는 아무도 안 때리고,
+   * 반대로 평타는 물리인데 기술만 마법인 사람이 있을 수 있다.
+   */
+  dmg: DmgType;
+  /**
+   * **패시브 관통** — 이 사람의 모든 공격이 늘 들고 나가는 것.
+   *
+   * 안 적으면 없다. 기술 하나에만 붙는 관통은 `SkillDef.pierce` 쪽이고,
+   * 둘이 겹치면 더한다 (`blowOf`).
+   *
+   * 지금은 아무도 없다. 자리를 미리 파 두는 이유는, 나중에 넣을 때
+   * **계산까지 같이 고쳐야 하는 상황**을 안 만들기 위해서다.
+   */
+  pierce?: Partial<Pierce>;
   /**
    * 공격 속도 — **초당 몇 번 치나.**
    *
@@ -204,6 +313,22 @@ export interface CharDef {
    * 하늘로 쏘고, 향로는 아군을 회복시킨다.
    */
   skill: SkillKind;
+  /**
+   * **두 번째부터** 가진 기술들. 안 적으면 `skill` 하나뿐이다.
+   *
+   * `skill` 과 합쳐서 이 사람이 가진 전부가 된다 (`skillsOf`). 첫 번째를
+   * 여기 안 넣는 이유는, 두 곳에 적히면 서로 어긋날 수 있어서다 — `skill`
+   * 은 언제나 첫 번째이고 여기는 언제나 그 뒤다.
+   *
+   * ## 여럿이면 한 스윙에 하나씩 나간다
+   *
+   * 주기가 서로 달라(`SkillDef.every`) 같은 차례에 둘이 걸릴 수 있는데,
+   * 그때 한꺼번에 안 나간다 — 하나를 내보내고 나머지는 다음 스윙으로
+   * 밀린다 (`nextSkill`). 그래서 실제 간격은 그 사람의 공격 속도가 정한다.
+   *
+   * 지금은 아무도 없다. 넷 다 하나씩이라 이 줄은 비어 있다.
+   */
+  extra?: readonly SkillKind[];
 
   /*
     아래 셋은 **다 만든 캐릭터에만** 있다.
@@ -282,6 +407,24 @@ export interface SkillDef {
    * "최대 몇" 이 제각각이 되면서 모두에게 걸리는 값이 됐다.
    */
   targets: number;
+  /**
+   * 이 기술이 무슨 피해인가.
+   *
+   * 쓰는 사람의 평타 종류(`CharDef.dmg`)와 **따로다.** 물리로 베는 사람이
+   * 마법 기술을 쓸 수도 있고, 그 반대도 된다 — 갈라 두지 않으면 캐릭터
+   * 하나가 한 종류에 묶인다.
+   *
+   * 회복형(`pick: 'none'`)에게도 값이 있다. 아무도 안 때리므로 쓰이지
+   * 않지만, 선택으로 두면 "이 기술은 무슨 피해지?" 를 물을 때마다 회복형
+   * 인지 아닌지를 먼저 봐야 한다.
+   */
+  dmg: DmgType;
+  /**
+   * 이 기술만의 관통. 안 적으면 없다.
+   *
+   * 쓰는 사람의 패시브 관통(`CharDef.pierce`)과 **더해진다** (`blowOf`).
+   */
+  pierce?: Partial<Pierce>;
   /** 한 번당 **공격력**에 걸리는 배수 */
   mul: number;
   /**
@@ -390,6 +533,8 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
   wave: {
     /* 줄을 가로질러 지나가므로 **길에 있는 전부**가 맞는다 */
     name: '검기', art: 'sk_wave', hits: 1, pick: 'all', targets: 0,
+    /* 검으로 벤다 — 날아가도 베는 것이다 */
+    dmg: 'phys',
     mul: 1.4, defMul: 1.0, heal: 0, healPct: 0,
     flies: true, landOn: 2, every: 4, aura: 'ring', leaps: false,
     /* 이졸데의 평타는 `holy`(빛). 스킬은 길게 훑는 베기라 조각이 튄다 */
@@ -409,7 +554,8 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
       한 지점에 떨어진다. 그래서 **거기 모여 있는 무리**만 휩쓴다 —
       앞줄로 뛰어들면 근접만, 뒷줄로 뛰어들면 원거리만.
     */
-    name: '강타', art: 'sk_leap', hits: 1, pick: 'kind', targets: 2, mul: 1.5, defMul: 0, heal: 0, healPct: 0,
+    name: '강타', art: 'sk_leap', hits: 1, pick: 'kind', targets: 2, dmg: 'phys',
+    mul: 1.5, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 3, every: 5, aura: 'none', leaps: true,
     /* 솟음 · 낙하 · 착지. 떠 있는 시간이 곧 높이다 */
     beat: [260, 170, 250],
@@ -435,7 +581,8 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
   */
   rain: {
     /* 하늘에서 흩어져 떨어진다 — 아무나 셋 */
-    name: '화살비', art: 'sk_rain', hits: 3, pick: 'random', targets: 3, mul: 1.5, defMul: 0, heal: 0, healPct: 0,
+    name: '화살비', art: 'sk_rain', hits: 3, pick: 'random', targets: 3, dmg: 'phys',
+    mul: 1.5, defMul: 0, heal: 0, healPct: 0,
     /* 무릎 꿇고 자리를 잡는 기술이라 발밑에 마법진이 어울린다 */
     flies: false, landOn: 3, every: 4, aura: 'rune', leaps: false,
     /*
@@ -458,7 +605,10 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     회복이 전멸을 취소해 버리면 아무도 안 죽는다.
   */
   heal: {
-    name: '기도', art: 'sk_heal', hits: 1, pick: 'none', targets: 0, mul: 0, defMul: 0,
+    name: '기도', art: 'sk_heal', hits: 1, pick: 'none', targets: 0,
+    /* 아무도 안 때리므로 안 쓰이는 값이다. 쓰는 사람을 따라 마법으로 적는다 */
+    dmg: 'magic',
+    mul: 0, defMul: 0,
     heal: 1.0, healPct: 0.15,
     /*
       **발밑에 아무것도 안 깐다.**
@@ -523,16 +673,59 @@ export function skillOf(id: string): SkillDef {
 /**
  * 그 캐릭터가 가진 기술 **전부**.
  *
- * 지금은 한 명당 하나뿐이라 `skillOf` 와 같은 것을 한 칸짜리 배열로 돌려준다.
- * 그런데 화면에 목록으로 내걸리는 순간(`SkillPanel`) 이건 곧 여러 개가 된다 —
- * 그때 화면을 고치는 게 아니라 여기만 고치면 되게 미리 목록으로 받는다.
+ * **순서가 곧 자리 번호다.** 0 번이 `skill`, 그다음이 `extra` 순서 그대로다.
+ * 화면과 계산이 "몇 번째 기술" 로 서로 말을 맞추므로(`applySkill` 의 `slot`),
+ * 이 순서가 흔들리면 그린 기술과 들어간 기술이 갈린다.
  *
- * 전투는 여전히 `skillOf` 를 쓴다. **몇 번째 공격마다 무엇이 나가느냐**는
- * 하나일 때와 여럿일 때의 규칙이 다른데(순서대로 도나, 준비된 것부터 나가나),
- * 아직 정할 일이 없는 규칙을 미리 정해 두면 나중에 그걸 먼저 지워야 한다.
+ * 지금은 넷 다 하나씩이라 늘 한 칸짜리다.
  */
 export function skillsOf(id: string): SkillDef[] {
-  return [skillOf(id)];
+  const d = (CHARS as Record<string, CharDef | undefined>)[id];
+  /* 첫 번째는 늘 `skill` 이고, 나머지가 `extra` 다 — 순서가 곧 자리 번호다 */
+  return [skillOf(id), ...(d?.extra ?? []).map((k) => SKILLS[k])];
+}
+
+/**
+ * 이 사람의 기술 중 **제일 자주 도는 것**의 주기.
+ *
+ * 머리 위·파티 칸의 충전 칸이 이걸 기준으로 찬다 (`state/battleUi`). 여럿을
+ * 가진 사람에게 칸 하나로 말할 수 있는 것은 "다음 기술까지" 뿐이고, 그건
+ * 제일 빨리 돌아오는 것이 정한다.
+ */
+export function soonestEvery(id: string): number {
+  const list = skillsOf(id);
+  return list.reduce((a, sk) => Math.min(a, sk.every), list[0]?.every ?? 4);
+}
+
+/**
+ * 이번 스윙에 나갈 기술의 **자리 번호** — 평타면 -1.
+ *
+ * ## 한 스윙에 하나만
+ *
+ * 기술이 여럿이면 같은 차례에 둘 이상이 걸릴 수 있다 (주기가 4 와 6 이면
+ * 12번째 스윙에서 겹친다). 그때 **한꺼번에 안 나간다** — 하나를 내보내고
+ * 나머지는 `queue` 에 남아 다음 스윙에서 하나씩 나간다. 그러니 실제 간격은
+ * 그 사람의 공격 속도가 정한다.
+ *
+ * 한꺼번에 내보내면 그 한 스윙만 피해가 몇 배로 튀고, 화면에서는 말풍선
+ * 여럿과 이펙트 여럿이 한 프레임에 겹쳐 뜬다 — 무슨 일이 일어났는지 읽을
+ * 방법이 없다.
+ *
+ * ## 왜 줄을 밖에서 들고 있나
+ *
+ * 밀린 것을 기억해야 하므로 상태가 필요한데, 이 함수를 상태를 가진 물건으로
+ * 만들면 시험이 어려워진다. 대신 **부르는 쪽이 줄을 들고** 여기서는 그
+ * 줄을 고친다 — `Fighter` 의 스윙 순환이 제 클로저에 하나 두고 있다.
+ *
+ * @param queue 밀려 있는 기술 자리들. **이 배열을 고친다** (넣고 뺀다)
+ */
+export function nextSkill(id: string, n: number, queue: number[]): number {
+  const list = skillsOf(id);
+  for (let i = 0; i < list.length; i++) {
+    /* `every` 가 0 이하면 안 도는 기술이다 — 나눗셈이 늘 0 이라 매번 걸린다 */
+    if (list[i].every > 0 && n % list[i].every === 0) queue.push(i);
+  }
+  return queue.length ? (queue.shift() as number) : -1;
 }
 
 export type HitFx =
@@ -576,7 +769,17 @@ export const CHARS: Record<CharId, CharDef> = {
     quote: '맹세를 지키느라 한 번도 뒤로 물러선 적이 없다.',
     gear: '서약검 여명', gearKind: 'sword',
     gearNote: '무릎 꿇고 받은 검. 날에 새긴 맹세가 아직 지워지지 않았다.',
-    atk: 15, hp: 300, def: 5, spd: 0.8, crit: 0, critDmg: 1.5,
+    /*
+      **넷 중 유일하게 마법저항력이 있다** (1). 방어력 5 와 나란히 두면
+      "앞에 서는 사람" 이 물리만 받아 주는 게 아니라는 뜻이 된다.
+
+      1 인 것이 적어 보이지만 뺄셈이라 그렇지 않다 (`Armor`) — 마법 평타
+      한 대가 8 이면 8분의 1 이 늘 깎인다. 지금 마법으로 때리는 적이
+      없으므로 실제로는 아직 아무 일도 안 한다 (`docs/FOE_TABLE.md`).
+    */
+    atk: 15, hp: 300, def: 5, res: 1, spd: 0.8, crit: 0, critDmg: 1.5,
+    /* 검으로 벤다 */
+    dmg: 'phys',
     from: '업적 · 파티 강화 합계 60 달성', fx: 'holy', range: 'melee', skill: 'wave', art: 'knightgirl',
   },
 
@@ -598,7 +801,9 @@ export const CHARS: Record<CharId, CharDef> = {
     quote: '박수는 나중에 쳐. 아직 한 곡 남았어.',
     gear: '축배의 도끼', gearKind: 'axe',
     gearNote: '연회장에서 집어 온 것. 무엇을 자르려고 만든 물건인지는 안 물었다.',
-    atk: 25, hp: 200, def: 2, spd: 0.7, crit: 0, critDmg: 2.0,
+    atk: 25, hp: 200, def: 2, res: 0, spd: 0.7, crit: 0, critDmg: 2.0,
+    /* 도끼로 찍는다 */
+    dmg: 'phys',
     from: '모집', fx: 'smash', range: 'melee', skill: 'leap', art: 'bunnyaxe',
   },
 
@@ -619,7 +824,9 @@ export const CHARS: Record<CharId, CharDef> = {
     quote: '나무는 다 베어 갔어. 활은 아직 여기 있고.',
     gear: '마른가지 곡궁', gearKind: 'bow',
     gearNote: '베어 나간 숲에서 하나 남은 가지로 깎았다. 아직 마르는 중이다.',
-    atk: 20, hp: 150, def: 1, spd: 1.1, crit: 0, critDmg: 2.0,
+    atk: 20, hp: 150, def: 1, res: 0, spd: 1.1, crit: 0, critDmg: 2.0,
+    /* 화살이다 */
+    dmg: 'phys',
     from: '모집', fx: 'thrust', range: 'ranged', skill: 'rain', art: 'elfarcher',
   },
 
@@ -640,7 +847,17 @@ export const CHARS: Record<CharId, CharDef> = {
     quote: '다치는 건 상관없어요. 혼자 다치지만 않으면.',
     gear: '잿빛 종 향로', gearKind: 'censer',
     gearNote: '불타는 예배당에서 하나 건져 나왔다. 아직 재 냄새가 난다.',
-    atk: 10, hp: 150, def: 1, spd: 0.5, crit: 0, critDmg: 1.5,
+    atk: 10, hp: 150, def: 1, res: 0, spd: 0.5, crit: 0, critDmg: 1.5,
+    /*
+      **넷 중 유일하게 평타가 마법이다.**
+
+      향로를 흔드는 사람이 칼처럼 때릴 수는 없다는 설정이기도 하지만,
+      규칙 쪽 이유가 더 크다 — 물리를 막는 적이 나올 때 파티에 대답이
+      하나는 있어야 한다. 공격력이 넷 중 제일 낮은(10) 사람에게 그 자리를
+      준 것은, 이 사람을 넣는 이유가 "세다" 가 아니라 "다르다" 여야 하기
+      때문이다.
+    */
+    dmg: 'magic',
     from: '모집', fx: 'arcane', range: 'melee', skill: 'heal', art: 'nun',
   },
 };
@@ -737,10 +954,16 @@ export function swingMs(spd: number): number {
   return Math.round(ATTACK_BASE_MS / Math.max(0.05, spd));
 }
 
-export interface Stat {
+/**
+ * 지금 이 캐릭터의 수치.
+ *
+ * `Armor` 를 만족한다 (`def` + `res`). 그래서 피해 계산에 이 값을 **그대로**
+ * 넘길 수 있고, 적(`Foe`)도 같은 모양이라 계산 쪽은 아군인지 적인지 몰라도
+ * 된다 (`autoBattle` 의 `strikeFor`).
+ */
+export interface Stat extends Armor {
   atk: number;
   hp: number;
-  def: number;
   /** 초당 공격 횟수 */
   spd: number;
   /** 치명타 확률 (0~1) */
@@ -777,6 +1000,16 @@ export function statOf(c: OwnedChar): Stat {
       피해가 통째로 1 이 된다.
     */
     def: Math.round(d.def * (1 + g * 0.4)),
+    /*
+      마법저항력도 방어와 **같은 기울기**로 자란다. 하는 일이 똑같고
+      (`Armor`) 막는 것만 다르므로, 기울기를 다르게 둘 이유가 없다.
+
+      기본값이 0 이거나 1 이라 실제로 오르는 폭이 아주 작다 — 이졸데의 1 은
+      최대 강화(+20, S등급)에서 2 가 된다. 0 인 사람은 아무리 강화해도 0 이다.
+      이 스탯은 **키우는 축이 아니라 갖고 있고 없고**로 두었기 때문이고,
+      의도한 것이다.
+    */
+    res: Math.round((d.res ?? 0) * (1 + g * 0.4)),
     /* 속도와 치명타는 강화로 안 자란다 — 자라는 축은 하나여야 한다 */
     spd: d.spd,
     crit: d.crit,
@@ -798,5 +1031,55 @@ export function charPower(c: OwnedChar): number {
     방어는 **체력처럼** 센다. 맞을 때마다 그만큼 덜 닳으므로 실제로 버티는
     양이 늘어나는 것이고, 한 판에 예순 대쯤 맞는다고 보고 60 을 곱한다.
   */
+  /*
+    **마법저항력은 안 센다.**
+
+    지금 마법으로 때리는 적이 하나도 없어서다 (`docs/FOE_TABLE.md` — 전부
+    물리다). 방어와 같은 무게로 얹으면 이졸데의 전투력만 삼십 남짓 오르는데,
+    그 삼십은 화면 어디에서도 실제 이득으로 돌아오지 않는다. 비교하라고
+    내건 숫자가 비교를 틀리게 만드는 셈이다.
+
+    마법을 쓰는 적이 생기는 날 `+ s.res * 60 * 0.6` 을 얹으면 된다.
+  */
   return Math.round(dps * 8 + s.hp * 0.6 + s.def * 60 * 0.6);
+}
+
+/**
+ * 이 사람의 한 대가 들고 나가는 것 — **종류와 관통.**
+ *
+ * `sk` 를 주면 그 기술의 한 대이고, 안 주면 평타다.
+ *
+ * ## 관통은 더한다
+ *
+ * 패시브(`CharDef.pierce`)와 기술(`SkillDef.pierce`)이 겹치면 둘 다 산다.
+ * 어느 한쪽이 이기게 두면 "패시브로 물리관통을 가진 사람이 마법관통 기술을
+ * 쓰면 물리관통이 사라지는" 식의 규칙이 생기는데, 그건 설명할 수가 없다.
+ *
+ * 종류는 반대로 **덮어쓴다.** 한 대는 물리이거나 마법이거나 둘 중 하나이지
+ * 둘 다일 수 없어서, 더할 수가 없다.
+ */
+export function blowOf(id: string, sk?: SkillDef): Blow {
+  const d = (CHARS as Record<string, CharDef | undefined>)[id];
+  const pass = d?.pierce;
+  return {
+    type: sk ? sk.dmg : (d?.dmg ?? 'phys'),
+    pierce: {
+      phys: !!pass?.phys || !!sk?.pierce?.phys,
+      magic: !!pass?.magic || !!sk?.pierce?.magic,
+    },
+  };
+}
+
+/**
+ * 이 사람이 **한 번이라도** 관통을 들고 나가나 — 화면에 표시할지 판단용.
+ *
+ * 패시브와 모든 기술을 다 훑는다. 하나라도 있으면 캐릭터 창이 그 줄을
+ * 내건다 (`CharPopup`).
+ */
+export function anyPierce(id: string): Pierce {
+  const all = [blowOf(id), ...skillsOf(id).map((sk) => blowOf(id, sk))];
+  return {
+    phys: all.some((b) => b.pierce.phys),
+    magic: all.some((b) => b.pierce.magic),
+  };
 }

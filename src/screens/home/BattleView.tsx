@@ -34,7 +34,7 @@ import {
   MOB_CAP, STAGE_MS, bossReady, fightHeld, foeOf, healPlan, pickAim, skillDamage,
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
-import { CHARS, projFrame, projSet, skillOf } from '@/core/chars';
+import { CHARS, projFrame, projSet, skillOf, skillsOf } from '@/core/chars';
 import { hpOf, members, partyStat, supportMul } from '@/core/party';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
@@ -681,16 +681,23 @@ export function BattleView() {
     스킬을 쓴 순간. **검기는 여기서 안 그린다** — 검끝에서 나가야 하므로
     `Fighter` 안에서 그린다 (`SwordWave`). 여기서는 피해와 화면 흔들기만.
   */
-  const onSkill = React.useCallback((id: string) => {
+  const onSkill = React.useCallback((id: string, slot: number) => {
     if (fightHeld(now.current.battle)) return;
     /* 나갔으니 처음부터 다시 센다 */
     resetCharge(id);
 
     const { battle: b, party: pt, chars: ch } = now.current;
     const me = ch[id];
-    if (!me) { skillFoe(id); return; }
+    if (!me) { skillFoe(id, undefined, slot); return; }
 
-    const sk = skillOf(me.id);
+    /*
+      **어느 기술이 나갔는지는 `Fighter` 가 정해서 넘긴다** (`slot`).
+
+      여기서 다시 고르면 몸이 휘두른 기술과 피해를 넣는 기술이 갈릴 수 있다 —
+      자리(`at`)를 화면이 골라 넘기는 것과 똑같은 이유다. 지금은 한 명당
+      기술이 하나뿐이라 늘 0 이지만, 규칙은 지금 세워 둔다.
+    */
+    const sk = skillsOf(me.id)[slot] ?? skillOf(me.id);
 
     /*
       회복형은 적 쪽에 그릴 게 없다. 대신 **아군 쪽에** 그린다.
@@ -701,7 +708,7 @@ export function BattleView() {
     */
     if (sk.pick === 'none') {
       const plan = healPlan(sk, pt, ch, b.hp);
-      skillFoe(id);
+      skillFoe(id, undefined, slot);
       shake.fire(0.4);
       const made = Object.entries(plan)
         .filter(([, v]) => v > 0)
@@ -724,7 +731,7 @@ export function BattleView() {
     */
     const idx = skillTargets(sk, b.foes, targetOf(b));
 
-    const dmg = skillDamage(me, pt, ch);
+    const dmg = skillDamage(me, pt, ch, slot);
     /* 자리는 **때리기 전에** 다 잡아 둔다 — 죽으면 줄이 통째로 다시 짜인다 */
     const spots = idx.map(spotOf);
     /*
@@ -739,7 +746,7 @@ export function BattleView() {
       ? [{ ...spots[0], x: Math.min(...spots.map((sp) => sp.x)) }]
       : [];
 
-    skillFoe(id, idx);
+    skillFoe(id, idx, slot);
     shake.fire(sk.pick === 'all' || sk.leaps ? 1.2 : 1);
 
     setHits((old) => {

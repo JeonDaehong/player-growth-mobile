@@ -13,8 +13,8 @@ import { View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useGame } from '@/state/store';
 import {
-  BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId, MAX_GEAR_LV,
-  battleTypeOf, charPower, gearCost, gearOdds, statOf,
+  BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId, DMG_NAME, MAX_GEAR_LV,
+  anyPierce, battleTypeOf, blowOf, charPower, gearCost, gearOdds, statOf,
 } from '@/core/chars';
 import { fmt } from '@/core/currency';
 import { Bar, Btn, KV, ListItem, Row, Sep, T, Tag } from '@/ui/atoms';
@@ -141,8 +141,33 @@ export function CharPopup({
           )}
 
           <Sep />
-          <KV k="공격력" v={String(statOf(c).atk)} />
+          {/*
+            ── 수치 ──
+
+            방어력과 마법저항력을 **나란히** 놓는다. 둘은 같은 뺄셈이고 막는
+            것만 다른데(`core/chars` 의 `Armor`), 떨어뜨려 놓으면 그 대칭이
+            안 보여서 마법저항력이 무슨 값인지 따로 배워야 한다.
+
+            평타 옆에 종류를 붙이는 것도 같은 이유다 — "공격력 15" 만 있으면
+            그게 어느 쪽 방어에 막히는지 알 길이 없다.
+          */}
+          <KV k="공격력" v={`${statOf(c).atk} (${DMG_NAME[blowOf(c.id).type]} 피해)`} />
           <KV k="체력" v={String(statOf(c).hp)} />
+          <KV k="방어력" v={`${statOf(c).def} (물리 피해를 막는다)`} />
+          <KV k="마법저항력" v={`${statOf(c).res} (마법 피해를 막는다)`} />
+          {(() => {
+            /* 관통은 **가진 사람에게만** 뜬다 — 0 짜리 줄이 넷에게 다 붙으면 잡음이다 */
+            const p = anyPierce(c.id);
+            const on: string[] = [];
+            if (p.phys) on.push('물리관통');
+            if (p.magic) on.push('마법관통');
+            return on.length ? <KV k="관통" v={on.join(' · ')} /> : null;
+          })()}
+          <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
+            방어력은 물리 피해를, 마법저항력은 마법 피해를 그 수만큼 깎습니다
+            (비율이 아니라 뺄셈이고, 아무리 깎여도 최소 1은 들어갑니다).
+            관통이 있으면 그 방어를 통째로 무시합니다.
+          </T>
           {!maxed && <KV k="성공 확률" v={`${Math.round(gearOdds(c.gearLv) * 100)}%`} dim />}
           {!maxed && <KV k="강화 비용" v={fmt(cost)} warn={money < cost} />}
 

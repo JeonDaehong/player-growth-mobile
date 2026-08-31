@@ -19,7 +19,7 @@
  * 다시 그려진다 — 스토어가 그 일을 안 하고 필요한 둘만 다시 그린다.
  */
 import { create } from 'zustand';
-import { skillOf } from '@/core/chars';
+import { soonestEvery } from '@/core/chars';
 
 interface BattleUi {
   /** 사람별로 지금까지 친 평타 수 (0 ~ every-1) */
@@ -36,8 +36,14 @@ export const useBattleUi = create<BattleUi>((set) => ({
   bumpCharge: (who) => set((st) => ({
     charge: {
       ...st.charge,
-      /* 다 차면 멈춘다 — 넘치면 화면의 칸 수보다 많아진다 */
-      [who]: Math.min(skillOf(who).every - 1, (st.charge[who] ?? 0) + 1),
+      /*
+        다 차면 멈춘다 — 넘치면 화면의 칸 수보다 많아진다.
+
+        기술이 여럿이면 **제일 빨리 도는 것**을 기준으로 찬다
+        (`soonestEvery`). 칸 하나로 말할 수 있는 건 "다음 기술까지" 뿐이고,
+        그건 제일 먼저 돌아오는 것이 정한다.
+      */
+      [who]: Math.min(soonestEvery(who) - 1, (st.charge[who] ?? 0) + 1),
     },
   })),
 

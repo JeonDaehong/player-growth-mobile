@@ -20,10 +20,10 @@
  * 매핑해 두었으므로, 새 시트가 들어오면 `SET` 한 줄만 바꾸면 된다.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View } from 'react-native';
+import { Animated, Easing, Text, View } from 'react-native';
 import type { HitFx } from '@/core/chars';
 import { Sprite } from '@/ui/Sprite';
-import { MONO, WHITE } from '@/ui/theme';
+import { BLACK, MONO, WHITE } from '@/ui/theme';
 
 /** 이펙트 한 판의 길이 */
 export const FX_MS = 260;
@@ -386,6 +386,101 @@ export function PatternCall({ nonce, name }: { nonce: number; name: string }) {
       >
         {name}
       </Animated.Text>
+    </Animated.View>
+  );
+}
+
+/** 말풍선이 떴다 사라지기까지 (ms) */
+const SHOUT_MS = 900;
+
+/**
+ * 기술 이름 — **쓴 사람 머리 위 말풍선.**
+ *
+ * ## 왜 무대 가운데가 아닌가
+ *
+ * `PatternCall` 과 하는 일은 같은데 자리가 다르다. 저건 **우두머리 하나**가
+ * 쓰는 것이라 무대 위쪽 한가운데에 걸어도 누가 쓴 건지 헷갈릴 일이 없다.
+ *
+ * 이건 넷이 **각자 제 박자로** 쓴다 (`SkillDef.every` 가 4 와 5 라 주기가
+ * 어긋난다). 가운데에 걸면 두셋이 같은 순간에 겹쳐 뜨고, 그러면 이름은
+ * 보이는데 **누가 썼는지가 사라진다.** 말풍선은 꼬리가 주인을 가리키므로
+ * 넷이 동시에 외쳐도 각자의 것으로 읽힌다.
+ *
+ * ## 흰 바탕에 검은 글씨
+ *
+ * 화면에서 유일하게 **반전된** 덩어리다. 무대는 검은 바탕에 흰 선뿐이라
+ * (`ui/theme`), 흰 글씨를 그냥 얹으면 인물·이펙트·피해 숫자와 색도 굵기도
+ * 같아서 섞여 버린다. 통째로 뒤집으면 40px 짜리 인물 위에서도 한눈에
+ * 떨어져 나온다 — 만화 말풍선이 원래 흰 이유다.
+ *
+ * 모서리는 안 둥글린다 (`ui/theme` 의 `BORDER`). 꼬리도 삼각형이 아니라
+ * **계단 세 칸**이다 — 도트 화면에서 매끈한 빗변은 그 자리만 해상도가 다른
+ * 것처럼 보인다.
+ *
+ * ## 길이
+ *
+ * 0.9초다. 기술 동작 자체가 0.5초 남짓이고(`SK_MS`), 제일 빠른 사람은 네
+ * 번에 한 번씩 쓴다. 이보다 길게 두면 다음 것이 뜨기 전에 안 사라져서
+ * 말풍선이 상시 켜져 있는 것이 된다.
+ */
+export function SkillShout({ nonce, name }: { nonce: number; name: string }) {
+  const t = useRef(new Animated.Value(0)).current;
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    if (nonce <= 0 || !name) return undefined;
+    setOn(true);
+    t.setValue(0);
+    let alive = true;
+    const a = Animated.timing(t, {
+      toValue: 1, duration: SHOUT_MS, easing: Easing.linear, useNativeDriver: true,
+    });
+    a.start(() => { if (alive) setOn(false); });
+    return () => { alive = false; a.stop(); };
+  }, [nonce, name, t]);
+
+  /*
+    `interpolate()` 는 부를 때마다 `t` 에 자식 노드를 매단다 — 그리기마다
+    부르면 노드가 쌓여 시간에 비례해 느려진다 (`PatternCall` 과 같은 이유).
+  */
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.08, 0.7, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+  /* 작게 시작해 한 번 넘겼다 제자리로 — "툭 튀어나온다" 가 곧 외치는 것이다 */
+  const pop = useMemo(() => t.interpolate({
+    inputRange: [0, 0.09, 0.2, 1], outputRange: [0.55, 1.18, 1, 1],
+  }), [t]);
+  /* 뜬 뒤로는 천천히 떠오른다 — 제자리에 붙어 있으면 라벨로 보인다 */
+  const rise = useMemo(() => t.interpolate({
+    inputRange: [0, 0.2, 1], outputRange: [3, 0, -6],
+  }), [t]);
+
+  if (!on) return null;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        alignItems: 'center',
+        opacity: fade,
+        transform: [{ translateY: rise }, { scale: pop }],
+      }}
+    >
+      <View style={{ backgroundColor: WHITE, paddingHorizontal: 5, paddingVertical: 2 }}>
+        <Text
+          numberOfLines={1}
+          style={{
+            color: BLACK, fontFamily: MONO, fontSize: 10, fontWeight: '700',
+            includeFontPadding: false,
+          }}
+        >
+          {name}!
+        </Text>
+      </View>
+      {/* 꼬리 — 아래로 좁아지는 계단 세 칸. 이게 주인을 가리킨다 */}
+      <View style={{ width: 6, height: 2, backgroundColor: WHITE }} />
+      <View style={{ width: 4, height: 2, backgroundColor: WHITE }} />
+      <View style={{ width: 2, height: 2, backgroundColor: WHITE }} />
     </Animated.View>
   );
 }

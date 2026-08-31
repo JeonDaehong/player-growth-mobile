@@ -57,7 +57,14 @@ export interface RosterActions {
    * `strikeFoe` 와 같은 자리에서 같은 방식으로 처리한다 — 잡으면 보상과
    * 경험치가 같이 들어간다.
    */
-  skillFoe: (who: string, at?: readonly number[]) => void;
+  /**
+   * 기술을 쓴다.
+   *
+   * @param at   맞는 자리들. 화면이 골라서 넘긴다
+   * @param slot 기술이 여럿이면 몇 번째 것인가 (`core/chars` 의 `skillsOf`
+   *             순서). 안 주면 첫 번째 — 지금은 다들 하나씩이라 늘 0 이다
+   */
+  skillFoe: (who: string, at?: readonly number[], slot?: number) => void;
   /**
    * 골드로 한 명 모집한다.
    *
@@ -183,11 +190,11 @@ export const createRosterSlice = (
     set({ battle, money: st.money + ev.gold });
   },
 
-  skillFoe: (who, at) => {
+  skillFoe: (who, at, slot) => {
     const st = get();
     if (fightHeld(st.battle)) return;
     const { battle, ev } = applySkill(
-      st.battle, who, st.party, st.chars, Math.random, at,
+      st.battle, who, st.party, st.chars, Math.random, at, slot ?? 0,
     );
     /*
       회복형은 피해가 0 이다.

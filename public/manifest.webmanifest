@@ -5,13 +5,19 @@
   "id": "/",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
   "orientation": "portrait",
   "background_color": "#000000",
   "theme_color": "#000000",
   "lang": "ko",
   "dir": "ltr",
-  "categories": ["games"],
+  "categories": [
+    "games"
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",

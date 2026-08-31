@@ -452,7 +452,14 @@ export interface GameActions {
   strikeFoe: (who: string, aim?: number) => void;
   /** 스킬 — 앞의 세 마리를 1.5배로. 5초마다 */
   /** @param at 화면이 이미 고른 자리들. 없으면 스킬 규칙대로 여기서 고른다 */
-  skillFoe: (who: string, at?: readonly number[]) => void;
+  /**
+   * 기술을 쓴다.
+   *
+   * @param at   맞는 자리들. 화면이 골라서 넘긴다
+   * @param slot 기술이 여럿이면 몇 번째 것인가 (`core/chars` 의 `skillsOf`
+   *             순서). 안 주면 첫 번째 — 지금은 다들 하나씩이라 늘 0 이다
+   */
+  skillFoe: (who: string, at?: readonly number[], slot?: number) => void;
   /** 골드로 한 명 모집. 안 가진 사람 중에서만 나온다 */
   recruitDraw: () => { id: CharId } | 'poor' | 'full';
 

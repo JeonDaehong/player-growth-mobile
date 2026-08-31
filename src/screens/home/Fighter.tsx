@@ -31,13 +31,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { Row } from '@/ui/atoms';
-import { CHARS, HitFx, OwnedChar, skillOf, statOf, swingMs } from '@/core/chars';
+import {
+  CHARS, HitFx, OwnedChar, nextSkill, skillOf, skillsOf, statOf, swingMs,
+} from '@/core/chars';
 
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap } from '@/ui/spriteAssets';
 import { WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
-import { DamageNumber, HealMarks, HitBurst } from './HitFx';
+import { DamageNumber, HealMarks, HitBurst, SkillShout } from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
 
@@ -206,14 +208,39 @@ function FighterView({
    */
   onAim: (id: string, skill: boolean) => number;
   onSwing: (s: Swing) => void;
-  /** 스킬을 쓸 때 — 검기가 떠나는 순간에 불린다 */
-  onSkill: (id: string) => void;
+  /**
+   * 스킬을 쓸 때 — 검기가 떠나는 순간에 불린다.
+   *
+   * @param slot 이번에 나간 기술의 자리 (`core/chars` 의 `skillsOf` 순서).
+   *             여기서 정해서 넘기는 이유는, 기술이 여럿일 때 무엇이 나갈지를
+   *             아는 건 스윙 순환을 돌리는 여기뿐이기 때문이다 — 밖에서 다시
+   *             고르면 그린 기술과 들어간 기술이 갈린다.
+   */
+  onSkill: (id: string, slot: number) => void;
 }) {
   const d = CHARS[ch.id];
   const st = statOf(ch);
   const [frame, setFrame] = useState<Frame>('guard');
   /** 몇 번째 스킬인지 — 바뀔 때마다 검기가 새로 날아간다 */
   const [castNo, setCastNo] = useState(0);
+  /**
+   * 지금 외치고 있는 것 — 몇 번째 외침인지와 무슨 기술인지.
+   *
+   * `castNo` 와 따로 센다. 저건 **날아가는 것**이 있을 때만 올라가서
+   * (`throwing`), 도약과 기도에서는 영영 0 이다. 외치는 건 기술 넷 다 한다.
+   *
+   * 번호와 이름을 **한 덩어리로** 들고 있다. 따로 두면 둘이 어긋나는 순간이
+   * 생기고 — 기술이 여럿인 사람이라면 — 검기를 쓰면서 강타를 외친다.
+   */
+  const [shout, setShout] = useState<{ no: number; name: string }>({ no: 0, name: '' });
+  /**
+   * 지금 몸이 하고 있는 기술의 **자리**. 평타 중이면 -1.
+   *
+   * 발밑 표시(`SkillAura`)가 이걸 본다 — 기술마다 표시가 다른데
+   * (`SkillDef.aura`), 늘 첫 번째 기술 것을 그리면 두 번째 기술을 쓸 때
+   * 엉뚱한 것이 깔린다.
+   */
+  const [casting, setCasting] = useState(-1);
   /** 이번에 날린 것이 가야 할 거리 — 쏘는 순간 정해진다 */
   const [fly, setFly] = useState(0);
 
@@ -327,13 +354,37 @@ function FighterView({
 
     /** 몇 번째 스윙인가 — `SkillDef.every` 번째마다 평타 대신 기술이 나간다 */
     let n = 0;
+    /**
+     * 차례가 됐지만 아직 안 나간 기술들의 자리.
+     *
+     * **한 스윙에 하나만** 나간다 (`nextSkill`). 기술이 여럿인 사람에게
+     * 둘 이상이 같은 차례에 걸릴 수 있는데, 한꺼번에 내보내면 그 한 스윙만
+     * 피해가 몇 배로 튀고 화면에서는 말풍선과 이펙트가 한 프레임에 겹친다.
+     * 밀린 것은 다음 스윙에서 나가므로, 실제 간격은 공격 속도가 정한다.
+     *
+     * 지금은 한 명당 기술이 하나뿐이라 이 줄은 늘 비어 있다.
+     */
+    const queue: number[] = [];
 
     const cycle = () => {
       if (!alive) return;
       n += 1;
       /* 몇 번째마다 나가는지는 기술이 정한다 — 무거운 것일수록 드물다 */
-      const sk = skillOf(ch.id);
-      const skill = n % sk.every === 0;
+      const list = skillsOf(ch.id);
+      /** 이번 스윙에 나갈 기술의 자리. -1 이면 평타다 */
+      const slot = nextSkill(ch.id, n, queue);
+      const skill = slot >= 0;
+      const sk = list[Math.max(0, slot)] ?? skillOf(ch.id);
+      setCasting(slot);
+
+      /*
+        **이름은 동작이 시작될 때 외친다.**
+
+        맞는 칸(`landAt`)까지 기다리면 이미 다 휘두른 뒤에 말풍선이 뜬다 —
+        기도처럼 0.3초를 모으는 기술에서는 특히 늦어서, "뭘 하려는 거지" 가
+        지나간 다음에야 답이 나온다. 치켜드는 순간에 외쳐야 순서가 맞다.
+      */
+      if (skill) setShout((v) => ({ no: v.no + 1, name: sk.name }));
 
       /* 몸이 통째로 날아가는 기술은 박자가 따로다 — 떠 있는 시간이 곧 높이다 */
       const leaping = skill && sk.leaps;
@@ -416,7 +467,7 @@ function FighterView({
       const reach = flyMsOf(dist);
 
       if (throwing) at(landAt + reach, () => {
-        if (skill) cbSkill.current(ch.id);
+        if (skill) cbSkill.current(ch.id, slot);
         else cb.current({ id: ch.id, fx: d.fx, dmg: st.atk });
       });
 
@@ -431,7 +482,7 @@ function FighterView({
             적에게 닿을 때 들어간다 — 놓자마자 깎으면 검기가 아직 칼 옆에
             있는데 저 끝의 적이 먼저 죽는다.
           */
-          cbSkill.current(ch.id);
+          cbSkill.current(ch.id, slot);
         } else {
           cb.current({ id: ch.id, fx: d.fx, dmg: st.atk });
         }
@@ -508,6 +559,8 @@ function FighterView({
 
   const { lift, scale } = depthAt(back);
   const size = Math.round(width * scale);
+  /** 지금 나가는 중인 기술 — 평타 중이면 null */
+  const castSk = casting >= 0 ? (skillsOf(ch.id)[casting] ?? null) : null;
   const max = st.hp;
   const ratio = Math.max(0, Math.min(1, hp / Math.max(1, max)));
 
@@ -643,14 +696,47 @@ function FighterView({
       ))}
 
       {/*
+        기술 이름 — **머리 위 말풍선** (`SkillShout`).
+
+        `bottom: size` 로 다는 이유는 이 상자의 높이가 곧 `size` 이기 때문이다
+        (`Sprite` 만 흐름에 있고 나머지는 전부 절대 배치다). 상수로 박아 두면
+        무대가 좁아 인물이 줄어들 때(`width`) 말풍선만 제자리에 남는다.
+
+        좌우로 넘치게 두었다 (`left/right: -16`). 이름이 인물보다 넓을 수
+        있는데(`화살비!`), 상자 폭에 가두면 가운데 정렬이 그 안에서만
+        일어나서 글자가 줄바꿈되거나 잘린다.
+
+        `zIndex` 는 피해 숫자(40)보다 위다. 둘이 겹치는 순간이 있는데,
+        그때 가려져야 하는 건 0.9초짜리 외침이 아니라 계속 뜨는 숫자다.
+      */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          bottom: size + 4,
+          left: -16,
+          right: -16,
+          alignItems: 'center',
+          zIndex: 46,
+        }}
+      >
+        <SkillShout nonce={shout.no} name={shout.name} />
+      </View>
+
+      {/*
         스킬 이펙트 — 휘두르는 동안 발밑에서 빛이 퍼진다.
 
         네 번에 한 번뿐인 큰 기술인데 몸짓만 바뀌면 평타와 구분이
         잘 안 된다. 발밑 고리 하나로 "지금 뭔가 다른 걸 한다" 가 읽힌다.
       */}
       <SkillAura
-        on={skillOf(ch.id).aura !== 'none' && (frame === 'sk_1' || frame === 'sk_2')}
-        kind={skillOf(ch.id).aura === 'rune' ? 'rune' : 'ring'}
+        /*
+          **지금 나가는 기술**의 표시를 그린다 (`casting`). `frame` 이 이미
+          기술 칸인지를 가려 주므로, 평타 중에는 `casting` 이 -1 이 아니어도
+          안 켜진다.
+        */
+        on={castSk !== null && castSk.aura !== 'none' && (frame === 'sk_1' || frame === 'sk_2')}
+        kind={castSk?.aura === 'rune' ? 'rune' : 'ring'}
         size={size}
       />
 
@@ -666,7 +752,15 @@ function FighterView({
         `sk_3` 그림 안에 이미 들어 있어서, `castNo` 자체가 안 올라간다 —
         이 줄은 그때 `nonce` 가 0 이라 아무것도 안 그린다.
       */}
-      {(skillOf(ch.id).flies || d.range === 'ranged') && (
+      {/*
+        **하나라도 날아가는 기술이 있으면** 달아 둔다 (`some`).
+
+        지금 쓰는 기술만 보고 달면, 검기가 아직 날아가는 중에 다음 스윙이
+        평타로 넘어가면서 이 줄이 통째로 사라진다 — 화면 가운데에서 검기가
+        증발한다. 달아 두는 값은 가볍고(`castNo` 가 0 이면 아무것도 안 그린다)
+        사라지는 쪽은 눈에 띄므로, 켜 두는 편이 맞다.
+      */}
+      {(skillsOf(ch.id).some((sk) => sk.flies) || d.range === 'ranged') && (
         <SwordWave charId={ch.id} nonce={castNo} size={size} dist={fly} />
       )}
 

@@ -11,6 +11,7 @@
  *   템플릿이 바뀌어도 이 스크립트는 그대로 돈다.
  *
  * 넣는 것
+ *   · viewport 교체 — 확대 금지 (Expo 템플릿 것은 확대를 허용한다)
  *   · manifest 링크 — 이게 없으면 "홈 화면에 추가" 가 그냥 북마크가 된다
  *   · theme-color — 안드로이드 상태바를 검정으로 (흰 띠가 남으면 게임이 잘려 보인다)
  *   · iOS 용 meta — 사파리는 manifest 의 display 를 안 본다. 따로 말해 줘야 한다
@@ -77,6 +78,29 @@ const TAGS = `${MARK}
 
 let html = readFileSync(HTML, 'utf8');
 
+/*
+  ── 확대 금지 ──
+
+  Expo 템플릿의 viewport 는 `width=device-width, initial-scale=1,
+  shrink-to-fit=no` 다. 배율을 안 잠그므로 핀치와 더블탭으로 확대된다.
+  손가락으로 연타하는 게임에서는 그게 곧 오작동이다 — 두 번째 탭이 확대로
+  먹히면 화면이 어긋난 채 남는다.
+
+  **`src/ui/webViewport.ts` 와 같은 값이어야 한다.** 저기 것은 뜬 뒤에
+  덮어쓰는 것이라 개발 서버와 템플릿 변경을 막아 주고, 여기 것은 첫 그림이
+  그려지기 전부터 걸려 있게 한다. 값이 갈리면 배포본이 로드 직후 한 번
+  출렁인다 (덮어쓰는 순간 브라우저가 viewport 를 다시 잡는다).
+*/
+const VIEWPORT = '<meta name="viewport" content="width=device-width, '
+  + 'initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, '
+  + 'shrink-to-fit=no" />';
+
+if (!/<meta\s+name="viewport"[^>]*>/.test(html)) {
+  console.error('index.html 에 viewport meta 가 없습니다 — 템플릿이 바뀌었는지 확인하세요.');
+  process.exit(1);
+}
+html = html.replace(/<meta\s+name="viewport"[^>]*>/, VIEWPORT);
+
 if (html.includes(MARK)) {
   // 이미 손댄 파일 — 옛 블록을 걷어 내고 새로 넣는다
   html = html.replace(new RegExp(`${MARK}[\\s\\S]*?</script>`), '').replace(/\n\s*\n\s*<\/head>/, '\n  </head>');
@@ -90,4 +114,4 @@ if (!html.includes('</head>')) {
 html = html.replace('</head>', `    ${TAGS}\n  </head>`);
 writeFileSync(HTML, html, 'utf8');
 
-console.log('PWA 태그를 dist/index.html 에 넣었습니다.');
+console.log('PWA 태그를 dist/index.html 에 넣었습니다 (확대 금지 viewport 포함).');

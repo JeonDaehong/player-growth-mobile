@@ -52,7 +52,8 @@ import {
   Party, allDown, fullHp, hpOf, members, partyStat, supportMul,
 } from './party';
 import {
-  CHARS, OwnedChar, SkillDef, Stat, skillOf, statOf, swingMs,
+  Armor, Blow, CHARS, DmgType, NO_ARMOR, NO_PIERCE, OwnedChar, SkillDef, Stat,
+  blowOf, skillOf, skillsOf, statOf, swingMs,
 } from './chars';
 
 /** 한 틱의 길이 */
@@ -215,6 +216,37 @@ export interface FoeKind {
    * 아녜스(공격력 10)의 평타가 통째로 최소치로 깎인다.
    */
   def?: number;
+  /**
+   * 마법저항력 — 맞는 **마법** 피해를 그 수만큼 깎는다. 안 적으면 0.
+   *
+   * 아군 쪽과 완전히 같은 뺄셈이다 (`core/chars` 의 `Armor`).
+   *
+   * 지금은 스무 판 전부 0 이다. 파티에서 마법으로 때리는 사람이 아녜스
+   * 하나뿐이라(`CharDef.dmg`), 여기에 값을 주는 순간 그 한 사람만 벽에
+   * 부딪힌다 — 대답할 방법이 없는 문제는 난이도가 아니라 고장이다.
+   * 마법 딜러가 둘 이상 생기면 그때 여는 자리다.
+   */
+  res?: number;
+  /**
+   * 이 적의 공격이 무슨 피해인가. 안 적으면 **물리**다.
+   *
+   * 지금은 스무 판의 잡몹과 우두머리가 전부 물리다. 그래서 아군의
+   * 마법저항력(이졸데의 1)은 아직 아무 일도 안 한다 — 스탯과 화면과 계산을
+   * 먼저 깔아 두고, 그것을 쓰는 적은 나중에 넣는다.
+   *
+   * 우두머리 특수기도 이 값을 따른다. 패턴마다 따로 두지 않은 이유는,
+   * 한 마리가 평타는 물리로 치고 기술은 마법으로 치는 일이 아직 없어서다 —
+   * 자리를 미리 파 두면 두 곳이 어긋날 수 있다.
+   */
+  dmg?: DmgType;
+  /*
+    적에게는 **관통이 없다.** 관통은 캐릭터의 기술·패시브에 붙는 것이라
+    (`core/chars` 의 `Pierce`) 아군이 적의 방어를 뚫는 방향으로만 쓴다.
+
+    적이 아군의 방어를 뚫기 시작하면 방어력을 올릴 이유가 사라지는데, 지금
+    이 게임에서 방어는 "앞에 서는 사람" 의 존재 이유 그 자체다. 필요해지면
+    여기에 한 줄 얹고 foeBlow 만 고치면 된다.
+  */
   /**
    * 우두머리만 쓰는 특수 패턴. 안 적으면 `BOSS_PATTERNS` 를 쓴다.
    *
@@ -558,13 +590,34 @@ export const kindsOf = (stage: number): readonly FoeKind[] => stageOf(stage).kin
 /** 이 스테이지의 주력 (배경 그림은 여기서 나온다) */
 export const kindOf = (stage: number): FoeKind => kindsOf(stage)[0];
 
-export interface Foe extends FoeKind {
+/**
+ * 스테이지 배수까지 먹인 적 한 마리의 실제 수치.
+ *
+ * `Armor` 를 만족한다 (`def` + `res`) — 아군의 `Stat` 과 같은 모양이라,
+ * 피해 계산은 때리는 쪽도 맞는 쪽도 누구인지 몰라도 된다 (`strikeFor`).
+ */
+/*
+  `def`·`res` 를 `Omit` 으로 걷어내고 `Armor` 쪽 것을 쓴다. `FoeKind` 에서는
+  둘 다 선택(안 적으면 0)인데 여기서는 이미 채워진 값이라 필수여야 한다 —
+  안 걷어내면 두 정의가 부딪혀 `Foe` 를 `Armor` 로 못 넘긴다.
+*/
+export interface Foe extends Omit<FoeKind, 'def' | 'res'>, Armor {
   hp: number;
   atk: number;
   spd: number;
-  def: number;
   boss: boolean;
 }
+
+/**
+ * 이 적의 한 대가 들고 나가는 것.
+ *
+ * 아군 쪽 `blowOf` 와 짝이다. **관통은 늘 없다** — 이유는 `FoeKind` 에
+ * 적어 두었다. 적에게 관통을 주려면 여기 한 곳만 고치면 된다.
+ */
+export const foeBlow = (f: FoeKind): Blow => ({
+  type: f.dmg ?? 'phys',
+  pierce: NO_PIERCE,
+});
 
 /**
  * 서 있는 적 한 마리.
@@ -704,6 +757,7 @@ export function foeOf(stage: number, boss: boolean, k = 0): Foe {
     atk: Math.max(1, Math.round(kind.atk * Math.pow(s, STAGE_ATK_POW))),
     spd: kind.spd,
     def: kind.def ?? 0,
+    res: kind.res ?? 0,
     boss,
   };
 }
@@ -1310,7 +1364,7 @@ export function battleTick(
       */
       at.push(isBoss ? patternAt(n, kind.patterns ?? BOSS_PATTERNS) : null);
     }
-    return { slot: { ...f, cd, n }, atk: kind.atk, swings, at };
+    return { slot: { ...f, cd, n }, atk: kind.atk, blow: foeBlow(kind), swings, at };
   });
   /* 줄어든 시계를 실제로 들고 나간다 — 안 그러면 시계가 영영 안 준다 */
   foes = ticked.map((t) => t.slot);
@@ -1323,9 +1377,12 @@ export function battleTick(
     일이 생기고, 실제로 시계는 잡몹 것을 쓰면서 공격력만 우두머리 것을 쓰고
     있었다.
   */
-  const hits: { atk: number; pat: BossPattern | null }[] = [];
+  const hits: { atk: number; blow: Blow; pat: BossPattern | null }[] = [];
   for (const t of ticked) {
-    for (let i = 0; i < t.swings; i++) hits.push({ atk: t.atk, pat: t.at[i] ?? null });
+    for (let i = 0; i < t.swings; i++) {
+      /* 무슨 피해인지도 한 대마다 달고 간다 — 종마다 다를 수 있다 (`FoeKind.dmg`) */
+      hits.push({ atk: t.atk, blow: t.blow, pat: t.at[i] ?? null });
+    }
   }
 
   /* 이번 틱에 나간 특수기 — 화면이 이름을 띄운다. 여럿이면 마지막 것 */
@@ -1351,7 +1408,14 @@ export function battleTick(
         배수는 **방어력을 빼기 전에** 곱한다. 뺀 뒤에 곱하면 방어가 배수만큼
         같이 커져서, 세게 치는 공격일수록 방어가 잘 먹는 거꾸로 된 일이 된다.
       */
-      const dmg = strikeFor(Math.round(h.atk * (h.pat ? h.pat.mul : 1)), 1, statOf(who2).def);
+      /*
+        맞는 사람의 **두 겹**을 통째로 넘긴다 (`Stat` 이 `Armor` 다). 어느
+        겹이 걸릴지는 h.blow 가 정한다 — 지금 적은 전부 물리라 늘 방어력
+        쪽이지만, 마법으로 때리는 적이 생기면 여기는 안 고쳐도 된다.
+      */
+      const dmg = strikeFor(
+        Math.round(h.atk * (h.pat ? h.pat.mul : 1)), 1, statOf(who2), h.blow,
+      );
       hp[who2.id] = Math.max(0, hp[who2.id] - dmg);
       taken += dmg;
       hurtId = who2.id;
@@ -1459,10 +1523,15 @@ export function applyHit(
     죽어 줄이 짧아졌을 수 있다 — 조이지 않으면 없는 놈을 때린다.
   */
   const at = Math.min(aim ?? pickAim(foes.length, rand), Math.max(0, foes.length - 1));
-  /* 맞는 놈의 방어력만큼 깎인다 — 종마다 다르다 */
+  /*
+    맞는 놈이 들고 있는 만큼 깎인다 — 종마다 다르다.
+
+    `foeOf` 가 돌려주는 것이 곧 `Armor` 라 그대로 넘긴다. 어느 겹이 걸릴지는
+    때리는 사람의 평타 종류가 정한다 (`blowOf` — 아녜스만 마법이다).
+  */
   const dmg = strikeFor(
     mine.atk * supportMul(party, chars), rollCrit(mine, rand),
-    foeOf(st.stage, st.boss, foes[at].k).def,
+    foeOf(st.stage, st.boss, foes[at].k), blowOf(me.id),
   );
   foes[at] = { ...foes[at], hp: foes[at].hp - dmg };
 
@@ -1557,7 +1626,11 @@ export function rollCrit(st: Stat, rand: () => number = Math.random): number {
  *
  * ## 순서가 뜻을 정한다
  *
- *   (공격력 × 배수 × 치명타) − 방어력
+ *   (공격력 × 배수 × 치명타) − 막는 겹
+ *
+ * **막는 겹이 둘이다.** 물리 피해는 방어력이, 마법 피해는 마법저항력이
+ * 막는다 (`core/chars` 의 `Armor`·`Blow`). 한 대는 둘 중 하나이므로 한
+ * 번에 한 겹만 걸린다.
  *
  * 방어를 **맨 마지막에** 뺀다. 곱하기 전에 빼면 방어력이 배수만큼 부풀어서,
  * 2배짜리 기술 앞에서 방어 5 가 10 처럼 작동한다 — 큰 기술일수록 잘 막히는
@@ -1569,8 +1642,25 @@ export function rollCrit(st: Stat, rand: () => number = Math.random): number {
  * 그 상대는 영원히 못 이기고, 화면에서는 아무 일도 안 일어난 채로 판이
  * 끝나기만 기다리게 된다.
  */
-export function strikeFor(base: number, critMul: number, def: number): number {
-  return Math.max(1, Math.round(base * critMul) - Math.max(0, def));
+export function strikeFor(
+  base: number,
+  critMul: number,
+  armor: Armor,
+  blow: Blow,
+): number {
+  /*
+    **종류가 맞는 한 겹만 깎는다.**
+
+    물리는 방어력에 걸리고 마법은 마법저항력에 걸린다. 둘을 더해서 빼면
+    갈래를 나눈 뜻이 없어진다 — 어느 쪽으로 때리든 결국 같은 양이 막힌다.
+
+    관통이 있으면 그 한 겹을 **통째로** 건너뛴다 (`core/chars` 의 `Pierce`).
+    비율이 아니라 있고 없고인 이유도 거기 적어 두었다.
+  */
+  const shield = blow.type === 'magic'
+    ? (blow.pierce.magic ? 0 : armor.res)
+    : (blow.pierce.phys ? 0 : armor.def);
+  return Math.max(1, Math.round(base * critMul) - Math.max(0, shield));
 }
 
 /**
@@ -1590,11 +1680,21 @@ export function skillDamage(
   me: OwnedChar,
   party: Party,
   chars: Record<string, OwnedChar>,
+  /** 기술이 여럿이면 몇 번째 것인가 (`core/chars` 의 `skillsOf` 순서) */
+  slot = 0,
 ): number {
-  const sk = skillOf(me.id);
+  const sk = skillsOf(me.id)[slot] ?? skillOf(me.id);
   const mine = statOf(me);
-  /* 치명타는 안 셈한다 — 화면에 미리 적는 값이라 늘 같아야 한다 */
-  return strikeFor(skillBase(mine, sk, supportMul(party, chars)), 1, 0);
+  /*
+    치명타는 안 셈한다 — 화면에 미리 적는 값이라 늘 같아야 한다.
+
+    맞는 쪽도 안 본다 (`NO_ARMOR`). 적마다 다른 값을 여기서 정할 수가
+    없어서, "맨몸에 몇 들어가나" 를 적는다. 그래서 관통이 있어도 이 숫자는
+    안 바뀐다 — 뚫을 것이 애초에 0 이다.
+  */
+  return strikeFor(
+    skillBase(mine, sk, supportMul(party, chars)), 1, NO_ARMOR, blowOf(me.id, sk),
+  );
 }
 
 /**
@@ -1715,7 +1815,11 @@ export function healPlan(
 function healerOf(
   party: Party, chars: Record<string, OwnedChar>, sk: SkillDef,
 ): string | null {
-  for (const c of members(party, chars)) if (skillOf(c.id) === sk) return c.id;
+  /*
+    **가진 기술 전부를 본다.** `skillOf` 하나만 보면, 기술이 여럿인 사람의
+    두 번째 기술이 회복형일 때 시전자를 못 찾아 회복이 통째로 사라진다.
+  */
+  for (const c of members(party, chars)) if (skillsOf(c.id).includes(sk)) return c.id;
   return null;
 }
 
@@ -1731,6 +1835,14 @@ export function applySkill(
    * 안 주면 여기서 고른다 (시험과 서버 계산용).
    */
   at?: readonly number[],
+  /**
+   * 기술이 여럿이면 **몇 번째 것**인가 (`core/chars` 의 `skillsOf` 순서).
+   *
+   * 화면이 골라서 넘긴다. 여기서 다시 고르면 화면이 그린 기술과 실제로
+   * 들어간 기술이 갈릴 수 있다 — 자리를 고르는 일과 같은 이유로 한쪽이
+   * 정해서 넘긴다.
+   */
+  slot = 0,
 ): TickResult {
   const me = chars[who];
   if (!me || !party.includes(who as never) || st.down > 0) {
@@ -1738,7 +1850,7 @@ export function applySkill(
   }
   if (hpOf(me, st.hp) <= 0) return { battle: st, ev: NOTHING };
 
-  const sk = skillOf(me.id);
+  const sk = skillsOf(me.id)[slot] ?? skillOf(me.id);
 
   /* ── 회복형 — 적은 안 건드린다 ── */
   if (sk.heal > 0) {
@@ -1770,12 +1882,14 @@ export function applySkill(
 
     화살비는 세 발이 각각 다른 놈에게 꽂히므로, 한 번만 굴려 셋에 똑같이
     먹이면 "세 발" 이 아니라 "한 발을 셋으로 나눈 것" 이 된다. 그리고 맞는
-    놈마다 방어력이 다르다 (돌 슬라임 3, 나머지 0).
+    놈마다 막는 것이 다르다 (돌 슬라임 방어 3, 나머지 0).
   */
+  /* 이 기술 한 대가 들고 나가는 것 — 종류와 관통. 한 번만 만든다 */
+  const blow = blowOf(me.id, sk);
   for (const i of idx) {
     const dmg = strikeFor(
       skillBase(mine, sk, supportMul(party, chars)), rollCrit(mine, rand),
-      foeOf(st.stage, st.boss, foes[i].k).def,
+      foeOf(st.stage, st.boss, foes[i].k), blow,
     );
     foes[i] = { ...foes[i], hp: foes[i].hp - dmg };
     hit += dmg;

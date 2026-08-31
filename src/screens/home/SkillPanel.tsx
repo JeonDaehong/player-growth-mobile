@@ -18,7 +18,9 @@
  */
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { CHARS, OwnedChar, SkillDef, skillsOf, statOf, swingMs } from '@/core/chars';
+import {
+  CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillsOf, statOf, swingMs,
+} from '@/core/chars';
 import { Party, members, supportMul } from '@/core/party';
 import { skillBase, strikeFor } from '@/core/autoBattle';
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
@@ -36,6 +38,20 @@ import { BORDER, SP } from '@/ui/theme';
  */
 export function skillEverySec(c: OwnedChar, sk: SkillDef): number {
   return (swingMs(statOf(c).spd) * sk.every) / 1000;
+}
+
+/**
+ * 관통을 사람 말로. 없으면 빈 문자열.
+ *
+ * 두 종류를 다 뚫는 기술이 아직 없지만, 생기면 한 줄에 같이 적는다 —
+ * 줄을 둘로 나누면 하나만 가진 흔한 경우가 괜히 목록처럼 보인다.
+ */
+function pierceText(sk: SkillDef, id: string): string {
+  const p = blowOf(id, sk).pierce;
+  const on: string[] = [];
+  if (p.phys) on.push('방어력 무시');
+  if (p.magic) on.push('마법저항력 무시');
+  return on.join(' · ');
 }
 
 /** 누구를 때리나 — `pick` 을 사람 말로 */
@@ -72,7 +88,13 @@ export function SkillPanel({
         const on = open === sk.name;
         const sec = skillEverySec(c, sk);
         /* 한 대의 피해. **계산과 같은 함수**를 쓴다 — 적어 둔 수와 박히는 수가 갈리면 안 된다 */
-        const hit = strikeFor(skillBase(st, sk, sup), 1, 0);
+        /*
+          맞는 쪽은 안 본다 (`NO_ARMOR`) — 적마다 다른 값을 여기서 정할 수
+          없으니 "맨몸에 몇 들어가나" 를 적는다. 계산 쪽 `skillDamage` 와
+          같은 값이다.
+        */
+        const hit = strikeFor(skillBase(st, sk, sup), 1, NO_ARMOR, blowOf(c.id, sk));
+        const pierce = pierceText(sk, c.id);
         return (
           <View key={sk.name}>
             <ListItem
@@ -84,7 +106,16 @@ export function SkillPanel({
                 도착하는 순간 저절로 붙는다.
               */
               left={<Sprite set="skill_icon" name={sk.art} size={22} />}
-              right={<Tag label={`${sec.toFixed(1)}초`} />}
+              /*
+                쿨타임 옆에 **피해 종류**를 붙인다. 회복형은 아무도 안 때리므로
+                뺀다 — 거기 "마법" 이 붙으면 마법으로 때리는 기술로 읽힌다.
+              */
+              right={(
+                <Row gap={3}>
+                  {sk.pick !== 'none' && <Tag label={DMG_NAME[sk.dmg]} />}
+                  <Tag label={`${sec.toFixed(1)}초`} />
+                </Row>
+              )}
               onPress={() => setOpen(on ? null : sk.name)}
             />
             {on && (
@@ -115,15 +146,22 @@ export function SkillPanel({
                         ? `공격력의 ${Math.round(sk.mul * 100)}% + 방어력의 ${Math.round(sk.defMul * 100)}%`
                         : `공격력의 ${Math.round(sk.mul * 100)}%`}
                     />
+                    <KV k="피해 종류" v={`${DMG_NAME[sk.dmg]} 피해`} />
+                    {!!pierce && <KV k="관통" v={pierce} />}
                     <KV k="한 대" v={`${hit}`} />
                     {sk.hits > 1 && <KV k="발수" v={`${sk.hits}발`} />}
                     {sk.targets > 0 && <KV k="최대 대상" v={`${sk.targets}`} />}
                     {st.crit > 0 && (
                       <KV k="치명타" v={`${Math.round(st.crit * 100)}% · ${Math.round(st.critDmg * 100)}%`} />
                     )}
+                    {/*
+                      별표를 쓰면 안 된다 — 여기는 마크다운이 아니라 화면이라
+                      `**...**` 가 글자 그대로 뜬다. 강조는 문장 순서로 낸다.
+                    */}
                     <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
-                      곁에 선 보조까지 셈한 값입니다. 실제로 들어가는 총합은
-                      그때 서 있는 적 수에 따라 달라집니다.
+                      {`곁에 선 보조까지 셈한 값이고, 아무것도 안 막는 상대 기준입니다. `
+                        + `실제로는 상대의 ${sk.dmg === 'magic' ? '마법저항력' : '방어력'}만큼 `
+                        + '깎여서 들어가고, 총합은 그때 서 있는 적 수에 따라 달라집니다.'}
                     </T>
                   </>
                 )}

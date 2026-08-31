@@ -35,9 +35,18 @@ def block(name):
     return m.group(1)
 
 
+# 뒤쪽 셋(`def`·`res`·`dmg`)은 **안 적으면 기본값**이다 — 스무 판이 전부
+# 기본값이라 스물두 종에 0 을 스물두 번 적게 하면 그 0 들이 눈에 안 들어온다.
+# 기본값은 `core/autoBattle` 의 `FoeKind` 가 정하고, 여기서는 그것과 같은
+# 값을 채운다 (`DEF_DEF`·`DEF_RES`·`DEF_DMG`).
 FIELD = (r"art: '(?P<art>[^']+)', name: '(?P<name>[^']+)', bg: '[^']*', "
          r"melee: (?P<melee>true|false) ?, atk: (?P<atk>\d+), hp: (?P<hp>\d+), "
-         r"spd: (?P<spd>[\d.]+)(?:, def: (?P<def>\d+))?")
+         r"spd: (?P<spd>[\d.]+)(?:, def: (?P<def>\d+))?"
+         r"(?:, res: (?P<res>\d+))?(?:, dmg: '(?P<dmg>\w+)')?")
+
+# `FoeKind` 가 정한 기본값 — 여기와 저기가 갈리면 표가 거짓말이 된다
+DEF_DEF, DEF_RES, DEF_DMG = '0', '0', 'phys'
+DMG_NAME = {'phys': '물리', 'magic': '마법'}
 
 
 def kinds_of(name):
@@ -87,16 +96,19 @@ def swing(spd):
 
 
 def row(d, where):
-    return '| %s | `%s` | %s | %s | %s | %s | %s (%dms) | %s |' % (
+    return '| %s | `%s` | %s | %s | %s | %s | %s | %s (%dms) | %s | %s |' % (
         where, d['art'], d['name'],
         '근접' if d['melee'] == 'true' else '원거리',
+        DMG_NAME[d.get('dmg') or DEF_DMG],
         d['atk'], d['hp'], d['spd'], swing(d['spd']),
-        d.get('def') or '0',
+        d.get('def') or DEF_DEF,
+        d.get('res') or DEF_RES,
     )
 
 
-HEAD = ('| 스테이지 | 스프라이트 | 이름 | 사거리 | 공격력 | 체력 | 공격속도 | 방어력 |'
-        + NL + '|---|---|---|---|---|---|---|---|')
+HEAD = ('| 스테이지 | 스프라이트 | 이름 | 사거리 | 피해 | 공격력 | 체력 | 공격속도 '
+        '| 방어력 | 마법저항력 |'
+        + NL + '|---|---|---|---|---|---|---|---|---|---|')
 
 mob_rows, boss_rows, stage_rows = [], [], []
 seen = {}
@@ -104,7 +116,7 @@ for i, e in enumerate(entries):
     n = i + 1
     bg, zone, raw = e[0], e[1], e[2]
     boss = dict(zip(
-        ['art', 'name', 'melee', 'atk', 'hp', 'spd', 'def'], e[3:]))
+        ['art', 'name', 'melee', 'atk', 'hp', 'spd', 'def', 'res', 'dmg'], e[3:]))
     ks = kinds_in(raw)
     for k in ks:
         seen.setdefault(k['art'], (k, []))[1].append(n)
@@ -120,11 +132,13 @@ for art, (k, ns) in seen.items():
 cs = io.open('src/core/chars.ts', encoding='utf-8').read()
 crows = []
 for m in re.finditer(
-        r"name: '([^']+)',(?:[^}]*?)atk: (\d+), hp: (\d+), def: (\d+), "
-        r"spd: ([\d.]+), crit: ([\d.]+), critDmg: ([\d.]+)", cs):
-    nm, atk, hp, dfn, spd, crit, cd = m.groups()
-    crows.append('| %s | %s | %s | %s | %s (%dms) | %g%% | %g%% |' % (
-        nm, atk, hp, dfn, spd, swing(spd), float(crit) * 100, float(cd) * 100))
+        r"name: '([^']+)',(?:[^}]*?)atk: (\d+), hp: (\d+), def: (\d+), res: (\d+), "
+        r"spd: ([\d.]+), crit: ([\d.]+), critDmg: ([\d.]+)"
+        r"(?:[^}]*?)dmg: '(\w+)'", cs):
+    nm, atk, hp, dfn, res, spd, crit, cd, dmg = m.groups()
+    crows.append('| %s | %s | %s | %s | %s | %s | %s (%dms) | %g%% | %g%% |' % (
+        nm, DMG_NAME[dmg], atk, hp, dfn, res, spd, swing(spd),
+        float(crit) * 100, float(cd) * 100))
 assert crows, '캐릭터 수치를 못 읽었다'
 
 DOC = """# 적 수치표
@@ -137,8 +151,17 @@ DOC = """# 적 수치표
 
 - **공격속도** 는 배수입니다. 1.0 이 기준이고, 괄호 안이 실제 간격입니다
   (`1200 / 배수` ms — `core/chars` 의 `ATTACK_BASE_MS`).
-- **방어력** 은 뺄셈입니다. 3 이면 들어오는 피해에서 3 을 뺍니다. 비율이
-  아니라서 약한 공격일수록 많이 깎입니다 (최소 1 은 들어갑니다).
+- **피해에 두 종류가 있습니다** — 물리와 마법. 막는 스탯이 서로 다릅니다.
+  - **방어력** 은 **물리** 피해만 깎습니다.
+  - **마법저항력** 은 **마법** 피해만 깎습니다.
+  - 둘 다 뺄셈입니다. 3 이면 들어오는 피해에서 3 을 뺍니다. 비율이 아니라서
+    약한 공격일수록 많이 깎입니다 (최소 1 은 들어갑니다).
+  - 관통이 있는 공격은 그 방어를 **통째로 무시**합니다. 지금 관통을 가진
+    캐릭터는 없습니다 (`core/chars` 의 `Pierce`).
+- **지금 적은 전부 물리로 때리고, 방어력·마법저항력이 다 0 입니다.** 그래서
+  이졸데의 마법저항력 1 은 아직 아무 일도 안 하고, 아녜스의 마법 평타도
+  물리와 똑같이 들어갑니다. 갈래는 다 깔아 두었고 쓰는 적만 아직 없습니다
+  (`core/autoBattle` 의 `FoeKind.dmg`·`FoeKind.res`).
 - 판이 올라가도 **수치는 안 세집니다.** `STAGE_HP_POW`/`STAGE_ATK_POW` 가
   둘 다 0 이라 표에 적힌 값이 화면에 그대로 나옵니다. 판을 가르는 것은
   수치가 아니라 **어떤 종이 몇 종 나오느냐**입니다.
@@ -175,8 +198,8 @@ DOC = """# 적 수치표
 
 비교용입니다. `core/chars` 의 `CHARS` 가 원본입니다.
 
-| 이름 | 공격력 | 체력 | 방어력 | 공격속도 | 치명타 | 치명타 피해 |
-|---|---|---|---|---|---|---|
+| 이름 | 평타 | 공격력 | 체력 | 방어력 | 마법저항력 | 공격속도 | 치명타 | 치명타 피해 |
+|---|---|---|---|---|---|---|---|---|
 %(chars)s
 """
 

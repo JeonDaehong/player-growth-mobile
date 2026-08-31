@@ -29,6 +29,7 @@ import { connectGuilds } from '@/state/useGuilds';
 import { useNetSync } from '@/state/useNetSync';
 import { BLACK, MONO, WHITE } from '@/ui/theme';
 import { applyWebTextRendering } from '@/ui/webText';
+import { applyWebViewport, armImmersive } from '@/ui/webViewport';
 
 import AuthScreen from '@/screens/AuthScreen';
 import HomeScreen from '@/screens/HomeScreen';
@@ -227,6 +228,15 @@ function useLive(active: boolean) {
 
 export default function App() {
   applyWebTextRendering();
+  /*
+    확대 금지와 전체 화면. 둘 다 웹에서만 하는 일이고, 여러 번 불려도
+    안전하게 되어 있다 (`ui/webViewport`).
+
+    전체 화면은 여기서 **들어가는 게 아니라 걸어 두는** 것이다 — 브라우저가
+    사용자 입력 없이는 안 내주므로 첫 탭까지 기다린다.
+  */
+  applyWebViewport();
+  armImmersive();
   /*
     지난 세션 시도의 결과를 되살린다. 리디렉션으로 구글에 다녀오면 이 앱은
     통째로 새로 뜨므로, 안 되살리면 방금 한 시도가 없던 일이 된다.
