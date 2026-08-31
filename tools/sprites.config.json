@@ -3233,40 +3233,36 @@
       ]
     },
     {
-      "file": "boss-5.jpg",
+      "file": "boss-5 copy.jpg",
       "name": "b05_spinatus",
       "expect": [
         4,
         1
       ],
       "floor": true,
-      "note": "5스테이지 우두머리 (docs/boss-art/b05_spinatus.md). 평타와 기술의 동작이 각각 다른 칸이다. 흰 바탕에 검은 선으로 와서 뒤집는다",
+      "note": "5스테이지 우두머리 (docs/boss-art/b05_spinatus.md). 처음 것은 흰 바탕으로 와서 뒤집어야 했는데, 다시 받은 것은 검은 바탕에 흰 몸이라 그대로 쓴다",
       "labels": [
         "idle",
         "attack",
         "skill1",
         "down"
-      ],
-      "invert": true
+      ]
     },
     {
-      "file": "boss-6.jpg",
+      "file": "boss-6 copy.jpg",
       "name": "b06_petros",
       "expect": [
         4,
         1
       ],
       "floor": true,
-      "note": "6스테이지 우두머리 (docs/boss-art/b06_petros.md). 흰 종이에 검은 선으로 와서 paper 로 처리한다 — invert 로는 몸통이 검어진다",
+      "note": "6스테이지 우두머리 (docs/boss-art/b06_petros.md). 처음 것은 흰 종이에 검은 선으로 와서 paper 로 처리했는데, 다시 받은 것은 검은 바탕에 흰 몸이라 그대로 쓴다",
       "labels": [
         "idle",
         "attack",
         "skill1",
         "down"
-      ],
-      "paper": true,
-      "cropBottom": 0.03,
-      "cropTop": 0.02
+      ]
     },
     {
       "file": "boss-7.jpg",

@@ -17,16 +17,21 @@
  * 나쁜 것을 오른쪽에 두는 이유는 그쪽이 적이 있는 방향이기 때문이다 — 나쁜
  * 일은 저기서 온다.
  *
- * ## 아직 그림이 없으면 아무것도 안 그린다
+ * ## 네모 칸 안에 넣는다
  *
- * `assets/sprites/status_icon/` 가 아직 없다. `Sprite` 는 없는 세트에
- * `fallback` 을 안 주면 아무것도 안 그리므로 (`ui/Sprite`), 그림이 도착하는
- * 순간 저절로 붙고 그때까지는 자리만 비어 있다. 코드는 안 고쳐도 된다.
+ * 로고만 덜렁 떠 있으니 화면에 얹힌 것이 아니라 **새어 나온 것**처럼 보였다.
+ * 칸이 있으면 "여기는 상태가 붙는 자리다" 가 먼저 읽히고, 하나만 걸려 있어도
+ * 빈자리가 아니라 한 칸이 찬 것으로 보인다.
+ *
+ * 칸은 이 게임의 다른 테두리와 같다 — 1px 흰 선, 모서리를 안 둥글린다
+ * (`ui/theme` 의 `BORDER`). 안은 검게 채운다: 무대 위에 겹쳐 뜨므로 배경이
+ * 비치면 로고와 인물이 섞인다.
  */
 import React from 'react';
 import { View } from 'react-native';
 import { GOOD, StatusId } from '@/core/status';
 import { Sprite } from '@/ui/Sprite';
+import { BLACK, WHITE } from '@/ui/theme';
 
 /**
  * 로고 하나의 크기.
@@ -36,8 +41,33 @@ import { Sprite } from '@/ui/Sprite';
  */
 const ICON = 12;
 
+/** 칸의 안쪽 여백 — 로고가 테두리에 닿으면 둘이 한 덩어리로 뭉갠다 */
+const PAD = 2;
+
 /** 한 줄에 몇 개까지 — 넘치면 인물 폭을 넘어 옆 사람 위로 간다 */
 const CAP = 4;
+
+/**
+ * 로고 한 칸.
+ *
+ * 테두리가 있는 이유는 `StatusRow` 머리말에 적어 두었다 — 로고만 있으면
+ * 화면에 얹힌 것이 아니라 새어 나온 것처럼 보인다.
+ */
+function Slot({ id }: { id: StatusId }) {
+  return (
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: WHITE,
+        /* 무대 위에 겹치므로 안을 채운다 — 비치면 인물과 섞인다 */
+        backgroundColor: BLACK,
+        padding: PAD,
+      }}
+    >
+      <Sprite set="status_icon" name={id} size={ICON} />
+    </View>
+  );
+}
 
 export function StatusRow({
   status, size,
@@ -72,11 +102,11 @@ export function StatusRow({
         zIndex: 44,
       }}
     >
-      <View style={{ flexDirection: 'row', gap: 1 }}>
-        {good.map((s) => <Sprite key={s} set="status_icon" name={s} size={ICON} />)}
+      <View style={{ flexDirection: 'row', gap: 2 }}>
+        {good.map((s) => <Slot key={s} id={s} />)}
       </View>
-      <View style={{ flexDirection: 'row', gap: 1 }}>
-        {bad.map((s) => <Sprite key={s} set="status_icon" name={s} size={ICON} />)}
+      <View style={{ flexDirection: 'row', gap: 2 }}>
+        {bad.map((s) => <Slot key={s} id={s} />)}
       </View>
     </View>
   );
