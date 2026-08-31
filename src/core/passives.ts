@@ -24,7 +24,7 @@
 import {
   Armor, CharId, OwnedChar, statOf,
 } from './chars';
-import { Hex, StatusId, mulOf } from './status';
+import { Hex, STATUS_NAME, StatusId, mulOf } from './status';
 
 /**
  * 패시브 하나.
@@ -259,30 +259,109 @@ export function liveArmor(c: OwnedChar, hex: readonly Hex[]): Armor {
 export const healMulOf = (hex: readonly Hex[]): number => mulOf(hex, 'st_wither');
 
 /**
+ * 로고 줄에 뜨는 칸 하나 (`screens/home/StatusRow`).
+ *
+ * **세트를 같이 들고 다닌다.** 예전에는 `StatusId` 만 돌려주고 화면이
+ * `status_icon` 으로 못 박아 그렸는데, 패시브가 제 로고를 갖게 되면서
+ * (`passive_icon`) 한 줄에 두 세트가 섞이게 됐다.
+ */
+export interface Mark {
+  /** 어느 스프라이트 폴더에서 (`assets/sprites/`) */
+  set: 'status_icon' | 'passive_icon';
+  /** 그 안의 칸 이름 */
+  name: string;
+  /** 좋은 것인가 — 화면이 이걸로 차례를 가른다 */
+  good: boolean;
+  /** 사람이 읽는 이름. 아직 쓰는 데는 없지만 로고만으로 안 통할 때를 위해 */
+  label: string;
+}
+
+/**
  * 화면에 뜨는 것들 — **지금 이 사람에게 실제로 일어나고 있는 일.**
  *
- * ## 늘 켜져 있는 패시브는 안 띄운다
+ * ## 패시브가 거는 것은 패시브 로고로 뜬다
  *
- * 아녜스의 +10% 와 리안느의 +0.1 은 그 사람이 서 있는 내내 켜져 있다. 그걸
- * 로고로 띄우면 네 칸 모두에 격노와 신속이 **판이 끝날 때까지 붙박이로**
- * 앉아서, 정작 우두머리가 건 출혈이 그 뒤로 밀려난다.
+ * 한동안 상태 로고를 빌려 썼다 (아녜스 → 격노, 리안느 → 신속). 규칙이
+ * 실제로 그거라 틀린 표시는 아니었는데, **누가 주고 있는지**가 사라졌다 —
+ * 리안느와 비앙카가 둘 다 신속이라 넷의 칸이 다 똑같아 보였다.
  *
- * 파티 구성이 주는 것은 캐릭터 창이 글로 말한다 (`CharPopup` 의 패시브 줄).
- * 이 줄은 **왔다 가는 것**만 맡는다.
+ * 이제 패시브가 거는 것은 그 패시브의 제 로고로 뜬다
+ * (`docs/PASSIVE_ICON_PROMPTS.md`). 아녜스가 쓰러지면 네 칸에서 `pv_ash` 가
+ * 한꺼번에 사라지고, 그게 곧 "화력이 떨어졌다" 는 신호가 된다.
  *
- * 비앙카의 것은 예외다. 조건이 붙어 있어서(체력이 낮을 때만) 실제로 켜졌다
- * 꺼지고, 그 순간이 곧 "지금 위험하지만 제일 세다" 라 볼 값이 있다.
+ * 우두머리가 거는 것은 그대로 상태 로고다 — 저건 원인이 여럿이라 (중독을
+ * 거는 우두머리가 여섯이다) 원인마다 그림을 두면 열두 가지가 서른 가지가
+ * 된다. 상태 로고는 **무슨 일이 일어나는가**를, 패시브 로고는 **누가
+ * 그러고 있는가**를 말한다.
+ *
+ * ## 누구에게 뜨나
+ *
+ *   아군 전체 패시브 (아녜스 · 리안느)  살아 있는 모두에게
+ *   제 몸 패시브 (이졸데 · 비앙카)      그 사람에게만
+ *
+ * 비앙카의 것은 조건이 붙어 있어(체력이 낮을 때만) 실제로 켜졌다 꺼진다 —
+ * 그 순간이 곧 "지금 위험하지만 제일 세다" 다 (`FRENZY_SHOW`).
+ *
+ * @param alive 지금 살아 있는 파티원들. 쓰러진 사람의 패시브는 안 걸린다
  */
-export function statusOf(
+export function marksOf(
   who: string,
   cur: number,
   max: number,
   hex: readonly Hex[],
-): readonly StatusId[] {
-  const bad = hex.filter((h) => h.ms > 0).map((h) => h.id);
-  const p = passiveOf(who);
-  if (p?.frenzy && p.icon && cur > 0 && frenzyMul(who, cur, max) >= FRENZY_SHOW) {
-    return [p.icon, ...bad];
+  alive: readonly OwnedChar[] = [],
+): readonly Mark[] {
+  /* 쓰러진 사람에게는 아무것도 안 뜬다 — 시체에 붙은 버프는 거짓말이다 */
+  if (cur <= 0) return NO_MARK;
+
+  const good: Mark[] = [];
+  const mark = (p: PassiveDef): Mark => ({
+    set: 'passive_icon', name: p.art, good: true, label: p.name,
+  });
+
+  /* 제 것이 먼저 — 이 칸은 이 사람의 칸이다 */
+  const mine = passiveOf(who);
+  if (mine?.regen) good.push(mark(mine));
+  if (mine?.frenzy && frenzyMul(who, cur, max) >= FRENZY_SHOW) good.push(mark(mine));
+
+  /* 그다음이 남이 주는 것 — 파티 자리 순서라 매번 같은 차례로 뜬다 */
+  for (const c of alive) {
+    const p = passiveOf(c.id);
+    if (!p || !(p.allyAtk || p.allySpd)) continue;
+    good.push(mark(p));
   }
-  return bad;
+
+  const bad: Mark[] = hex
+    .filter((h) => h.ms > 0)
+    .map((h) => ({
+      set: 'status_icon' as const,
+      name: h.id,
+      good: false,
+      label: STATUS_NAME[h.id],
+    }));
+
+  if (!good.length && !bad.length) return NO_MARK;
+  return [...good, ...bad];
+}
+
+/** 아무것도 안 걸린 상태 — 매번 새 배열을 만들면 화면이 계속 다시 그려진다 */
+const NO_MARK: readonly Mark[] = [];
+
+/**
+ * 원래 값 옆에 붙는 **차이** — `10 (+2)` 의 괄호 안.
+ *
+ * 같으면 빈 문자열이다. 0 을 적으면 안 걸린 것과 걸렸는데 상쇄된 것이
+ * 구분은 되지만, 넷의 여섯 줄에 `(+0)` 이 붙어 있으면 정작 실제로 바뀐
+ * 줄이 안 보인다 — 화면에서 눈에 띄어야 하는 것은 **달라진 것**이다.
+ *
+ * 부호를 늘 적는다. `(2)` 는 오른 건지 내린 건지 알 수 없다.
+ *
+ * @param dec 소수 몇 자리까지. 공격속도만 1 이고 나머지는 0 이다
+ */
+export function deltaText(base: number, now: number, dec = 0): string {
+  const d = now - base;
+  /* 반올림해서 0 이 되면 안 적는다 — 화면에 안 보이는 차이다 */
+  const shown = Number(d.toFixed(dec));
+  if (!shown) return '';
+  return ` (${shown > 0 ? '+' : ''}${shown.toFixed(dec)})`;
 }

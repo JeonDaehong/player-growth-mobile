@@ -25,10 +25,25 @@
  * 흑백 2색이라 초록·빨강 테두리를 못 쓴다 (`ui/theme`). 무대에 있을 때는
  * 왼쪽/오른쪽 끝으로 갈랐는데, 파티 칸은 폭이 좁아서 하나만 걸리면 한쪽에
  * 치우쳐 보인다. 여기서는 **가운데 모아 놓고 좋은 것을 먼저** 둔다.
+ *
+ * ## 두 세트가 섞인다
+ *
+ * 패시브가 거는 것은 **패시브 로고**로, 우두머리가 거는 것은 **상태 로고**로
+ * 뜬다 (`core/passives` 의 `marksOf` 에 이유가 있다). 그래서 칸마다 어느
+ * 폴더에서 꺼낼지를 같이 들고 온다.
+ *
+ * ## 나쁜 것에 자리를 먼저 준다
+ *
+ * 칸 폭이 86px 남짓이라 여섯 개가 안 들어간다. 넘치면 잘리는데, 잘리는 것이
+ * 하필 제일 끝(나쁜 것)이면 **정작 대응해야 할 것이 안 보인다.**
+ *
+ * 그래서 나쁜 것을 셋까지 먼저 잡고, 남는 자리에 좋은 것을 넣는다. 패시브는
+ * 판이 끝날 때까지 안 바뀌는 것이라 한둘이 밀려도 잃는 게 적다 — 궁금하면
+ * 캐릭터 창에 다 적혀 있다.
  */
 import React from 'react';
 import { View } from 'react-native';
-import { GOOD, StatusId } from '@/core/status';
+import { Mark } from '@/core/passives';
 import { Sprite } from '@/ui/Sprite';
 import { BLACK, WHITE } from '@/ui/theme';
 
@@ -50,8 +65,16 @@ const PAD = 1;
  */
 export const ROW_H = 16;
 
-/** 한쪽에 몇 개까지 — 넘치면 칸 폭을 넘어간다 */
-const CAP = 3;
+/**
+ * 한 줄에 몇 개까지.
+ *
+ * 칸 하나가 86px 남짓이고 로고 하나가 테두리까지 14px, 사이가 2px 다.
+ * 넷이면 65px 로 넉넉하고 다섯이면 81px 로 아슬아슬하다. 넷에서 끊는다.
+ */
+const CAP = 4;
+
+/** 그중 나쁜 것이 차지할 수 있는 몫 — 남는 자리를 좋은 것이 쓴다 */
+const BAD_CAP = 3;
 
 /**
  * 로고 한 칸.
@@ -62,7 +85,7 @@ const CAP = 3;
  *
  * 안을 검게 채우는 것은 파티 칸의 테두리와 겹쳐 뜨기 때문이다.
  */
-function Slot({ id }: { id: StatusId }) {
+function Slot({ mark }: { mark: Mark }) {
   return (
     <View
       style={{
@@ -72,14 +95,16 @@ function Slot({ id }: { id: StatusId }) {
         padding: PAD,
       }}
     >
-      <Sprite set="status_icon" name={id} size={ICON} />
+      {/* 세트를 칸이 들고 온다 — 패시브 로고와 상태 로고가 섞여 뜬다 */}
+      <Sprite set={mark.set} name={mark.name} size={ICON} />
     </View>
   );
 }
 
-export function StatusRow({ status }: { status: readonly StatusId[] }) {
-  const good = status.filter((s) => GOOD.has(s)).slice(0, CAP);
-  const bad = status.filter((s) => !GOOD.has(s)).slice(0, CAP);
+export function StatusRow({ status }: { status: readonly Mark[] }) {
+  /* 나쁜 것이 먼저 자리를 잡는다 — 넘쳐서 잘리면 안 되는 쪽이다 */
+  const bad = status.filter((s) => !s.good).slice(0, BAD_CAP);
+  const good = status.filter((s) => s.good).slice(0, Math.max(0, CAP - bad.length));
 
   return (
     <View
@@ -97,10 +122,10 @@ export function StatusRow({ status }: { status: readonly StatusId[] }) {
         gap: 2,
       }}
     >
-      {good.map((s) => <Slot key={s} id={s} />)}
+      {good.map((s, i) => <Slot key={`g${s.set}${s.name}${i}`} mark={s} />)}
       {/* 좋은 것과 나쁜 것 사이만 조금 더 벌린다 — 두 무리로 읽히게 */}
       {!!good.length && !!bad.length && <View style={{ width: 3 }} />}
-      {bad.map((s) => <Slot key={s} id={s} />)}
+      {bad.map((s) => <Slot key={`b${s.name}`} mark={s} />)}
     </View>
   );
 }

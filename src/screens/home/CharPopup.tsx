@@ -26,6 +26,9 @@ import { BORDER, SP } from '@/ui/theme';
 import { SkillPanel } from './SkillPanel';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
+import { deltaText, liveArmor, liveAtk, liveSpd } from '@/core/passives';
+import { hexOf } from '@/core/status';
+import { hpOf, livingMembers } from '@/core/party';
 
 export function CharPopup({
   slot, onClose,
@@ -37,6 +40,15 @@ export function CharPopup({
   const enhanceGear = useGame((s) => s.enhanceGear);
   const setGear = useGame((s) => s.setGear);
   const toast = useGame((s) => s.toast);
+  /*
+    지금 남은 체력과 걸려 있는 것들.
+
+    수치 옆에 **지금 얼마나 오르내렸나**를 적으려면 둘 다 필요하다. 비앙카의
+    공격속도는 남은 체력이 정하고(`frenzy`), 둔화·약화·파쇄는 걸려 있는 것이
+    정한다.
+  */
+  const hpMap = useGame((s) => s.battle.hp);
+  const hexMap = useGame((s) => s.battle.hex);
 
   /** 방금 두들긴 결과 — 창을 닫으면 사라진다 */
   const [last, setLast] = useState<'up' | 'fail' | null>(null);
@@ -48,6 +60,27 @@ export function CharPopup({
   const id = party[slot] ?? null;
   const c = id ? chars[id] : null;
   const d = c ? CHARS[c.id] : null;
+
+  /*
+    ── 지금 값과 원래 값 ──
+
+    **계산이 쓰는 것과 같은 함수**를 쓴다 (`core/passives`). 여기서 따로
+    세면 창에 적힌 공격력과 실제로 박히는 피해가 갈리는데, 그건 화면만
+    봐서는 못 잡는다.
+
+    여기 `c` 는 **파티 자리에 서 있는 사람**이다 (창고 목록은 아래 따로
+    있고 거기에는 수치를 안 적는다). 쓰러져 있으면 괄호를 아예 안 붙인다 —
+    시체에 붙은 버프는 거짓말이고, 다시 일어서면 그때 다시 계산된다.
+  */
+  const alive = livingMembers(party, chars, hpMap);
+  const hex = c ? hexOf(hexMap, c.id) : [];
+  const cur = c ? hpOf(c, hpMap) : 0;
+  const base = c ? statOf(c) : null;
+  const now = c && base && cur > 0 ? {
+    atk: Math.round(liveAtk(c, alive, hex)),
+    spd: liveSpd(c, cur, alive, hex),
+    ...liveArmor(c, hex),
+  } : null;
 
   const owned = Object.values(chars);
   const cost = c ? gearCost(c.gearLv) : 0;
@@ -177,7 +210,21 @@ export function CharPopup({
             평타 옆에 종류를 붙이는 것도 같은 이유다 — "공격력 15" 만 있으면
             그게 어느 쪽 방어에 막히는지 알 길이 없다.
           */}
-          <KV k="공격력" v={`${statOf(c).atk} (${DMG_NAME[blowOf(c.id).type]})`} />
+          {/*
+            ── 괄호 안은 **지금 걸려 있는 만큼**이다 ──
+
+            원래 값을 먼저 적고, 패시브와 우두머리가 얹거나 깎은 몫을 괄호로
+            붙인다 (`25 (+2)`). 합쳐진 값 하나만 적으면 "왜 창에 적힌 것과
+            다르지" 가 되고, 원래 값만 적으면 버프가 화면에서 사라진다.
+
+            안 걸려 있으면 괄호가 아예 안 뜬다 — 넷의 여섯 줄에 `(+0)` 이
+            붙어 있으면 정작 달라진 줄이 안 보인다 (`deltaText`).
+          */}
+          <KV
+            k="공격력"
+            v={`${statOf(c).atk}${now ? deltaText(statOf(c).atk, now.atk) : ''}`
+              + ` (${DMG_NAME[blowOf(c.id).type]})`}
+          />
           {/*
             공격속도가 빠져 있었다. 이 게임에서 **스킬 주기까지 정하는 값**이라
             (`SkillDef.every` 가 횟수로 도므로) 없으면 왜 어떤 사람이 기술을
@@ -186,13 +233,27 @@ export function CharPopup({
             배수만 적으면 "0.8" 이 빠른 건지 느린 건지 알 수 없어서 실제 간격을
             같이 적는다 — `core/chars` 의 `swingMs` 와 같은 값이다.
           */}
+          {/*
+            간격은 **지금 값으로** 적는다. 저건 "얼마나 자주 휘두르나" 라서,
+            원래 간격을 적어 두고 옆에 차이를 붙이면 두 숫자를 나눠야 실제
+            박자가 나온다 — 그건 읽는 사람이 할 일이 아니다.
+          */}
           <KV
             k="공격속도"
-            v={`${statOf(c).spd} (${swingMs(statOf(c).spd)}ms 마다)`}
+            v={`${statOf(c).spd}${now ? deltaText(statOf(c).spd, now.spd, 1) : ''}`
+              + ` (${swingMs(now ? now.spd : statOf(c).spd)}ms 마다)`}
           />
-          <KV k="체력" v={String(statOf(c).hp)} />
-          <KV k="방어력" v={`${statOf(c).def} (물리 피해를 막는다)`} />
-          <KV k="마법저항력" v={`${statOf(c).res} (마법 피해를 막는다)`} />
+          <KV k="체력" v={`${cur > 0 ? `${Math.ceil(cur)} / ` : ''}${statOf(c).hp}`} />
+          <KV
+            k="방어력"
+            v={`${statOf(c).def}${now ? deltaText(statOf(c).def, now.def) : ''}`
+              + ' (물리 피해를 막는다)'}
+          />
+          <KV
+            k="마법저항력"
+            v={`${statOf(c).res}${now ? deltaText(statOf(c).res, now.res) : ''}`
+              + ' (마법 피해를 막는다)'}
+          />
           {statOf(c).crit > 0 && (
             <KV
               k="치명타"
@@ -211,6 +272,10 @@ export function CharPopup({
             방어력은 물리 피해를, 마법저항력은 마법 피해를 그 수만큼 깎습니다
             (비율이 아니라 뺄셈이고, 아무리 깎여도 최소 1은 들어갑니다).
             관통이 있으면 그 방어를 통째로 무시합니다.
+          </T>
+          <T size={9} dim="dim" style={{ marginTop: 2 }}>
+            괄호 안의 +- 는 지금 걸려 있는 패시브와 상태 효과가 얹거나 깎은
+            몫입니다. 판이 끝나거나 걸린 것이 풀리면 사라집니다.
           </T>
           {/*
             공짜·확실일 때는 확률과 비용 줄을 뺀다 — "100%" 와 "0 골드" 는

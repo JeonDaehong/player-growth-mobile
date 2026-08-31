@@ -16,10 +16,10 @@ import {
   BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, battleTypeOf, skillsOf, statOf,
 } from '@/core/chars';
 import {
-  MAX_PARTY_GEAR, PARTY_SIZE, hpOf, partyGear, partyPower,
+  MAX_PARTY_GEAR, PARTY_SIZE, hpOf, livingMembers, partyGear, partyPower,
 } from '@/core/party';
 import { hexOf } from '@/core/status';
-import { statusOf } from '@/core/passives';
+import { marksOf } from '@/core/passives';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { StatusRow } from './StatusRow';
 import { Sprite } from '@/ui/Sprite';
@@ -54,6 +54,14 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
     피해 숫자와 말풍선이 이미 쓰는 자리다.
   */
   const charge = useBattleUi((s) => s.charge);
+
+  /*
+    살아 있는 사람들 — **패시브가 이걸 본다.**
+
+    아녜스가 쓰러지면 네 칸에서 `pv_ash` 가 한꺼번에 사라진다. 그게 곧
+    "화력이 떨어졌다" 는 신호다 (`core/passives` 의 `marksOf`).
+  */
+  const alive = livingMembers(party, chars, hpMap);
 
   const gear = partyGear(party, chars);
   const power = partyPower(party, chars);
@@ -136,8 +144,8 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     때마다 네 칸이 위아래로 들썩인다.
                   */}
                   <StatusRow
-                    status={statusOf(
-                      c.id, hpOf(c, hpMap), statOf(c).hp, hexOf(hexMap, c.id),
+                    status={marksOf(
+                      c.id, hpOf(c, hpMap), statOf(c).hp, hexOf(hexMap, c.id), alive,
                     )}
                   />
 
