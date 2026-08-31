@@ -42,7 +42,7 @@ import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
 import { BORDER, SP, WHITE } from '@/ui/theme';
 import {
-  BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, PatternCall,
+  BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, SkillShout,
   useShake,
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
@@ -1363,6 +1363,34 @@ export function BattleView() {
                     }}
                   >
                     {/*
+                      특수기 이름 — **우두머리 머리 위 말풍선.**
+
+                      파티 것과 같은 부품인데 가장자리가 뾰족하다 (`burst`).
+                      같은 자리에 같은 크기로 뜨므로 크기로는 못 가르고,
+                      흑백이라 색으로도 못 가른다 — 모양으로 가른다.
+
+                      우두머리는 한 마리뿐이라 줄의 어느 자리에 있든 `back` 이
+                      0 이다. 그래도 `battle.boss` 를 같이 보는 이유는, 잡몹이
+                      특수기를 쓰게 되는 날 조용히 잡몹 머리 위에 뜨지 않게
+                      하기 위해서다.
+                    */}
+                    {battle.boss && back === 0 && (
+                      <View
+                        pointerEvents="none"
+                        style={{
+                          position: 'absolute',
+                          bottom: foeSize + 6,
+                          left: -18,
+                          right: -18,
+                          alignItems: 'center',
+                          zIndex: 46,
+                        }}
+                      >
+                        <SkillShout nonce={patCall} name={battle.pat ?? ''} burst />
+                      </View>
+                    )}
+
+                    {/*
                       적도 **발밑에** 체력 막대를 단다.
 
                       아군만 달아 두면 "내가 얼마나 버티나" 는 보이는데 "쟤를
@@ -1541,12 +1569,15 @@ export function BattleView() {
         {!down && <BossCall nonce={bossCall} name={cur.name} />}
 
         {/*
-          우두머리 특수기 이름 — 무대 **위쪽**.
+          ── 특수기 이름은 이제 우두머리 머리 위에 뜬다 ──
 
-          `BossCall` 이 쓰는 한가운데를 피한다. 우두머리가 나오는 순간
-          등장 이름과 겹쳐 두면 둘 다 안 읽힌다.
+          예전에는 무대 위쪽에 자막처럼 걸었다. 자리가 비어 있어서 걸기는
+          쉬웠는데, **누가 쓴 건지**가 안 붙어 있었다. 파티 기술은 이미
+          쓴 사람 머리 위에서 외치고 있었으므로(`SkillShout`) 우두머리만
+          자막인 것도 규칙이 둘인 셈이었다.
+
+          지금은 적 줄 안에서 그린다 (아래 `foes.map`).
         */}
-        {!down && <PatternCall nonce={patCall} name={battle.pat ?? ''} />}
 
         {/*
           판이 열리고 닫히는 막 — 무대 안의 맨 위 층.

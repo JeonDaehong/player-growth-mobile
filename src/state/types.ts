@@ -430,6 +430,8 @@ export interface GameActions {
   setPartySlot: (slot: number, id: CharId | null) => void;
   /** 고유장비를 한 번 두들긴다. 부서지지도 내려가지도 않는다 */
   enhanceGear: (id: CharId) => 'up' | 'fail' | 'max' | 'poor' | 'none';
+  /** 강화 수치를 바로 정한다 — 테스트용 (`FREE_ENHANCE` 가 꺼지면 아무 일도 안 한다) */
+  setGear: (id: CharId, lv: number) => void;
   /** 자동 전투 한 틱 — 시간·등장·적 공격 */
   battleTickOnce: () => void;
   /**

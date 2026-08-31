@@ -9,7 +9,7 @@
  * 두 체계가 잠깐 같이 있는 건 괜찮지만, **서로 참조하지는 않는다.**
  */
 import {
-  CHARS, CharId, MAX_GEAR_LV, OwnedChar,
+  CHARS, CharId, FREE_ENHANCE, MAX_GEAR_LV, OwnedChar,
   gearCost, gearOdds, isCharId, newChar,
 } from '@/core/chars';
 import { PARTY_SIZE, Party, cleanParty } from '@/core/party';
@@ -27,6 +27,16 @@ export interface RosterActions {
   setPartySlot: (slot: number, id: CharId | null) => void;
   /** 고유장비를 한 번 두들긴다 */
   enhanceGear: (id: CharId) => 'up' | 'fail' | 'max' | 'poor' | 'none';
+  /**
+   * 강화 수치를 **바로 정한다** — 테스트용.
+   *
+   * 되돌리기(+0)와 한 번에 올리기(+100)가 이걸 쓴다. 공짜로 강화해도 100 칸을
+   * 한 번씩 눌러야 하면 직접 굴려 볼 수가 없다.
+   *
+   * ⚠ `FREE_ENHANCE` 가 꺼져 있으면 아무 일도 안 한다 — 출시본에 남아서
+   * 돈 없이 만렙이 되는 길이 되면 안 된다.
+   */
+  setGear: (id: CharId, lv: number) => void;
   /** 자동 전투 한 틱 — 시간·등장·적 공격 */
   battleTickOnce: () => void;
   /**
@@ -138,6 +148,17 @@ export const createRosterSlice = (
       chars: { ...st.chars, [id]: next },
     });
     return up ? 'up' : 'fail';
+  },
+
+  setGear: (id, lv) => {
+    /* 테스트 스위치가 꺼져 있으면 없는 기능이다 */
+    if (!FREE_ENHANCE) return;
+    const st = get();
+    const c = st.chars[id];
+    if (!c) return;
+    const next = Math.max(0, Math.min(MAX_GEAR_LV, Math.floor(lv)));
+    if (next === c.gearLv) return;
+    set({ chars: { ...st.chars, [id]: { ...c, gearLv: next } } });
   },
 
   recruitDraw: () => {

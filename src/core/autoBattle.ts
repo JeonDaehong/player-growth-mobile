@@ -1179,8 +1179,19 @@ export function enterStage(
 }
 
 /** 우두머리를 부를 수 있나 — 사냥 시간이 다 됐고 아직 안 불렀다 */
+/**
+ * **테스트 모드 — 사냥 시간을 안 기다리고 우두머리를 부를 수 있다.**
+ *
+ * 평소에는 1분을 사냥해야 단추가 생긴다 (`STAGE_MS`). 스무 판을 손으로 굴려
+ * 보려면 그 1분이 판마다 붙어서 스무 번이면 20분이다.
+ *
+ * ⚠ **출시 전에 false 로 되돌린다.** `core/chars` 의 `FREE_ENHANCE` 와 짝이다 —
+ * 둘 다 직접 굴려 보려고 켜 둔 스위치다.
+ */
+export const FREE_BOSS = true;
+
 export const bossReady = (st: BattleState): boolean => (
-  !st.boss && !st.called && st.msLeft <= 0 && !fightHeld(st)
+  !st.boss && !st.called && (FREE_BOSS || st.msLeft <= 0) && !fightHeld(st)
 );
 
 /**

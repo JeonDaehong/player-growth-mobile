@@ -88,14 +88,33 @@
 - **st_poison ↔ st_break** — 둘 다 한쪽이 크게 떨어져 나간 모양이다. 중독은 **원**이고 파쇄는 **사각**이다 — 그것 하나로 갈린다
 - **st_silence ↔ st_bleed** — 둘 다 막대다. 침묵은 **가로 하나**, 출혈은 **사선 둘**이다
 
-## 셀 순서
+## 넷씩 세 장으로 나눕니다
 
-| 셀 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| | 출혈 | 중독 | 기절 | 침묵 | 둔화 | 약화 | 파쇄 | 시듦 | 격노 | 견고 | 재생 | 신속 |
-| id | `st_bleed` | `st_poison` | `st_stun` | `st_silence` | `st_slow` | `st_weak` | `st_break` | `st_wither` | `st_rage` | `st_guard` | `st_regen` | `st_haste` |
+한 시트에 열둘을 달라고 두 번 요청했고 **두 번 다 망가져 왔습니다** — 6x3 에
+같은 그림이 두세 번씩 들어 있고, 가장자리는 디더링돼서 14px 에서 회색 얼룩이
+됐습니다.
 
-## 프롬프트
+그런데 이 프로젝트에서 **4칸 시트는 늘 한 번에 나왔습니다** — `role_icon` ·
+`skill_icon` · `boss_passive` 전부 그랬습니다. 열둘이 문제였지 아이콘이 문제가
+아니었습니다.
+
+**짝은 같은 장에 뒀습니다.** 부러진 칼/온전한 칼처럼 일부러 닮게 그리고 한
+가지로만 가르는 것들은, 다른 장에서 따로 그리면 둘이 안 닮습니다.
+
+파일 이름은 `status-1.jpg` · `status-2.jpg` · `status-3.jpg` 입니다.
+
+## A장 — 지속 피해와 행동 불가
+
+넷 다 서로 안 닮았습니다. 짝이 없으므로 각자 제 모양이면 됩니다.
+
+### 셀 순서
+
+| 셀 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| | 출혈 | 중독 | 기절 | 침묵 |
+| id | `st_bleed` | `st_poison` | `st_stun` | `st_silence` |
+
+### 프롬프트
 
 ```
 ABSOLUTE RULE — NO TEXT OF ANY KIND:
@@ -105,22 +124,14 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of 12 ICONS in one row, left to right. They are a matched set — same weight, same fill, same size within their cells, drawn by the same hand on the same day.
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
 
-The 12 cells, in this exact order:
+The 4 cells, in this exact order:
 
 Cell 1 — TWO PARALLEL SLASHES. Two thick straight bars running corner to corner diagonally across the cell, top-right to bottom-left, each a fifth of the cell wide, with a gap of the same width between them. The upper one is longer and runs the full diagonal; the lower one is two-thirds as long. Both ends of both bars are cut flat and square, not tapered to points. Nothing else in the cell. Squint test: two slashes.
-Cell 2 — ONE FALLING DROP. A single solid teardrop filling the whole cell — a fat round bottom taking two-thirds of the height, narrowing upward into a thick neck that ends in a blunt point at the top edge. The widest part is at the bottom. It is one smooth bulging mass with no notch, no cut and no second shape. Squint test: a drop.
+Cell 2 — AN EATEN DISC. One solid circle filling the whole cell, with a single enormous BITE taken out of its upper right — the bite is a third of the diameter deep and reaches nearly to the centre, with a coarse edge of three big rounded scallops. Everything else is solid fill and the shape still reads as a circle. It is ROUND where the break icon is SQUARE, and that is what separates the two. Squint test: a circle with a chunk gone.
 Cell 3 — A THICK BOLT. One solid zigzag running top to bottom: a wide bar coming down from the top edge to the middle, jogging hard sideways by half the cell width, then continuing down to the bottom edge. The bar is a quarter of the cell wide along its whole length and the corners at the jog are sharp right angles, not curves. It touches the top and bottom edges. Squint test: a bolt.
 Cell 4 — ONE HEAVY BAR. A single solid horizontal bar across the middle of the cell, running the FULL width edge to edge, a third of the cell tall, with flat square ends. There is nothing above it and nothing below it — the rest of the cell is empty. It is the simplest icon of the set and it must stay that way: a mouth stopped. Squint test: a bar.
-Cell 5 — ONE DOWNWARD CHEVRON. A single thick V shape pointing DOWN, filling the middle of the cell — two heavy arms meeting at a point at the bottom, each arm a quarter of the cell wide, the open ends reaching the upper left and upper right corners. One chevron only. Squint test: a down arrowhead.
-Cell 6 — A SNAPPED BLADE. A short stubby wedge standing upright in the lower half of the cell — wide and flat at the bottom, narrowing as it rises, but CUT OFF FLAT halfway up with a coarse jagged break of three big teeth across the top. It reaches only halfway up the cell and it has no point. It is the short broken twin of the rage icon and the difference in HEIGHT is the whole read. Squint test: a broken stump.
-Cell 7 — A BROKEN BLOCK. A solid rectangle filling the whole cell, with ONE horizontal groove across the middle a tenth of the cell tall — and the entire TOP RIGHT QUARTER of the rectangle is missing, bitten away in a coarse stepped break of three big square steps. The bite is a quarter of the whole shape, so it is impossible to miss. It is the broken twin of the guard icon. Squint test: a block with a corner gone.
-Cell 8 — A CROSS WITH NO TOP. A thick upright bar standing in the middle of the cell from the bottom edge up to two-thirds height, crossed near its top by a thick horizontal bar running the full width — a T shape, arms a third of the cell wide. There is NO arm above the crossbar. It is the regen cross with the top broken off, and that missing arm is the whole read. Squint test: a T.
-Cell 9 — A WHOLE BLADE. A tall narrow wedge standing upright and filling the FULL height of the cell — wide and flat at the bottom edge, tapering evenly all the way up to a single sharp point at the top edge. No crossguard, no hilt, no notch, nothing but the wedge. It is the tall whole twin of the weak icon and the difference in HEIGHT is the whole read. Squint test: a blade.
-Cell 10 — A WHOLE BLOCK. A solid rectangle filling the whole cell edge to edge, with ONE horizontal groove across the middle a tenth of the cell tall, dividing it into two equal courses. Every corner is square and present. It is the whole twin of the break icon. Squint test: a solid block.
-Cell 11 — A THICK CROSS. A plus sign filling the whole cell — a vertical bar from the top edge to the bottom edge and a horizontal bar from the left edge to the right edge, both a third of the cell wide, crossing at the centre. All four arms are the same length and all four ends are cut flat. Squint test: a plus.
-Cell 12 — TWO UPWARD CHEVRONS. Two thick chevrons pointing UP, stacked one above the other with a gap between them — each two heavy arms meeting at a point at the top, each arm a fifth of the cell wide. The lower one is wider and reaches both side edges; the upper one is narrower and sits above it. TWO of them, and that count is what separates this from the slow icon as much as the direction does. Squint test: two up arrowheads.
 
 STYLE (strict, non-negotiable):
 - 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
@@ -159,28 +170,213 @@ Everything below follows from that one fact.
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
 
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING.
+- Every edge is a HARD STEP between solid white and solid black. Do not soften, feather or anti-alias anything, and do not fake a grey by alternating black and white pixels along an edge.
+- A checkerboard border turns into grey fuzz at 14 pixels and the shape loses its outline, which is the only thing that identifies it. An earlier attempt came back with dithered edges and half the icons were unreadable.
+- Two colours exist in this image: pure white and pure black. Nothing in between, anywhere.
+
 THEY ALL WEIGH THE SAME.
-- Half of these are bad things and half are good things, but NOTHING in the drawing may say which is which. No icon is darker, thinner, spikier or gloomier than another. The game says good or bad by where it puts them on screen; the icon only says WHAT.
+- Some of these are bad things and some are good, but NOTHING in the drawing may say which is which. No icon is darker, thinner, spikier or gloomier than another. The game says good or bad by where it puts them on screen; the icon only says WHAT.
 - Every icon uses the same stroke weight and the same solid fill.
 
-THEY MUST NOT BE CONFUSABLE. Put all 12 finished icons side by side and squint until they blur. If any two have a similar outline, redraw the weaker one — the outline is the only thing that survives at 14 pixels.
-
-FOUR PAIRS ARE DELIBERATELY RELATED AND MUST STILL SEPARATE:
-- Cell 9 (whole blade, full height) vs cell 6 (snapped blade, half height) — separated by HEIGHT.
-- Cell 10 (whole block) vs cell 7 (block with a quarter bitten out) — separated by the MISSING CORNER.
-- Cell 11 (four-armed cross) vs cell 8 (three-armed T) — separated by the MISSING TOP ARM.
-- Cell 5 (one chevron, pointing down) vs cell 12 (two chevrons, pointing up) — separated by DIRECTION and by COUNT.
+THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and squint until they blur. If any two have a similar outline, redraw the weaker one — the outline is the only thing that survives at 14 pixels.
 
 SHEET LAYOUT:
-- Arrange the cells in an exact uniform grid: 12 columns x 1 row.
+- Arrange the cells in an exact uniform grid: 4 columns x 1 row.
 - Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a magenta
   border around the outer edge of the whole sheet.
 - Magenta appears ONLY on these separator lines, never inside a cell.
 - Every cell is exactly the same size. Reading order is left to right, then top to
   bottom.
-- Do not add extra rows of variants. Exactly 1 row, exactly 12 cells.
-- EVERY CELL MUST BE SQUARE. With a 12x1 grid that means the whole sheet is
-  12:1 — output it at 6144x512.
+- Do not add extra rows of variants. Exactly 1 row, exactly 4 cells.
+- EVERY CELL MUST BE SQUARE. With a 4x1 grid that means the whole sheet is
+  4:1 — output it at 2048x512.
+  A square cell is required. A tall narrow cell cannot hold a weapon swung forward,
+  and a short wide cell cannot hold one raised. Both have been tried and both
+  clipped.
+```
+
+## B장 — 공격과 방어
+
+**두 쌍입니다.** 1·2번이 같은 칼(부러진 것 / 온전한 것), 3·4번이 같은 사각(귀퉁이가 없는 것 / 꽉 찬 것). 짝끼리는 닮아야 하고 **한 가지로만** 갈려야 합니다.
+
+### 셀 순서
+
+| 셀 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| | 약화 | 격노 | 파쇄 | 견고 |
+| id | `st_weak` | `st_rage` | `st_break` | `st_guard` |
+
+### 프롬프트
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+
+The 4 cells, in this exact order:
+
+Cell 1 — A SNAPPED BLADE. A short stubby wedge standing upright in the lower half of the cell — wide and flat at the bottom, narrowing as it rises, but CUT OFF FLAT halfway up with a coarse jagged break of three big teeth across the top. It reaches only halfway up the cell and it has no point. It is the short broken twin of the rage icon and the difference in HEIGHT is the whole read. Squint test: a broken stump.
+Cell 2 — A WHOLE BLADE. A tall narrow wedge standing upright and filling the FULL height of the cell — wide and flat at the bottom edge, tapering evenly all the way up to a single sharp point at the top edge. No crossguard, no hilt, no notch, nothing but the wedge. It is the tall whole twin of the weak icon and the difference in HEIGHT is the whole read. Squint test: a blade.
+Cell 3 — A BROKEN BLOCK. A solid rectangle filling the whole cell, with ONE horizontal groove across the middle a tenth of the cell tall — and the entire TOP RIGHT QUARTER of the rectangle is missing, bitten away in a coarse stepped break of three big square steps. The bite is a quarter of the whole shape, so it is impossible to miss. It is the broken twin of the guard icon. Squint test: a block with a corner gone.
+Cell 4 — A WHOLE BLOCK. A solid rectangle filling the whole cell edge to edge, with ONE horizontal groove across the middle a tenth of the cell tall, dividing it into two equal courses. Every corner is square and present. It is the whole twin of the break icon. Squint test: a solid block.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 12 TO 16 PIXELS. That is smaller than the text next to it.
+Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon must read as a single silhouette at a glance. Not a
+  scene, not an object sitting on a background, not two things next to each other.
+- FILL THE CELL. The shape touches or nearly touches all four sides of its cell.
+  An icon drawn small inside its cell disappears entirely when scaled down.
+- SOLID, NOT OUTLINED. Draw it as a filled white mass. A hollow outline at 14px
+  becomes a grey smudge, because the outline and the hole merge.
+- NO INTERIOR DETAIL. No rivets, no wood grain, no gem facets, no shading, no
+  highlights. If you can only see it at full size, it is noise.
+- ONE NOTCH OR CUT-OUT AT MOST, and it must be at least a fifth of the width.
+  Anything finer closes up.
+- STRAIGHT AND CHUNKY. Thick strokes, hard angles, flat ends. Thin tapering lines
+  vanish; a 1px point at full size is nothing at icon size.
+- NO PERSPECTIVE. Flat and front-on, like a road sign. These are the only images
+  in this game that are NOT drawn in three-quarter view.
+- CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
+  text and a tilted icon looks like a mistake.
+
+TEST: squint until the image is a blur. If you can still name it, it is right.
+If it becomes a grey blob, the shape is too busy.
+
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING.
+- Every edge is a HARD STEP between solid white and solid black. Do not soften, feather or anti-alias anything, and do not fake a grey by alternating black and white pixels along an edge.
+- A checkerboard border turns into grey fuzz at 14 pixels and the shape loses its outline, which is the only thing that identifies it. An earlier attempt came back with dithered edges and half the icons were unreadable.
+- Two colours exist in this image: pure white and pure black. Nothing in between, anywhere.
+
+THEY ALL WEIGH THE SAME.
+- Some of these are bad things and some are good, but NOTHING in the drawing may say which is which. No icon is darker, thinner, spikier or gloomier than another. The game says good or bad by where it puts them on screen; the icon only says WHAT.
+- Every icon uses the same stroke weight and the same solid fill.
+
+THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and squint until they blur. If any two have a similar outline, redraw the weaker one — the outline is the only thing that survives at 14 pixels.
+
+SHEET LAYOUT:
+- Arrange the cells in an exact uniform grid: 4 columns x 1 row.
+- Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a magenta
+  border around the outer edge of the whole sheet.
+- Magenta appears ONLY on these separator lines, never inside a cell.
+- Every cell is exactly the same size. Reading order is left to right, then top to
+  bottom.
+- Do not add extra rows of variants. Exactly 1 row, exactly 4 cells.
+- EVERY CELL MUST BE SQUARE. With a 4x1 grid that means the whole sheet is
+  4:1 — output it at 2048x512.
+  A square cell is required. A tall narrow cell cannot hold a weapon swung forward,
+  and a short wide cell cannot hold one raised. Both have been tried and both
+  clipped.
+```
+
+## C장 — 속도와 회복
+
+**두 쌍입니다.** 1·2번이 같은 십자(위 팔이 없는 것 / 있는 것), 3·4번이 같은 갈매기(아래 하나 / 위 둘).
+
+### 셀 순서
+
+| 셀 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| | 시듦 | 재생 | 둔화 | 신속 |
+| id | `st_wither` | `st_regen` | `st_slow` | `st_haste` |
+
+### 프롬프트
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+
+The 4 cells, in this exact order:
+
+Cell 1 — A CROSS WITH NO TOP. A thick upright bar standing in the middle of the cell from the bottom edge up to two-thirds height, crossed near its top by a thick horizontal bar running the full width — a T shape, arms a third of the cell wide. There is NO arm above the crossbar. It is the regen cross with the top broken off, and that missing arm is the whole read. Squint test: a T.
+Cell 2 — A THICK CROSS. A plus sign filling the whole cell — a vertical bar from the top edge to the bottom edge and a horizontal bar from the left edge to the right edge, both a third of the cell wide, crossing at the centre. All four arms are the same length and all four ends are cut flat. Squint test: a plus.
+Cell 3 — ONE DOWNWARD CHEVRON. A single thick V shape pointing DOWN, filling the middle of the cell — two heavy arms meeting at a point at the bottom, each arm a quarter of the cell wide, the open ends reaching the upper left and upper right corners. One chevron only. Squint test: a down arrowhead.
+Cell 4 — TWO UPWARD CHEVRONS. Two thick chevrons pointing UP, stacked one above the other with a gap between them — each two heavy arms meeting at a point at the top, each arm a fifth of the cell wide. The lower one is wider and reaches both side edges; the upper one is narrower and sits above it. TWO of them, and that count is what separates this from the slow icon as much as the direction does. Squint test: two up arrowheads.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 12 TO 16 PIXELS. That is smaller than the text next to it.
+Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon must read as a single silhouette at a glance. Not a
+  scene, not an object sitting on a background, not two things next to each other.
+- FILL THE CELL. The shape touches or nearly touches all four sides of its cell.
+  An icon drawn small inside its cell disappears entirely when scaled down.
+- SOLID, NOT OUTLINED. Draw it as a filled white mass. A hollow outline at 14px
+  becomes a grey smudge, because the outline and the hole merge.
+- NO INTERIOR DETAIL. No rivets, no wood grain, no gem facets, no shading, no
+  highlights. If you can only see it at full size, it is noise.
+- ONE NOTCH OR CUT-OUT AT MOST, and it must be at least a fifth of the width.
+  Anything finer closes up.
+- STRAIGHT AND CHUNKY. Thick strokes, hard angles, flat ends. Thin tapering lines
+  vanish; a 1px point at full size is nothing at icon size.
+- NO PERSPECTIVE. Flat and front-on, like a road sign. These are the only images
+  in this game that are NOT drawn in three-quarter view.
+- CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
+  text and a tilted icon looks like a mistake.
+
+TEST: squint until the image is a blur. If you can still name it, it is right.
+If it becomes a grey blob, the shape is too busy.
+
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING.
+- Every edge is a HARD STEP between solid white and solid black. Do not soften, feather or anti-alias anything, and do not fake a grey by alternating black and white pixels along an edge.
+- A checkerboard border turns into grey fuzz at 14 pixels and the shape loses its outline, which is the only thing that identifies it. An earlier attempt came back with dithered edges and half the icons were unreadable.
+- Two colours exist in this image: pure white and pure black. Nothing in between, anywhere.
+
+THEY ALL WEIGH THE SAME.
+- Some of these are bad things and some are good, but NOTHING in the drawing may say which is which. No icon is darker, thinner, spikier or gloomier than another. The game says good or bad by where it puts them on screen; the icon only says WHAT.
+- Every icon uses the same stroke weight and the same solid fill.
+
+THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and squint until they blur. If any two have a similar outline, redraw the weaker one — the outline is the only thing that survives at 14 pixels.
+
+SHEET LAYOUT:
+- Arrange the cells in an exact uniform grid: 4 columns x 1 row.
+- Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a magenta
+  border around the outer edge of the whole sheet.
+- Magenta appears ONLY on these separator lines, never inside a cell.
+- Every cell is exactly the same size. Reading order is left to right, then top to
+  bottom.
+- Do not add extra rows of variants. Exactly 1 row, exactly 4 cells.
+- EVERY CELL MUST BE SQUARE. With a 4x1 grid that means the whole sheet is
+  4:1 — output it at 2048x512.
   A square cell is required. A tall narrow cell cannot hold a weapon swung forward,
   and a short wide cell cannot hold one raised. Both have been tried and both
   clipped.
@@ -188,15 +384,17 @@ SHEET LAYOUT:
 
 ## 슬라이서 설정
 
-```json
-{ "file": "<파일명>", "name": "status_icon", "expect": [12, 1],
-  "labels": ["st_bleed", "st_poison", "st_stun", "st_silence", "st_slow", "st_weak", "st_break", "st_wither", "st_rage", "st_guard", "st_regen", "st_haste"] }
-```
+세 장을 **한 세트로 이어 붙입니다** (`append`). 그래야
+`assets/sprites/status_icon/` 하나에 열둘이 다 들어갑니다.
 
-한 줄에 열둘이면 셀 하나가 512px 이라 시트가 6144x512 입니다. 너무 길면
-**여섯씩 두 줄**로 받아도 됩니다 — 그때는 `"expect": [6, 2]` 로 바꾸고
-프롬프트의 마지막 문단(SHEET LAYOUT)을 `6 columns x 2 rows` 로 고치세요.
-읽는 차례는 왼쪽에서 오른쪽, 그다음 아래 줄입니다.
+```json
+{ "file": "status-1.jpg", "name": "status_icon", "expect": [4, 1],
+  "labels": ["st_bleed", "st_poison", "st_stun", "st_silence"] },
+{ "file": "status-2.jpg", "name": "status_icon", "expect": [4, 1], "append": true,
+  "labels": ["st_weak", "st_rage", "st_break", "st_guard"] },
+{ "file": "status-3.jpg", "name": "status_icon", "expect": [4, 1], "append": true,
+  "labels": ["st_wither", "st_regen", "st_slow", "st_haste"] }
+```
 
 ## 다시 뽑을 때
 

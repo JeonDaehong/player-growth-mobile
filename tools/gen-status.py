@@ -76,11 +76,12 @@ STATUS = [
 
     ('st_poison', '중독', '나쁜', '마법 지속 피해 (맹독·산성·포자·부패 전부)',
      r'지속 마법 피해',
-     'ONE FALLING DROP. A single solid teardrop filling the whole cell — a fat '
-     'round bottom taking two-thirds of the height, narrowing upward into a thick '
-     'neck that ends in a blunt point at the top edge. The widest part is at the '
-     'bottom. It is one smooth bulging mass with no notch, no cut and no second '
-     'shape. Squint test: a drop.'),
+     'AN EATEN DISC. One solid circle filling the whole cell, with a single '
+     'enormous BITE taken out of its upper right — the bite is a third of the '
+     'diameter deep and reaches nearly to the centre, with a coarse edge of three '
+     'big rounded scallops. Everything else is solid fill and the shape still '
+     'reads as a circle. It is ROUND where the break icon is SQUARE, and that is '
+     'what separates the two. Squint test: a circle with a chunk gone.'),
 
     ('st_stun', '기절', '나쁜', '행동 불가', r'기절',
      'A THICK BOLT. One solid zigzag running top to bottom: a wide bar coming down '
@@ -154,6 +155,34 @@ STATUS = [
      'reaches both side edges; the upper one is narrower and sits above it. TWO of '
      'them, and that count is what separates this from the slow icon as much as '
      'the direction does. Squint test: two up arrowheads.'),
+]
+
+
+# ══ 넷씩 세 장으로 나눈다 ═════════════════════════════════════
+#
+# 한 시트에 열둘을 달라고 두 번 요청했고 두 번 다 망가져 왔다 — 6x3 에 같은
+# 그림이 두세 번씩 들어 있고, 가장자리는 디더링됐다.
+#
+# 그런데 이 프로젝트에서 **4칸 시트는 늘 한 번에 나왔다** — `role_icon` ·
+# `skill_icon` · `boss_passive` 셋 다 그랬다. 열둘이 문제였지 아이콘이 문제가
+# 아니었다.
+#
+# **짝은 같은 장에** 둔다. 부러진 칼/온전한 칼처럼 일부러 닮게 그리고 한
+# 가지로만 가르는 것들은, 다른 장에서 따로 그리면 둘이 안 닮는다.
+
+SHEETS = [
+    ('A', '지속 피해와 행동 불가',
+     ['st_bleed', 'st_poison', 'st_stun', 'st_silence'],
+     '넷 다 서로 안 닮았습니다. 짝이 없으므로 각자 제 모양이면 됩니다.'),
+    ('B', '공격과 방어',
+     ['st_weak', 'st_rage', 'st_break', 'st_guard'],
+     '**두 쌍입니다.** 1·2번이 같은 칼(부러진 것 / 온전한 것), 3·4번이 같은 '
+     '사각(귀퉁이가 없는 것 / 꽉 찬 것). 짝끼리는 닮아야 하고 **한 가지로만** '
+     '갈려야 합니다.'),
+    ('C', '속도와 회복',
+     ['st_wither', 'st_regen', 'st_slow', 'st_haste'],
+     '**두 쌍입니다.** 1·2번이 같은 십자(위 팔이 없는 것 / 있는 것), 3·4번이 '
+     '같은 갈매기(아래 하나 / 위 둘).'),
 ]
 
 
@@ -301,23 +330,29 @@ PAGE = """# 상태 효과 로고
 ### 특히 헷갈리기 쉬운 짝
 
 %(clash)s
-## 셀 순서
+## 넷씩 세 장으로 나눕니다
 
-%(table)s
-## 프롬프트
+한 시트에 열둘을 달라고 두 번 요청했고 **두 번 다 망가져 왔습니다** — 6x3 에
+같은 그림이 두세 번씩 들어 있고, 가장자리는 디더링돼서 14px 에서 회색 얼룩이
+됐습니다.
 
-%(prompt)s
+그런데 이 프로젝트에서 **4칸 시트는 늘 한 번에 나왔습니다** — `role_icon` ·
+`skill_icon` · `boss_passive` 전부 그랬습니다. 열둘이 문제였지 아이콘이 문제가
+아니었습니다.
+
+**짝은 같은 장에 뒀습니다.** 부러진 칼/온전한 칼처럼 일부러 닮게 그리고 한
+가지로만 가르는 것들은, 다른 장에서 따로 그리면 둘이 안 닮습니다.
+
+파일 이름은 `status-1.jpg` · `status-2.jpg` · `status-3.jpg` 입니다.
+%(sheets)s
 ## 슬라이서 설정
 
-```json
-{ "file": "<파일명>", "name": "status_icon", "expect": [12, 1],
-  "labels": [%(labels)s] }
-```
+세 장을 **한 세트로 이어 붙입니다** (`append`). 그래야
+`assets/sprites/status_icon/` 하나에 열둘이 다 들어갑니다.
 
-한 줄에 열둘이면 셀 하나가 512px 이라 시트가 6144x512 입니다. 너무 길면
-**여섯씩 두 줄**로 받아도 됩니다 — 그때는 `"expect": [6, 2]` 로 바꾸고
-프롬프트의 마지막 문단(SHEET LAYOUT)을 `6 columns x 2 rows` 로 고치세요.
-읽는 차례는 왼쪽에서 오른쪽, 그다음 아래 줄입니다.
+```json
+%(config)s
+```
 
 ## 다시 뽑을 때
 
@@ -348,62 +383,91 @@ touch or nearly touch all four sides of its own cell. Redraw them larger.
 """
 
 
+SHEET_TPL = """
+## %(tag)s장 — %(title)s
+
+%(note)s
+
+### 셀 순서
+
+%(table)s
+### 프롬프트
+
+%(prompt)s"""
+
+
 def build():
     bosses = load_bosses()
     src = sources(bosses)
+    by = {i[0]: i for i in STATUS}
 
     rows = []
     for sid, ko, side, mean, _keys, _art in STATUS:
         who = src.get(sid) or []
-        where = ('%s판 우두머리' % '·'.join(str(s) for s in who)) if who else '—'
+        where = ('%s판 우두머리' % '·'.join(str(n) for n in who)) if who else '—'
         if sid == 'st_rage':
             where = '보조가 곁에 섰을 때 (`core/party` 의 `supportMul`)'
         if sid == 'st_haste':
             where = '아직 없음 — 둔화의 짝으로 자리만 열어 둡니다'
         rows.append('| `%s` | %s | %s | %s | %s |' % (sid, ko, side, mean, where))
 
-    cells = [(sid, ko, art) for sid, ko, _s, _m, _k, art in STATUS]
-
     clash = NL.join(
         '- **%s ↔ %s** — %s' % (a, b, why) for a, b, why in CLASH) + NL
 
-    prompt = block(
-        NOTEXT,
-        'SUBJECT: a single sheet of %d ICONS in one row, left to right. They are a '
-        'matched set — same weight, same fill, same size within their cells, drawn '
-        'by the same hand on the same day.' % len(STATUS) + NL + NL
-        + rows_of(cells, 'The %d cells, in this exact order:' % len(STATUS)),
-        PIXEL_STYLE,
-        ICON_STYLE,
-        'THEY ALL WEIGH THE SAME.' + NL
-        + '- Half of these are bad things and half are good things, but NOTHING in '
-        'the drawing may say which is which. No icon is darker, thinner, spikier '
-        'or gloomier than another. The game says good or bad by where it puts '
-        'them on screen; the icon only says WHAT.' + NL
-        + '- Every icon uses the same stroke weight and the same solid fill.',
-        'THEY MUST NOT BE CONFUSABLE. Put all %d finished icons side by side and '
-        'squint until they blur. If any two have a similar outline, redraw the '
-        'weaker one — the outline is the only thing that survives at 14 pixels.'
-        % len(STATUS) + NL + NL
-        + 'FOUR PAIRS ARE DELIBERATELY RELATED AND MUST STILL SEPARATE:' + NL
-        + '- Cell 9 (whole blade, full height) vs cell 6 (snapped blade, half '
-        'height) — separated by HEIGHT.' + NL
-        + '- Cell 10 (whole block) vs cell 7 (block with a quarter bitten out) — '
-        'separated by the MISSING CORNER.' + NL
-        + '- Cell 11 (four-armed cross) vs cell 8 (three-armed T) — separated by '
-        'the MISSING TOP ARM.' + NL
-        + '- Cell 5 (one chevron, pointing down) vs cell 12 (two chevrons, '
-        'pointing up) — separated by DIRECTION and by COUNT.',
-        grid(len(STATUS), 1),
-    )
+    # 열둘이 세 장에 정확히 한 번씩 들어가야 한다 — 빠뜨리면 조용히 없어진다
+    seen = [i for _t, _ti, ids, _n in SHEETS for i in ids]
+    assert sorted(seen) == sorted(i[0] for i in STATUS), \
+        '시트에 빠지거나 겹친 로고가 있다: %r' % seen
+
+    blocks, cfg = [], []
+    for n, (tag, title, ids, note) in enumerate(SHEETS):
+        cells = [(i, by[i][1], by[i][5]) for i in ids]
+        prompt = block(
+            NOTEXT,
+            'SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to '
+            'right. Four cells. Not five, not six, and not two rows — four cells '
+            'in one row, each a different icon. Do not repeat an icon anywhere '
+            'on the sheet and do not add variants of one.' + NL + NL
+            + rows_of(cells, 'The 4 cells, in this exact order:'),
+            PIXEL_STYLE,
+            ICON_STYLE,
+            'NO DITHERING. NO CHECKERBOARD. NO STIPPLING.' + NL
+            + '- Every edge is a HARD STEP between solid white and solid black. '
+            'Do not soften, feather or anti-alias anything, and do not fake a '
+            'grey by alternating black and white pixels along an edge.' + NL
+            + '- A checkerboard border turns into grey fuzz at 14 pixels and the '
+            'shape loses its outline, which is the only thing that identifies '
+            'it. An earlier attempt came back with dithered edges and half the '
+            'icons were unreadable.' + NL
+            + '- Two colours exist in this image: pure white and pure black. '
+            'Nothing in between, anywhere.',
+            'THEY ALL WEIGH THE SAME.' + NL
+            + '- Some of these are bad things and some are good, but NOTHING in '
+            'the drawing may say which is which. No icon is darker, thinner, '
+            'spikier or gloomier than another. The game says good or bad by '
+            'where it puts them on screen; the icon only says WHAT.' + NL
+            + '- Every icon uses the same stroke weight and the same solid fill.',
+            'THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side '
+            'and squint until they blur. If any two have a similar outline, '
+            'redraw the weaker one — the outline is the only thing that survives '
+            'at 14 pixels.',
+            grid(4, 1),
+        )
+        blocks.append(SHEET_TPL % {
+            'tag': tag, 'title': title, 'note': note,
+            'table': table_of(cells), 'prompt': prompt,
+        })
+        cfg.append(
+            '{ "file": "status-%d.jpg", "name": "status_icon", "expect": [4, 1],%s'
+            % (n + 1, ' "append": true,' if n else '')
+            + NL + '  "labels": [%s] }' % labels_of(cells))
 
     return PAGE % {
         'rows': NL.join(rows),
-        'shapes': NL.join('| `%s` | %s |' % (i, s) for i, s in SHAPES),
+        'shapes': NL.join('| `%s` | %s |' % (i, sh) for i, sh in SHAPES),
         'clash': clash,
-        'table': table_of(cells),
-        'prompt': prompt,
-        'labels': labels_of(cells),
+        'sheets': ''.join(blocks),
+        'config': (',' + NL).join(cfg),
     }
 
 

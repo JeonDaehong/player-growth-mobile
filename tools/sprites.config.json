@@ -3592,6 +3592,53 @@
         "bp_rot",
         "bp_ward"
       ]
+    },
+    {
+      "file": "status-1.jpg",
+      "name": "status_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "note": "상태 효과 로고 A장 — 지속 피해와 행동 불가 (docs/STATUS_ICON_PROMPTS.md). 12~16px 기호라 바닥에 세울 것이 없어 floor 를 안 건다",
+      "labels": [
+        "st_bleed",
+        "st_poison",
+        "st_stun",
+        "st_silence"
+      ]
+    },
+    {
+      "file": "status-2.jpg",
+      "name": "status_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "append": true,
+      "note": "상태 효과 로고 B장 — 공격과 방어 (칼 한 쌍 + 사각 한 쌍) (docs/STATUS_ICON_PROMPTS.md). 12~16px 기호라 바닥에 세울 것이 없어 floor 를 안 건다",
+      "labels": [
+        "st_weak",
+        "st_rage",
+        "st_break",
+        "st_guard"
+      ]
+    },
+    {
+      "file": "status-3.jpg",
+      "name": "status_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "append": true,
+      "note": "상태 효과 로고 C장 — 속도와 회복 (십자 한 쌍 + 갈매기 한 쌍) (docs/STATUS_ICON_PROMPTS.md). 12~16px 기호라 바닥에 세울 것이 없어 floor 를 안 건다",
+      "labels": [
+        "st_wither",
+        "st_regen",
+        "st_slow",
+        "st_haste"
+      ]
     }
   ],
   "_srcDirs": [

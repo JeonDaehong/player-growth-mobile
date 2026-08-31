@@ -13,9 +13,9 @@ import { View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useGame } from '@/state/store';
 import {
-  BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId, DMG_NAME, MAX_GEAR_LV,
-  anyPierce, battleTypeOf, blowOf, charPower, gearCost, gearOdds, statOf,
-  swingMs,
+  BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId, DMG_NAME, FREE_ENHANCE,
+  MAX_GEAR_LV, anyPierce, battleTypeOf, blowOf, charPower, gearCost, gearOdds,
+  statOf, swingMs,
 } from '@/core/chars';
 import { fmt } from '@/core/currency';
 import { Bar, Btn, KV, ListItem, Row, Sep, T, Tag } from '@/ui/atoms';
@@ -33,6 +33,7 @@ export function CharPopup({
   const money = useGame((s) => s.money);
   const setPartySlot = useGame((s) => s.setPartySlot);
   const enhanceGear = useGame((s) => s.enhanceGear);
+  const setGear = useGame((s) => s.setGear);
   const toast = useGame((s) => s.toast);
 
   /** 방금 두들긴 결과 — 창을 닫으면 사라진다 */
@@ -47,7 +48,8 @@ export function CharPopup({
   const owned = Object.values(chars);
   const cost = c ? gearCost(c.gearLv) : 0;
   const maxed = !!c && c.gearLv >= MAX_GEAR_LV;
-  const canPay = !!c && money >= cost && !maxed;
+  /* 테스트 모드에서는 비용이 0 이라 돈을 안 본다 (`FREE_ENHANCE`) */
+  const canPay = !!c && (FREE_ENHANCE || money >= cost) && !maxed;
 
   const run = () => {
     if (!c) return;
@@ -187,18 +189,54 @@ export function CharPopup({
             (비율이 아니라 뺄셈이고, 아무리 깎여도 최소 1은 들어갑니다).
             관통이 있으면 그 방어를 통째로 무시합니다.
           </T>
-          {!maxed && <KV k="성공 확률" v={`${Math.round(gearOdds(c.gearLv) * 100)}%`} dim />}
-          {!maxed && <KV k="강화 비용" v={fmt(cost)} warn={money < cost} />}
+          {/*
+            공짜·확실일 때는 확률과 비용 줄을 뺀다 — "100%" 와 "0 골드" 는
+            읽는 사람에게 아무것도 안 알려 주면서 자리만 차지한다.
+          */}
+          {!maxed && !FREE_ENHANCE && (
+            <KV k="성공 확률" v={`${Math.round(gearOdds(c.gearLv) * 100)}%`} dim />
+          )}
+          {!maxed && !FREE_ENHANCE && (
+            <KV k="강화 비용" v={fmt(cost)} warn={money < cost} />
+          )}
 
           <Btn
             label={maxed ? '최대 강화' : '강화하기'}
-            sub={maxed ? undefined : fmt(cost)}
+            sub={maxed || FREE_ENHANCE ? undefined : fmt(cost)}
             size="lg"
             fill={canPay}
             disabled={!canPay}
             style={{ marginTop: SP.md }}
             onPress={run}
           />
+
+          {/*
+            ── 테스트용 단추 둘 ──
+
+            `FREE_ENHANCE` 가 켜져 있을 때만 나온다 (`core/chars`). 공짜로
+            강화해도 +100 까지 백 번을 눌러야 하면 직접 굴려 볼 수가 없어서
+            한 번에 올리는 것도 같이 둔다.
+
+            ⚠ 출시 전에 `FREE_ENHANCE` 를 끄면 이 줄은 통째로 사라진다.
+          */}
+          {FREE_ENHANCE && (
+            <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
+              <Btn
+                label={`+${MAX_GEAR_LV} 까지`}
+                size="sm"
+                style={{ flex: 1 }}
+                disabled={maxed}
+                onPress={() => { setGear(c.id, MAX_GEAR_LV); setLast(null); }}
+              />
+              <Btn
+                label="+0 으로 되돌리기"
+                size="sm"
+                style={{ flex: 1 }}
+                disabled={c.gearLv === 0}
+                onPress={() => { setGear(c.id, 0); setLast(null); }}
+              />
+            </Row>
+          )}
 
           <Btn
             label="이 자리 비우기"

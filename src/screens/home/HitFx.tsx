@@ -423,7 +423,57 @@ const SHOUT_MS = 900;
  * 번에 한 번씩 쓴다. 이보다 길게 두면 다음 것이 뜨기 전에 안 사라져서
  * 말풍선이 상시 켜져 있는 것이 된다.
  */
-export function SkillShout({ nonce, name }: { nonce: number; name: string }) {
+/**
+ * 말풍선 가장자리의 **뾰족한 것들**.
+ *
+ * 우두머리 기술은 파티 기술보다 세다는 것이 한눈에 보여야 해서, 같은 말풍선을
+ * 만화의 **폭발형**으로 바꾼다. 도형을 그릴 수단이 사각형뿐이라(SVG 를 안
+ * 쓴다) 작은 사각을 45도로 돌려 반쯤 상자 뒤로 숨긴다 — 밖으로 나온 절반이
+ * 삼각형이 된다.
+ *
+ * 상자보다 **먼저** 그린다. 나중에 그린 것이 위에 오므로, 상자가 안쪽 절반을
+ * 덮어 준다.
+ */
+function Spikes({ side, n }: { side: 'top' | 'bottom' | 'left' | 'right'; n: number }) {
+  const across = side === 'top' || side === 'bottom';
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        ...(across
+          ? { left: 2, right: 2, [side]: -4, flexDirection: 'row' }
+          : { top: 1, bottom: 1, [side]: -4, flexDirection: 'column' }),
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}
+    >
+      {Array.from({ length: n }, (_v, i) => (
+        <View
+          key={i}
+          style={{
+            width: 8, height: 8, backgroundColor: WHITE,
+            transform: [{ rotate: '45deg' }],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+export function SkillShout({
+  nonce, name, burst = false,
+}: {
+  nonce: number;
+  name: string;
+  /**
+   * 폭발형인가 — 우두머리 기술에만 쓴다.
+   *
+   * 파티 기술과 **같은 자리에 같은 크기로** 뜨는데 세기가 다르다. 크기로
+   * 가르면 우두머리 것이 화면을 덮고, 색으로는 못 가른다 (흑백 2색).
+   * 가장자리 모양으로 가르는 것이 제일 싸다.
+   */
+  burst?: boolean;
+}) {
   const t = useRef(new Animated.Value(0)).current;
   const [on, setOn] = useState(false);
 
@@ -466,16 +516,27 @@ export function SkillShout({ nonce, name }: { nonce: number; name: string }) {
         transform: [{ translateY: rise }, { scale: pop }],
       }}
     >
-      <View style={{ backgroundColor: WHITE, paddingHorizontal: 5, paddingVertical: 2 }}>
-        <Text
-          numberOfLines={1}
-          style={{
-            color: BLACK, fontFamily: MONO, fontSize: 10, fontWeight: '700',
-            includeFontPadding: false,
-          }}
-        >
-          {name}!
-        </Text>
+      <View>
+        {/* 뾰족한 것들이 먼저 — 상자가 안쪽 절반을 덮는다 */}
+        {burst && (
+          <>
+            <Spikes side="top" n={5} />
+            <Spikes side="bottom" n={5} />
+            <Spikes side="left" n={2} />
+            <Spikes side="right" n={2} />
+          </>
+        )}
+        <View style={{ backgroundColor: WHITE, paddingHorizontal: 6, paddingVertical: 3 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              color: BLACK, fontFamily: MONO, fontSize: 10, fontWeight: '700',
+              includeFontPadding: false,
+            }}
+          >
+            {name}!
+          </Text>
+        </View>
       </View>
       {/* 꼬리 — 아래로 좁아지는 계단 세 칸. 이게 주인을 가리킨다 */}
       <View style={{ width: 6, height: 2, backgroundColor: WHITE }} />

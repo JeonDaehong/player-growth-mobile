@@ -921,17 +921,43 @@ export const newChar = (id: CharId): OwnedChar => ({ id, gearLv: 0 });
  *
  * 대신 성공률이 계속 떨어져서 후반이 느려진다 — 위험 대신 시간으로 막는다.
  */
-export const MAX_GEAR_LV = 30;
+/**
+ * 고유장비 강화의 상한.
+ *
+ * **30 에서 100 으로 올렸다.** 적은 1판에서 20판까지 체력이 250배가 되는데
+ * (`docs/FOE_TABLE.md`) 파티가 자랄 길은 이 강화 하나뿐이다. 30 이 상한이면
+ * 최대로 키운 파티도 공격력이 3.7배에 그쳐서, 재 보니 12판에서 막혔다.
+ *
+ * 100 이면 등급 성장률 0.11 로 12배까지 간다 (`GRADE_GROWTH`).
+ */
+export const MAX_GEAR_LV = 100;
+
+/**
+ * **테스트 모드 — 강화가 공짜이고 반드시 성공한다.**
+ *
+ * 직접 굴려 보려고 켜 둔 스위치다. 켜져 있으면 `gearCost` 가 0 이고
+ * `gearOdds` 가 1 이라, 누르는 대로 올라간다.
+ *
+ * ⚠ **출시 전에 false 로 되돌린다.** 끄는 자리를 여기 하나로 모아 둔 이유가
+ * 그것이다 — 확률과 비용을 각자 고쳐 놓으면 하나를 빠뜨린다.
+ */
+export const FREE_ENHANCE = true;
 
 /** +n 에서 +n+1 로 갈 확률 */
 export function gearOdds(gearLv: number): number {
   if (gearLv >= MAX_GEAR_LV) return 0;
-  // +0→+1 은 95%, +29→+30 은 12% 근처
+  if (FREE_ENHANCE) return 1;
+  /*
+    +0→+1 은 95%, 그 뒤로 한 칸마다 3%p 씩 떨어지고 12% 에서 바닥을 친다.
+    상한이 100 이 되면서 대부분의 구간이 바닥(12%)이다 — 상한을 올릴 때
+    곡선도 같이 다시 잡아야 한다.
+  */
   return Math.max(0.12, 0.95 - gearLv * 0.03);
 }
 
 /** +n 에서 +n+1 로 갈 때 드는 골드 */
 export function gearCost(gearLv: number): number {
+  if (FREE_ENHANCE) return 0;
   return Math.floor(300 * Math.pow(1.28, Math.max(0, gearLv)));
 }
 
