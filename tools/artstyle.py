@@ -190,3 +190,105 @@ def labels_of(items):
 
 def block(*parts):
     return '```\n' + '\n\n'.join(p for p in parts if p) + '\n```\n'
+
+# ══ 생물 ═════════════════════════════════════════════════════
+#
+# 적 생성기(`gen-foe`)와 보스 생성기(`gen-boss`)가 같이 쓴다. 같은 화면에
+# 나란히 서는 그림이라 규칙이 갈리면 안 된다 — 한쪽에만 적어 두면 언젠가
+# 한쪽만 고쳐진다.
+
+STANDS = """IT STANDS. IT NEVER LIES DOWN.
+
+The floor is a receding quarter-view plane and the sprite is simply composited on
+top of it. That works for something STANDING, because the bottom of the shape meets
+the floor along one clear line. It cannot work for something LYING FLAT: a wide
+shallow pool, a puddle, a slick, a thing spread out across the ground has no such
+line, and the floor cannot draw itself around it. It lands on screen as a sticker
+glued to the floor, and no amount of drawing inside the sprite will fix it, because
+the fix would have to happen in the floor.
+
+So nothing here is drawn as a flat spread pool, a stain, or anything poured out
+across a surface, however heavy or liquid it is meant to be. Every creature has real
+height. Drips hang in empty black and simply stop; they never pool or spread at the
+bottom.
+
+(A creature the description below says FLOATS is the other allowed case, and it is
+the opposite of lying down, not an exception to it: it hangs clear of the ground
+with empty black beneath it, so there is no contact to sell at all. What is banned
+is the middle case — something spread out ON the floor.)
+
+WEIGHT IS SHOWN BY SAGGING, NOT BY LYING. A heavy creature stands and loses the
+fight with its own weight: the middle bulges out sideways past the base, the base
+spreads and loads, the top slumps and overhangs to one side, and long drips hang off
+the underside. That reads as heavy at 45 pixels. Flat does not — flat just reads as
+small."""
+
+
+SILHOUETTE = """SILHOUETTE — this is the whole job.
+
+Four of these stand overlapping on a 138px-tall stage, each about 40-52 pixels
+across. At that size there is no colour, no texture, and no face to read. The ONLY
+thing that tells one enemy from another is the OUTLINE.
+
+So the shape must be decided, not decorated:
+- Pick one bold silhouette and commit to it. State it to yourself in five words.
+- The three cells keep that silhouette. Only the pose inside it changes.
+- Details that vanish below 50px are wasted ink: a row of twenty small teeth, thin
+  antennae, surface speckle. The answer is FEWER AND BIGGER, never NONE — six teeth
+  the length of a finger read fine at 45px, while a mouth with no teeth at all reads
+  as a pebble.
+- Do NOT rely on shading to separate parts. Two shapes that touch must differ in
+  outline, not in fill."""
+
+
+NOT_CUTE = """IT IS A MONSTER. IT IS NOT A MASCOT.
+
+BANNED, all of it:
+- Big round sparkly eyes with white catchlights. No cartoon shine dots.
+- Any smile, any open happy mouth, any blush, any raised cheeks.
+- Symmetrical, tidy, egg-smooth outlines. Nothing that looks moulded.
+- Chibi proportions — a huge head on a small body, a face filling half the shape.
+- Anything you would put on a sticker.
+- Anything that would pass unremarked in a field guide to real animals. If a
+  naturalist could label it and move on, it is not a monster yet."""
+
+
+ALIVE = """IT IS ALIVE AND IT IS COMING FOR YOU.
+
+Not a prop, not an icon, not a mascot standing to attention. Every cell should read
+as a creature that is about to do something. Even the resting frame leans forward.
+
+Facing LEFT is wrong. Draw it facing RIGHT; the game mirrors it in code so it turns
+to face the party."""
+
+
+# ══ 아이콘 ═══════════════════════════════════════════════════
+#
+# 아이콘 생성기(`gen-icon`)와 보스 생성기(`gen-boss`)가 같이 쓴다.
+# 보스 패시브 로고도 화면 위쪽에 12~16px 로 뜨는 같은 종류의 그림이다.
+
+ICON_STYLE = """ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 12 TO 16 PIXELS. That is smaller than the text next to it.
+Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon must read as a single silhouette at a glance. Not a
+  scene, not an object sitting on a background, not two things next to each other.
+- FILL THE CELL. The shape touches or nearly touches all four sides of its cell.
+  An icon drawn small inside its cell disappears entirely when scaled down.
+- SOLID, NOT OUTLINED. Draw it as a filled white mass. A hollow outline at 14px
+  becomes a grey smudge, because the outline and the hole merge.
+- NO INTERIOR DETAIL. No rivets, no wood grain, no gem facets, no shading, no
+  highlights. If you can only see it at full size, it is noise.
+- ONE NOTCH OR CUT-OUT AT MOST, and it must be at least a fifth of the width.
+  Anything finer closes up.
+- STRAIGHT AND CHUNKY. Thick strokes, hard angles, flat ends. Thin tapering lines
+  vanish; a 1px point at full size is nothing at icon size.
+- NO PERSPECTIVE. Flat and front-on, like a road sign. These are the only images
+  in this game that are NOT drawn in three-quarter view.
+- CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
+  text and a tilted icon looks like a mistake.
+
+TEST: squint until the image is a blur. If you can still name it, it is right.
+If it becomes a grey blob, the shape is too busy."""
+

@@ -18,35 +18,13 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from artstyle import NL, NOTEXT, PIXEL_STYLE, block, grid, labels_of, rows_of, table_of  # noqa: E402
+from artstyle import (  # noqa: E402
+    ICON_STYLE, NL, NOTEXT, PIXEL_STYLE, block, grid, labels_of, rows_of,
+    table_of,
+)
 
 
 # ══ 아이콘 공통 규칙 ═══════════════════════════════════════════
-
-ICON_STYLE = """ICON RULES — this is a symbol, not a picture.
-
-IT WILL BE SHOWN AT 12 TO 16 PIXELS. That is smaller than the text next to it.
-Everything below follows from that one fact.
-
-- ONE SHAPE. The whole icon must read as a single silhouette at a glance. Not a
-  scene, not an object sitting on a background, not two things next to each other.
-- FILL THE CELL. The shape touches or nearly touches all four sides of its cell.
-  An icon drawn small inside its cell disappears entirely when scaled down.
-- SOLID, NOT OUTLINED. Draw it as a filled white mass. A hollow outline at 14px
-  becomes a grey smudge, because the outline and the hole merge.
-- NO INTERIOR DETAIL. No rivets, no wood grain, no gem facets, no shading, no
-  highlights. If you can only see it at full size, it is noise.
-- ONE NOTCH OR CUT-OUT AT MOST, and it must be at least a fifth of the width.
-  Anything finer closes up.
-- STRAIGHT AND CHUNKY. Thick strokes, hard angles, flat ends. Thin tapering lines
-  vanish; a 1px point at full size is nothing at icon size.
-- NO PERSPECTIVE. Flat and front-on, like a road sign. These are the only images
-  in this game that are NOT drawn in three-quarter view.
-- CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
-  text and a tilted icon looks like a mistake.
-
-TEST: squint until the image is a blur. If you can still name it, it is right.
-If it becomes a grey blob, the shape is too busy."""
 
 
 # ══ 전투 타입 ═════════════════════════════════════════════════

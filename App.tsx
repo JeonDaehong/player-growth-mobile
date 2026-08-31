@@ -30,6 +30,7 @@ import { useNetSync } from '@/state/useNetSync';
 import { BLACK, MONO, WHITE } from '@/ui/theme';
 import { applyWebTextRendering } from '@/ui/webText';
 import { applyWebViewport, armImmersive } from '@/ui/webViewport';
+import { InstallBar } from '@/ui/InstallBar';
 
 import AuthScreen from '@/screens/AuthScreen';
 import HomeScreen from '@/screens/HomeScreen';
@@ -321,6 +322,14 @@ function Root() {
           <ClosureNoticePopup active={!!account && signedUp} />
           <TutorialHost />
           <Toasts />
+          {/*
+            "홈 화면에 추가" 한 줄. 대개 안 뜬다 (`ui/InstallBar`) — 설치할 수
+            있을 때만, 그리고 닫기 전까지만.
+
+            토스트보다 **뒤에** 둔다. 둘이 겹치면 방금 한 행동의 결과가
+            먼저 보여야 한다.
+          */}
+          <InstallBar />
       </View>
     </>
   );

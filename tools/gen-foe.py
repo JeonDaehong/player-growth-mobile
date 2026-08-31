@@ -30,8 +30,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from artstyle import (  # noqa: E402
-    NL, NOTEXT, NO_GROUND, PIXEL_STYLE, QUARTER, block, grid, labels_of,
-    rows_of, table_of,
+    ALIVE, NL, NOTEXT, NOT_CUTE, NO_GROUND, PIXEL_STYLE, QUARTER, SILHOUETTE,
+    STANDS, block, grid, labels_of, rows_of, table_of,
 )
 
 # 챕터마다 폴더를 나눈다 — 한 폴더에 마흔둘이 쌓이면 이름으로만 구분해야 한다
@@ -53,62 +53,6 @@ def out_dir_of(f):
 # `BattleView` 가 이 셋만 부른다. 넷째를 그려도 안 쓴다.
 
 FRAME_IDS = ['idle', 'attack', 'down']
-
-
-STANDS = """IT STANDS. IT NEVER LIES DOWN.
-
-The floor is a receding quarter-view plane and the sprite is simply composited on
-top of it. That works for something STANDING, because the bottom of the shape meets
-the floor along one clear line. It cannot work for something LYING FLAT: a wide
-shallow pool, a puddle, a slick, a thing spread out across the ground has no such
-line, and the floor cannot draw itself around it. It lands on screen as a sticker
-glued to the floor, and no amount of drawing inside the sprite will fix it, because
-the fix would have to happen in the floor.
-
-So nothing here is drawn as a flat spread pool, a stain, or anything poured out
-across a surface, however heavy or liquid it is meant to be. Every creature has real
-height. Drips hang in empty black and simply stop; they never pool or spread at the
-bottom.
-
-(A creature the description below says FLOATS is the other allowed case, and it is
-the opposite of lying down, not an exception to it: it hangs clear of the ground
-with empty black beneath it, so there is no contact to sell at all. What is banned
-is the middle case — something spread out ON the floor.)
-
-WEIGHT IS SHOWN BY SAGGING, NOT BY LYING. A heavy creature stands and loses the
-fight with its own weight: the middle bulges out sideways past the base, the base
-spreads and loads, the top slumps and overhangs to one side, and long drips hang off
-the underside. That reads as heavy at 45 pixels. Flat does not — flat just reads as
-small."""
-
-
-SILHOUETTE = """SILHOUETTE — this is the whole job.
-
-Four of these stand overlapping on a 138px-tall stage, each about 40-52 pixels
-across. At that size there is no colour, no texture, and no face to read. The ONLY
-thing that tells one enemy from another is the OUTLINE.
-
-So the shape must be decided, not decorated:
-- Pick one bold silhouette and commit to it. State it to yourself in five words.
-- The three cells keep that silhouette. Only the pose inside it changes.
-- Details that vanish below 50px are wasted ink: a row of twenty small teeth, thin
-  antennae, surface speckle. The answer is FEWER AND BIGGER, never NONE — six teeth
-  the length of a finger read fine at 45px, while a mouth with no teeth at all reads
-  as a pebble.
-- Do NOT rely on shading to separate parts. Two shapes that touch must differ in
-  outline, not in fill."""
-
-
-NOT_CUTE = """IT IS A MONSTER. IT IS NOT A MASCOT.
-
-BANNED, all of it:
-- Big round sparkly eyes with white catchlights. No cartoon shine dots.
-- Any smile, any open happy mouth, any blush, any raised cheeks.
-- Symmetrical, tidy, egg-smooth outlines. Nothing that looks moulded.
-- Chibi proportions — a huge head on a small body, a face filling half the shape.
-- Anything you would put on a sticker.
-- Anything that would pass unremarked in a field guide to real animals. If a
-  naturalist could label it and move on, it is not a monster yet."""
 
 
 SLIME = """WHAT A SLIME IS.
@@ -331,15 +275,6 @@ because the player sees it for about a fifth of a second at 60 pixels tall:
 Do NOT draw impact marks, shockwave rings, or the ground cracking. The game draws
 its own effects on top, and a ring drawn into the sprite lands on screen as a white
 smear that never goes away."""
-
-
-ALIVE = """IT IS ALIVE AND IT IS COMING FOR YOU.
-
-Not a prop, not an icon, not a mascot standing to attention. Every cell should read
-as a creature that is about to do something. Even the resting frame leans forward.
-
-Facing LEFT is wrong. Draw it facing RIGHT; the game mirrors it in code so it turns
-to face the party."""
 
 
 # ══ 적 ═══════════════════════════════════════════════════════
@@ -618,7 +553,6 @@ TPL_SHOT = """
   "labels": [%(labels)s] }
 ```
 """
-
 
 
 # ══ 초원 (2~10 스테이지) ═════════════════════════════════════

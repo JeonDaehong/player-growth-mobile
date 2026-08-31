@@ -42,6 +42,19 @@ let armed = false;
  */
 let wentFull = false;
 
+/**
+ * 크롬이 넘겨준 설치 제안. 잡아 두지 않으면 그 순간 사라진다.
+ *
+ * 이 이벤트는 **한 번만** 오고, 기본 동작을 막아 두면 브라우저가 제 배너를
+ * 안 띄운다. 대신 우리가 원할 때 `prompt()` 를 부를 수 있다.
+ */
+let offer: (Event & { prompt?: () => void }) | null = null;
+/** 설치 제안이 생겼거나 사라졌을 때 알려 줄 곳들 */
+const watchers = new Set<() => void>();
+let offerBound = false;
+
+const tell = () => { watchers.forEach((f) => f()); };
+
 const web = () => Platform.OS === 'web' && typeof document !== 'undefined';
 
 /**
@@ -99,6 +112,76 @@ export function applyWebViewport() {
   }
 
   blockPinch();
+  catchOffer();
+}
+
+/**
+ * **이미 설치된 채로 실행 중인가.**
+ *
+ * `display-mode` 는 manifest 가 요청한 값이 아니라 **지금 실제로 그렇게
+ * 떠 있는지**를 말한다. 그래서 이게 참이면 시스템 바가 이미 없다.
+ *
+ * iOS 사파리는 `display-mode` 를 늦게까지 지원 안 했으므로
+ * `navigator.standalone` 도 같이 본다.
+ */
+export function installed(): boolean {
+  if (!web() || typeof window === 'undefined') return false;
+  if (typeof window.matchMedia === 'function') {
+    if (window.matchMedia('(display-mode: fullscreen)').matches) return true;
+    if (window.matchMedia('(display-mode: standalone)').matches) return true;
+    if (window.matchMedia('(display-mode: minimal-ui)').matches) return true;
+  }
+  return !!(navigator as Navigator & { standalone?: boolean }).standalone;
+}
+
+/** 지금 "홈 화면에 추가" 를 띄울 수 있나 */
+export const canInstall = (): boolean => !!offer;
+
+/** 설치 제안이 생기거나 사라지면 알려 준다. 끊는 함수를 돌려준다 */
+export function watchInstall(fn: () => void): () => void {
+  watchers.add(fn);
+  return () => { watchers.delete(fn); };
+}
+
+/**
+ * 설치 창을 띄운다. 잡아 둔 제안은 **한 번만** 쓸 수 있다.
+ *
+ * 사용자가 거절하든 받아들이든 그 제안은 소모되므로, 부른 뒤에는 버튼을
+ * 지운다 — 눌러도 아무 일이 안 나는 버튼이 남아 있으면 그게 더 나쁘다.
+ */
+export function askInstall() {
+  const o = offer;
+  if (!o || typeof o.prompt !== 'function') return;
+  offer = null;
+  tell();
+  try {
+    o.prompt();
+  } catch {
+    /* 브라우저가 거절하면 그냥 안 뜬다 — 게임은 그대로 돈다 */
+  }
+}
+
+/**
+ * 크롬의 설치 제안을 잡아 둔다.
+ *
+ * **기본 동작을 막는다.** 안 막으면 브라우저가 제 위치에 제 배너를 띄우는데,
+ * 그건 게임 화면을 가리고 우리가 언제 띄울지 정할 수도 없다.
+ *
+ * 이 이벤트가 아예 안 오는 경우가 흔하다 — 이미 설치했거나, 사파리이거나,
+ * 크롬이 아직 "설치할 만한 페이지" 로 안 봤거나. 그럴 때는 버튼이 안 뜬다.
+ */
+function catchOffer() {
+  if (offerBound || typeof window === 'undefined') return;
+  offerBound = true;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    offer = e as Event & { prompt?: () => void };
+    tell();
+  });
+
+  /* 설치가 끝나면 버튼을 거둔다 */
+  window.addEventListener('appinstalled', () => { offer = null; tell(); });
 }
 
 /**
