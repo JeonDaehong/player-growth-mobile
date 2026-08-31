@@ -21,7 +21,7 @@
  * 두느냐 오른쪽에 두느냐**로 말한다 (`StatusRow`).
  */
 import { OwnedChar } from './chars';
-import { Party, supportMul } from './party';
+import { Party } from './party';
 
 /** 상태 하나. 값은 곧 스프라이트 칸 이름이다 (`assets/sprites/status_icon/`) */
 export type StatusId =
@@ -72,19 +72,23 @@ const NONE: readonly StatusId[] = [];
 /**
  * 지금 이 사람에게 걸려 있는 것들.
  *
- * **아직 격노 하나뿐이다.** 보조가 파티에 서 있으면 전원의 공격력이 오르는데
- * (`core/party` 의 `supportMul`), 그것이 이 게임에 실제로 존재하는 유일한
- * 지속 효과다. 나머지 열하나는 우두머리 기술이 들어올 때 여기에 붙는다.
+ * **아직 아무것도 안 걸린다.** 열두 가지를 다 정의해 두었지만, 그걸 거는
+ * 우두머리 기술이 아직 계산에 안 들어가 있다 (`docs/BOSS_SKILLS.md`).
  *
- * 보조 자신에게도 붙는다 — `supportMul` 이 파티 전체에 걸리므로 본인도
- * 받는다. 본인만 빼면 화면과 계산이 어긋난다.
+ * ## 보조 버프는 왜 안 띄우나
+ *
+ * 한동안 격노(`supportMul`)를 띄웠다. 보조가 서 있으면 전원의 공격력이
+ * 오르는 게 맞으니 틀린 표시는 아니었다. 그런데 그건 **파티를 어떻게
+ * 짰나**이지 지금 무슨 일이 일어나고 있나가 아니다 — 처음부터 끝까지 안
+ * 바뀌는 아이콘은 알려 주는 게 없으면서 인물만 가린다.
+ *
+ * 상태 로고는 **왔다 가는 것**만 띄운다. 파티 구성이 주는 것은 파티 칸과
+ * 캐릭터 창이 말할 자리다.
  */
 export function statusOf(
   _who: string,
-  party: Party,
-  chars: Record<string, OwnedChar>,
+  _party: Party,
+  _chars: Record<string, OwnedChar>,
 ): readonly StatusId[] {
-  return supportMul(party, chars) > 1 ? RAGE : NONE;
+  return NONE;
 }
-
-const RAGE: readonly StatusId[] = ['st_rage'];

@@ -797,82 +797,68 @@ export function BattleView() {
   }, [hits]);
 
   /*
-    파티가 받은 피해는 **모아 뒀다가 한 번에** 띄운다.
+    파티가 받은 피해는 **닳는 순간에** 띄운다.
 
-    전투 계산은 0.5초마다 조금씩 깎는다 (`core/autoBattle`). 그걸 그대로
-    띄웠더니 `-3 -3 -3 -3 -3` 이 끝없이 흘렀다. 실제로는 잡몹 셋이 계속
-    갉아먹고 있는 게 맞지만, 화면에서 그건 **피해가 아니라 노이즈**다.
+    한동안 1.1초짜리 박자에 모아 뒀다가 한꺼번에 띄웠다. 잡몹 셋이 갉아먹을
+    때 `-3 -3 -3 -3` 이 흐르는 게 노이즈였기 때문인데, 그 대가로 **막대가
+    먼저 내려가고 숫자가 나중에** 떴다 — 같은 사건을 두 시계로 그린 셈이다.
 
-    적에게도 파티원과 같은 박자를 준다 (`FOE_BEAT_MS`). 그동안 깎인 만큼을
-    모아 뒀다가, 적이 실제로 팔을 휘두르는 순간 **한 번** 띄운다.
-    계산은 그대로고 보이는 것만 묶는 것이라 총합은 어긋나지 않는다.
+    수치를 손으로 짜면서 한 대가 20~75 가 됐다 (`docs/FOE_TABLE.md`). 숫자
+    하나하나가 뜻을 가지므로 모을 이유가 없어졌고, 모으지 않으니 시계도 하나가
+    됐다.
   */
-  /** 사람별로 모아 둔 피해 — 키는 CharId */
-  const pending = useRef<Record<string, number>>({});
   const [foeSwing, setFoeSwing] = useState(false);
   /** 무대 폭 — 근접이 얼마나 나갈지 여기서 나온다 */
   const [stageW, setStageW] = useState(0);
 
   useEffect(() => {
+    /*
+      **체력이 실제로 닳은 그 순간**에 전부 한다 — 숫자 · 적의 휘두르기 ·
+      날아오는 것. 예전에는 여기서 모아만 두고 따로 도는 1.1초 박자가 띄웠는데,
+      그러면 막대가 먼저 내려가고 숫자가 나중에 떴다.
+
+      기록은 **연출을 안 하는 때에도** 남긴다 (전멸·빈 파티). 안 그러면 다시
+      싸울 때 그동안의 변화가 통째로 "방금 맞은 것" 으로 뜬다.
+    */
+    const hurt: [string, number][] = [];
     for (const c of members(party, chars)) {
       const now = hpOf(c, battle.hp);
       const was = prevHp.current[c.id];
-      if (was !== undefined && now < was) {
-        pending.current[c.id] = (pending.current[c.id] ?? 0) + (was - now);
-      }
+      if (was !== undefined && now < was) hurt.push([c.id, Math.round(was - now)]);
       prevHp.current[c.id] = now;
     }
-  }, [battle.hp, party, chars]);
+    if (empty || down || !hurt.length) return undefined;
 
-  useEffect(() => {
-    if (empty || down) return;
-    /*
-      박자 안에서 거는 타이머들을 모아 둔다.
-
-      예전에는 `setTimeout` 두 개를 걸어 놓고 안 치웠다. 화면을 떠나거나
-      파티가 전멸해 이 박자가 멈춰도 그것들은 살아남아, 사라진 화면의
-      상태를 건드리려 든다. 1.1초마다 두 개씩이라 오래 켜 두면 적지 않다.
-    */
     const late: ReturnType<typeof setTimeout>[] = [];
     const after = (ms: number, fn: () => void) => { late.push(setTimeout(fn, ms)); };
 
-    const beat = setInterval(() => {
-      const acc = Object.entries(pending.current)
-        .map(([id, v]) => [id, Math.round(v)] as const)
-        .filter(([, v]) => v > 0);
-      if (!acc.length) return;
-      pending.current = {};
+    /* 적이 팔을 휘두른다 */
+    setFoeSwing(true);
+    after(200, () => setFoeSwing(false));
 
-      // 적이 팔을 휘두른다
-      setFoeSwing(true);
-      after(200, () => setFoeSwing(false));
+    /*
+      뒷줄은 **뭔가를 날린다.**
 
-      /*
-        뒷줄은 **뭔가를 날린다.**
-
-        모션만 있으면 뒤에서 혼자 꿈틀거리는 것으로 보인다. 아군 맨 앞까지의
-        거리를 그때 재서 넘긴다 — 자리는 계속 바뀌므로 미리 잡아 둘 수 없다.
-      */
-      const made2 = shotsRef.current(acc.map(([id]) => id));
-      if (made2.length) {
-        setShots((old) => [...old.slice(-5), ...made2]);
-        after(FOE_SHOT_MS + 60, () => {
-          setShots((old) => old.filter((x) => !made2.some((m) => m.key === x.key)));
-        });
-      }
-
-      const made = acc.map(([id, v]) => ({ key: seq.current++, who: id, text: `-${v}` }));
-      setPops((old) => [...old.slice(-4), ...made]);
-      after(750, () => {
-        setPops((old) => old.filter((x) => !made.some((m) => m.key === x.key)));
+      모션만 있으면 뒤에서 혼자 꿈틀거리는 것으로 보인다. 아군 맨 앞까지의
+      거리를 그때 재서 넘긴다 — 자리는 계속 바뀌므로 미리 잡아 둘 수 없다.
+    */
+    const shot = shotsRef.current(hurt.map(([id]) => id));
+    if (shot.length) {
+      setShots((old) => [...old.slice(-5), ...shot]);
+      after(FOE_SHOT_MS + 60, () => {
+        setShots((old) => old.filter((x) => !shot.some((m) => m.key === x.key)));
       });
-    }, FOE_BEAT_MS);
+    }
 
-    return () => {
-      clearInterval(beat);
-      late.forEach(clearTimeout);
-    };
-  }, [empty, down]);
+    const made = hurt.map(([id, v]) => ({ key: seq.current++, who: id, text: `-${v}` }));
+    setPops((old) => [...old.slice(-4), ...made]);
+    after(750, () => {
+      setPops((old) => old.filter((x) => !made.some((m) => m.key === x.key)));
+    });
+
+    return () => late.forEach(clearTimeout);
+  }, [battle.hp, party, chars, empty, down]);
+
 
   /*
     이번 박자에 누가 무엇을 날리나.
@@ -1566,7 +1552,7 @@ export function BattleView() {
         ))}
 
         {/* 우두머리 등장 — 무대 한가운데. 전멸 안내보다 아래에 둔다 */}
-        {!down && <BossCall nonce={bossCall} name={cur.name} />}
+        {!down && <BossCall nonce={bossCall} name={cur.name} title={cur.title} />}
 
         {/*
           ── 특수기 이름은 이제 우두머리 머리 위에 뜬다 ──

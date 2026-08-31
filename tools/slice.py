@@ -33,6 +33,13 @@
   killCorner            우하단 워터마크 제거
   auto                  true 면 마젠타 선에서 칸 경계를 자동으로 뽑는다 (불균등 칸 대응)
   allowFilled           꽉 찬 그림이 정상인 세트(카드·배경 등)에서 채움률 경고를 끈다.
+  paper                 **흰 종이에 검은 선**으로 그려져 온 시트. invert 로는 못
+                        고친다 — 뒤집으면 종이가 검어지는 김에 **몸통도 검어지고**
+                        선만 희게 남아서, 화면에서 시커먼 덩어리가 된다.
+                        대신 테두리에서 흰색을 타고 번져 들어가 "바깥 종이" 를
+                        찾고, 거기만 배경으로 버린다. 윤곽 안쪽의 흰 부분은
+                        몸통이라 그대로 흰색으로 남고, 안쪽의 검은 선은 구멍이
+                        된다 — 흑백 반전으로 들어온 시트와 결과가 같아진다.
   inset                 셀 네 변을 이 비율만큼 깎는다. 흰 배경 시트를 invert 하면
                         칸 테두리가 흰 액자로 남는데, 그걸 없애는 데 쓴다.
 """
@@ -263,6 +270,53 @@ def trim(mask):
     return rows[0], rows[-1] + 1, cols[0], cols[-1] + 1
 
 
+def on_paper(mask, rgb):
+    """흰 종이에 그려진 선화를 흑백 반전 시트와 같은 모양으로 바꾼다.
+
+    `invert` 로는 안 된다. 뒤집으면 종이가 검어지면서 **몸통도 같이** 검어지고
+    선만 희게 남는다 — 화면에서 시커먼 덩어리가 된다 (6판 우두머리가 그랬다).
+
+    바깥 종이는 **테두리에 닿아 있는 흰 덩어리**다. 거기서 흰색을 타고 번져
+    들어가 표시하고, 그것만 버린다. 윤곽선이 닫혀 있으면 안쪽 흰 부분은 안
+    닿으므로 몸통으로 남는다.
+
+    `mask` 는 흰 픽셀이 True 다 (`binarize`). 돌려주는 것도 같은 뜻이라,
+    이 뒤의 처리(`inset`·`floor`·`minPart`)가 그대로 이어진다.
+    """
+    h, w = mask.shape
+    # 마젠타 구분선은 종이도 그림도 아니다 — 번지기 전에 흰색으로 쳐서
+    # 테두리와 이어 준다. 안 그러면 선이 벽이 되어 종이를 못 찾는다
+    start = mask | magenta_mask(rgb)
+
+    outside = np.zeros((h, w), dtype=bool)
+    stack = []
+    for x in range(w):
+        for y in (0, h - 1):
+            if start[y, x]:
+                stack.append((y, x))
+    for y in range(h):
+        for x in (0, w - 1):
+            if start[y, x]:
+                stack.append((y, x))
+
+    # 재귀 대신 스택 — 셀이 512px 이라 재귀로는 파이썬 한계를 넘는다
+    while stack:
+        y, x = stack.pop()
+        if outside[y, x] or not start[y, x]:
+            continue
+        outside[y, x] = True
+        if y > 0:
+            stack.append((y - 1, x))
+        if y < h - 1:
+            stack.append((y + 1, x))
+        if x > 0:
+            stack.append((y, x - 1))
+        if x < w - 1:
+            stack.append((y, x + 1))
+
+    return mask & ~outside
+
+
 def to_png(mask):
     """True=흰색, False=투명. RN 에서 어떤 배경 위에도 올릴 수 있게 알파를 쓴다."""
     h, w = mask.shape
@@ -389,6 +443,8 @@ def run(only=None):
                                      Image.LANCZOS)
                     cell = g
                 mask = binarize(cell, s.get('thresh'))
+                if s.get('paper'):
+                    mask = on_paper(mask, np.array(cell))
                 if s.get('invert'):
                     # 흰 배경 + 검은 글리프 시트 → 글리프를 흰색으로.
                     # ⚠ 마젠타는 휘도 105 라 그냥 반전하면 칸 테두리가 흰 액자로 남는다

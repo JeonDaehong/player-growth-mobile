@@ -217,6 +217,14 @@ export interface FoeKind {
    */
   def?: number;
   /**
+   * 이름 위에 작게 붙는 수식어. 우두머리만 쓴다.
+   *
+   * `탐식의 거대 슬라임, 젤라투스` 를 한 줄로 넣으면 등장 배너에서 넘친다.
+   * 캐릭터가 이미 같은 모양을 쓰고 있어서(`core/chars` 의 `CharDef.title`)
+   * 적도 같게 나눴다 — 수식어는 작게 위에, 고유명은 크게 아래.
+   */
+  title?: string;
+  /**
    * 마법저항력 — 맞는 **마법** 피해를 그 수만큼 깎는다. 안 적으면 0.
    *
    * 아군 쪽과 완전히 같은 뺄셈이다 (`core/chars` 의 `Armor`).
@@ -499,7 +507,7 @@ export const STAGES: StageDef[] = [
       { art: 'sl_ranged', name: '뱉는 슬라임', bg: '01', melee: false, dmg: 'phys', atk: 10, hp: 30, spd: 1.0, def: 0, res: 0 },
     ],
     boss: {
-      art: 'b01_gelatus', name: '빅 슬라임', bg: '01', melee: true, dmg: 'phys',
+      art: 'b01_gelatus', name: '젤라투스', title: '탐식의 거대 슬라임', bg: '01', melee: true, dmg: 'phys',
       atk: 20, hp: 500, spd: 0.8, def: 0, res: 0,
     },
   },
@@ -507,7 +515,7 @@ export const STAGES: StageDef[] = [
     bg: '01', zone: '오염된 응집체들의 평원',
     kinds: [g('grass', 10, 55, 0.8, 0, 0), g('spore', 12, 40, 1.0, 0, 0)],
     boss: {
-      art: 'b02_floratus', name: '풀무더기 슬라임', bg: '01', melee: true, dmg: 'phys',
+      art: 'b02_floratus', name: '플로라투스', title: '수림을 침식한 덩굴 슬라임', bg: '01', melee: true, dmg: 'phys',
       atk: 24, hp: 650, spd: 0.8, def: 1, res: 0,
     },
   },
@@ -515,7 +523,7 @@ export const STAGES: StageDef[] = [
     bg: '01', zone: '오염된 응집체들의 평원',
     kinds: [g('mud', 12, 80, 0.75, 1, 0), g('spore', 13, 45, 1.0, 0, 0)],
     boss: {
-      art: 'b03_acidus', name: '수렁 슬라임', bg: '01', melee: true, dmg: 'phys',
+      art: 'b03_acidus', name: '아시두스', title: '부식을 흩뿌리는 산성 슬라임', bg: '01', melee: true, dmg: 'phys',
       atk: 28, hp: 850, spd: 0.8, def: 2, res: 1,
     },
   },
@@ -527,7 +535,7 @@ export const STAGES: StageDef[] = [
       g('thorn', 17, 45, 1.0, 0, 0),
     ],
     boss: {
-      art: 'b04_sporia', name: '홀씨 슬라임', bg: '01', melee: true, dmg: 'phys',
+      art: 'b04_sporia', name: '스포리아', title: '역병을 삼킨 포자 슬라임', bg: '01', melee: true, dmg: 'phys',
       atk: 32, hp: 1050, spd: 0.8, def: 2, res: 3,
     },
   },
@@ -539,7 +547,7 @@ export const STAGES: StageDef[] = [
       g('thorn', 19, 55, 1.0, 0, 0),
     ],
     boss: {
-      art: 'b05_spinatus', name: '가시덩이 슬라임', bg: '01', melee: true, dmg: 'phys',
+      art: 'b05_spinatus', name: '스피나투스', title: '통곡을 부르는 가시 슬라임왕', bg: '01', melee: true, dmg: 'phys',
       atk: 36, hp: 1300, spd: 0.8, def: 4, res: 2,
     },
   },
@@ -551,7 +559,7 @@ export const STAGES: StageDef[] = [
       g('thorn', 21, 65, 1.0, 0, 0),
     ],
     boss: {
-      art: 'b06_petros', name: '바위 슬라임', bg: '02', melee: true, dmg: 'phys',
+      art: 'b06_petros', name: '페트로스', title: '대지를 짓누르는 암석 슬라임', bg: '02', melee: true, dmg: 'phys',
       atk: 42, hp: 1600, spd: 0.75, def: 8, res: 2,
     },
   },
@@ -563,7 +571,7 @@ export const STAGES: StageDef[] = [
       g('acid', 24, 70, 1.0, 0, 2),
     ],
     boss: {
-      art: 'b07_idolatus', name: '가르는 슬라임', bg: '02', melee: true, dmg: 'phys',
+      art: 'b07_idolatus', name: '이돌라투스', title: '고대 우상의 절단 슬라임', bg: '02', melee: true, dmg: 'phys',
       atk: 48, hp: 1900, spd: 0.75, def: 7, res: 3,
     },
   },
@@ -575,7 +583,7 @@ export const STAGES: StageDef[] = [
       g('acid', 27, 80, 1.0, 0, 3),
     ],
     boss: {
-      art: 'b08_solvenus', name: '녹이는 슬라임', bg: '02', melee: true, dmg: 'phys',
+      art: 'b08_solvenus', name: '솔베누스', title: '만물을 녹이는 융해 슬라임', bg: '02', melee: true, dmg: 'phys',
       atk: 54, hp: 2250, spd: 0.75, def: 5, res: 7,
     },
   },
@@ -588,7 +596,7 @@ export const STAGES: StageDef[] = [
       g('thorn', 27, 75, 1.0, 0, 0),
     ],
     boss: {
-      art: 'b09_osseus', name: '뼈무덤 슬라임', bg: '02', melee: true, dmg: 'phys',
+      art: 'b09_osseus', name: '오세우스', title: '백골을 품은 뼈무덤 슬라임', bg: '02', melee: true, dmg: 'phys',
       atk: 60, hp: 2650, spd: 0.7, def: 9, res: 5,
     },
   },
@@ -601,7 +609,7 @@ export const STAGES: StageDef[] = [
       g('acid', 33, 100, 1.0, 0, 5),
     ],
     boss: {
-      art: 'b10_sludginus', name: '슬라임 군주', bg: '02', melee: true, dmg: 'phys',
+      art: 'b10_sludginus', name: '슬러지누스', title: '타락한 심연의 슬라임 로드', bg: '02', melee: true, dmg: 'phys',
       atk: 68, hp: 3200, spd: 0.7, def: 11, res: 8,
     },
   },
@@ -610,7 +618,7 @@ export const STAGES: StageDef[] = [
     bg: '03', zone: '타락한 군락의 정원',
     kinds: [p('vine', 25, 350, 0.8, 6, 0), p('spore', 32, 160, 1.0, 2, 5)],
     boss: {
-      art: 'b11_acanthus', name: '가시덤불 군체', bg: '03', melee: true, dmg: 'phys',
+      art: 'b11_acanthus', name: '아칸투스', title: '백골을 감싼 가시덤불', bg: '03', melee: true, dmg: 'phys',
       atk: 75, hp: 3600, spd: 0.7, def: 13, res: 7,
     },
   },
@@ -622,7 +630,7 @@ export const STAGES: StageDef[] = [
       p('spore', 35, 180, 1.0, 2, 6),
     ],
     boss: {
-      art: 'b12_nepenthia', name: '아귀꽃 여왕', bg: '03', melee: true, dmg: 'phys',
+      art: 'b12_nepenthia', name: '네펜티아', title: '굶주린 아귀꽃 여왕', bg: '03', melee: true, dmg: 'phys',
       atk: 82, hp: 4000, spd: 0.7, def: 11, res: 10,
     },
   },
@@ -634,7 +642,7 @@ export const STAGES: StageDef[] = [
       p('spore', 38, 200, 1.0, 2, 7),
     ],
     boss: {
-      art: 'b13_matrona', name: '덩굴 어미', bg: '03', melee: true, dmg: 'phys',
+      art: 'b13_matrona', name: '마트로나', title: '대지를 조여오는 덩굴 모체', bg: '03', melee: true, dmg: 'phys',
       atk: 90, hp: 4450, spd: 0.65, def: 15, res: 9,
     },
   },
@@ -646,7 +654,7 @@ export const STAGES: StageDef[] = [
       p('sap', 42, 210, 1.0, 2, 8),
     ],
     boss: {
-      art: 'b14_columna', name: '홀씨 기둥', bg: '03', melee: true, dmg: 'phys',
+      art: 'b14_columna', name: '콜룸나', title: '백골을 품은 포자 기둥', bg: '03', melee: true, dmg: 'phys',
       atk: 98, hp: 4950, spd: 0.65, def: 12, res: 15,
     },
   },
@@ -659,7 +667,7 @@ export const STAGES: StageDef[] = [
       p('sap', 47, 230, 1.0, 2, 9),
     ],
     boss: {
-      art: 'b15_cadavera', name: '시체꽃', bg: '03', melee: true, dmg: 'phys',
+      art: 'b15_cadavera', name: '카다베라', title: '악취를 피워내는 시체꽃', bg: '03', melee: true, dmg: 'phys',
       atk: 108, hp: 5500, spd: 0.65, def: 16, res: 13,
     },
   },
@@ -667,7 +675,7 @@ export const STAGES: StageDef[] = [
     bg: '04', zone: '타락한 군락의 정원',
     kinds: [w('stump', 40, 700, 0.75, 14, 2), w('branch', 52, 300, 1.0, 5, 0)],
     boss: {
-      art: 'b16_truncus', name: '늙은 그루터기', bg: '04', melee: true, dmg: 'phys',
+      art: 'b16_truncus', name: '트룽쿠스', title: '원한이 찍힌 그루터기', bg: '04', melee: true, dmg: 'phys',
       atk: 118, hp: 6200, spd: 0.6, def: 20, res: 12,
     },
   },
@@ -679,7 +687,7 @@ export const STAGES: StageDef[] = [
       w('branch', 56, 320, 1.0, 5, 0),
     ],
     boss: {
-      art: 'b17_cavus', name: '속 빈 거인', bg: '04', melee: true, dmg: 'phys',
+      art: 'b17_cavus', name: '카부스', title: '백골을 품은 고목 거인', bg: '04', melee: true, dmg: 'phys',
       atk: 128, hp: 6900, spd: 0.6, def: 23, res: 14,
     },
   },
@@ -691,7 +699,7 @@ export const STAGES: StageDef[] = [
       w('pod', 62, 350, 1.0, 5, 10),
     ],
     boss: {
-      art: 'b18_spinosa', name: '가시나무', bg: '04', melee: true, dmg: 'phys',
+      art: 'b18_spinosa', name: '스피노사', title: '대지를 찌르는 가시목', bg: '04', melee: true, dmg: 'phys',
       atk: 140, hp: 7700, spd: 0.6, def: 26, res: 16,
     },
   },
@@ -704,7 +712,7 @@ export const STAGES: StageDef[] = [
       w('pod', 68, 390, 1.0, 5, 11),
     ],
     boss: {
-      art: 'b19_putridus', name: '썩은 거목', bg: '04', melee: true, dmg: 'phys',
+      art: 'b19_putridus', name: '푸트리두스', title: '부패를 품은 태고의 거목', bg: '04', melee: true, dmg: 'phys',
       atk: 152, hp: 8600, spd: 0.55, def: 29, res: 18,
     },
   },
@@ -717,7 +725,7 @@ export const STAGES: StageDef[] = [
       w('pod', 75, 420, 1.0, 6, 12),
     ],
     boss: {
-      art: 'b20_silvanus', name: '숲의 어른', bg: '04', melee: true, dmg: 'phys',
+      art: 'b20_silvanus', name: '실바누스', title: '숲의 의지를 품은 고대 수호수', bg: '04', melee: true, dmg: 'phys',
       atk: 170, hp: 10000, spd: 0.55, def: 33, res: 21,
     },
   },

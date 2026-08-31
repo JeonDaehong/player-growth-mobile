@@ -52,6 +52,11 @@ import { StatusRow } from './StatusRow';
  * 빠르게 지나가야 세게 친 것처럼 보이고, 앞뒤가 길어야 힘을 모았다 푸는
  * 느낌이 난다.
  */
+/** 쓰러진 자세를 그대로 보여 주는 시간 — 읽을 만큼만 */
+const FALL_HOLD_MS = 500;
+/** 그 뒤 흐려져 사라지는 데 걸리는 시간 */
+const FALL_FADE_MS = 600;
+
 const CUT_MS = [120, 70, 100];
 export const SWING_MS = CUT_MS.reduce((a, b) => a + b, 0);
 
@@ -267,6 +272,39 @@ function FighterView({
 
   /** 이 사람이 쓰러졌나 — 파티 전멸과 별개다 */
   const fallen = hp <= 0;
+
+  /**
+   * 쓰러진 뒤의 사라짐.
+   *
+   * 예전에는 쓰러진 자세를 **불투명도 0.3 으로 계속** 띄웠다. 그러면 죽은
+   * 사람이 무대에 계속 누워 있어서, 넷 중 둘이 죽으면 화면이 시체로 붐빈다 —
+   * 살아 있는 둘이 어느 쪽인지 한눈에 안 들어온다.
+   *
+   * 쓰러지는 자세를 **잠깐 보여 주고 지운다.** 죽은 것은 한 번 보면 되는
+   * 정보이고, 그 뒤로는 자리를 비워 주는 편이 낫다. 되살아나면 즉시 돌아온다.
+   */
+  const gone = useRef(new Animated.Value(1)).current;
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    if (!fallen) {
+      /* 되살아났다 — 기다리지 않고 바로 돌려놓는다 */
+      gone.setValue(1);
+      setHidden(false);
+      return undefined;
+    }
+    let alive = true;
+    setHidden(false);
+    gone.setValue(1);
+    const a = Animated.sequence([
+      /* 쓰러진 자세를 읽을 시간 */
+      Animated.delay(FALL_HOLD_MS),
+      Animated.timing(gone, {
+        toValue: 0, duration: FALL_FADE_MS, useNativeDriver: true,
+      }),
+    ]);
+    a.start(() => { if (alive) setHidden(true); });
+    return () => { alive = false; a.stop(); };
+  }, [fallen, gone]);
 
   /*
     맞은 횟수. 늘어날 때마다 몸 위에서 불꽃이 한 번 터진다.
@@ -567,6 +605,8 @@ function FighterView({
 
   const { lift, scale } = depthAt(back);
   const size = Math.round(width * scale);
+  /* 다 사라진 사람은 아예 안 그린다 — 자리도 안 차지한다 */
+  if (hidden && fallen) return null;
   /** 지금 나가는 중인 기술 — 평타 중이면 null */
   const castSk = casting >= 0 ? (skillsOf(ch.id)[casting] ?? null) : null;
   const max = st.hp;
@@ -585,7 +625,11 @@ function FighterView({
           **덜 그려진 것**으로 보인다. 깊이는 이미 크기와 높이가 말하고 있다
           (`depthAt`) — 거기에 흐림까지 얹을 이유가 없다.
         */
-        opacity: down || fallen ? 0.3 : 1,
+        /*
+          쓰러지면 흐려졌다 사라진다 (`gone`). 파티 전멸(`down`)은 다르다 —
+          그때는 넷이 다 누워 있고 곧 일어나므로, 흐리게 남겨 둔다.
+        */
+        opacity: fallen ? gone : (down ? 0.3 : 1),
         zIndex: 10 - back,
         transform: [
           { translateX: stepX },

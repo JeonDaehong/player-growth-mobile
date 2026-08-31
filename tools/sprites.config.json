@@ -3146,16 +3146,41 @@
     {
       "file": "boss-1.jpg",
       "name": "b01_gelatus",
-      "expect": [
-        4,
+      "region": [
+        0.004,
+        0.012,
+        0.752,
+        0.988
+      ],
+      "grid": [
+        3,
         1
       ],
       "floor": true,
-      "note": "1스테이지 우두머리 (docs/boss-art/b01_gelatus.md). 평타와 기술의 동작이 각각 다른 칸이다",
+      "note": "1스테이지 우두머리 (docs/boss-art/b01_gelatus.md). **4번 칸이 가로선으로 반씩 쪼개져 왔다** — 피격 자세가 위아래 둘이다. 영역을 둘로 나눠 앞 세 칸과 4번 칸 위쪽 절반만 쓴다 — 1~3번 칸",
       "labels": [
         "idle",
         "attack",
-        "skill1",
+        "skill1"
+      ]
+    },
+    {
+      "file": "boss-1.jpg",
+      "name": "b01_gelatus",
+      "region": [
+        0.752,
+        0.012,
+        0.996,
+        0.5
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "append": true,
+      "floor": true,
+      "note": "1스테이지 우두머리 (docs/boss-art/b01_gelatus.md). **4번 칸이 가로선으로 반씩 쪼개져 왔다** — 피격 자세가 위아래 둘이다. 영역을 둘로 나눠 앞 세 칸과 4번 칸 위쪽 절반만 쓴다 — 4번 칸 위쪽 절반",
+      "labels": [
         "down"
       ]
     },
@@ -3232,15 +3257,16 @@
         1
       ],
       "floor": true,
-      "note": "6스테이지 우두머리 (docs/boss-art/b06_petros.md). 평타와 기술의 동작이 각각 다른 칸이다. 흰 바탕에 검은 선으로 와서 뒤집는다",
+      "note": "6스테이지 우두머리 (docs/boss-art/b06_petros.md). 흰 종이에 검은 선으로 와서 paper 로 처리한다 — invert 로는 몸통이 검어진다",
       "labels": [
         "idle",
         "attack",
         "skill1",
         "down"
       ],
-      "invert": true,
-      "inset": 0.06
+      "paper": true,
+      "cropBottom": 0.03,
+      "cropTop": 0.02
     },
     {
       "file": "boss-7.jpg",

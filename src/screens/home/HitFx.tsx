@@ -262,7 +262,14 @@ const CALL_MS = 2200;
  * 글씨는 뜨는 동안 무대를 가리므로 오래 두면 안 된다. 흐리게 들어와서
  * 잠깐 머물고 흐리게 나간다 — 2.2초면 읽고도 남는다.
  */
-export function BossCall({ nonce, name }: { nonce: number; name: string }) {
+export function BossCall({
+  nonce, name, title,
+}: {
+  nonce: number;
+  name: string;
+  /** 이름 위에 작게 붙는 수식어 (`FoeKind.title`). 없으면 이름만 뜬다 */
+  title?: string;
+}) {
   const t = useRef(new Animated.Value(0)).current;
   const [on, setOn] = useState(false);
 
@@ -308,7 +315,7 @@ export function BossCall({ nonce, name }: { nonce: number; name: string }) {
           color: WHITE, fontFamily: MONO, fontSize: 9, letterSpacing: 3,
         }}
       >
-        우 두 머 리
+        {title || '우 두 머 리'}
       </Animated.Text>
       <Animated.Text
         style={{

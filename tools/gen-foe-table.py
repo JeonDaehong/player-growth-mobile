@@ -55,6 +55,7 @@ BY_HELPER = {'g': species('SLIME'), 'p': species('PLANT'), 'w': species('WOOD')}
 stages_src = s[s.index('export const STAGES'):s.index('/** 그 스테이지의 구성')]
 
 BOSS = (r"boss: \{\s*art: '(?P<art>[^']+)', name: '(?P<name>[^']+)', "
+        r"(?:title: '[^']*', )?"
         r"bg: '[^']*', melee: (?P<melee>true|false), dmg: '(?P<dmg>\w+)',\s*"
         r"atk: (?P<atk>\d+), hp: (?P<hp>\d+), spd: (?P<spd>[\d.]+), "
         r"def: (?P<def>\d+), res: (?P<res>\d+),\s*\}")

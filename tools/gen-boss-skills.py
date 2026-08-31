@@ -55,7 +55,8 @@ def load_stats():
     part = s[s.index('export const STAGES'):s.index('/** 그 스테이지의 구성')]
     out = []
     for m in re.finditer(
-            r"boss: \{\s*art: '[^']+', name: '([^']+)', bg: '[^']*', "
+            r"boss: \{\s*art: '[^']+', name: '([^']+)', "
+            r"(?:title: '[^']*', )?bg: '[^']*', "
             r"melee: \w+, dmg: '\w+',\s*atk: (\d+), hp: (\d+), spd: ([\d.]+), "
             r"def: (\d+), res: (\d+),\s*\}", part):
         nm, atk, hp, spd, dfn, res = m.groups()
