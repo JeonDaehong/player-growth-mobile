@@ -26,8 +26,6 @@ import { BORDER, SP } from '@/ui/theme';
 import { SkillPanel } from './SkillPanel';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
-import { passiveOf } from '@/core/passives';
-import { STATUS_NAME } from '@/core/status';
 
 export function CharPopup({
   slot, onClose,
@@ -214,39 +212,6 @@ export function CharPopup({
             (비율이 아니라 뺄셈이고, 아무리 깎여도 최소 1은 들어갑니다).
             관통이 있으면 그 방어를 통째로 무시합니다.
           </T>
-
-          {/*
-            ── 패시브 ──
-
-            **여기가 유일하게 적히는 자리다.**
-
-            무대의 로고 줄(`StatusRow`)에는 안 띄운다. 아녜스의 +10% 와
-            리안느의 +0.1 은 그 사람이 서 있는 내내 켜져 있어서, 로고로
-            띄우면 네 칸 모두에 붙박이로 앉아 정작 우두머리가 건 출혈을
-            뒤로 밀어낸다. 늘 같은 것은 글로 한 번 읽으면 된다.
-
-            비앙카의 것만 예외로 로고가 뜬다 — 조건이 붙어 있어서 실제로
-            켜졌다 꺼지고, 그 순간이 곧 "지금 위험하지만 제일 세다" 다.
-          */}
-          {(() => {
-            const p = passiveOf(c.id);
-            if (!p) return null;
-            return (
-              <View style={[BORDER, { padding: SP.xs, marginTop: SP.sm }]}>
-                <Row gap={SP.xs} style={{ alignItems: 'center' }}>
-                  {!!p.icon && <Sprite set="status_icon" name={p.icon} size={12} />}
-                  <T size={10} bold>패시브 · {p.name}</T>
-                </Row>
-                <T size={10} style={{ marginTop: 2 }}>{p.text}</T>
-                {/* 별표를 쓰지 않는다 — 여기는 마크다운이 아니라 화면 글자다 */}
-                <T size={9} dim="dim" style={{ marginTop: 2 }}>
-                  {`파티에 서 있고 살아 있는 동안만 걸립니다${
-                    p.icon ? ` · 화면에는 ${STATUS_NAME[p.icon]}(으)로 뜹니다` : ''
-                  }`}
-                </T>
-              </View>
-            );
-          })()}
           {/*
             공짜·확실일 때는 확률과 비용 줄을 뺀다 — "100%" 와 "0 골드" 는
             읽는 사람에게 아무것도 안 알려 주면서 자리만 차지한다.

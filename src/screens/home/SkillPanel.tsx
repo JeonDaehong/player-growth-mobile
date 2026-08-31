@@ -15,12 +15,23 @@
  *
  * 처음부터 다 펴 놓으면 강화 버튼이 화면 밖으로 밀린다 — 이 창에서 제일 자주
  * 하는 일이 그건데. 이름과 쿨타임만 보이고, 궁금할 때 눌러서 편다.
+ *
+ * ## 패시브가 맨 위다
+ *
+ * 한동안 패시브를 **수치 절 안쪽**에 뒀다 (방어력·마법저항력 다음). 거기
+ * 있으면 스킬 목록과 한참 떨어져서, 이 사람이 무엇을 하는지 알려면 창을
+ * 두 군데 봐야 했다.
+ *
+ * 패시브도 스킬이다 — 다른 것은 **누르지 않아도 켜져 있다**는 것뿐이다.
+ * 그러니 스킬 목록의 일부여야 하고, 늘 켜져 있는 쪽이 먼저다: 액티브는
+ * "가끔 일어나는 일" 이고 패시브는 "늘 그런 사람" 이라 뒤엣것이 배경이 된다.
  */
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import {
   CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillsOf, statOf, swingMs,
 } from '@/core/chars';
+import { passiveOf } from '@/core/passives';
 import { Party, allyAtk, members } from '@/core/party';
 import { skillBase, strikeFor } from '@/core/autoBattle';
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
@@ -77,10 +88,47 @@ export function SkillPanel({
   /* 파티 패시브가 기술에도 걸린다 — 전투가 쓰는 것과 같은 값이다 */
   const sup = allyAtk(party, chars);
 
+  const pv = passiveOf(c.id);
+
   return (
     <>
+      {/*
+        ── 패시브 ──
+
+        액티브보다 **먼저** 온다. 액티브는 가끔 일어나는 일이고 패시브는 늘
+        그런 사람이라, 뒤엣것을 알고 나서 앞엣것을 읽어야 말이 된다 —
+        "아녜스를 넣으면 넷이 다 세진다" 를 모르고 기도의 회복량만 보면
+        이 사람을 넣을 이유가 반밖에 안 보인다.
+
+        접지 않는다. 한 줄이면 다 적히므로 접을 것이 없다.
+      */}
+      {!!pv && (
+        <>
+          <Row between style={{ marginBottom: SP.xs }}>
+            <T size={11} bold>패시브</T>
+            <T size={9} dim="dim">늘 켜져 있습니다</T>
+          </Row>
+          <ListItem
+            title={pv.name}
+            sub={pv.text}
+            /*
+              **제 로고를 쓴다** (`passive_icon`). 상태 로고를 빌려 쓰면
+              비앙카와 리안느가 같은 그림이 된다 —
+              `docs/PASSIVE_ICON_PROMPTS.md` 에 이유를 적어 뒀다.
+
+              아직 그림이 없으면 빈 자리로 남고, 도착하는 순간 저절로 붙는다.
+            */
+            left={<Sprite set="passive_icon" name={pv.art} size={22} />}
+            right={<Tag label="항상" />}
+          />
+          <T size={9} dim="dim" style={{ marginTop: 2, marginBottom: SP.sm }}>
+            파티에 서 있고 살아 있는 동안만 걸립니다 — 쓰러지면 그 자리에서 꺼집니다.
+          </T>
+        </>
+      )}
+
       <Row between style={{ marginBottom: SP.xs }}>
-        <T size={11} bold>스킬</T>
+        <T size={11} bold>액티브 스킬</T>
         <T size={9} dim="dim">눌러서 자세히</T>
       </Row>
 

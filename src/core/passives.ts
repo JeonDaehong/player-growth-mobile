@@ -55,7 +55,22 @@ export interface PassiveDef {
    * 있을 때가 1배다.
    */
   frenzy?: { at: number; mul: number };
-  /** 화면에 뜨는 로고. 없으면 안 뜬다 (`core/status` 의 `StatusId`) */
+  /**
+   * 캐릭터 창에 뜨는 **제 로고** (`assets/sprites/passive_icon/`).
+   *
+   * 사람마다 하나다. 한동안 상태 로고를 빌려 썼는데
+   * (`docs/PASSIVE_ICON_PROMPTS.md` 에 이유를 적어 뒀다) 그러면 비앙카와
+   * 리안느가 같은 그림이 되어 넷을 나란히 놓았을 때 둘이 한 사람으로 보였다.
+   */
+  art: string;
+  /**
+   * **전투 중에** 뜨는 상태 로고. 없으면 안 뜬다 (`core/status` 의 `StatusId`).
+   *
+   * 위의 `art` 와 다른 것이다. 저건 "이 사람은 어떤 사람인가" 이고 이건
+   * "지금 이 사람에게 무슨 일이 일어나고 있나" 다 — 비앙카가 다쳐서
+   * 빨라지고 있을 때 파티 칸에 뜨는 신속은, 원인이 패시브든 우두머리
+   * 기술이든 같은 사실이라 같은 그림이어야 한다.
+   */
   icon?: StatusId;
 }
 
@@ -84,6 +99,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
     name: '불굴의 맹세',
     text: '1초마다 체력 2 회복',
     regen: 2,
+    art: 'pv_oath',
     icon: 'st_regen',
   },
 
@@ -101,6 +117,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
     name: '최후의 한 곡',
     text: '체력이 낮을수록 공격속도 증가 (체력 10%에서 1.5배)',
     frenzy: { at: 0.10, mul: 1.5 },
+    art: 'pv_encore',
     icon: 'st_haste',
   },
 
@@ -115,6 +132,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
     name: '숲의 박자',
     text: '아군 전체 공격속도 +0.1',
     allySpd: 0.1,
+    art: 'pv_tempo',
     icon: 'st_haste',
   },
 
@@ -128,6 +146,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
     name: '재의 축복',
     text: '아군 전체 공격력 +10%',
     allyAtk: 0.10,
+    art: 'pv_ash',
     icon: 'st_rage',
   },
 };
