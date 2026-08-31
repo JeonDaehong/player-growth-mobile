@@ -23,6 +23,12 @@ docs/CHARACTER_ART_PROMPTS.md + docs/character-art/*.md 생성기
 설명을 다시 쓰지 않는다. 그게 유일하게 통하는 방법이다.
 """
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# 세로 구도 규칙은 `tools/gen-char.py` 와 **같은 것**을 쓴다 — 같은 뷰어에서
+# 같은 화면으로 보는 그림이라, 규칙이 두 벌이면 한쪽만 세로가 된다.
+from artstyle import PORTRAIT  # noqa: E402
 
 
 
@@ -1433,8 +1439,10 @@ for i, (nid, ko, place, tone, gift, perk, lock, bg) in enumerate(NPCS, 1):
             f"THE SETTING: {bg}.",
             f"THIS IMAGE — affinity level {lv} of 10, \"{lven}\":\n{ladder}",
             ILLUST_STYLE,
+            PORTRAIT,
             ILLUST_LOCK,
-            "OUTPUT: one finished illustration, 16:9 landscape, wallpaper resolution. "
+            "OUTPUT: one finished illustration, 9:16 PORTRAIT — a tall phone wallpaper, "
+            "at least 1242 x 2208. It must be taller than it is wide. "
             "No grid, no panels, no text anywhere in the image.",
         ]) + "\n```\n")
 
@@ -1666,8 +1674,21 @@ W(f"""# 99. 슬라이서와 후처리
 # ── 쓰기 ─────────────────────────────────────────────────────
 
 os.makedirs(OUT_DIR, exist_ok=True)
+"""
+이 폴더를 **혼자 쓰지 않는다.**
+
+`tools/gen-char.py` 가 같은 폴더에 파티 캐릭터 넷의 파일을 쓴다 (CharId 이름
+그대로 — `knightgirl.md` 처럼). 아래 청소는 "내가 안 만든 .md 는 잔재" 로 보고
+지우므로, 그대로 두면 **저쪽이 방금 만든 파일을 지운다.** 실제로 지웠고,
+다시 돌리면 되살아나므로 지운 티도 안 났다.
+
+그래서 저쪽이 쓰는 이름은 건너뛴다.
+"""
+OWNED_BY_GEN_CHAR = {'knightgirl.md', 'bunnyaxe.md', 'elfarcher.md', 'nun.md'}
 # 예전에 한 파일로 만들던 시절의 잔재를 지운다 — 남아 있으면 둘 다 검색에 걸린다
 for stale in os.listdir(OUT_DIR):
+    if stale in OWNED_BY_GEN_CHAR:
+        continue
     if stale.endswith('.md') and os.path.join(OUT_DIR, stale).replace('\\', '/') \
             not in {n for n, _b in _files}:
         os.remove(os.path.join(OUT_DIR, stale))

@@ -21,7 +21,7 @@ import { View } from 'react-native';
 import {
   CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillsOf, statOf, swingMs,
 } from '@/core/chars';
-import { Party, members, supportMul } from '@/core/party';
+import { Party, allyAtk, members } from '@/core/party';
 import { skillBase, strikeFor } from '@/core/autoBattle';
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
@@ -74,8 +74,8 @@ export function SkillPanel({
 
   const list = skillsOf(c.id);
   const st = statOf(c);
-  /* 보조가 곁에 있으면 기술도 같이 오른다 — 전투가 쓰는 것과 같은 값이다 */
-  const sup = supportMul(party, chars);
+  /* 파티 패시브가 기술에도 걸린다 — 전투가 쓰는 것과 같은 값이다 */
+  const sup = allyAtk(party, chars);
 
   return (
     <>

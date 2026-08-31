@@ -49,12 +49,18 @@
  *   최고 기록(`best`)도 그대로 남는다
  */
 import {
-  Party, allDown, fullHp, hpOf, members, partyStat, supportMul,
+  Party, allDown, allyAtk, fullHp, hpOf, livingMembers, members, partyStat,
 } from './party';
 import {
-  Armor, Blow, CHARS, DmgType, NO_ARMOR, NO_PIERCE, OwnedChar, SkillDef, Stat,
-  blowOf, skillOf, skillsOf, statOf, swingMs,
+  Armor, Blow, CHARS, DmgType, NO_ARMOR, NO_PIERCE, OwnedChar, PHYS_BLOW, Role,
+  SkillDef, Stat, blowOf, skillOf, skillsOf, statOf, swingMs,
 } from './chars';
+import {
+  Hex, StatusId, hexOf, mulOf, putHex, tickHex,
+} from './status';
+import {
+  allyAtkMul, healMulOf, liveArmor, liveSpd, regenOf,
+} from './passives';
 
 /** 한 틱의 길이 */
 export const TICK_MS = 500;
@@ -262,6 +268,37 @@ export interface FoeKind {
    * 놈" 을 표현할 자리가 필요해서 `undefined` 와 `[]` 를 구분해 둔다.
    */
   patterns?: readonly BossPattern[];
+  /**
+   * 우두머리가 늘 달고 있는 성질. 다섯 판마다 하나씩 있다.
+   *
+   * 기술과 따로 둔 이유는 **도는 방식이 달라서**다. 기술은 몇 번째 공격이냐로
+   * 나가고, 성질은 그런 순간이 없다 — 맞을 때마다, 매 틱, 늘 켜져 있다.
+   */
+  passive?: BossPassive;
+}
+
+/**
+ * 우두머리 기술이 **걸고 가는 것** 하나.
+ *
+ * 계수로 적는다 (`tick` 은 공격력의 몇 배). 실제 숫자는 거는 순간 그
+ * 우두머리의 공격력을 곱해서 만든다 (`hexFrom`) — 걸린 다음에는 건 놈이
+ * 죽어도 그대로 남아야 하므로, `core/status` 의 `Hex` 는 계수가 아니라
+ * 숫자를 들고 간다.
+ */
+export interface HexSpec {
+  id: StatusId;
+  /** 몇 초 동안 */
+  sec: number;
+  /** 0.5초마다 **우두머리 공격력의 몇 배**. 지속 피해가 아니면 안 적는다 */
+  tick?: number;
+  /** 그 지속 피해가 물리인가 마법인가. 안 적으면 기술과 같다 */
+  dmg?: DmgType;
+  /** 배수형이면 몇 배. 0.5 면 절반으로 깎는다 */
+  mul?: number;
+  /** 걸릴 확률 (0~1). 안 적으면 반드시 걸린다 */
+  odds?: number;
+  /** 몇 겹까지 쌓이나. 안 적으면 안 쌓인다 */
+  stack?: number;
 }
 
 /**
@@ -270,24 +307,86 @@ export interface FoeKind {
  * **파티 스킬과 같은 규칙이다** (`core/chars` 의 `SkillDef`) — 몇 번째
  * 공격마다(`every`) 나오고, 공격력의 몇 배(`mul`)로, 누구를(`aim`) 치는가.
  * 규칙을 맞춰 둔 이유는 화면이 두 가지를 따로 셀 필요가 없어서다.
+ *
+ * 사양과 계산해 둔 숫자는 `docs/BOSS_SKILLS.md` 에 있다.
  */
 export interface BossPattern {
   /** 그림·연출을 고를 때 쓰는 이름표 */
   id: string;
-  /** 화면에 뜨는 이름 */
+  /** 화면에 뜨는 이름 — 우두머리 머리 위 말풍선이 이걸 외친다 */
   name: string;
   /**
-   * 몇 번째 공격마다 나오나. 5 면 **평타 넷을 친 다음** 다섯 번째가 이것이다.
+   * 몇 번째 공격마다 나오나. 4 면 **평타 셋을 친 다음** 네 번째가 이것이다.
    *
-   * 지금은 기술이 하나뿐이지만, 둘 이상이 같은 차례에 걸리면 **드문 쪽이
-   * 이긴다** (`every` 가 큰 쪽). 자주 나오는 것이 이기면 드문 것은 영영 안
-   * 나온다 — 6 과 3 이면 6의 배수는 전부 3의 배수이기도 하다.
+   * 둘 이상이 같은 차례에 걸리면 **드문 쪽이 이긴다** (`every` 가 큰 쪽).
+   * 자주 나오는 것이 이기면 드문 것은 영영 안 나온다 — 6 과 3 이면 6의
+   * 배수는 전부 3의 배수이기도 하다.
    */
   every: number;
-  /** 공격력의 몇 배 */
+  /** 공격력의 몇 배. **0 이면 즉시 피해가 없다** (거는 것만 하는 기술) */
   mul: number;
-  /** 전원인가 한 명인가 */
-  aim: 'all' | 'one';
+  /**
+   * 누구를 치나.
+   *
+   *   all    살아 있는 전원
+   *   one    자리 확률대로 한 명 (`AIM`)
+   *   two    무작위 두 명 — 겹치지 않게
+   *   front  맨 앞 한 명 (`core/party` 의 `defenseOrder`)
+   *   low    체력이 **비율로** 제일 낮은 한 명
+   *
+   * `low` 를 남은 양이 아니라 비율로 재는 이유: 남은 양으로 재면 원래 체력이
+   * 적은 사람(리안느 150)이 가득 차 있어도 늘 걸린다. 그러면 "마무리를
+   * 노린다" 가 아니라 "제일 약한 사람만 팬다" 가 된다.
+   */
+  aim: 'all' | 'one' | 'two' | 'front' | 'low';
+  /** 이 기술이 물리인가 마법인가. 그 우두머리의 평타와 **따로다** */
+  dmg: DmgType;
+  /** 맞는 사람의 방어 한 겹을 통째로 건너뛰나 (`core/chars` 의 `Pierce`) */
+  pierce?: boolean;
+  /** 맞은 사람에게 거는 것들 — 전부 건다 (각자 제 확률로) */
+  hex?: readonly HexSpec[];
+  /**
+   * **둘 중 하나만** 건다. 17판 공허한 울림 하나뿐이다.
+   *
+   * "40% 확률로 기절 또는 약화" 를 `hex` 로는 못 적는다 — 거기 둘을 넣으면
+   * 각각 40% 라 둘 다 걸리는 판이 생긴다.
+   */
+  oneOf?: { odds: number; of: readonly HexSpec[] };
+  /** 입힌 피해의 몇 할을 우두머리가 제 체력으로 가져가나 */
+  drain?: number;
+  /** 맞은 사람의 스킬 게이지를 몇 할 깎나 */
+  gauge?: number;
+}
+
+/**
+ * 우두머리가 늘 달고 있는 것 — **기술이 아니라 성질.**
+ *
+ * 다섯 판마다 하나씩 있다 (5 · 10 · 15 · 20). 판이 다섯씩 넘어갈 때
+ * "이번 우두머리는 뭔가 다르다" 를 기술 말고 다른 축으로 말하는 자리다.
+ */
+export interface BossPassive {
+  /** 화면에 뜨는 이름 */
+  name: string;
+  /** 설명에 적는 한 줄 */
+  text: string;
+  /** 받는 피해 배수 — 0.8 이면 20% 덜 아프다 */
+  tough?: number;
+  /** 맞으면 때린 사람에게 되돌리는 비율 (물리) */
+  reflect?: number;
+  /** **평타**에 맞은 사람에게 거는 것 */
+  onHit?: HexSpec;
+  /**
+   * 늘 깔려 있는 오라 — 그 역할의 아군에게 **매 틱 다시 건다.**
+   *
+   * 다시 거는 이유: 한 번만 걸고 시간이 지나 풀리게 두면 우두머리가 살아
+   * 있는데도 오라가 깜빡인다. 매 틱 새로 고치면 우두머리가 죽는 순간
+   * 자연히 걷힌다.
+   */
+  aura?: { role: Role; of: readonly HexSpec[] };
+  /** 스스로 회복 — `sec` 초마다 최대 체력의 `pct` */
+  regen?: { sec: number; pct: number };
+  /** 체력이 `under` 아래면 방어력이 `defMul` 배 */
+  last?: { under: number; defMul: number };
 }
 
 /**
@@ -315,8 +414,181 @@ export interface BossPattern {
  * 쓴다 (없는 시트는 `attack` 으로 떨어진다).
  */
 export const BOSS_PATTERNS: readonly BossPattern[] = [
-  { id: 'sweep', name: '휩쓸기', every: 5, mul: 0.9, aim: 'all' },
+  { id: 'sweep', name: '휩쓸기', every: 5, mul: 0.9, aim: 'all', dmg: 'phys' },
 ];
+
+/*
+  ── 스무 우두머리의 기술 ──
+
+  사양은 `tools/gen-boss.py` 에 문장으로, 계산해 둔 숫자는
+  `docs/BOSS_SKILLS.md` 에 표로 있다. 여기는 **그 표를 코드로 옮긴 것**이고,
+  세 벌이 어긋나지 않는지는 `tools/gen-boss-skills.py` 가 검사한다.
+
+  ## 왜 `STAGES` 안이 아니라 여기 따로 있나
+
+  판 하나가 이미 열 줄이 넘는다 (배경 · 지역 · 잡몹 셋 · 우두머리 수치).
+  거기에 기술까지 넣으면 한 판이 서른 줄이 되어, 스무 판을 나란히 놓고
+  "수치가 고르게 오르나" 를 볼 수 없게 된다. 수치는 수치끼리, 기술은
+  기술끼리 모여 있어야 각각을 훑을 수 있다.
+
+  붙이는 일은 `foeOf` 가 한다.
+*/
+export const BOSS_SKILLS: Record<number, readonly BossPattern[]> = {
+  1: [{ id: 'squash', name: '뭉개기', every: 4, mul: 0.90, aim: 'all', dmg: 'phys' }],
+  2: [{ id: 'coil', name: '식인 덩굴 휘감기', every: 4, mul: 2.00, aim: 'one', dmg: 'phys' }],
+  3: [{
+    id: 'spray', name: '맹독 오물 분사', every: 6, mul: 0, aim: 'all', dmg: 'magic',
+    hex: [{ id: 'st_poison', sec: 3, tick: 0.10, dmg: 'magic' }],
+  }],
+  4: [{
+    id: 'haze', name: '환각 포자 폭발', every: 6, mul: 0, aim: 'all', dmg: 'magic',
+    hex: [{ id: 'st_slow', sec: 5, mul: 0.50 }],
+  }],
+  5: [{
+    id: 'barb', name: '칼날 가시 난사', every: 6, mul: 1.00, aim: 'all', dmg: 'phys',
+    hex: [{ id: 'st_bleed', sec: 3, tick: 0.05, dmg: 'phys' }],
+  }],
+  6: [{
+    id: 'rock', name: '암석 낙하', every: 6, mul: 1.30, aim: 'all', dmg: 'phys',
+    hex: [{ id: 'st_stun', sec: 3, odds: 0.30 }],
+  }],
+  7: [{
+    id: 'cleave', name: '양단 직격', every: 5, mul: 2.00, aim: 'one', dmg: 'phys',
+    hex: [{ id: 'st_bleed', sec: 3, tick: 0.05, dmg: 'phys' }],
+  }],
+  8: [{
+    id: 'melt', name: '강산성 융해 액', every: 6, mul: 0, aim: 'all', dmg: 'magic',
+    hex: [{ id: 'st_poison', sec: 5, tick: 0.12, dmg: 'magic' }],
+  }],
+  9: [{
+    id: 'bone', name: '백골 가시 찌르기', every: 3, mul: 2.00, aim: 'one', dmg: 'phys',
+    pierce: true,
+  }],
+  10: [
+    {
+      id: 'tide', name: '오염된 심연의 해일', every: 3, mul: 1.50, aim: 'all', dmg: 'phys',
+      hex: [{ id: 'st_poison', sec: 3, tick: 0.15, dmg: 'magic' }],
+    },
+    {
+      id: 'gulp', name: '포식의 점액', every: 7, mul: 2.00, aim: 'low', dmg: 'magic',
+      drain: 0.50,
+    },
+  ],
+  11: [{
+    id: 'spike', name: '유해의 가시 찌르기', every: 4, mul: 1.10, aim: 'all', dmg: 'phys',
+    pierce: true,
+    hex: [{ id: 'st_bleed', sec: 3, tick: 0.05, dmg: 'phys' }],
+  }],
+  12: [{
+    id: 'digest', name: '포식자의 소화액', every: 5, mul: 0, aim: 'one', dmg: 'magic',
+    hex: [
+      { id: 'st_poison', sec: 3, tick: 0.15, dmg: 'magic' },
+      { id: 'st_slow', sec: 5, mul: 0.50 },
+    ],
+  }],
+  13: [{
+    id: 'bind', name: '속박의 덩굴 휘감기', every: 5, mul: 1.40, aim: 'two', dmg: 'phys',
+    hex: [{ id: 'st_stun', sec: 2 }],
+  }],
+  14: [{
+    id: 'burst', name: '독성 포자 분출', every: 6, mul: 0, aim: 'all', dmg: 'magic',
+    hex: [
+      { id: 'st_poison', sec: 4, tick: 0.08, dmg: 'magic' },
+      { id: 'st_wither', sec: 5, mul: 0.50 },
+    ],
+  }],
+  15: [{
+    id: 'stench', name: '부패의 악취', every: 6, mul: 0, aim: 'all', dmg: 'magic',
+    hex: [
+      { id: 'st_poison', sec: 4, tick: 0.10, dmg: 'magic' },
+      { id: 'st_silence', sec: 5 },
+    ],
+  }],
+  16: [{
+    id: 'axe', name: '녹슨 도끼의 일격', every: 5, mul: 2.20, aim: 'front', dmg: 'phys',
+    hex: [{ id: 'st_break', sec: 5, mul: 0.60 }],
+  }],
+  17: [{
+    id: 'hollow', name: '공허한 울림', every: 6, mul: 1.00, aim: 'all', dmg: 'magic',
+    oneOf: {
+      odds: 0.40,
+      of: [
+        { id: 'st_stun', sec: 2 },
+        { id: 'st_weak', sec: 5, mul: 0.75 },
+      ],
+    },
+  }],
+  18: [{
+    id: 'lash', name: '가시 가지 후려치기', every: 5, mul: 1.40, aim: 'all', dmg: 'phys',
+    pierce: true,
+  }],
+  19: [{
+    id: 'root', name: '부패한 뿌리 솟구침', every: 6, mul: 1.50, aim: 'all', dmg: 'phys',
+  }],
+  20: [
+    {
+      id: 'bolt', name: '태고의 성난 벼락', every: 6, mul: 1.50, aim: 'all', dmg: 'phys',
+      gauge: 0.50,
+    },
+    {
+      id: 'blade', name: '자비없는 칼날', every: 5, mul: 2.50, aim: 'low', dmg: 'magic',
+    },
+  ],
+};
+
+/**
+ * 다섯 판마다 하나씩 있는 우두머리 성질.
+ *
+ * 넷이 서로 **다른 축**을 건드린다 — 반사 · 평타에 붙는 것 · 늘 깔린 오라 ·
+ * 제 몸 지키기. 같은 축을 둘이 쓰면 뒤엣것이 "더 센 앞엣것" 이 되어 판이
+ * 넘어간 느낌이 안 난다.
+ */
+export const BOSS_PASSIVES: Record<number, BossPassive> = {
+  5: {
+    name: '가시 갑옷',
+    text: '피격 시 공격자에게 받은 피해의 10%만큼 물리 반사',
+    reflect: 0.10,
+  },
+  10: {
+    name: '오염된 점성',
+    text: '평타에 맞은 아군의 공격속도를 3초간 10% 감소 (최대 3중첩)',
+    onHit: { id: 'st_slow', sec: 3, mul: 0.90, stack: 3 },
+  },
+  15: {
+    name: '부패의 오라',
+    text: '방어 역할 아군의 방어력을 0으로 만들고 1초마다 공격력의 5%만큼 지속 마법 피해',
+    /*
+      배수 0 이라 방어가 **통째로** 0 이 된다 (`core/passives` 의 `liveArmor`).
+
+      지속 피해는 사양이 "1초마다 5%" 인데 이 게임의 틱은 0.5초다. 틱당
+      2.5% 로 나눠 적는다 — 1초에 한 번만 때리려고 시계를 따로 두면 지속
+      피해 시계가 둘이 되고, 둘이면 언젠가 한쪽만 고친다.
+    */
+    aura: {
+      role: 'guard',
+      of: [
+        { id: 'st_break', sec: 1, mul: 0 },
+        { id: 'st_poison', sec: 1, tick: 0.025, dmg: 'magic' },
+      ],
+    },
+  },
+  20: {
+    name: '수호수의 가호',
+    text: '받는 피해 20% 감소 · 15초마다 최대 체력의 5% 회복 · 체력 30% 이하에서 방어력 50% 증가',
+    tough: 0.80,
+    regen: { sec: 15, pct: 0.05 },
+    /*
+      사양은 "체력 30% 이하에서 **10초간** 방어력 50% 증가" 다. 여기서는
+      **30% 아래인 동안 계속**으로 뒀다.
+
+      한 번 걸리면 10초 뒤에 풀리는데 그때도 체력은 여전히 30% 아래라
+      곧바로 다시 걸린다. 실제로 벌어지는 일은 "체력이 낮으면 단단하다"
+      하나뿐이고, 10초 시계는 그 사이 한 틱 깜빡이는 것 말고는 아무 일도
+      안 한다. 시계를 하나 덜 두는 쪽을 골랐다.
+    */
+    last: { under: 0.30, defMul: 1.50 },
+  },
+};
 
 /**
  * `n` 번째 공격에 나오는 패턴. 없으면 `null` (평타).
@@ -817,6 +1089,22 @@ export interface FoeSlot {
    * 때마다 남은 놈들이 다시 그려져 깜빡인다.
    */
   id: number;
+  /**
+   * **무대에서 서는 자리** (0 ~ `MOB_CAP`-1). 0 이 맨 앞이다.
+   *
+   * ## 왜 배열 순서로는 안 되나
+   *
+   * 목록에서의 자리(`foes` 의 인덱스)는 한 마리가 죽으면 **밀린다.** 앞줄이
+   * 쓰러지면 뒤에 있던 놈이 0번이 되고, 화면은 그놈을 앞으로 미끄러뜨린다 —
+   * 아무도 안 움직였는데 줄이 통째로 앞으로 당겨진다.
+   *
+   * 자리를 따로 들고 다니면 **죽어도 남은 놈들이 안 움직인다.** 빈자리는
+   * 비워 두고, 다음에 걸어 들어오는 놈이 그 자리를 받는다.
+   *
+   * 앞쪽 몇 자리가 붙어 싸우는 줄인지는 판이 정한다 (`meleeSlots`). 그래서
+   * 근접이 뒷줄에 서거나 원거리가 앞줄에 서는 일이 없다.
+   */
+  pos: number;
 }
 
 /**
@@ -836,6 +1124,36 @@ const meleeKinds = (stage: number): number[] =>
 /** 떨어져서 던지는 종들의 자리 번호 */
 const rangedKinds = (stage: number): number[] =>
   kindsOf(stage).map((k, i) => (k.melee ? -1 : i)).filter((i) => i >= 0);
+
+/**
+ * 이 판에서 **앞줄이 몇 자리**인가.
+ *
+ * 앞에서부터 이만큼이 붙어 싸우는 자리이고, 나머지가 던지는 자리다. 누가
+ * 서 있든, 몇 마리가 죽었든 **안 바뀐다** — 그래야 자리를 고정할 수 있다
+ * (`FoeSlot.pos`).
+ *
+ * 던지는 종이 없는 판이면 넷 다 앞줄이고, 붙어 싸우는 종이 없으면 앞줄이
+ * 아예 없다. 지금 스무 판은 전부 둘 다 있어서 늘 2 다.
+ */
+export function meleeSlots(stage: number): number {
+  const m = meleeKinds(stage).length;
+  const r = rangedKinds(stage).length;
+  if (!m) return 0;
+  if (!r) return MOB_CAP;
+  return MOB_CAP - RANGED_CAP;
+}
+
+/**
+ * 자리마다 앞줄인가 — 길이가 늘 `MOB_CAP` 이다.
+ *
+ * 화면이 "이 자리는 얼마나 앞으로 나가 있나" 를 잴 때 쓴다. **비어 있는
+ * 자리도 값을 갖는다** — 서 있는 놈만 보고 재면 한 마리 죽을 때마다 줄
+ * 전체가 앞뒤로 움직인다.
+ */
+export const rowMelee = (stage: number): boolean[] => {
+  const n = meleeSlots(stage);
+  return Array.from({ length: MOB_CAP }, (_v, i) => i < n);
+};
 
 /**
  * 이 스테이지의 적 한 마리.
@@ -909,6 +1227,18 @@ export function foeOf(stage: number, boss: boolean, k = 0): Foe {
     spd: kind.spd,
     def: kind.def ?? 0,
     res: kind.res ?? 0,
+    /*
+      **기술과 성질은 판이 붙인다.**
+
+      `STAGES` 의 우두머리 줄에는 수치만 적혀 있다. 기술은 `BOSS_SKILLS`,
+      성질은 `BOSS_PASSIVES` 에 따로 모여 있고 (거기 이유를 적어 뒀다),
+      둘을 이어 붙이는 곳이 여기 한 군데다.
+
+      종에 `patterns` 가 직접 적혀 있으면 그쪽이 이긴다 — 잡몹에게 패턴을
+      줄 일이 생겼을 때를 위한 자리다.
+    */
+    patterns: boss ? (kind.patterns ?? BOSS_SKILLS[s] ?? BOSS_PATTERNS) : kind.patterns,
+    passive: boss ? (kind.passive ?? BOSS_PASSIVES[s]) : undefined,
     boss,
   };
 }
@@ -1022,6 +1352,41 @@ export interface BattleState {
    * `< >` 로 뒤로 갈 수도 있으므로 "다음" 으로는 표현이 안 된다.
    */
   goTo: number | null;
+  /**
+   * 아군에게 걸려 있는 것들. 키는 CharId (`core/status` 의 `Hex`).
+   *
+   * 우두머리 기술이 걸고, 매 틱 시간이 흐른다 (`tickHex`). 판이 바뀌거나
+   * 전멸하면 통째로 비운다 — 다음 판까지 출혈을 들고 가면 "왜 체력이 줄지"
+   * 를 설명할 화면이 없다.
+   */
+  hex: Record<string, Hex[]>;
+  /**
+   * 스킬 게이지를 강제로 깎인 횟수. 키는 CharId.
+   *
+   * 게이지 자체는 화면이 센다 (`Fighter` 안의 스윙 횟수). 여기서 셀 수가
+   * 없다 — 휘두르는 박자는 캐릭터마다 다르고 틱과 무관하기 때문이다.
+   * 그래서 **깎으라는 신호만** 여기 남기고, 얼마나 깎을지는 화면이 안다.
+   *
+   * 숫자가 올라간 것을 보면 화면이 한 번 깎는다. 20판 태고의 성난 벼락
+   * 하나가 쓴다.
+   */
+  cut: Record<string, number>;
+  /**
+   * 우두머리가 나온 뒤로 흐른 시간 (ms). 잡몹 구간에서는 0.
+   *
+   * 20판의 "15초마다 회복" 이 이걸 본다. 시계를 우두머리 슬롯에 두지 않은
+   * 이유는, 슬롯은 죽으면 사라지는데 저 성질은 그 우두머리가 서 있는 동안의
+   * 것이라 판 상태에 두는 편이 자연스러워서다.
+   */
+  bossMs: number;
+  /**
+   * 적이 **실제로 한 대 친** 횟수.
+   *
+   * 화면이 "지금 적이 팔을 휘둘렀나" 를 이걸로 안다. 체력이 줄어든 것만
+   * 보면 지속 피해가 들어올 때마다 적이 허공에 팔을 휘두른다 — 5초짜리
+   * 중독이면 열 번이다.
+   */
+  swingSeq: number;
 }
 
 /**
@@ -1049,16 +1414,17 @@ const startFoes = (stage: number, seq = 0): { foes: FoeSlot[]; seq: number } => 
     이유가 화면에서 여러 가지가 동시에 벌어지게 하려는 것이므로, 첫 대형만은
     고르게 섞어 둔다. 그 뒤로 걸어 들어오는 놈은 무작위다.
   */
-  const wantMelee = r.length ? MOB_CAP - RANGED_CAP : MOB_CAP;
+  const wantMelee = meleeSlots(stage);
   for (let i = 0; i < wantMelee && m.length; i++) {
     const k = m[i % m.length];
-    foes.push(fresh(stage, k, n++));
+    /* 자리 번호가 곧 배열 순서다 — 처음 한 번은 빈자리 없이 채운다 */
+    foes.push(fresh(stage, k, n++, foes.length));
   }
   /* 남은 자리를 **먼저 센다** — 안에서 세면 넣을 때마다 목표가 줄어든다 */
   const wantRanged = r.length ? MOB_CAP - foes.length : 0;
   for (let i = 0; i < wantRanged; i++) {
     const k = r[i % r.length];
-    foes.push(fresh(stage, k, n++));
+    foes.push(fresh(stage, k, n++, foes.length));
   }
   return { foes, seq: n };
 };
@@ -1070,36 +1436,50 @@ const startFoes = (stage: number, seq = 0): { foes: FoeSlot[]; seq: number } => 
  * 걸어 들어오는 그 프레임에 바로 한 대 치므로, 화면에서는 아직 화면 끝에
  * 있는데 아군 체력이 닳는다.
  */
-function fresh(stage: number, k: number, id: number): FoeSlot {
+function fresh(stage: number, k: number, id: number, pos: number): FoeSlot {
   const kind = foeOf(stage, false, k);
-  return { hp: kind.hp, k, id, cd: swingMs(kind.spd), n: 0 };
+  return { hp: kind.hp, k, id, cd: swingMs(kind.spd), n: 0, pos };
 }
 
 /**
- * 한 마리를 줄에 끼워 넣는다. **끼운 자리**를 돌려준다.
+ * 한 마리를 **빈자리에** 세운다. 배열에서 끼운 자리를 돌려준다 (없으면 -1).
  *
- * 근접은 원거리 앞에, 원거리는 맨 뒤에. 그냥 뒤에 붙이면 근접이 원거리
- * 뒤에서 나타나고, 그러면 앞줄이 빈 채로 뒤에서만 두 줄이 선다.
+ * ## 자리를 새로 짜지 않는다
+ *
+ * 예전에는 근접을 원거리 **앞에 끼워 넣었다.** 그러면 뒤에 서 있던 놈들의
+ * 번호가 통째로 밀리고, 화면에서는 아무도 안 움직였는데 줄이 한 칸씩 뒤로
+ * 물러났다. 죽을 때도 같은 일이 반대로 일어났다.
+ *
+ * 지금은 자리마다 번호가 박혀 있으므로 (`FoeSlot.pos`) **비어 있는 번호를
+ * 찾아 그 자리에 세운다.** 앞줄 자리가 비면 근접이, 뒷줄 자리가 비면
+ * 원거리가 온다 — 서 있는 놈들은 아무 영향을 안 받는다.
+ *
+ * 배열은 **자리 번호 순으로** 유지한다. 노리는 확률(`AIM`)이 배열 순서를
+ * 앞줄로 읽으므로, 어긋나면 뒤에 선 놈이 앞줄 확률을 받는다.
  */
 function spawnInto(
   foes: FoeSlot[], stage: number, seq: number, rand: () => number = Math.random,
 ): number {
   const m = meleeKinds(stage);
   const r = rangedKinds(stage);
-  const alive = foes.filter((f) => isRanged(f, stage)).length;
+  const front = meleeSlots(stage);
+  const used = new Set(foes.map((f) => f.pos));
+  const freeIn = (from: number, to: number): number => {
+    for (let i = from; i < to; i++) if (!used.has(i)) return i;
+    return -1;
+  };
 
-  /* 뒷줄이 덜 찼고 앞줄이 이미 섰으면 원거리를, 아니면 근접을 */
-  const wantRanged = r.length > 0
-    && alive < RANGED_CAP
-    && foes.length >= MOB_CAP - RANGED_CAP;
-  const pool = wantRanged ? r : (m.length ? m : r);
+  const mFree = m.length ? freeIn(0, front) : -1;
+  const rFree = r.length ? freeIn(front, MOB_CAP) : -1;
+  /* 앞줄부터 채운다 — 앞이 빈 채로 뒤에서만 두 줄이 서면 싸움으로 안 보인다 */
+  const pos = mFree >= 0 ? mFree : rFree;
+  if (pos < 0) return -1;
+  const pool = mFree >= 0 ? m : r;
+
   const k = pool[Math.floor(rand() * pool.length)] ?? 0;
+  const slot: FoeSlot = fresh(stage, k, seq, pos);
 
-  const slot: FoeSlot = fresh(stage, k, seq);
-  if (wantRanged) { foes.push(slot); return foes.length - 1; }
-
-  /* 근접은 원거리 앞에 — 그냥 뒤에 붙이면 앞줄이 빈 채로 뒤에서만 선다 */
-  const at = foes.findIndex((f) => isRanged(f, stage));
+  const at = foes.findIndex((f) => f.pos > pos);
   if (at < 0) { foes.push(slot); return foes.length - 1; }
   foes.splice(at, 0, slot);
   return at;
@@ -1113,6 +1493,7 @@ export const newBattle = (): BattleState => {
     slain: 0, target: 0, hp: {}, down: 0, spawnIn: 0,
     openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
     called: false, pat: null, patSeq: 0,
+    hex: {}, cut: {}, bossMs: 0, swingSeq: 0,
   };
 };
 
@@ -1183,6 +1564,16 @@ export function enterStage(
     called: false,
     /* 판이 바뀌면 지난 판의 특수기 이름이 남아 있으면 안 된다 */
     pat: null,
+    /*
+      걸려 있던 것도 **판과 함께 걷힌다.**
+
+      출혈을 들고 다음 판으로 넘어가면, 화면에 그걸 건 놈이 없는데 체력만
+      줄어든다 — 무엇 때문인지 알 방법이 없다. 우두머리를 잡은 보상으로
+      읽히기도 한다.
+    */
+    hex: {},
+    cut: {},
+    bossMs: 0,
   };
 }
 
@@ -1284,6 +1675,51 @@ export function pickTarget(count: number, rand: () => number = Math.random): num
 export const targetOf = (st: BattleState): number =>
   st.foes.length ? Math.min(Math.max(0, Math.floor(st.target)), st.foes.length - 1) : 0;
 
+/**
+ * 사양(`HexSpec`)을 **실제로 걸리는 것**(`Hex`)으로 바꾼다.
+ *
+ * 계수에 그 우두머리의 공격력을 곱해 숫자로 굳힌다. 굳히는 이유는 걸린
+ * 다음에 우두머리가 죽어도 지속 피해가 남기 때문이다 — 계수만 들고 있으면
+ * 그때 공격력을 어디서 읽을지가 없어진다.
+ *
+ * @param atk 건 우두머리의 공격력
+ * @param dmg 기술의 피해 종류. `HexSpec.dmg` 가 없으면 이걸 쓴다
+ */
+export function hexFrom(spec: HexSpec, atk: number, dmg: DmgType): Hex {
+  return {
+    id: spec.id,
+    ms: Math.max(0, Math.round(spec.sec * 1000)),
+    /* 지속 피해는 **최소 1** 이다 — 반올림해서 0 이 되면 걸린 티가 안 난다 */
+    dot: spec.tick ? Math.max(1, Math.round(atk * spec.tick)) : 0,
+    dmg: spec.dmg ?? dmg,
+    mul: spec.mul ?? 1,
+    n: 1,
+  };
+}
+
+/**
+ * 이 기술이 이 사람에게 **실제로 거는 것들**. 확률은 여기서 굴린다.
+ *
+ * 사람마다 따로 굴린다 — 6판 암석 낙하의 "30% 확률로 기절" 은 넷 중 한둘만
+ * 걸려야 한다. 한 번 굴려 넷에 다 먹이면 "전원 기절" 과 "아무도 안 걸림" 만
+ * 남아서, 30% 라는 숫자가 뜻하는 바가 사라진다.
+ */
+function hexRoll(
+  p: BossPattern, atk: number, rand: () => number,
+): Hex[] {
+  const out: Hex[] = [];
+  for (const spec of p.hex ?? []) {
+    if (spec.odds !== undefined && rand() >= spec.odds) continue;
+    out.push(hexFrom(spec, atk, p.dmg));
+  }
+  if (p.oneOf && rand() < p.oneOf.odds) {
+    const of = p.oneOf.of;
+    const pick = of[Math.min(of.length - 1, Math.floor(rand() * of.length))];
+    if (pick) out.push(hexFrom(pick, atk, p.dmg));
+  }
+  return out;
+}
+
 /** 한 틱에 일어난 일 — 화면이 연출로 쓴다 */
 export interface TickEvent {
   /** 파티가 넣은 피해 */
@@ -1323,6 +1759,72 @@ const NOTHING: TickEvent = {
   hit: 0, taken: 0, hurt: null, fell: null, killed: 0, cleared: false,
   bossCame: false, wiped: false, gold: 0, healed: 0, pattern: null,
 };
+
+/**
+ * 이 기술이 **누구를 치나.**
+ *
+ * 평타(`pat` 이 null)와 `one` 은 자리 확률대로 한 명이다 (`AIM`). 나머지는
+ * 기술이 정한다.
+ *
+ * ## "맨 앞" 은 파티 1번 자리다
+ *
+ * `core/party` 의 `defenseOrder` 는 역할로 줄을 다시 세운다 (방어가 먼저).
+ * 그런데 화면에서 왼쪽에 서는 것은 **파티 자리 순서**이고, 자리 확률(`AIM`)
+ * 도 그 순서를 앞줄로 읽는다. 여기서만 역할 순서를 쓰면 "맨 앞을 친다" 는
+ * 기술이 화면 한가운데 선 사람을 친다.
+ *
+ * 그래서 앞은 **살아 있는 사람 중 파티 자리가 가장 앞인 사람**이다.
+ */
+function aimOf(
+  pat: BossPattern | null,
+  alive: readonly OwnedChar[],
+  hp: Record<string, number>,
+  rand: () => number,
+): OwnedChar[] {
+  if (!alive.length) return [];
+  if (!pat || pat.aim === 'one') return [alive[pickAim(alive.length, rand)]];
+  if (pat.aim === 'all') return [...alive];
+  if (pat.aim === 'front') return [alive[0]];
+  if (pat.aim === 'low') {
+    /*
+      **비율로** 잰다. 남은 양으로 재면 원래 체력이 적은 사람(리안느 150)이
+      가득 차 있어도 늘 걸려서, "마무리를 노린다" 가 "제일 약한 사람만
+      팬다" 가 된다.
+    */
+    let best = alive[0];
+    let low = Infinity;
+    for (const c of alive) {
+      const r = (hp[c.id] ?? 0) / Math.max(1, statOf(c).hp);
+      if (r < low) { low = r; best = c; }
+    }
+    return [best];
+  }
+  /* two — 겹치지 않게 둘. 같은 사람을 두 번 맞히면 한 명분이 사라진다 */
+  const pool = [...alive];
+  const out: OwnedChar[] = [];
+  for (let i = 0; i < 2 && pool.length; i++) {
+    out.push(...pool.splice(pickAim(pool.length, rand), 1));
+  }
+  return out;
+}
+
+/**
+ * 지금 이 적이 실제로 두르고 있는 방어 두 겹.
+ *
+ * 20판의 "체력 30% 이하에서 방어력 50% 증가" 하나가 여기를 쓴다
+ * (`BossPassive.last`). 나머지는 적어 놓은 값 그대로다.
+ */
+export function foeArmor(f: Foe, left: number): Armor {
+  const last = f.passive?.last;
+  if (!last || f.hp <= 0 || left / f.hp > last.under) return { def: f.def, res: f.res };
+  return {
+    def: Math.round(f.def * last.defMul),
+    res: Math.round(f.res * last.defMul),
+  };
+}
+
+/** 이 적이 받는 피해 배수 — 20판의 "받는 모든 피해 20% 감소" */
+export const foeTough = (f: Foe): number => f.passive?.tough ?? 1;
 
 /**
  * 한 틱.
@@ -1406,6 +1908,71 @@ export function battleTick(
   let { msLeft, slain, spawnIn, target, seq } = st;
   let isBoss = st.boss;
   let bossCame = false;
+  let bossMs = Number.isFinite(st.bossMs) ? st.bossMs : 0;
+  let swingSeq = Number.isFinite(st.swingSeq) ? st.swingSeq : 0;
+  const cut = { ...(st.cut ?? {}) };
+
+  /*
+    ── 걸려 있는 것들이 흐른다 ──
+
+    파티에서 빠진 사람의 기록은 여기서 사라진다 (`hp` 와 같은 태도). 남겨
+    두면 다시 넣었을 때 판을 떠나 있던 동안의 출혈이 그대로 되살아난다.
+  */
+  const hex: Record<string, Hex[]> = {};
+  let taken = 0;
+  let hurtId: string | null = null;
+  let fell: string | null = null;
+
+  for (const c of members(party, chars)) {
+    const was = hexOf(st.hex, c.id);
+    if (!was.length) continue;
+    const { left, dot } = tickHex(was, TICK_MS);
+    if (left.length) hex[c.id] = left;
+    if (hp[c.id] <= 0) continue;
+
+    /*
+      지속 피해도 **다른 피해와 같은 문을 지난다** (`strikeFor`) — 물리는
+      방어력이, 마법은 마법저항력이 막는다. 뺄셈이 게임에 한 곳만 있어야
+      "왜 이 사람은 덜 아픈가" 가 한 가지 이유로 설명된다.
+
+      파쇄가 걸려 있으면 그 깎인 방어로 막는다 (`liveArmor`) — 16판이
+      방어를 깎고 나서 출혈을 얹는 순서라, 여기서 원래 방어를 쓰면 깎은
+      뜻이 사라진다.
+    */
+    const armor = liveArmor(c, left);
+    let hurt = 0;
+    if (dot.phys > 0) {
+      hurt += strikeFor(dot.phys, 1, armor, { type: 'phys', pierce: NO_PIERCE });
+    }
+    if (dot.magic > 0) {
+      hurt += strikeFor(dot.magic, 1, armor, { type: 'magic', pierce: NO_PIERCE });
+    }
+    if (hurt <= 0) continue;
+    hp[c.id] = Math.max(0, hp[c.id] - hurt);
+    taken += hurt;
+    hurtId = c.id;
+    if (hp[c.id] <= 0) fell = c.id;
+  }
+
+  /*
+    ── 스스로 차는 체력 ──
+
+    이졸데의 패시브 하나뿐이다 (`core/passives`). 이 게임에 저절로 차는
+    체력이 없다는 규칙은 그대로다 — 저건 저절로가 아니라 **그 사람이 서
+    있어서** 차는 것이고, 쓰러지면 멈춘다.
+
+    쓰러진 사람은 안 채운다. 채우면 회복이 전멸을 취소해서 아무도 안 죽는다.
+  */
+  let healed = 0;
+  for (const c of members(party, chars)) {
+    const per = regenOf(c.id);
+    if (per <= 0 || hp[c.id] <= 0) continue;
+    const max = statOf(c).hp;
+    if (hp[c.id] >= max) continue;
+    const gain = Math.min(max - hp[c.id], Math.max(1, Math.round(per * TICK_MS / 1000)));
+    hp[c.id] += gain;
+    healed += gain;
+  }
 
   // ── 시간이 흐른다 ──
   if (!isBoss) msLeft = Math.max(0, msLeft - TICK_MS);
@@ -1430,8 +1997,10 @@ export function battleTick(
         아니라 방금 걸어 들어온 놈을 때린다.
       */
       const at = spawnInto(foes, st.stage, seq);
-      seq += 1;
-      if (at <= target) target += 1;
+      if (at >= 0) {
+        seq += 1;
+        if (at <= target) target += 1;
+      }
       spawnIn = SPAWN_TICKS;
     }
   }
@@ -1445,7 +2014,7 @@ export function battleTick(
   if (!isBoss && st.called && foes.length === 0) {
     isBoss = true;
     bossCame = true;
-    foes = [{ hp: bossFoe.hp, k: 0, id: seq, cd: swingMs(bossFoe.spd), n: 0 }];
+    foes = [{ hp: bossFoe.hp, k: 0, id: seq, cd: swingMs(bossFoe.spd), n: 0, pos: 0 }];
     seq += 1;
   }
 
@@ -1488,12 +2057,50 @@ export function battleTick(
   */
   const line = members(party, chars).filter((c) => hp[c.id] > 0);
 
-  let fell: string | null = null;
-  let taken = 0;
-  let hurtId: string | null = null;
+  /*
+    ── 우두머리가 늘 달고 있는 것 ──
+
+    오라는 **매 틱 다시 건다.** 시간이 지나 풀리게 두면 우두머리가 살아
+    있는데도 깜빡이고, 매 틱 새로 고치면 우두머리가 죽는 순간 자연히 걷힌다.
+  */
+  const pas = isBoss ? (bossFoe.passive ?? null) : null;
+  if (isBoss) {
+    bossMs += TICK_MS;
+    if (pas?.aura) {
+      for (const c of members(party, chars)) {
+        if (hp[c.id] <= 0 || CHARS[c.id].role !== pas.aura.role) continue;
+        let list = hex[c.id] ?? [];
+        for (const spec of pas.aura.of) {
+          list = putHex(list, hexFrom(spec, bossFoe.atk, 'magic'), spec.stack ?? 1);
+        }
+        hex[c.id] = list;
+      }
+    }
+    /*
+      스스로 차는 체력 — 몇 초마다 한 번이다.
+
+      "이번 틱에 그 선을 넘었나" 로 잰다. `bossMs % per === 0` 으로 보면
+      틱 길이가 안 맞아떨어질 때 영영 안 걸린다.
+    */
+    if (pas?.regen && foes.length) {
+      const per = Math.max(TICK_MS, pas.regen.sec * 1000);
+      if (Math.floor(bossMs / per) > Math.floor((bossMs - TICK_MS) / per)) {
+        const b = foes[0];
+        if (b && b.hp > 0) {
+          foes = [...foes];
+          foes[0] = {
+            ...b,
+            hp: Math.min(bossFoe.hp, b.hp + Math.round(bossFoe.hp * pas.regen.pct)),
+          };
+        }
+      }
+    }
+  } else {
+    bossMs = 0;
+  }
 
   /* 시계가 줄어든 새 목록 — 원본을 안 건드린다 */
-  const ticked = foes.map((f) => {
+  const ticked = foes.map((f, i) => {
     /*
       **우두머리는 우두머리의 수치로 읽는다.**
 
@@ -1513,6 +2120,11 @@ export function battleTick(
     let cd = (Number.isFinite(f.cd) ? f.cd : 0) - TICK_MS;
     /* `n` 도 나중에 생긴 칸이다 — `cd` 와 같은 이유로 걸러서 읽는다 */
     let n = Number.isFinite(f.n) ? f.n : 0;
+    /*
+      자리 번호도 나중에 생겼다. 없으면 **배열 순서를 그대로** 쓴다 — 예전
+      저장본에서는 배열 순서가 곧 자리였으므로 그게 맞는 값이다.
+    */
+    const pos = Number.isFinite(f.pos) ? f.pos : i;
     let swings = 0;
     /* 한 틱 안에 두 번 칠 수도 있다 (아주 빠른 적) */
     const at: (BossPattern | null)[] = [];
@@ -1526,7 +2138,7 @@ export function battleTick(
       */
       at.push(isBoss ? patternAt(n, kind.patterns ?? BOSS_PATTERNS) : null);
     }
-    return { slot: { ...f, cd, n }, atk: kind.atk, blow: foeBlow(kind), swings, at };
+    return { slot: { ...f, cd, n, pos }, atk: kind.atk, blow: foeBlow(kind), swings, at };
   });
   /* 줄어든 시계를 실제로 들고 나간다 — 안 그러면 시계가 영영 안 준다 */
   foes = ticked.map((t) => t.slot);
@@ -1550,20 +2162,29 @@ export function battleTick(
   /* 이번 틱에 나간 특수기 — 화면이 이름을 띄운다. 여럿이면 마지막 것 */
   let pattern: string | null = null;
 
+  /** 우두머리가 흡혈로 가져간 양 (10판 포식의 점액) */
+  let drained = 0;
+
   for (const h of hits) {
     const alive = line.filter((c) => hp[c.id] > 0);
     if (!alive.length) break;
 
-    /*
-      **누구를 때리나.**
+    /* 실제로 한 대 휘둘렀다 — 화면이 이 숫자로 팔을 움직인다 */
+    swingSeq += 1;
 
-      평타와 `one` 은 자리 확률대로 한 명 (`AIM`). `all` 은 살아 있는 전원이다 —
-      앞에 세운 사람이 대신 받아 줄 수 없는 유일한 공격이라, 여기서만 회복이
-      유일한 대답이 된다.
+    const marks = aimOf(h.pat, alive, hp, rand);
+
+    /*
+      기술은 **제 피해 종류와 관통을 따로 갖는다** (`BossPattern.dmg`).
+      평타가 물리인 우두머리가 마법 기술을 쓰는 판이 여럿이라(3·8·12·15·17),
+      평타 종류를 그대로 쓰면 마법저항력이 통째로 무시된다.
     */
-    const marks = h.pat && h.pat.aim === 'all'
-      ? alive
-      : [alive[pickAim(alive.length, rand)]];
+    const blow: Blow = h.pat
+      ? {
+        type: h.pat.dmg,
+        pierce: h.pat.pierce ? { phys: true, magic: true } : NO_PIERCE,
+      }
+      : h.blow;
 
     for (const who2 of marks) {
       /*
@@ -1571,19 +2192,57 @@ export function battleTick(
         같이 커져서, 세게 치는 공격일수록 방어가 잘 먹는 거꾸로 된 일이 된다.
       */
       /*
-        맞는 사람의 **두 겹**을 통째로 넘긴다 (`Stat` 이 `Armor` 다). 어느
-        겹이 걸릴지는 h.blow 가 정한다 — 지금 적은 전부 물리라 늘 방어력
-        쪽이지만, 마법으로 때리는 적이 생기면 여기는 안 고쳐도 된다.
+        맞는 사람의 **두 겹**을 통째로 넘기되, 지금 깎여 있으면 깎인 값을
+        쓴다 (`liveArmor`) — 16판이 방어를 40% 깎고 그 다음 대부터 아프게
+        하는 기술이라, 원래 값을 쓰면 깎은 뜻이 없어진다.
       */
-      const dmg = strikeFor(
-        Math.round(h.atk * (h.pat ? h.pat.mul : 1)), 1, statOf(who2), h.blow,
-      );
-      hp[who2.id] = Math.max(0, hp[who2.id] - dmg);
-      taken += dmg;
-      hurtId = who2.id;
-      if (hp[who2.id] <= 0) fell = who2.id;
+      const armor = liveArmor(who2, hex[who2.id] ?? []);
+      const base = Math.round(h.atk * (h.pat ? h.pat.mul : 1));
+      /*
+        배수가 0 인 기술은 **때리지 않는다** — 거는 것만 한다 (3·4·8·12·14·15판).
+        `strikeFor` 에 넣으면 최소 1 이 나와서, 피해가 없어야 할 기술에서
+        숫자가 뜬다.
+      */
+      const dmg = base > 0 ? strikeFor(base, 1, armor, blow) : 0;
+      if (dmg > 0) {
+        hp[who2.id] = Math.max(0, hp[who2.id] - dmg);
+        taken += dmg;
+        hurtId = who2.id;
+        if (hp[who2.id] <= 0) fell = who2.id;
+      }
+
+      /* ── 걸고 가는 것 ── */
+      let list = hex[who2.id] ?? [];
+      if (h.pat) {
+        for (const x of hexRoll(h.pat, h.atk, rand)) list = putHex(list, x, 1);
+        /*
+          게이지는 **여기서 못 깎는다.** 스킬 게이지를 세는 것은 화면이고
+          (`Fighter` 의 스윙 횟수), 그 박자는 틱과 무관하다. 신호만 남긴다.
+        */
+        if (h.pat.gauge) cut[who2.id] = (cut[who2.id] ?? 0) + 1;
+        if (h.pat.drain) drained += Math.round(dmg * h.pat.drain);
+      } else if (pas?.onHit) {
+        /* 평타에 붙는 것 — 10판 오염된 점성 하나뿐이다. 겹친다 */
+        list = putHex(list, hexFrom(pas.onHit, h.atk, 'phys'), pas.onHit.stack ?? 1);
+      }
+      if (list.length) hex[who2.id] = list;
+      else delete hex[who2.id];
     }
     if (h.pat) pattern = h.pat.name;
+  }
+
+  /*
+    흡혈 — 입힌 만큼 우두머리가 가져간다.
+
+    한 번에 몰아서 더한다. 맞는 사람마다 나눠 더하면 그 사이에 우두머리가
+    최대치를 넘었다가 다시 깎이는 중간 상태가 생긴다.
+  */
+  if (drained > 0 && foes.length && isBoss) {
+    const b = foes[0];
+    if (b && b.hp > 0) {
+      foes = [...foes];
+      foes[0] = { ...b, hp: Math.min(bossFoe.hp, b.hp + drained) };
+    }
   }
 
   if (allDown(party, chars, hp)) {
@@ -1601,10 +2260,15 @@ export function battleTick(
         down: REVIVE_TICKS,
         spawnIn: 0,
         pat: null,
+        /* 쓰러지면 걸려 있던 것도 같이 걷힌다 — 다시 일어설 때 가지고 가면 안 된다 */
+        hex: {},
+        cut: {},
+        bossMs: 0,
+        swingSeq,
       },
       ev: {
         hit, taken, hurt: hurtId, fell, pattern,
-        killed, cleared: false, bossCame, wiped: true, gold, healed: 0,
+        killed, cleared: false, bossCame, wiped: true, gold, healed,
       },
     };
   }
@@ -1621,10 +2285,11 @@ export function battleTick(
       */
       pat: pattern ?? st.pat ?? null,
       patSeq: pattern ? (Number.isFinite(st.patSeq) ? st.patSeq : 0) + 1 : (st.patSeq ?? 0),
+      hex, cut, bossMs, swingSeq,
     },
     ev: {
       hit, taken, hurt: hurtId, fell, pattern,
-      killed, cleared: false, bossCame, wiped: false, gold, healed: 0,
+      killed, cleared: false, bossCame, wiped: false, gold, healed,
     },
   };
 }
@@ -1691,15 +2356,44 @@ export function applyHit(
     `foeOf` 가 돌려주는 것이 곧 `Armor` 라 그대로 넘긴다. 어느 겹이 걸릴지는
     때리는 사람의 평타 종류가 정한다 (`blowOf` — 아녜스만 마법이다).
   */
-  const dmg = strikeFor(
-    mine.atk * supportMul(party, chars), rollCrit(mine, rand),
-    foeOf(st.stage, st.boss, foes[at].k), blowOf(me.id),
-  );
+  /*
+    ── 지금 이 사람이 실제로 내는 힘 ──
+
+    원래 공격력에 **파티 패시브**(아녜스의 +10%)와 **약화**가 같이 걸린다
+    (`core/passives`). 쓰러진 사람의 패시브는 안 센다 — 그래서 사제가 죽으면
+    남은 셋의 피해가 그 자리에서 떨어진다.
+  */
+  const alive = livingMembers(party, chars, st.hp);
+  const mineHex = hexOf(st.hex, who);
+  const kind = foeOf(st.stage, st.boss, foes[at].k);
+  const dmg = Math.max(1, Math.round(strikeFor(
+    mine.atk * allyAtkMul(alive) * mulOf(mineHex, 'st_weak'), rollCrit(mine, rand),
+    /* 20판은 체력이 낮으면 방어가 오른다 (`foeArmor`) */
+    foeArmor(kind, foes[at].hp), blowOf(me.id),
+  ) * foeTough(kind)));
   foes[at] = { ...foes[at], hp: foes[at].hp - dmg };
+
+  /*
+    ── 반사 ──
+
+    5판 가시 갑옷 하나뿐이다. 때린 사람이 받은 피해의 10%를 되돌려 받는다.
+
+    **되돌아오는 것도 물리다** — 때린 사람의 방어력이 막는다. 그냥 체력에서
+    빼면 방어를 올린 사람과 안 올린 사람이 똑같이 아파서, 이 게임에서 방어가
+    유일하게 안 통하는 자리가 생긴다.
+  */
+  let hp = st.hp;
+  const back = kind.passive?.reflect ?? 0;
+  if (back > 0) {
+    const bite = strikeFor(
+      Math.round(dmg * back), 1, liveArmor(me, mineHex), PHYS_BLOW,
+    );
+    hp = { ...hp, [who]: Math.max(0, hpOf(me, hp) - bite) };
+  }
 
   if (foes[at].hp > 0) {
     return {
-      battle: { ...st, foes, target: at },
+      battle: { ...st, foes, hp, target: at },
       ev: { ...NOTHING, hit: dmg },
     };
   }
@@ -1729,6 +2423,7 @@ export function applyHit(
       battle: {
         ...st,
         foes,
+        hp,
         slain: st.slain + 1,
         target: 0,
         clearIn: CLEAR_MS,
@@ -1744,7 +2439,7 @@ export function applyHit(
   /* 다음 놈은 **무작위로** 고른다 — 늘 맨 앞이면 한 자리만 계속 때린다 */
   return {
     battle: {
-      ...st, foes, slain: st.slain + 1, target: pickTarget(foes.length),
+      ...st, foes, hp, slain: st.slain + 1, target: pickTarget(foes.length),
     },
     ev: { ...NOTHING, hit: dmg, killed: 1, gold },
   };
@@ -1855,7 +2550,7 @@ export function skillDamage(
     안 바뀐다 — 뚫을 것이 애초에 0 이다.
   */
   return strikeFor(
-    skillBase(mine, sk, supportMul(party, chars)), 1, NO_ARMOR, blowOf(me.id, sk),
+    skillBase(mine, sk, allyAtk(party, chars)), 1, NO_ARMOR, blowOf(me.id, sk),
   );
 }
 
@@ -1941,6 +2636,8 @@ export function healPlan(
   party: Party,
   chars: Record<string, OwnedChar>,
   hp: Record<string, number>,
+  /** 지금 걸려 있는 것들 — 시듦(`st_wither`)이 있으면 받는 양이 깎인다 */
+  hex?: Record<string, Hex[]>,
 ): Record<string, number> {
   const out: Record<string, number> = {};
   if (sk.heal <= 0 && sk.healPct <= 0) return out;
@@ -1967,8 +2664,14 @@ export function healPlan(
   for (const c of members(party, chars)) {
     const mx = statOf(c).hp;
     const cur = hpOf(c, hp);
+    /*
+      **받는 쪽이 깎는다.** 14판 독성 포자가 거는 시듦이라, 시전자가 아니라
+      맞은 사람에게 걸려 있다 — 사제 한 명에게 걸렸다고 넷의 회복이 다
+      깎이면 사양과 다르다.
+    */
+    const mine = Math.round(amount * healMulOf(hexOf(hex, c.id)));
     /* 쓰러진 사람은 안 채운다 — 회복이 전멸을 되돌리면 아무도 안 죽는다 */
-    out[c.id] = cur <= 0 ? 0 : Math.min(mx, cur + amount) - cur;
+    out[c.id] = cur <= 0 ? 0 : Math.min(mx, cur + mine) - cur;
   }
   return out;
 }
@@ -2016,7 +2719,7 @@ export function applySkill(
 
   /* ── 회복형 — 적은 안 건드린다 ── */
   if (sk.heal > 0) {
-    const plan = healPlan(sk, party, chars, st.hp);
+    const plan = healPlan(sk, party, chars, st.hp, st.hex);
     const healed = Object.values(plan).reduce((a, v) => a + v, 0);
     /* 다 차 있으면 아무 일도 안 일어난다 — 헛것을 저장하지 않는다 */
     if (!healed) return { battle: st, ev: NOTHING };
@@ -2032,8 +2735,14 @@ export function applySkill(
 
   const mine = statOf(me);
   const foes = [...st.foes];
+  const alive = livingMembers(party, chars, st.hp);
+  const mineHex = hexOf(st.hex, who);
+  /* 파티 패시브와 약화가 같이 걸린다 — 평타(`applyHit`)와 같은 값이어야 한다 */
+  const sup = allyAtkMul(alive) * mulOf(mineHex, 'st_weak');
   let hit = 0;
   let killed = 0;
+  /** 5판 가시 갑옷이 되돌려 준 양 */
+  let bite = 0;
 
   /* 화면이 이미 골랐으면 그대로 쓴다 — 연출과 계산이 어긋날 자리를 없앤다 */
   const idx = (at ?? skillTargets(sk, foes, targetOf(st), rand))
@@ -2049,13 +2758,25 @@ export function applySkill(
   /* 이 기술 한 대가 들고 나가는 것 — 종류와 관통. 한 번만 만든다 */
   const blow = blowOf(me.id, sk);
   for (const i of idx) {
-    const dmg = strikeFor(
-      skillBase(mine, sk, supportMul(party, chars)), rollCrit(mine, rand),
-      foeOf(st.stage, st.boss, foes[i].k), blow,
-    );
+    const kind = foeOf(st.stage, st.boss, foes[i].k);
+    const dmg = Math.max(1, Math.round(strikeFor(
+      skillBase(mine, sk, sup), rollCrit(mine, rand),
+      foeArmor(kind, foes[i].hp), blow,
+    ) * foeTough(kind)));
     foes[i] = { ...foes[i], hp: foes[i].hp - dmg };
     hit += dmg;
+    /* 여러 마리를 치는 기술은 **친 만큼** 되돌아온다 (`applyHit` 과 같은 규칙) */
+    const back = kind.passive?.reflect ?? 0;
+    if (back > 0) {
+      bite += strikeFor(
+        Math.round(dmg * back), 1, liveArmor(me, mineHex), PHYS_BLOW,
+      );
+    }
   }
+
+  const hp = bite > 0
+    ? { ...st.hp, [who]: Math.max(0, hpOf(me, st.hp) - bite) }
+    : st.hp;
 
   /* 죽은 놈을 걷어낸다 — 뒤에서부터 지워야 인덱스가 안 밀린다 */
   for (let i = foes.length - 1; i >= 0; i--) {
@@ -2063,7 +2784,7 @@ export function applySkill(
   }
 
   if (!killed) {
-    return { battle: { ...st, foes }, ev: { ...NOTHING, hit } };
+    return { battle: { ...st, foes, hp }, ev: { ...NOTHING, hit } };
   }
 
   const gold = killGold(st.stage, st.boss) * killed;
@@ -2083,6 +2804,7 @@ export function applySkill(
       battle: {
         ...st,
         foes,
+        hp,
         slain: st.slain + killed,
         target: 0,
         clearIn: CLEAR_MS,
@@ -2095,7 +2817,7 @@ export function applySkill(
 
   return {
     battle: {
-      ...st, foes, slain: st.slain + killed, target: pickTarget(foes.length, rand),
+      ...st, foes, hp, slain: st.slain + killed, target: pickTarget(foes.length, rand),
     },
     ev: { ...NOTHING, hit, killed, gold },
   };

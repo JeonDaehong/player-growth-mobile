@@ -21,6 +21,7 @@ import { Image, Modal, Pressable, View } from 'react-native';
 import { WALLPAPERS } from '@/ui/wallpapers';
 import { T } from '@/ui/atoms';
 import { BLACK, SP, WHITE } from '@/ui/theme';
+import { useBackClose } from '@/ui/backGuard';
 
 export function WallpaperPopup({
   charId, name, onClose,
@@ -32,6 +33,14 @@ export function WallpaperPopup({
   onClose: () => void;
 }) {
   const src = charId ? WALLPAPERS[charId] : undefined;
+  /*
+    뒤로가기로도 닫힌다. 캐릭터 창 **위에** 뜨므로, 한 번 누르면 이것만
+    닫히고 캐릭터 창은 남는다 (`useBackClose` 가 열린 순서를 거꾸로 닫는다).
+
+    훅이라 `return null` 보다 **먼저** 불러야 한다 — 조건에 따라 안 부르면
+    훅 순서가 렌더마다 달라진다.
+  */
+  useBackClose(!!charId && !!src, onClose);
   if (!charId || !src) return null;
 
   return (

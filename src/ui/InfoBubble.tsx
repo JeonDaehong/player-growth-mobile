@@ -3,6 +3,7 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 import { KV, Row, Sep, T, Tag } from './atoms';
 import { BORDER, C, O, SP, WHITE } from './theme';
+import { useBackClose } from './backGuard';
 
 interface Props {
   visible: boolean;
@@ -25,6 +26,8 @@ interface Props {
  * Modal 은 스크롤 트리 밖의 오버레이에 렌더된다.
  */
 export function InfoBubble({ visible, title, badge, onClose, children, tail = 'up' }: Props) {
+  /* 휴대폰의 뒤로가기로도 닫힌다 (`ui/backGuard`) — 훅이라 이른 return 보다 먼저 */
+  useBackClose(visible, onClose);
   if (!visible) return null;
   return (
     <Modal transparent visible animationType="none" onRequestClose={onClose} statusBarTranslucent>

@@ -9,6 +9,7 @@ import { Btn, Row, Sep, T } from './atoms';
 import { Money } from './Money';
 import { Sprite } from './Sprite';
 import { C, SP, WHITE } from './theme';
+import { useBackClose } from './backGuard';
 
 /**
  * 복권 추첨 결과 알림.
@@ -39,6 +40,9 @@ export function LotteryResultHost() {
     return () => { clearInterval(tick); clearTimeout(t); };
     // 같은 배치로 타이머가 재시작되면 영영 안 닫힌다 — 첫 장의 id 로만 묶는다
   }, [key, n, close]);
+
+  /* 휴대폰의 뒤로가기로도 닫힌다 (`ui/backGuard`) — 훅이라 이른 return 보다 먼저 */
+  useBackClose(!!results && results.length > 0, close);
 
   if (!results || !results.length) return null;
 

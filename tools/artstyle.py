@@ -153,6 +153,24 @@ ILLUST_STYLE = """STYLE (strict):
 - This is NOT pixel art and NOT 1-bit. It is a fully rendered greyscale illustration.
 - She is an adult. Tasteful — no suggestive framing, no leering camera."""
 
+PORTRAIT = """VERTICAL COMPOSITION — this is a PHONE wallpaper, 9:16 portrait (tall).
+
+- The frame is TALL, not wide. Build the picture UP AND DOWN. Where the scene
+  description says something "runs away into the distance" or "stretches across the
+  floor", stage that as DEPTH climbing the frame, never as width crossing it.
+- FULL FIGURE, or three-quarter at the very least — head to foot is best. A tall frame
+  cropped at the chest throws away its whole lower half, which is the reason to shoot
+  portrait in the first place.
+- She stands (or kneels, or sits) so that her head sits near the UPPER THIRD line and
+  her feet near the bottom. Above her head is the place itself — ceiling, sky, canopy,
+  high window — and it stays quiet.
+- KEEP THE TOP AND BOTTOM STRIPS QUIET. A phone puts a clock across the top and a home
+  bar across the bottom. Nothing that must be read — her face above all — goes there.
+- Nothing important touches the left or right edge. The frame is narrow, so a prop
+  running off the side reads as CUT, not as continuing past the edge.
+- One figure only. No second character, no crowd, no inset panel."""
+
+
 MOE = """MOE / ANIME REGISTER — she is one of the pretty ones.
 
 - Modern Japanese moe anime style. Soft face with a small pointed chin, and LARGE

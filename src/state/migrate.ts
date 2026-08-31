@@ -290,6 +290,16 @@ export function migrateState(persisted: unknown): GameState {
     /* 지난 판에 나갔던 특수기 이름을 이어받을 이유가 없다 */
     pat: null,
     patSeq: 0,
+    /*
+      걸려 있던 것도 안 믿는다.
+
+      대형과 체력을 새로 세우면서(위) 출혈만 이어받으면, 켜자마자 아무도
+      안 때렸는데 체력이 줄어든다. 판을 새로 여는 것과 같은 태도다.
+    */
+    hex: {},
+    cut: {},
+    bossMs: 0,
+    swingSeq: 0,
   };
 
   return {

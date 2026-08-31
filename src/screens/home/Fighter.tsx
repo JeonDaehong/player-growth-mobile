@@ -145,7 +145,7 @@ type Frame = 'guard' | 'lose'
   | (typeof CUT_FRAMES)[number] | (typeof SK_FRAMES)[number];
 
 function FighterView({
-  ch, back, down, hp, damage, bless, advance, leapTo,
+  ch, back, down, hp, spd, stun, silent, cut, damage, bless, advance, leapTo,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -155,6 +155,32 @@ function FighterView({
   down: boolean;
   /** 이 사람의 남은 체력 */
   hp: number;
+  /**
+   * **지금 실제로** 초당 몇 번 휘두르나.
+   *
+   * 원래 수치(`statOf`)가 아니다. 파티 패시브(리안느의 +0.1), 다칠수록
+   * 빨라지는 것(비앙카), 둔화가 다 얹힌 값이다 (`core/passives` 의 `liveSpd`).
+   *
+   * 여기서 직접 안 재는 이유: 파티에 누가 살아 있는지와 지금 무엇이 걸려
+   * 있는지를 알아야 하는데, 그건 무대(`BattleView`)가 아는 것이다. 계산과
+   * 화면이 **같은 함수**를 써야 박자와 피해가 안 갈린다.
+   */
+  spd: number;
+  /**
+   * 기절했나 — 걸려 있으면 **아무것도 안 한다.**
+   *
+   * 쓰러진 것(`hp <= 0`)과 다르다. 서 있고 맞기도 하지만 못 움직인다.
+   */
+  stun: boolean;
+  /** 침묵인가 — 기술을 못 쓴다. 평타는 그대로 나간다 */
+  silent: boolean;
+  /**
+   * 스킬 게이지를 강제로 깎인 횟수 (`BattleState.cut`).
+   *
+   * 숫자가 올라갈 때마다 여기서 한 번 깎는다. 게이지를 세는 것은 이
+   * 안이라(스윙 횟수) 밖에서는 못 깎고, 그래서 **신호만** 받는다.
+   */
+  cut: number;
   /**
    * 이 사람 머리 위에 띄울 피해 숫자들.
    *
@@ -265,6 +291,51 @@ function FighterView({
   /** 이 사람이 쓰러졌나 — 파티 전멸과 별개다 */
   const fallen = hp <= 0;
 
+  /*
+    ── 박자와 세기는 **ref 로 흘린다** ──
+
+    아래 스윙 고리는 `useEffect` 안에서 타이머를 이어 건다. 공격속도를 의존성에
+    두면 값이 바뀔 때마다 고리가 통째로 다시 시작한다 — 그런데 지금은 공격속도가
+    **계속 바뀐다.** 비앙카는 체력이 1 깎일 때마다 빨라지고, 둔화는 5초 동안
+    걸렸다 풀린다. 의존성에 두면 그 사람은 휘두르다 말고 처음으로 돌아가기를
+    반복하다가 **영영 한 대도 못 친다.**
+
+    그래서 값은 ref 로 넣고, 고리는 다음 스윙을 예약할 때 최신 값을 읽는다.
+    빨라지면 다음 스윙부터 빨라진다 — 지금 휘두르던 것은 끝까지 휘두른다.
+  */
+  const spdRef = useRef(spd);
+  spdRef.current = spd;
+  const atkRef = useRef(st.atk);
+  atkRef.current = st.atk;
+  /** 침묵도 같은 이유로 ref 다 — 5초짜리라 고리를 두 번 끊는다 */
+  const silentRef = useRef(silent);
+  silentRef.current = silent;
+
+  /**
+   * 몇 번째 스윙인가 — 고리 밖에 둔다.
+   *
+   * 고리 안의 지역 변수였다. 그러면 고리가 다시 시작할 때마다 0 으로
+   * 돌아가서, 기절이 한 번 걸렸다 풀릴 때마다 스킬 게이지가 통째로
+   * 사라진다. 밖에 두면 멈췄다 이어져도 세던 것을 이어 센다.
+   */
+  const nRef = useRef(0);
+  /** 차례가 됐지만 아직 안 나간 기술들 — 같은 이유로 밖에 있다 */
+  const queueRef = useRef<number[]>([]);
+
+  /*
+    게이지를 깎으라는 신호가 왔다 (20판 태고의 성난 벼락).
+
+    **절반으로 되돌린다.** 0 으로 만들면 기술이 갓 나간 직후에 맞았을 때
+    아무 일도 안 일어난 것과 같아서, 맞은 사람 입장에서는 뭘 잃었는지 모른다.
+  */
+  const cutRef = useRef(cut);
+  useEffect(() => {
+    if (cut === cutRef.current) return;
+    cutRef.current = cut;
+    nRef.current = Math.floor(nRef.current / 2);
+    queueRef.current.length = 0;
+  }, [cut]);
+
   /**
    * 쓰러진 뒤의 사라짐.
    *
@@ -372,6 +443,14 @@ function FighterView({
       **보이는 것만** 멈춘다 — 누워 있는 사람이 검을 휘두르면 안 되니까.
     */
     if (down || fallen) { setFrame('lose'); return; }
+    /*
+      기절 — **서 있지만 아무것도 안 한다.**
+
+      쓰러진 것과 다르므로 `lose` 를 쓰지 않는다. `guard` 로 굳어 있으면
+      "가만히 있다" 가 그대로 보이고, 머리 위 로고가 왜인지를 말한다
+      (`StatusRow` 의 `st_stun`).
+    */
+    if (stun) { setFrame('guard'); return; }
     setFrame('guard');
 
     let alive = true;
@@ -387,11 +466,9 @@ function FighterView({
       그걸 그대로 ms 로 썼는데, 0.8 에서 290 을 빼면 음수라 하한 120ms 에
       걸려서 **모두가 초당 두 번 넘게** 휘둘렀다.
     */
-    const beat = swingMs(st.spd);
-    const idle = Math.max(120, beat - SWING_MS);
+    /** 지금 이 순간의 간격 — 스윙을 예약할 때마다 다시 읽는다 */
+    const beatNow = () => swingMs(spdRef.current);
 
-    /** 몇 번째 스윙인가 — `SkillDef.every` 번째마다 평타 대신 기술이 나간다 */
-    let n = 0;
     /**
      * 차례가 됐지만 아직 안 나간 기술들의 자리.
      *
@@ -402,15 +479,22 @@ function FighterView({
      *
      * 지금은 한 명당 기술이 하나뿐이라 이 줄은 늘 비어 있다.
      */
-    const queue: number[] = [];
+    const queue = queueRef.current;
 
     const cycle = () => {
       if (!alive) return;
-      n += 1;
+      nRef.current += 1;
+      const n = nRef.current;
       /* 몇 번째마다 나가는지는 기술이 정한다 — 무거운 것일수록 드물다 */
       const list = skillsOf(ch.id);
-      /** 이번 스윙에 나갈 기술의 자리. -1 이면 평타다 */
-      const slot = nextSkill(ch.id, n, queue);
+      /**
+       * 이번 스윙에 나갈 기술의 자리. -1 이면 평타다.
+       *
+       * **침묵이면 아예 안 고른다.** 고르고 나서 막으면 그 기술은 차례를
+       * 쓴 채로 사라진다 — 15판 부패의 악취가 5초를 거는데, 그동안 돌아온
+       * 차례가 통째로 없어지면 침묵이 풀린 뒤에도 한참 기술이 안 나간다.
+       */
+      const slot = silentRef.current ? -1 : nextSkill(ch.id, n, queue);
       const skill = slot >= 0;
       const sk = list[Math.max(0, slot)] ?? skillOf(ch.id);
       setCasting(slot);
@@ -506,7 +590,7 @@ function FighterView({
 
       if (throwing) at(landAt + reach, () => {
         if (skill) cbSkill.current(ch.id, slot);
-        else cb.current({ id: ch.id, fx: d.fx, dmg: st.atk });
+        else cb.current({ id: ch.id, fx: d.fx, dmg: atkRef.current });
       });
 
       at(landAt, () => {
@@ -522,7 +606,7 @@ function FighterView({
           */
           cbSkill.current(ch.id, slot);
         } else {
-          cb.current({ id: ch.id, fx: d.fx, dmg: st.atk });
+          cb.current({ id: ch.id, fx: d.fx, dmg: atkRef.current });
         }
         /*
           내디디는 걸음.
@@ -541,7 +625,13 @@ function FighterView({
       });
 
       at(span, () => setFrame('guard'));
-      at(span + idle, cycle);
+      /*
+        다음 스윙은 **지금 박자로** 잡는다.
+
+        간격에서 스윙에 안 쓰는 나머지가 쉬는 시간이다. 매번 다시 읽으므로
+        중간에 빨라지거나 느려져도 다음 스윙부터 반영된다.
+      */
+      at(span + Math.max(120, beatNow() - SWING_MS), cycle);
     };
 
     /*
@@ -550,10 +640,15 @@ function FighterView({
       간격이 같은 두 캐릭터를 동시에 시작시키면 영영 같이 움직여서 합창단이
       된다. 처음 한 번만 무작위로 어긋내면 그 뒤로는 알아서 흩어진 채로 돈다.
     */
-    at(Math.random() * beat, cycle);
+    at(Math.random() * beatNow(), cycle);
 
     return () => { alive = false; timers.forEach(clearTimeout); };
-  }, [ch.id, st.spd, st.atk, d.fx, down, fallen, step, leapX, leapY]);
+    /*
+      공격속도와 공격력은 **의존성이 아니다** — ref 로 흘린다 (위에 이유).
+      여기 남은 것들은 실제로 고리를 다시 세워야 하는 것들뿐이다: 사람이
+      바뀌었거나, 쓰러졌거나, 기절했거나.
+    */
+  }, [ch.id, d.fx, down, fallen, stun, step, leapX, leapY]);
 
   /*
     쿼터뷰 깊이.
@@ -597,8 +692,30 @@ function FighterView({
 
   const { lift, scale } = depthAt(back);
   const size = Math.round(width * scale);
-  /* 다 사라진 사람은 아예 안 그린다 — 자리도 안 차지한다 */
-  if (hidden && fallen) return null;
+  /*
+    ── 다 사라진 사람 ──
+
+    그림은 지우되 **자리는 남긴다.**
+
+    예전에는 `null` 을 돌려줬다. 그러면 감싸고 있는 가로줄에서 그 칸이
+    통째로 없어져서, 옆에 서 있던 사람들이 그만큼 옆으로 미끄러진다 —
+    아무도 안 움직였는데 줄이 다시 짜인다. 게다가 무대가 자리를 잴 때는
+    여전히 넷으로 세므로(`allyRightOf`), 그때부터 계산과 화면이 어긋난다.
+
+    빈 칸을 같은 폭으로 남기면 1·2·3·4번 자리가 판 내내 고정된다.
+  */
+  if (hidden && fallen) {
+    return (
+      <View
+        style={{
+          width: size,
+          height: 1,
+          marginLeft: back === 0 ? 0 : -(16 + squeeze),
+          marginBottom: lift,
+        }}
+      />
+    );
+  }
   /** 지금 나가는 중인 기술 — 평타 중이면 null */
   const castSk = casting >= 0 ? (skillsOf(ch.id)[casting] ?? null) : null;
   const max = st.hp;
@@ -851,6 +968,10 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.back === b.back
   && a.down === b.down
   && a.hp === b.hp
+  && a.spd === b.spd
+  && a.stun === b.stun
+  && a.silent === b.silent
+  && a.cut === b.cut
   && a.bless === b.bless
   && a.squeeze === b.squeeze
   && a.width === b.width

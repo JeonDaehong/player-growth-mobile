@@ -18,7 +18,8 @@ import {
 import {
   MAX_PARTY_GEAR, PARTY_SIZE, hpOf, partyGear, partyPower,
 } from '@/core/party';
-import { statusOf } from '@/core/status';
+import { hexOf } from '@/core/status';
+import { statusOf } from '@/core/passives';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { StatusRow } from './StatusRow';
 import { Sprite } from '@/ui/Sprite';
@@ -35,6 +36,14 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
     판단이 이 숫자에서 나온다.
   */
   const hpMap = useGame((s) => s.battle.hp);
+  /*
+    지금 걸려 있는 것들.
+
+    로고 줄이 이걸 그린다 (`StatusRow`). 무대가 아니라 여기서 읽는 이유는
+    `core/status` 머리말에 적어 두었다 — 걸려 있는 것은 "지금 이 사람이 어떤
+    상태인가" 라서, 남은 체력·스킬 칸과 같은 자리에 모여 있어야 한다.
+  */
+  const hexMap = useGame((s) => s.battle.hex);
   /*
     스킬이 몇 칸 찼나.
 
@@ -126,7 +135,11 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     **비어 있어도 높이를 지킨다** — 지우면 상태가 붙었다 풀릴
                     때마다 네 칸이 위아래로 들썩인다.
                   */}
-                  <StatusRow status={statusOf(c.id, party, chars)} />
+                  <StatusRow
+                    status={statusOf(
+                      c.id, hpOf(c, hpMap), statOf(c).hp, hexOf(hexMap, c.id),
+                    )}
+                  />
 
                   {/*
                     스킬 쿨 — 기술마다 한 줄.

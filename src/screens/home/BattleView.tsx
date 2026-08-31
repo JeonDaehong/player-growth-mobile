@@ -31,11 +31,14 @@ import { Animated, Easing, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  MOB_CAP, STAGE_MS, bossReady, fightHeld, foeOf, healPlan, pickAim, skillDamage,
+  MOB_CAP, STAGE_MS, bossReady, fightHeld, foeOf, healPlan, pickAim, rowMelee,
+  skillDamage,
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf, skillsOf } from '@/core/chars';
-import { hpOf, members, partyStat, supportMul } from '@/core/party';
+import { hpOf, members, partyStat } from '@/core/party';
+import { hasHex, hexOf } from '@/core/status';
+import { liveSpd } from '@/core/passives';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
@@ -335,6 +338,13 @@ export function BattleView() {
   const cur = foeOf(battle.stage, battle.boss);
   const ps = partyStat(party, chars);
   const line = members(party, chars);
+  /*
+    살아 있는 사람들 — **패시브가 이걸 본다.**
+
+    쓰러진 사람의 패시브는 꺼진다 (`core/passives`). 그래서 사제가 죽으면
+    남은 셋의 공격력이, 활잡이가 죽으면 넷의 공격속도가 그 자리에서 떨어진다.
+  */
+  const aliveLine = line.filter((c) => hpOf(c, battle.hp) > 0);
 
   const down = battle.down > 0;
   const empty = ps.count === 0;
@@ -343,6 +353,8 @@ export function BattleView() {
   const seq = useRef(0);
   /** 지난 틱의 사람별 체력 — 얼마나 깎였는지 재려고 */
   const prevHp = useRef<Record<string, number>>({});
+  /** 지난번에 본 "적이 실제로 친 횟수" — 지속 피해와 가르려고 */
+  const prevSwing = useRef(0);
 
   /** 맨 앞 적이 맞고 밀리는 동작 */
   const knock = useRef(new Animated.Value(0)).current;
@@ -454,8 +466,20 @@ export function BattleView() {
   /** 걸음을 이미 시작시킨 놈들 — 값 만들기와 움직이기가 따로라 따로 센다 */
   const started = useRef(new Set<number>()).current;
 
+  /**
+   * 무대 계산이 쓰는 값들 — 렌더가 끝날 때마다 갈아 끼운다.
+   *
+   * `count` 는 **목록의 길이**(누구를 때릴지 고를 때), `cap` 은 **자리 수**
+   * (어디에 그릴지 잴 때)다. 둘을 하나로 묶으면 한 마리 죽을 때마다 남은
+   * 놈들이 앞으로 미끄러진다.
+   *
+   * `pos` 는 목록 자리 → 무대 자리다 (`FoeSlot.pos`).
+   */
   const foeAt = useRef({
-    stageW: 0, count: 0, squeeze: 0, closeIn: 0, base: FOE_W, edge: EDGE, lap: FOE_LAP,
+    stageW: 0, count: 0, cap: MOB_CAP,
+    squeeze: 0, closeIn: 0, base: FOE_W, edge: EDGE, lap: FOE_LAP,
+    /** 목록 자리 → 무대 자리 */
+    pos: [] as number[],
     /** 자리별 근접 여부 — 원거리는 안 걸어 나온다 */
     melee: [] as boolean[],
   });
@@ -558,9 +582,15 @@ export function BattleView() {
    * 줄은 오른쪽 벽에서 `EDGE` 만큼 띄우고, 뒤에 선 놈부터 왼쪽에 세운 뒤
    * `FOE_LAP` 만큼 서로 겹친다. 여기서는 그 배치를 그대로 되짚는다.
    */
+  /**
+   * 그 **자리**가 무대 어디인가 (목록 순서가 아니라 `FoeSlot.pos`).
+   *
+   * 자리 수(`cap`)로 잰다 — 서 있는 마릿수로 재면 한 마리 죽을 때마다 줄
+   * 폭이 줄어서 남은 놈들이 통째로 앞으로 당겨진다.
+   */
   const spotOf = React.useCallback((back: number) => {
     const a = foeAt.current;
-    const n = Math.max(1, a.count);
+    const n = Math.max(1, a.cap);
     /* 줄 전체의 전진 거리 — 앞지르기가 막힌 값이다 */
     const adv = advanceRow(a.melee.length ? a.melee : [true], a.closeIn);
     const lap = a.lap + a.squeeze;
@@ -594,6 +624,8 @@ export function BattleView() {
    */
   const onAim = React.useCallback((id: string, skill: boolean) => {
     const foes = Math.max(1, foeAt.current.count);
+    /* 목록 자리 → 무대 자리. 죽어도 안 움직이므로 둘이 다르다 */
+    const posAt = (i: number) => foeAt.current.pos[i] ?? 0;
     /*
       **기술은 제일 뒤엣놈까지 간다.**
 
@@ -603,7 +635,7 @@ export function BattleView() {
     const at = skill ? foes - 1 : pickAim(foes);
     aimed.current[id] = at;
 
-    const spot = spotOf(at);
+    const spot = spotOf(posAt(at));
     const back = backRef.current[id] ?? 0;
     /*
       검끝에서 적의 **몸 가운데**까지.
@@ -647,8 +679,10 @@ export function BattleView() {
     const live = now.current.battle.foes.length;
     /* 날아가는 사이에 앞줄이 죽어 줄이 짧아졌을 수 있다 */
     const at = Math.min(saved ?? pickAim(live), Math.max(0, live - 1));
-    /* 자리는 **때리기 전에** 잡는다 — 죽으면 줄이 다시 짜여 자리가 달라진다 */
-    const spot = spotOf(at);
+    /* 목록 자리를 무대 자리로 옮긴다 — 그려야 할 곳은 그놈이 서 있는 자리다 */
+    const to = foeAt.current.pos[at] ?? 0;
+    /* 자리는 **때리기 전에** 잡는다 — 죽으면 목록이 줄어 번호가 밀린다 */
+    const spot = spotOf(to);
     strikeFoe(sw.id, at);
 
     const key = hitSeq.current++;
@@ -662,7 +696,8 @@ export function BattleView() {
       }];
     });
     shake.fire(0.55);
-    setFlinch([at]);
+    /* 움찔하는 것도 **무대 자리**로 적는다 — 그리는 쪽이 그 번호를 본다 */
+    setFlinch([to]);
     if (flinchT.current) clearTimeout(flinchT.current);
     flinchT.current = setTimeout(() => setFlinch([]), 130);
     Animated.sequence([
@@ -732,8 +767,9 @@ export function BattleView() {
     const idx = skillTargets(sk, b.foes, targetOf(b));
 
     const dmg = skillDamage(me, pt, ch, slot);
-    /* 자리는 **때리기 전에** 다 잡아 둔다 — 죽으면 줄이 통째로 다시 짜인다 */
-    const spots = idx.map(spotOf);
+    /* 자리는 **때리기 전에** 다 잡아 둔다 — 죽으면 목록이 줄어 번호가 밀린다 */
+    const posAt = (i: number) => foeAt.current.pos[i] ?? 0;
+    const spots = idx.map((i) => spotOf(posAt(i)));
     /*
       뛰어드는 기술은 **착지한 자리**에서도 터진다.
 
@@ -771,7 +807,7 @@ export function BattleView() {
       for (const spot of spots) put(spot, dmg, false);
       return [...live, ...add];
     });
-    setFlinch(idx);
+    setFlinch(idx.map(posAt));
     if (flinchT.current) clearTimeout(flinchT.current);
     flinchT.current = setTimeout(() => setFlinch([]), 180);
   }, [skillFoe, shake, resetCharge, spotOf]);
@@ -810,6 +846,25 @@ export function BattleView() {
   /** 무대 폭 — 근접이 얼마나 나갈지 여기서 나온다 */
   const [stageW, setStageW] = useState(0);
 
+  /*
+    ── 특수기는 **피해가 없어도** 동작한다 ──
+
+    적이 팔을 휘두르는 표시는 아래에서 **체력이 닳는 순간**에 켠다. 그런데
+    우두머리 기술 중 여섯(3·4·8·12·14·15판)은 그 자리에서 아무도 안 아프다 —
+    거는 것만 하는 기술이라 즉시 피해가 0 이다 (`docs/BOSS_SKILLS.md`).
+
+    그러면 화면에서는 말풍선만 뜨고 우두머리는 가만히 서 있다. 특히 4판
+    환각 포자는 숫자도 안 뜨므로 **정말 아무 일도 안 일어난 것**으로 보인다.
+
+    그래서 기술이 나갔다는 신호(`patSeq`)에도 한 번 휘두르게 한다.
+  */
+  useEffect(() => {
+    if (!patCall) return undefined;
+    setFoeSwing(true);
+    const off = setTimeout(() => setFoeSwing(false), 320);
+    return () => clearTimeout(off);
+  }, [patCall]);
+
   useEffect(() => {
     /*
       **체력이 실제로 닳은 그 순간**에 전부 한다 — 숫자 · 적의 휘두르기 ·
@@ -826,14 +881,30 @@ export function BattleView() {
       if (was !== undefined && now < was) hurt.push([c.id, Math.round(was - now)]);
       prevHp.current[c.id] = now;
     }
+    /*
+      **때린 것과 지속 피해를 가른다.**
+
+      숫자는 둘 다 띄운다 — 체력이 줄었으면 얼마나 줄었는지는 보여야 한다.
+      그런데 **팔을 휘두르는 것과 뭔가를 날리는 것은 실제로 쳤을 때만** 한다.
+      체력이 줄어든 것만 보고 연출하면, 5초짜리 중독이 도는 동안 적이 허공에
+      팔을 열 번 휘두른다.
+
+      실제로 친 횟수는 계산이 세어 준다 (`BattleState.swingSeq`).
+      숫자가 그대로면 이번에 줄어든 것은 걸려 있던 것 때문이다.
+    */
+    const swung = battle.swingSeq !== prevSwing.current;
+    prevSwing.current = battle.swingSeq;
+
     if (empty || down || !hurt.length) return undefined;
 
     const late: ReturnType<typeof setTimeout>[] = [];
     const after = (ms: number, fn: () => void) => { late.push(setTimeout(fn, ms)); };
 
     /* 적이 팔을 휘두른다 */
-    setFoeSwing(true);
-    after(200, () => setFoeSwing(false));
+    if (swung) {
+      setFoeSwing(true);
+      after(200, () => setFoeSwing(false));
+    }
 
     /*
       뒷줄은 **뭔가를 날린다.**
@@ -841,7 +912,7 @@ export function BattleView() {
       모션만 있으면 뒤에서 혼자 꿈틀거리는 것으로 보인다. 아군 맨 앞까지의
       거리를 그때 재서 넘긴다 — 자리는 계속 바뀌므로 미리 잡아 둘 수 없다.
     */
-    const shot = shotsRef.current(hurt.map(([id]) => id));
+    const shot = swung ? shotsRef.current(hurt.map(([id]) => id)) : [];
     if (shot.length) {
       setShots((old) => [...old.slice(-5), ...shot]);
       after(FOE_SHOT_MS + 60, () => {
@@ -856,7 +927,7 @@ export function BattleView() {
     });
 
     return () => late.forEach(clearTimeout);
-  }, [battle.hp, party, chars, empty, down]);
+  }, [battle.hp, battle.swingSeq, party, chars, empty, down]);
 
 
   /*
@@ -885,7 +956,7 @@ export function BattleView() {
       .filter((b): b is number => b !== undefined);
 
     return battle.foes
-      .map((f, b) => ({ f, b }))
+      .map((f) => ({ f, b: f.pos ?? 0 }))
       .filter(({ b }) => !foeMelee[b])
       .map(({ f, b }, i) => {
         const sp = spotOf(b);
@@ -923,7 +994,15 @@ export function BattleView() {
     이펙트만 원래 자리(오른쪽 끝)에서 터져서 **적과 따로 논다.**
   */
   /* 적 수가 아니라 **상한**으로 잰다 — 안 그러면 한 마리 죽을 때마다 아군이 튄다 */
-  const closeIn = closeInFor(stageW, line.length, cur.boss ? 1 : MOB_CAP, cur.boss);
+  /**
+   * 이 판에 적이 설 **자리 수**. 우두머리 구간은 하나다.
+   *
+   * 서 있는 마릿수가 아니다. 자리는 판 내내 고정이고, 죽으면 그 자리가
+   * 빌 뿐이다 — 그래야 남은 놈들이 안 움직인다 (`core/autoBattle` 의
+   * `FoeSlot.pos`).
+   */
+  const cap = cur.boss ? 1 : MOB_CAP;
+  const closeIn = closeInFor(stageW, line.length, cap, cur.boss);
   /**
    * 그 자리의 아군이 적 앞줄까지 가려면 몇 px 을 더 가야 하나.
    *
@@ -973,7 +1052,8 @@ export function BattleView() {
     const myRight = allyRightOf(back) - (allyAdv[back] ?? 0);
 
     /* 적 줄 — 오른쪽 벽에서 EDGE, **앞줄이 왼쪽 끝** */
-    const fn = Math.max(1, battle.foes.length);
+    /* 자리 수로 잰다 — 마릿수로 재면 한 마리 죽을 때마다 도약 거리가 튄다 */
+    const fn = Math.max(1, cap);
     const fbase = foeW;
     const flap = fLap + squeeze;
     const fsize = (b: number) => Math.round(fbase * depthAt(b).scale);
@@ -990,7 +1070,7 @@ export function BattleView() {
 
     크기와 간격이 **다 같은 값을 탄다** — 하나만 줄이면 겹치거나 벌어진다.
   */
-  const fit = fitOf(stageW, line.length, cur.boss ? 1 : MOB_CAP);
+  const fit = fitOf(stageW, line.length, cap);
   const partyW = PARTY_W * fit;
   const foeW = (cur.boss ? BOSS_W : FOE_W) * fit;
   const edge = EDGE * fit;
@@ -998,10 +1078,16 @@ export function BattleView() {
   const fLap = FOE_LAP * fit;
 
   /* 좁은 화면에서만 0 보다 커진다 */
-  const squeeze = squeezeFor(stageW, line.length, cur.boss ? 1 : MOB_CAP, cur.boss);
+  const squeeze = squeezeFor(stageW, line.length, cap, cur.boss);
 
-  /* 각 줄이 앞으로 나와 있는 거리 — 앞뒤가 안 뒤집히게 줄 단위로 잰다 */
-  const foeMelee = battle.foes.map((f) => foeOf(battle.stage, battle.boss, f.k).melee);
+  /*
+    각 줄이 앞으로 나와 있는 거리 — 앞뒤가 안 뒤집히게 줄 단위로 잰다.
+
+    **누가 서 있는지가 아니라 자리가 정한다** (`rowMelee`). 서 있는 놈을
+    보고 재면, 앞줄이 죽어 원거리가 0번 자리에 오는 순간 줄 전체의 전진
+    거리가 다시 계산되어 남은 놈들이 앞뒤로 미끄러진다.
+  */
+  const foeMelee = cur.boss ? [true] : rowMelee(battle.stage);
   const foeAdv = advanceRow(foeMelee, closeIn);
   const allyAdv = advanceRow(
     line.map((c) => CHARS[c.id].range === 'melee'),
@@ -1086,6 +1172,8 @@ export function BattleView() {
   foeAt.current = {
     stageW,
     count: battle.foes.length,
+    cap,
+    pos: battle.foes.map((f) => f.pos ?? 0),
     squeeze,
     melee: foeMelee,
     closeIn,
@@ -1216,6 +1304,18 @@ export function BattleView() {
                     lap={pLap}
                     down={down}
                     hp={hpOf(c, battle.hp)}
+                    /*
+                      **지금 실제로** 얼마나 빨리 휘두르나.
+
+                      계산과 같은 함수를 쓴다 (`core/passives` 의 `liveSpd`) —
+                      리안느의 +0.1, 비앙카의 다칠수록 빨라지는 것, 우두머리가
+                      건 둔화가 전부 여기 들어 있다. 따로 재면 화면의 박자와
+                      실제 피해가 갈리는데, 그건 눈으로 못 잡는다.
+                    */
+                    spd={liveSpd(c, hpOf(c, battle.hp), aliveLine, hexOf(battle.hex, c.id))}
+                    stun={hasHex(hexOf(battle.hex, c.id), 'st_stun')}
+                    silent={hasHex(hexOf(battle.hex, c.id), 'st_silence')}
+                    cut={battle.cut?.[c.id] ?? 0}
                     damage={pops.filter((pp) => pp.who === c.id)}
                     bless={bless}
                     /*
@@ -1245,12 +1345,22 @@ export function BattleView() {
               ))}
             </Animated.View>
 
-            {/* ── 적 (오른쪽, 뒤집어서 왼쪽을 본다) ── */}
+            {/*
+              ── 적 (오른쪽, 뒤집어서 왼쪽을 본다) ──
+
+              **전멸하면 아예 안 그린다.** 예전에는 0.35 로 흐리게 남겨
+              뒀는데, 그러면 "전멸" 글씨 뒤로 적 실루엣 넷이 비쳐서 판이
+              끝난 건지 아직 싸우는 건지가 안 읽혔다. 진 화면에 있어야 할
+              것은 졌다는 말 하나다.
+
+              아군은 따로 지울 필요가 없다 — 넷 다 쓰러진 상태라 제 죽는
+              연출을 마치고 스스로 사라진다 (`Fighter` 의 `gone`).
+            */}
+            {!down && (
             <Animated.View
               style={{
                 position: 'absolute', right: edge, bottom: FLOOR,
                 flexDirection: 'row', alignItems: 'flex-end',
-                opacity: down ? 0.35 : 1,
                 /* 맞고 밀리는 것 위에 **오른쪽 밖에서 들어오는 것**을 얹는다 */
                 transform: [
                   { translateX: knockX },
@@ -1270,10 +1380,39 @@ export function BattleView() {
                 때리는 놈(`foes[0]`)이 저 끝에 있어서, 붙어 싸우라고 걸어 나가도
                 가운데가 90px 씩 비었다.
 
-                깊이는 `zIndex` 가 맡으므로 그리는 차례는 배열 그대로면 된다.
+                깊이는 `zIndex` 가 맡으므로 그리는 차례는 자리 순서면 된다.
+
+                ── **목록이 아니라 자리로 돈다** ──
+
+                예전에는 `battle.foes` 를 그대로 돌렸다. 그러면 한 마리가
+                죽어 목록이 줄어들 때 뒤에 있던 놈들의 번호가 통째로 밀려서,
+                아무도 안 움직였는데 줄이 왼쪽으로 당겨졌다.
+
+                지금은 **자리 넷을 늘 그린다.** 비어 있는 자리는 폭만
+                차지하는 빈 칸이라(`flexDirection: 'row'` 라 폭이 곧 자리다),
+                옆에 선 놈들은 아무 영향을 안 받는다.
               */}
-              {battle.foes.map((f, i) => {
-                const back = i;   // 0 이 맨 앞
+              {Array.from({ length: cap }, (_v, back) => {
+                const f = battle.foes.find((x) => (x.pos ?? 0) === back);
+                if (!f) {
+                  /*
+                    빈자리 — **폭만 남긴다.**
+
+                    안 그리면 뒤에 선 놈들이 그만큼 앞으로 당겨진다. 자리를
+                    고정하는 일의 절반이 여기다.
+                  */
+                  return (
+                    <View
+                      key={`gap${back}`}
+                      style={{
+                        width: Math.round(foeW * depthAt(back).scale),
+                        height: 1,
+                        marginLeft: back === 0 ? 0 : -(fLap + squeeze),
+                        marginBottom: depthAt(back).lift,
+                      }}
+                    />
+                  );
+                }
                 /*
                   한 줄에 **여러 종이 섞여** 선다 (`kindsOf`). 앞줄은 붙어서
                   싸우는 놈, 뒷줄은 떨어져서 던지는 놈이라 그림도 세기도
@@ -1445,6 +1584,7 @@ export function BattleView() {
                 );
               })}
             </Animated.View>
+            )}
           </>
         )}
 
@@ -1572,8 +1712,22 @@ export function BattleView() {
           fromClear={staging.fromClear}
         />
 
+        {/*
+          ── 진 화면 ──
+
+          무대 한가운데에 이것만 뜬다. 적은 이미 안 그리고 있고(위), 아군은
+          죽는 연출을 마치고 스스로 사라진다 — 그래서 여기 남는 것은 배경과
+          이 글씨뿐이다.
+        */}
         {down && (
-          <View style={{ position: 'absolute', top: 46, left: 0, right: 0 }}>
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              alignItems: 'center', justifyContent: 'center',
+              zIndex: 70,
+            }}
+          >
             <T size={13} bold center>전멸</T>
             <T size={10} dim="sub" center style={{ marginTop: 2 }}>
               {battle.stage}스테이지를 처음부터 다시 시작합니다

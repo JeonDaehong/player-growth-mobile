@@ -25,6 +25,7 @@
  * 레벨은 레벨대로, 전투력은 전투력대로 보여 준다 — 화면에 두 줄이면 충분하다.
  */
 import { CharId, MAX_GEAR_LV, OwnedChar, Role, charPower, CHARS, statOf, swingMs } from './chars';
+import { allyAtkMul, allySpdAdd } from './passives';
 
 /** 파티 자리 수 */
 export const PARTY_SIZE = 4;
@@ -86,15 +87,50 @@ export function roleCount(party: Party, chars: Record<string, OwnedChar>): Recor
 }
 
 /**
- * 보조가 파티 전체에 더해 주는 공격력 배수.
+ * 지금 **살아 있는** 파티원들.
  *
- * 보조 한 명당 12%다. 넷을 다 보조로 채우면 48% 인데, 정작 때릴 사람이 없어
- * 초당 딜은 오히려 떨어진다 — 상한을 따로 걸지 않아도 스스로 말린다.
+ * 패시브가 이걸 본다 — 쓰러진 사람의 패시브는 꺼져야 하기 때문이다
+ * (`core/passives`). `hp` 를 안 주면 전원이 살아 있는 것으로 본다: 화면이
+ * "이 파티는 얼마나 센가" 를 적을 때는 아직 아무도 안 맞은 상태가 맞다.
  */
-export const SUPPORT_BONUS = 0.12;
+export function livingMembers(
+  party: Party,
+  chars: Record<string, OwnedChar>,
+  hp?: Record<string, number>,
+): OwnedChar[] {
+  const ms = members(party, chars);
+  return hp ? ms.filter((c) => hpOf(c, hp) > 0) : ms;
+}
 
-export function supportMul(party: Party, chars: Record<string, OwnedChar>): number {
-  return 1 + roleCount(party, chars).support * SUPPORT_BONUS;
+/**
+ * 파티 전체에 걸리는 공격력 배수.
+ *
+ * ## 역할이 아니라 사람이 정한다
+ *
+ * 예전에는 **보조 역할 한 명당 12%** 였다 (`SUPPORT_BONUS`). 역할만 맞으면
+ * 누구든 같은 값이라, 보조를 새로 만들 때마다 자동으로 12% 가 하나 더
+ * 생겼다 — 캐릭터를 고르는 일이 "보조가 몇이냐" 세는 일이 됐다.
+ *
+ * 지금은 **아녜스의 패시브 10%** 다 (`core/passives` 의 `PASSIVES`). 그
+ * 사람이 서 있어야 오르고, 쓰러지면 그 순간 꺼진다.
+ *
+ * @param hp 주면 쓰러진 사람의 패시브를 뺀다. 안 주면 전원이 살아 있는 것으로
+ */
+export function allyAtk(
+  party: Party,
+  chars: Record<string, OwnedChar>,
+  hp?: Record<string, number>,
+): number {
+  return allyAtkMul(livingMembers(party, chars, hp));
+}
+
+/** 파티 전체 공격속도에 더해지는 값 — 리안느의 +0.1 */
+export function allySpd(
+  party: Party,
+  chars: Record<string, OwnedChar>,
+  hp?: Record<string, number>,
+): number {
+  return allySpdAdd(livingMembers(party, chars, hp));
 }
 
 /**
@@ -106,13 +142,15 @@ export function supportMul(party: Party, chars: Record<string, OwnedChar>): numb
  */
 export function partyStat(party: Party, chars: Record<string, OwnedChar>) {
   const ms = members(party, chars);
-  const mul = supportMul(party, chars);
+  const mul = allyAtkMul(ms);
+  /* 리안느가 서 있으면 넷 다 그만큼 빨라진다 — 초당 딜에 그대로 들어간다 */
+  const add = allySpdAdd(ms);
   let hp = 0;
   let dps = 0;
   for (const c of ms) {
     const s = statOf(c);
     hp += s.hp;
-    dps += (s.atk * 1000) / swingMs(s.spd);
+    dps += (s.atk * 1000) / swingMs(s.spd + add);
   }
   return { hp: Math.round(hp), dps: Math.round(dps * mul * 10) / 10, count: ms.length };
 }

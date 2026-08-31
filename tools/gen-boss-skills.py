@@ -141,6 +141,47 @@ def check(bosses):
     assert not bad, ('사양과 계산이 어긋납니다:' + NL + NL.join(bad))
 
 
+def check_code(bosses):
+    """`BOSS_SKILLS` 가 이 표와 같은지 본다 — **세 번째 벌**을 맞춘다.
+
+    사양(gen-boss.py 의 문장) · 표(여기 SKILLS) · 코드(autoBattle.ts) 셋이
+    같은 것을 말해야 한다. `check` 가 앞의 둘을 맞추므로 여기서 코드를 맞춘다.
+
+    이게 없으면 제일 위험한 어긋남이 생긴다 — 문서에는 200%라고 적혀 있는데
+    실제로는 100%가 들어가는 것. 둘 다 그럴듯해서 아무도 못 잡는다.
+    """
+    src = io.open(SRC, encoding='utf-8').read()
+    part = src[src.index('export const BOSS_SKILLS'):
+               src.index('export const BOSS_PASSIVES')]
+    by = {b['stage']: b for b in bosses}
+    bad = []
+    for st, no, aim, mul, dt, every, dur, tick, tt, tags in SKILLS:
+        name = by[st]['skills'][no - 1][1]
+        at = part.find("name: '%s'" % name)
+        if at < 0:
+            bad.append('%d판 "%s" 가 코드에 없다' % (st, name))
+            continue
+        # 다음 기술이 시작되기 전까지가 이 기술의 칸이다
+        nxt = part.find("name: '", at + 8)
+        cell = part[at:nxt if nxt > 0 else len(part)]
+
+        want = ['every: %d' % every,
+                "aim: '%s'" % aim,
+                'mul: %s' % ('0' if mul is None else '%.2f' % mul)]
+        if dt is not None:
+            want.append("dmg: '%s'" % dt)
+        if dur is not None:
+            want.append('sec: %g' % dur)
+        if tick is not None:
+            want.append('tick: %.2f' % tick)
+        if any('무시' in t or '관통' in t for t in tags):
+            want.append('pierce: true')
+        for w in want:
+            if w not in cell:
+                bad.append('%d판 스킬%d "%s": 코드에 `%s` 가 없다' % (st, no, name, w))
+    assert not bad, ('코드와 표가 어긋납니다:' + NL + NL.join(bad))
+
+
 def rows(bosses, stats):
     by = {b['stage']: b for b in bosses}
     out = []
@@ -197,12 +238,17 @@ PAGE = """# 보스 스킬 계산식
 **숫자로** 보여 주는 표입니다. 계수만 봐서는 그 기술이 얼마나 아픈지 알 수
 없어서 만들었습니다.
 
-## 아직 코드에 안 들어갔습니다
+## 코드에 들어가 있습니다
 
-지금 계산에 들어 있는 우두머리 기술은 **하나**뿐입니다 — 평타 넷마다 나가는
-전체 공격(공격력의 90%%, `core/autoBattle` 의 `BOSS_PATTERNS`). 아래 표의
-나머지는 **사양**이고, 지속 피해 · 기절 · 침묵 · 둔화 · 흡혈 · 방어 감소 ·
-게이지 차감은 전부 새로 만들어야 하는 장치입니다.
+아래 표의 스물두 기술이 전부 `core/autoBattle` 의 `BOSS_SKILLS` 에 있고,
+실제로 나갑니다. 지속 피해 · 기절 · 침묵 · 둔화 · 약화 · 파쇄 · 시듦은
+걸렸다 풀리는 것으로(`core/status` 의 `Hex`), 흡혈 · 반사 · 게이지 차감은
+그 자리에서 처리합니다.
+
+다섯 판마다 있는 **우두머리 성질**(5 · 10 · 15 · 20)은 `BOSS_PASSIVES` 에
+따로 있습니다 — 기술이 아니라 늘 켜져 있는 것이라 표에 안 넣었습니다.
+
+걸려 있는 것은 파티 칸의 로고 줄에 뜹니다 (`screens/home/StatusRow`).
 
 ## 읽는 법
 
@@ -248,12 +294,20 @@ PAGE = """# 보스 스킬 계산식
 - **20판** — 기술이 둘이고 하나는 체력이 가장 낮은 사람을 노립니다. 마무리를
   전담하는 기술이라 총량은 작지만 실제 위험은 표의 숫자보다 큽니다.
 
-## 사양과 어긋나면 멈춥니다
+## 세 벌이 어긋나면 멈춥니다
 
-이 파일의 계수는 `tools/gen-boss-skills.py` 에 구조로 한 번 더 적혀 있습니다
-(문장은 계산에 못 쓰므로). 두 벌이 되면 어긋날 수 있어서, **여기 적은 숫자가
-`gen-boss.py` 의 설명 문장 안에 그대로 있는지 검사합니다** — 하나라도 안 맞으면
+같은 숫자가 세 군데에 있습니다 —
+
+  1. **사양** — `tools/gen-boss.py` 의 설명 문장 (사람이 읽는 것)
+  2. **표** — `tools/gen-boss-skills.py` 의 `SKILLS` (계산에 쓰는 구조)
+  3. **코드** — `src/core/autoBattle.ts` 의 `BOSS_SKILLS` (실제로 나가는 것)
+
+문장은 계산에 못 쓰고 코드는 문서를 못 만드므로 세 벌이 됩니다. 그래서 이
+파일을 돌릴 때마다 **셋이 같은 말을 하는지 검사하고**, 하나라도 어긋나면
 문서를 안 쓰고 멈춥니다.
+
+제일 위험한 어긋남은 문서에는 200%%라고 적혀 있는데 코드에는 100%%가 들어가
+있는 것입니다 — 둘 다 그럴듯해 보여서 화면만 봐서는 못 잡습니다.
 """
 
 
@@ -261,6 +315,7 @@ if __name__ == '__main__':
     bosses = load_bosses()
     stats = load_stats()
     check(bosses)
+    check_code(bosses)
     gl = NL.join('- **%d판 스킬%d** — %s' % (st, no, why)
                  for (st, no), why in sorted(GUESSED.items()))
     io.open(OUT, 'w', encoding='utf-8').write(PAGE % {

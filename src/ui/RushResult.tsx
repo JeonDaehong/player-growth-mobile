@@ -8,6 +8,7 @@ import { Money } from './Money';
 import { Sprite } from './Sprite';
 import { CREATURE_SPRITES } from './sprites';
 import { C, SP, WHITE } from './theme';
+import { useBackClose } from './backGuard';
 
 /**
  * 크리처 러쉬 배팅 결과 알림.
@@ -35,6 +36,9 @@ export function RushResultHost() {
     };
     // r.slot 이 바뀔 때만 다시 잡는다 (같은 결과로 타이머가 재시작되면 안 닫힌다)
   }, [r?.slot, close]);
+
+  /* 휴대폰의 뒤로가기로도 닫힌다 (`ui/backGuard`) — 훅이라 이른 return 보다 먼저 */
+  useBackClose(!!r, close);
 
   if (!r) return null;
 

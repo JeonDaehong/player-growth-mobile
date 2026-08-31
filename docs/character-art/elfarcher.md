@@ -314,9 +314,21 @@ OUTPUT: a single square image, 512x512. No grid, no separator lines, no magenta.
 
 ## §C. 2D 일러스트 (GPT)
 
-감상용 한 장입니다. 게임 안에 들어가는 그림이 아니라, 캐릭터를 얻었을 때
-크게 한 번 보여 주는 쪽입니다.
-`assets/wallpaper/knightgirl.jpg` 가 기준 톤입니다.
+감상용 한 장입니다. 게임 안에 들어가는 그림이 아니라, 캐릭터 창에서
+"월페이퍼 보기" 로 화면을 꽉 채워 보여 주는 쪽입니다
+(`screens/home/WallpaperPopup`).
+
+### 세로입니다
+
+처음에는 16:9 가로로 뽑았습니다. 그런데 이 게임을 보는 화면은 **세로로 긴
+휴대폰**이라, 가로 그림을 화면에 담으면 위아래로 검은 띠가 절반 가까이
+남습니다 — 월페이퍼가 아니라 가운데 낀 띠 하나가 됩니다.
+
+그래서 **9:16 세로**로 다시 뽑습니다. 인물을 무릎 위까지가 아니라 발끝까지
+넣고, 머리 위로 장소가 올라가는 구도입니다. 자세한 규칙은 프롬프트 안의
+VERTICAL COMPOSITION 에 있습니다.
+
+`assets/wallpaper/knightgirl.jpg` 가 기준 톤입니다 (가로판이지만 인물과 명암은 그대로 씁니다).
 
 **§A 와 §B 를 레퍼런스로 첨부하세요.** 픽셀 그림이지만 머리 모양·갑옷·좌우
 배치를 잡아 주는 데는 충분히 먹습니다.
@@ -352,12 +364,30 @@ STYLE (strict):
 - This is NOT pixel art and NOT 1-bit. It is a fully rendered greyscale illustration.
 - She is an adult. Tasteful — no suggestive framing, no leering camera.
 
+VERTICAL COMPOSITION — this is a PHONE wallpaper, 9:16 portrait (tall).
+
+- The frame is TALL, not wide. Build the picture UP AND DOWN. Where the scene
+  description says something "runs away into the distance" or "stretches across the
+  floor", stage that as DEPTH climbing the frame, never as width crossing it.
+- FULL FIGURE, or three-quarter at the very least — head to foot is best. A tall frame
+  cropped at the chest throws away its whole lower half, which is the reason to shoot
+  portrait in the first place.
+- She stands (or kneels, or sits) so that her head sits near the UPPER THIRD line and
+  her feet near the bottom. Above her head is the place itself — ceiling, sky, canopy,
+  high window — and it stays quiet.
+- KEEP THE TOP AND BOTTOM STRIPS QUIET. A phone puts a clock across the top and a home
+  bar across the bottom. Nothing that must be read — her face above all — goes there.
+- Nothing important touches the left or right edge. The frame is narrow, so a prop
+  running off the side reads as CUT, not as continuing past the edge.
+- One figure only. No second character, no crowd, no inset panel.
+
 CHARACTER CONSISTENCY — if a reference image is attached, match it exactly. Treat the written description above as a checklist against that reference, not as licence to redesign. Keep every asymmetric detail on the stated side: she holds the bow in her LEFT hand and draws with her RIGHT in every frame, and the quiver rides on her RIGHT hip.
 
-OUTPUT: one finished illustration, 16:9 landscape, wallpaper resolution. No grid, no panels, no text anywhere in the image.
+OUTPUT: one finished illustration, 9:16 PORTRAIT — a tall phone wallpaper, at least 1242 x 2208. It must be taller than it is wide. No grid, no panels, no text anywhere in the image.
 ```
 
-받으면 `assets/wallpaper/elfarcher.jpg` 로 넣으세요. **1-bit 로 만들면 안 됩니다.**
+받으면 `assets/wallpaper/elfarcher.jpg` 로 **덮어쓰세요** (가로판을 대신합니다).
+**1-bit 로 만들면 안 됩니다.**
 
 ---
 

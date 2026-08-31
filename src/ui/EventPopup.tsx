@@ -9,6 +9,7 @@ import { Sprite } from './Sprite';
 import { C, O, SP, WHITE } from './theme';
 import { sfx } from './sfx';
 import { useTutorialRunning } from './Tutorial';
+import { useBackClose } from './backGuard';
 
 /**
  * 이벤트 안내 팝업 — 게임을 켜면 한 번 뜬다.
@@ -52,6 +53,9 @@ export function EventPopupHost() {
     }, 900);
     return () => clearTimeout(t);
   }, [signedUp, hideUntil, tutorialRunning]);
+
+  /* 휴대폰의 뒤로가기로도 닫힌다 (`ui/backGuard`) — 훅이라 이른 return 보다 먼저 */
+  useBackClose(open, () => { sfx('click'); hide(0); setOpen(false); });
 
   if (!open) return null;
 

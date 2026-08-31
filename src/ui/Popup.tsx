@@ -4,6 +4,7 @@ import Animated, { FadeIn, FadeOut, ZoomIn, ZoomOut } from 'react-native-reanima
 import { Row, T } from './atoms';
 import { C, SP, WHITE } from './theme';
 import { sfx } from './sfx';
+import { useBackClose } from './backGuard';
 
 interface Props {
   visible: boolean;
@@ -33,6 +34,14 @@ export function Popup({ visible, title, onClose, children, right, overlay }: Pro
   useEffect(() => {
     if (visible) sfx('open');
   }, [visible]);
+  /*
+    휴대폰의 뒤로가기로도 닫힌다.
+
+    `Modal` 의 `onRequestClose` 는 안드로이드 네이티브에서만 불린다 — 웹으로
+    올린 이 게임에서는 아무도 안 부르고, 뒤로가기가 곧 앱 종료였다.
+    `useBackClose` 가 방문 기록을 하나 쌓아서 그 눌림을 받아 낸다.
+  */
+  useBackClose(visible, onClose);
   if (!visible) return null;
   return (
     <Modal transparent visible animationType="none" onRequestClose={onClose} statusBarTranslucent>
