@@ -11,10 +11,35 @@
 | 등장 | 13스테이지 · 타락한 군락의 정원 |
 | 칸 수 | 4칸 |
 
-13스테이지 우두머리. **높이가 아니라 길이로 큽니다.**
+13스테이지 우두머리. **길이로 크지만, 칸을 안 벗어납니다.**
 
-칸 높이의 56%만 쓰지만 **가로는 칸을 넘어갑니다** — 양쪽 끝이 칸 밖으로
-빠져나가서 어디서 시작하고 끝나는지 안 보여야 합니다.
+처음엔 "양쪽 끝이 칸 밖으로 빠져나간다" 고 적었습니다. 그런데 같은 프롬프트
+끝에는 "어느 것도 잘리면 안 되고 자석선에서 8px 을 띄우라" 고 적혀 있습니다 —
+**서로 반대되는 지시**라 어느 쪽도 못 지키고, 그래서 잘린 채로 나왔습니다.
+
+길이는 **감아서** 보여 줍니다. 밧줄이 제 몸 위로 네 겹 감겨 쌓이고 양쪽 끝이
+그 아래로 들어가 안 나오면, 어디서 시작하고 끝나는지 안 보이면서도 칸 안에
+다 들어갑니다. `STANDS` 가 "무게는 눕는 게 아니라 처지는 것으로" 라고 말하는
+것과 같은 자리입니다.
+
+**가로로 길면 화면에서 오히려 작아집니다.** `Sprite` 가 정사각 상자에
+`contain` 으로 그리므로, 가로가 세로의 세 배면 가로에 맞춰 줄어들고 세로가
+텅 빕니다. 그래서 쌓인 더미는 **가로세로가 비슷해야** 합니다.
+
+## 밧줄로 나오면 안 됩니다
+
+감으라고만 했더니 밧줄이 나왔습니다. 길고 감긴 것에 표면까지 매끈하면 그건
+규칙을 뭐라고 적든 밧줄입니다. 식물로 되돌리는 것 넷을 넣었습니다 —
+
+| | 무엇 |
+|---|---|
+| **잎** | 제일 셉니다. 큼직한 것 다섯이 **윤곽 밖으로** 나옵니다. 밧줄에는 잎이 안 달립니다 |
+| **마디** | 줄기가 일정 간격으로 부풀어 울퉁불퉁합니다. 밧줄은 처음부터 끝까지 굵기가 같습니다 |
+| **곁순** | 마디마다 돋은 어린 덩굴 여덟. 이 생물에서 유일하게 가는 것들입니다 |
+| **덩굴손 끝** | 용수철처럼 두세 바퀴 **말립니다.** 식물만 하는 짓입니다 |
+
+세로로 파인 골도 넣었습니다 — 밧줄은 꼬임이 **비스듬하고** 줄기의 결은
+**세로**입니다.
 
 3번 칸에 **고리가 정확히 둘**입니다. 대상이 2명인 유일한 기술이라, 세는 것이
 곧 읽는 것입니다. 나머지 덩굴 넷은 낮게 빼서 둘이 묻히지 않게 합니다.
@@ -53,21 +78,27 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 SUBJECT: a 4-frame animation sheet of ONE single creature, left to right. The creature is in every cell.
 
 THE CREATURE (the same one in all 4 cells):
-The root that every vine in this garden is a branch of.
-BODY: ENORMOUSLY LONG AND LOW — it crosses the entire width of the cell and BOTH ENDS RUN OFF PAST THE EDGES. It has no visible start or end, and that is the point: a mob vine is a rope you can see all of, and this one is not.
-THE VISIBLE MIDDLE swells into a thick knotted MASS about a third of the way along, much higher than the rest. That swelling is the part that is awake.
-FROM THE SWELLING rise SIX TENDRILS, far thicker and longer than a mob has, curling up and forward at different heights. Two are as tall as the swelling is wide.
+The mother root that every vine in this garden is a branch of.
+IT IS A PLANT. NOT A ROPE, NOT A SNAKE, NOT A CABLE. That is the single easiest thing to get wrong here, because the body is long and coiled, and a long coiled thing with a smooth even surface is a rope no matter what else the description says. Everything in the next three paragraphs exists to stop that.
+BODY: ONE ENORMOUS WOODY STEM, COILED. It is far longer than the cell is wide and it shows that by DOUBLING BACK ON ITSELF — four heavy overlapping coils, each as thick as a mob is tall, stacked and crossing over one another and piling up in the lower two-thirds of the cell. The pile is slightly wider than it is tall, not three times wider.
+THE STEM IS NOT AN EVEN TUBE. It SWELLS AT NODES — a hard knuckled thickening every stem-width or so along its whole length, half again as thick as the stem between them, so the outline of every coil is lumpy and jointed rather than smooth. A rope is the same width from end to end; this is not, and that is the difference you see first. Deep grooves run LENGTHWISE along the stem between the nodes (a rope's twist runs diagonally — these do not).
+LEAVES — the strongest thing that says plant, so do not leave them out. FIVE big heavy leaves grow off the coils at different points, each as long as the stem is thick, on short stiff stalks, angled every which way. They BREAK THE OUTLINE of the pile so the silhouette is not a smooth coil but a coil with leaves sticking out of it. Two are torn, one is curled shut, one is a hard grey dead one still hanging on.
+FROM THE NODES sprout EIGHT young SIDE-SHOOTS, thin new growth a quarter the thickness of the main stem, going in eight different directions with two small leaves each. They are what a cut vine puts out, and nothing else in this creature is thin.
+NEITHER END IS VISIBLE. Both ends run UNDER the coils of its own body and do not come out again, so there is no terminus anywhere in the drawing. That is the point — a mob vine is a stem you can see all of, and this one is not.
+LENGTH IS SHOWN BY COILING, NEVER BY LEAVING THE CELL. The stem must not touch or cross the edge of its cell at any point. Growth that runs off the edge does not read as long; it reads as a drawing that got cut.
+THE TOPMOST COIL swells into a thick knotted MASS off to one side, rising clear above the pile. That swelling is the part that is awake, and it is the highest point of the body.
+FROM THE SWELLING rise SIX TENDRILS, far thicker and longer than a mob has, curling up and forward at different heights. Two are as tall as the swelling is wide. EVERY TENDRIL ENDS IN A TIGHT SPIRAL COIL, wound two or three turns like a spring — that spiral is a thing only a plant does, and it is the second-strongest plant signal on the sheet after the leaves.
 THE OPENING is a long split down the TOP of the swelling, held apart, lined with SEVEN inward spines. It runs lengthwise, not across.
 EYES: FOUR, in a row along the swelling at different heights, one large and three small, all looking along the length of the body rather than out at you.
-CAUGHT ALONG THE LENGTH, spaced far apart: a SKULL near one edge, a RIBCAGE in the swelling, a BOOT still laced further along. They mark how far it reaches.
-THE ACCIDENT — this one only: the rope is SEVERED CLEAN just before one edge of the cell and has grown back across the gap in a knotted lump twice the thickness of the rope. Someone cut it and it did not stop.
+CAUGHT IN THE COILS, spaced far apart on different loops: a SKULL on the lowest coil, a RIBCAGE in the swelling, a BOOT still laced on a middle coil. The stem has GROWN AROUND each of them — swollen lips of wood closed over the edges, new side-shoots coming out right beside them — so they were caught years ago and grown over, not tied on. They mark how much stem there is.
+THE ACCIDENT — this one only: on the front-most coil the stem is SEVERED CLEAN and has grown back across the gap in a knotted burl twice the thickness of the stem, with a spray of six young shoots bursting out of the join — the way a cut vine answers being cut. One loop of the pile has that swollen scarred joint and none of the others do. Someone cut it and it did not stop.
 
 The 4 cells, in this exact order:
 
-Cell 1 — lying long and still across the field, the six tendrils raised and curling slowly, the split along the swelling half open. It reads as ground that has not noticed you yet.
-Cell 2 — the whip. TWO tendrils have lashed forward together, stretched thin and long out ahead of the swelling, and the whole rope has been dragged after them so the swelling is off centre. The other four stay raised.
-Cell 3 — THE SNARE — it takes EXACTLY TWO characters and holds them, so the cell must show TWO of something, clearly countable. Two of the six tendrils have shot out and UP, far higher and further than anything else on the sheet, and each has curled its tip into a CLOSED LOOP — two separate nooses, hanging at different heights on opposite sides of the cell, both drawn tight and empty. The other four tendrils are pulled back and low, out of the way, so nothing competes with the two. The long body is braced and flattened. It is the TALLEST cell, and the two loops are the only closed shapes on the whole sheet — the player counts them without meaning to.
-Cell 4 — struck. The swelling has split open along the top and three tendrils are torn off, the rope buckled into a hard kink. The ribcage shows through the gash and the boot has come loose.
+Cell 1 — coiled and still, the four loops settled and overlapping, leaves hanging off the pile at their own angles, the six tendrils raised off the swelling with their spirals loose, the split along the swelling half open. It reads as undergrowth that has not noticed you yet.
+Cell 2 — the whip. TWO tendrils have lashed forward together, stretched thin and long out ahead of the swelling with their end spirals pulled almost straight, and the topmost coil has been dragged after them so the pile is pulled off centre. Three leaves have been torn back flat against the stem by the movement. The coils stay stacked and the whole body stays inside the cell.
+Cell 3 — THE SNARE — it takes EXACTLY TWO characters and holds them, so the cell must show TWO of something, clearly countable. Two of the six tendrils have shot out and UP, far higher and further than anything else on the sheet, and each has curled its tip into a CLOSED LOOP — two separate nooses, hanging at different heights on opposite sides of the cell, both drawn tight and empty, both well inside the edges. The other four tendrils are pulled back and low, out of the way, so nothing competes with the two. The coiled pile beneath has drawn in TIGHTER and taller to brace for the pull, so the body is narrower here than in the idle cell, and every leaf on it has been pulled up and back like hair in wind. It is the TALLEST cell, and the two nooses are the only closed shapes on the whole sheet — the player counts them without meaning to.
+Cell 4 — struck. The swelling has split open along the top and three tendrils are torn off, their spirals gone. The coils have LOOSENED and slumped apart, the pile collapsing to about half its height, and for the first time you can see between the loops. Leaves are stripped and falling, two of them clear of the body. The ribcage shows through the gash and the boot has come loose.
 
 STYLE (strict, non-negotiable):
 - 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
@@ -290,9 +321,12 @@ as a creature that is about to do something. Even the resting frame leans forwar
 Facing LEFT is wrong. Draw it facing RIGHT; the game mirrors it in code so it turns
 to face the party.
 
-NOTHING MAY BE CUT OFF.
-- It fills about 56% of the cell height in the idle cell. It is the only creature on the field and it must read as such.
+NOTHING MAY BE CUT OFF, AND NOTHING MAY LEAVE ITS CELL.
+- In the idle cell it fills about 72% of the cell along its LONGER dimension — the height if it is taller than wide, the WIDTH if it is wider than tall. The other dimension follows from its proportions. It is the only creature on the field and it must read as such.
 - Size the sheet from the LARGEST cell, not from idle. The skill cells break out of the body and they must still fit.
+- THE GAME DRAWS EACH SPRITE INSIDE A SQUARE BOX and shrinks it to fit. A creature drawn three times wider than it is tall therefore arrives on screen SMALL — the width is what got scaled down, and the height is left empty. Aim for a shape that sits comfortably in a square: at most about half again as wide as it is tall, in every cell.
+- THE WIDEST CELL SPANS AT MOST 90% OF THE CELL WIDTH, and the tallest at most 90% of its height. Where a cell says a pose is "three times its idle width" or "twice the height of the idle cell", that is an instruction about the IDLE pose too: draw idle small enough that the big pose still fits. Never solve it by letting the big pose overflow.
+- IF IT IS MEANT TO BE VERY LONG, show that by COILING, DOUBLING BACK or STACKING it — never by running it off the edge. Length that leaves the cell does not read as length; it reads as a drawing that got cut, and the slicer cannot find the cell boundary afterwards.
 - Every cell holds the WHOLE creature plus every loose piece. If any of it touches a magenta line, that cell has failed.
 - Leave at least 8px of empty black between the outermost pixel and every magenta line.
 
@@ -334,6 +368,17 @@ forward and stays short, and each skill cell goes the way its own description
 says — wide, or tall, or long and narrow. Do not distinguish them by detail.
 ```
 
+**잘려 나왔을 때** (칸 경계를 넘었을 때)
+
+```
+Part of the creature crosses the magenta separator lines and is cut off. Every
+cell must contain the WHOLE creature with at least 8px of empty black between its
+outermost pixel and every magenta line. Do not crop the creature to fix this and
+do not move the magenta lines — redraw the creature SMALLER inside its cell, and
+if it is a long shape, coil it or double it back on itself instead of extending
+it. Keep the poses and the proportions the same.
+```
+
 **바닥이 그려져 나왔을 때**
 
 ```
@@ -353,7 +398,7 @@ between them. Redraw them as one animation, not as 4 separate drawings.
 **너무 작게 그려 나왔을 때**
 
 ```
-The creature is drawn too small inside its cell. Redraw it filling about 56%
+The creature is drawn too small inside its cell. Redraw it filling about 72%
 of the cell height, centred, with the empty space distributed around it rather than
 below it.
 ```

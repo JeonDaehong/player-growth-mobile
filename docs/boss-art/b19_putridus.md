@@ -67,7 +67,7 @@ The 4 cells, in this exact order:
 
 Cell 1 — standing swollen and leaning, the eight roots curled and hanging in the air, the dead second tree standing up out of the broken crown. The split is half open. It is enormous and completely still.
 Cell 2 — the lean. The whole trunk has tipped forward and ONE root has swung up and out ahead of the body, thick and blunt, reaching past the front. The other seven stay curled. The dead tree in the crown has swung forward with the trunk and stayed upright in the bowl.
-Cell 3 — THE ERUPTION — it hits EVERYONE with one heavy physical blow, so ALL EIGHT ROOTS have been driven UP AND FORWARD at once. They have straightened out of their curls and now radiate up and out ahead of the trunk in a wide fan, each one straight, rigid and ending in a hard splintered point, spread across the full width and height of the cell and reaching past its edges. THEY ARE ALL IN THE AIR — clear of one another and clear of any surface. Do not draw ground, a floor line, or anything for them to have come out of; they are simply thrust. The trunk behind them has reared back and is nearly hidden by its own roots. It is the WIDEST cell and the fan takes almost all of it. Six clods of rotted wood hang loose among the roots.
+Cell 3 — THE ERUPTION — it hits EVERYONE with one heavy physical blow, so ALL EIGHT ROOTS have been driven UP AND FORWARD at once. They have straightened out of their curls and now radiate up and out ahead of the trunk in a wide fan, each one straight, rigid and ending in a hard splintered point, spread across the full width and height of the cell and stopping just short of its edges. THEY ARE ALL IN THE AIR — clear of one another and clear of any surface. Do not draw ground, a floor line, or anything for them to have come out of; they are simply thrust. The trunk behind them has reared back and is nearly hidden by its own roots. It is the WIDEST cell and the fan takes almost all of it. Six clods of rotted wood hang loose among the roots.
 Cell 4 — struck. The trunk has split from the mouth up to the crown bowl and is opening apart, four roots snapped and dropping. The dead second tree has toppled out of the bowl and is falling across the trunk.
 
 STYLE (strict, non-negotiable):
@@ -291,9 +291,12 @@ as a creature that is about to do something. Even the resting frame leans forwar
 Facing LEFT is wrong. Draw it facing RIGHT; the game mirrors it in code so it turns
 to face the party.
 
-NOTHING MAY BE CUT OFF.
-- It fills about 78% of the cell height in the idle cell. It is the only creature on the field and it must read as such.
+NOTHING MAY BE CUT OFF, AND NOTHING MAY LEAVE ITS CELL.
+- In the idle cell it fills about 78% of the cell along its LONGER dimension — the height if it is taller than wide, the WIDTH if it is wider than tall. The other dimension follows from its proportions. It is the only creature on the field and it must read as such.
 - Size the sheet from the LARGEST cell, not from idle. The skill cells break out of the body and they must still fit.
+- THE GAME DRAWS EACH SPRITE INSIDE A SQUARE BOX and shrinks it to fit. A creature drawn three times wider than it is tall therefore arrives on screen SMALL — the width is what got scaled down, and the height is left empty. Aim for a shape that sits comfortably in a square: at most about half again as wide as it is tall, in every cell.
+- THE WIDEST CELL SPANS AT MOST 90% OF THE CELL WIDTH, and the tallest at most 90% of its height. Where a cell says a pose is "three times its idle width" or "twice the height of the idle cell", that is an instruction about the IDLE pose too: draw idle small enough that the big pose still fits. Never solve it by letting the big pose overflow.
+- IF IT IS MEANT TO BE VERY LONG, show that by COILING, DOUBLING BACK or STACKING it — never by running it off the edge. Length that leaves the cell does not read as length; it reads as a drawing that got cut, and the slicer cannot find the cell boundary afterwards.
 - Every cell holds the WHOLE creature plus every loose piece. If any of it touches a magenta line, that cell has failed.
 - Leave at least 8px of empty black between the outermost pixel and every magenta line.
 
@@ -333,6 +336,17 @@ SILHOUETTE ALONE at 60 pixels tall. Redraw so that each cell breaks out of the
 creature's ordinary shape in a different direction: the ordinary attack reaches
 forward and stays short, and each skill cell goes the way its own description
 says — wide, or tall, or long and narrow. Do not distinguish them by detail.
+```
+
+**잘려 나왔을 때** (칸 경계를 넘었을 때)
+
+```
+Part of the creature crosses the magenta separator lines and is cut off. Every
+cell must contain the WHOLE creature with at least 8px of empty black between its
+outermost pixel and every magenta line. Do not crop the creature to fix this and
+do not move the magenta lines — redraw the creature SMALLER inside its cell, and
+if it is a long shape, coil it or double it back on itself instead of extending
+it. Keep the poses and the proportions the same.
 ```
 
 **바닥이 그려져 나왔을 때**

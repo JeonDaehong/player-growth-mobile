@@ -301,7 +301,8 @@ BOSSES = [
           'CONSTRICT — it hits ONE character very hard, so it goes LONG AND NARROW '
           'and aims at one point. ALL FIVE vines have shot out FORWARD together in '
           'a tight parallel bundle, stretched to three times the width of the body, '
-          'reaching off the far side of the cell, and the closed loop has been '
+          'reaching almost to the far side of the cell but stopping clear of it, '
+          'and the closed loop has been '
           'carried out along them and is snapping shut at the far end. The mass '
           'itself is dragged forward and thin, almost emptied, leaning far past its '
           'own base. It is the WIDEST cell and it is not tall at all — it is a '
@@ -695,8 +696,9 @@ BOSSES = [
           '(평타 3대마다)',
           'PIERCE — it ignores armour entirely and hits ONE character, so it is the '
           'THINNEST, STRAIGHTEST shape on the sheet. The mass has thrown itself '
-          'forward and stretched into ONE long horizontal spear reaching off the '
-          'far edge of the cell, three times the width of the idle body and no '
+          'forward and stretched into ONE long horizontal spear reaching almost to '
+          'the far edge of the cell but stopping clear of it, three times the '
+          'width of the idle body and no '
           'thicker than the skull at any point along it. THE SKULL HAS BEEN DRIVEN '
           'TO THE TIP and leads the spear, the bitten hole facing forward, with the '
           'femur running alongside it as the point. The back end of the creature is '
@@ -763,8 +765,8 @@ BOSSES = [
           'THE WAVE — it hits EVERYONE with the biggest hit in the chapter and then '
           'poisons them, so it takes the ENTIRE CELL. The whole creature has reared '
           'up and curled FORWARD AND OVER into one huge breaking crest that arches '
-          'from the base, up past the top edge, and back down across the full width '
-          'of the cell — the body itself is the wave. The rift is open along the '
+          'from the base, up to just under the top edge, and back down across the '
+          'full width of the cell without touching any edge — the body itself is the wave. The rift is open along the '
           'whole inside of the curl with every tooth showing. Under the curl the '
           'threads have been dragged out into a hanging fringe and eight loose '
           'gobbets hang in the air. The bent gate is carried up in the crest and is '
@@ -777,7 +779,8 @@ BOSSES = [
           'itself with it, so this cell is a REACH AND A PULL, not a wave. The body '
           'stays upright and compact — very close to its idle shape and clearly '
           'smaller than the wave cell — while ONE long tube of sludge has shot out '
-          'from the rift, thin and straight, reaching off the far edge of the cell '
+          'from the rift, thin and straight, reaching almost to the far edge of '
+          'the cell but stopping clear of it, '
           'at head height, ending in a SECOND SMALL MOUTH at the tip, open, with '
           'four teeth of its own. The tube is the only thing that has left the '
           'body. The great eye in the crown has turned to follow it and is the only '
@@ -789,7 +792,7 @@ BOSSES = [
         'of the six eyes are gone with the collapsed crown.',
         """10스테이지 우두머리. **전반 챕터의 마지막이고, 이 게임에서 제일 큽니다.**
 
-**여섯 칸입니다** — 기술이 둘이라서입니다. 두 기술이 서로 안 닮는 것이 이
+**다섯 칸입니다** (대기 · 평타 · 스킬1 · 스킬2 · 피격) — 기술이 둘이라서입니다. 두 기술이 서로 안 닮는 것이 이
 시트에서 제일 어려운 부분입니다:
 
 | | 해일 (스킬1) | 포식 (스킬2) |
@@ -904,7 +907,8 @@ BOSSES = [
           'single aimed STREAM, not a spray. The main pitcher has been TIPPED RIGHT '
           'OVER on its stem, mouth down, almost upside down, and a thick continuous '
           'ROPE OF FLUID is pouring out of it in one unbroken arc, down and forward '
-          'to a single point off the low corner of the cell. The arc is the longest '
+          'to a single point just inside the low corner of the cell. The arc is '
+          'the longest '
           'line on the sheet and it does not spread or break up — one stream, one '
           'destination. The stem is bent double under the tipped weight and the '
           'four small pitchers are hanging the wrong way up, unused. The sword has '
@@ -923,35 +927,78 @@ BOSSES = [
     ),
 
     boss(
-        'b13_matrona', '대지를 조여오는 덩굴 모체', '마트로나', 13, 'growth', 56,
-        'The root that every vine in this garden is a branch of.' + NL
-        + 'BODY: ENORMOUSLY LONG AND LOW — it crosses the entire width of the cell '
-        'and BOTH ENDS RUN OFF PAST THE EDGES. It has no visible start or end, and '
-        'that is the point: a mob vine is a rope you can see all of, and this one '
-        'is not.' + NL
-        + 'THE VISIBLE MIDDLE swells into a thick knotted MASS about a third of the '
-        'way along, much higher than the rest. That swelling is the part that is '
-        'awake.' + NL
+        'b13_matrona', '대지를 조여오는 덩굴 모체', '마트로나', 13, 'growth', 72,
+        'The mother root that every vine in this garden is a branch of.' + NL
+        + 'IT IS A PLANT. NOT A ROPE, NOT A SNAKE, NOT A CABLE. That is the single '
+        'easiest thing to get wrong here, because the body is long and coiled, and '
+        'a long coiled thing with a smooth even surface is a rope no matter what '
+        'else the description says. Everything in the next three paragraphs exists '
+        'to stop that.' + NL
+        + 'BODY: ONE ENORMOUS WOODY STEM, COILED. It is far longer than the cell is '
+        'wide and it shows that by DOUBLING BACK ON ITSELF — four heavy overlapping '
+        'coils, each as thick as a mob is tall, stacked and crossing over one '
+        'another and piling up in the lower two-thirds of the cell. The pile is '
+        'slightly wider than it is tall, not three times wider.' + NL
+        + 'THE STEM IS NOT AN EVEN TUBE. It SWELLS AT NODES — a hard knuckled '
+        'thickening every stem-width or so along its whole length, half again as '
+        'thick as the stem between them, so the outline of every coil is lumpy and '
+        'jointed rather than smooth. A rope is the same width from end to end; this '
+        'is not, and that is the difference you see first. Deep grooves run '
+        'LENGTHWISE along the stem between the nodes (a rope\'s twist runs '
+        'diagonally — these do not).' + NL
+        + 'LEAVES — the strongest thing that says plant, so do not leave them out. '
+        'FIVE big heavy leaves grow off the coils at different points, each as long '
+        'as the stem is thick, on short stiff stalks, angled every which way. They '
+        'BREAK THE OUTLINE of the pile so the silhouette is not a smooth coil but a '
+        'coil with leaves sticking out of it. Two are torn, one is curled shut, one '
+        'is a hard grey dead one still hanging on.' + NL
+        + 'FROM THE NODES sprout EIGHT young SIDE-SHOOTS, thin new growth a '
+        'quarter the thickness of the main stem, going in eight different '
+        'directions with two small leaves each. They are what a cut vine puts out, '
+        'and nothing else in this creature is thin.' + NL
+        + 'NEITHER END IS VISIBLE. Both ends run UNDER the coils of its own body '
+        'and do not come out again, so there is no terminus anywhere in the '
+        'drawing. That is the point — a mob vine is a stem you can see all of, and '
+        'this one is not.' + NL
+        + 'LENGTH IS SHOWN BY COILING, NEVER BY LEAVING THE CELL. The stem must not '
+        'touch or cross the edge of its cell at any point. Growth that runs off the '
+        'edge does not read as long; it reads as a drawing that got cut.' + NL
+        + 'THE TOPMOST COIL swells into a thick knotted MASS off to one side, '
+        'rising clear above the pile. That swelling is the part that is awake, and '
+        'it is the highest point of the body.' + NL
         + 'FROM THE SWELLING rise SIX TENDRILS, far thicker and longer than a mob '
         'has, curling up and forward at different heights. Two are as tall as the '
-        'swelling is wide.' + NL
+        'swelling is wide. EVERY TENDRIL ENDS IN A TIGHT SPIRAL COIL, wound two or '
+        'three turns like a spring — that spiral is a thing only a plant does, and '
+        'it is the second-strongest plant signal on the sheet after the leaves.'
+        + NL
         + 'THE OPENING is a long split down the TOP of the swelling, held apart, '
         'lined with SEVEN inward spines. It runs lengthwise, not across.' + NL
         + 'EYES: FOUR, in a row along the swelling at different heights, one large '
         'and three small, all looking along the length of the body rather than out '
         'at you.' + NL
-        + 'CAUGHT ALONG THE LENGTH, spaced far apart: a SKULL near one edge, a '
-        'RIBCAGE in the swelling, a BOOT still laced further along. They mark how '
-        'far it reaches.' + NL
-        + 'THE ACCIDENT — this one only: the rope is SEVERED CLEAN just before one '
-        'edge of the cell and has grown back across the gap in a knotted lump twice '
-        'the thickness of the rope. Someone cut it and it did not stop.',
-        'lying long and still across the field, the six tendrils raised and curling '
-        'slowly, the split along the swelling half open. It reads as ground that '
-        'has not noticed you yet.',
+        + 'CAUGHT IN THE COILS, spaced far apart on different loops: a SKULL on '
+        'the lowest coil, a RIBCAGE in the swelling, a BOOT still laced on a '
+        'middle coil. The stem has GROWN AROUND each of them — swollen lips of '
+        'wood closed over the edges, new side-shoots coming out right beside them '
+        '— so they were caught years ago and grown over, not tied on. They mark '
+        'how much stem there is.' + NL
+        + 'THE ACCIDENT — this one only: on the front-most coil the stem is SEVERED '
+        'CLEAN and has grown back across the gap in a knotted burl twice the '
+        'thickness of the stem, with a spray of six young shoots bursting out of '
+        'the join — the way a cut vine answers being cut. One loop of the pile has '
+        'that swollen scarred joint and none of the others do. Someone cut it and '
+        'it did not stop.',
+        'coiled and still, the four loops settled and overlapping, leaves hanging '
+        'off the pile at their own angles, the six tendrils raised off the swelling '
+        'with their spirals loose, the split along the swelling half open. It reads '
+        'as undergrowth that has not noticed you yet.',
         'the whip. TWO tendrils have lashed forward together, stretched thin and '
-        'long out ahead of the swelling, and the whole rope has been dragged after '
-        'them so the swelling is off centre. The other four stay raised.',
+        'long out ahead of the swelling with their end spirals pulled almost '
+        'straight, and the topmost coil has been dragged after them so the pile is '
+        'pulled off centre. Three leaves have been torn back flat against the stem '
+        'by the movement. The coils stay stacked and the whole body stays inside '
+        'the cell.',
         [('skill1', '속박의 덩굴 휘감기',
           '무작위 2명에게 공격력의 140%만큼 물리 피해, 2초간 기절 '
           '(평타 5대마다)',
@@ -960,18 +1007,48 @@ BOSSES = [
           'have shot out and UP, far higher and further than anything else on the '
           'sheet, and each has curled its tip into a CLOSED LOOP — two separate '
           'nooses, hanging at different heights on opposite sides of the cell, both '
-          'drawn tight and empty. The other four tendrils are pulled back and low, '
-          'out of the way, so nothing competes with the two. The long body is '
-          'braced and flattened. It is the TALLEST cell, and the two loops are the '
-          'only closed shapes on the whole sheet — the player counts them without '
-          'meaning to.')],
+          'drawn tight and empty, both well inside the edges. The other four '
+          'tendrils are pulled back and low, out of the way, so nothing competes '
+          'with the two. The coiled pile beneath has drawn in TIGHTER and taller to '
+          'brace for the pull, so the body is narrower here than in the idle cell, '
+          'and every leaf on it has been pulled up and back like hair in wind. '
+          'It is the TALLEST cell, and the two nooses are the only closed shapes on '
+          'the whole sheet — the player counts them without meaning to.')],
         'struck. The swelling has split open along the top and three tendrils are '
-        'torn off, the rope buckled into a hard kink. The ribcage shows through the '
-        'gash and the boot has come loose.',
-        """13스테이지 우두머리. **높이가 아니라 길이로 큽니다.**
+        'torn off, their spirals gone. The coils have LOOSENED and slumped apart, '
+        'the pile collapsing to about half its height, and for the first time you '
+        'can see between the loops. Leaves are stripped and falling, two of them '
+        'clear of the body. The ribcage shows through the gash and the boot has '
+        'come loose.',
+        """13스테이지 우두머리. **길이로 크지만, 칸을 안 벗어납니다.**
 
-칸 높이의 56%만 쓰지만 **가로는 칸을 넘어갑니다** — 양쪽 끝이 칸 밖으로
-빠져나가서 어디서 시작하고 끝나는지 안 보여야 합니다.
+처음엔 "양쪽 끝이 칸 밖으로 빠져나간다" 고 적었습니다. 그런데 같은 프롬프트
+끝에는 "어느 것도 잘리면 안 되고 자석선에서 8px 을 띄우라" 고 적혀 있습니다 —
+**서로 반대되는 지시**라 어느 쪽도 못 지키고, 그래서 잘린 채로 나왔습니다.
+
+길이는 **감아서** 보여 줍니다. 밧줄이 제 몸 위로 네 겹 감겨 쌓이고 양쪽 끝이
+그 아래로 들어가 안 나오면, 어디서 시작하고 끝나는지 안 보이면서도 칸 안에
+다 들어갑니다. `STANDS` 가 "무게는 눕는 게 아니라 처지는 것으로" 라고 말하는
+것과 같은 자리입니다.
+
+**가로로 길면 화면에서 오히려 작아집니다.** `Sprite` 가 정사각 상자에
+`contain` 으로 그리므로, 가로가 세로의 세 배면 가로에 맞춰 줄어들고 세로가
+텅 빕니다. 그래서 쌓인 더미는 **가로세로가 비슷해야** 합니다.
+
+## 밧줄로 나오면 안 됩니다
+
+감으라고만 했더니 밧줄이 나왔습니다. 길고 감긴 것에 표면까지 매끈하면 그건
+규칙을 뭐라고 적든 밧줄입니다. 식물로 되돌리는 것 넷을 넣었습니다 —
+
+| | 무엇 |
+|---|---|
+| **잎** | 제일 셉니다. 큼직한 것 다섯이 **윤곽 밖으로** 나옵니다. 밧줄에는 잎이 안 달립니다 |
+| **마디** | 줄기가 일정 간격으로 부풀어 울퉁불퉁합니다. 밧줄은 처음부터 끝까지 굵기가 같습니다 |
+| **곁순** | 마디마다 돋은 어린 덩굴 여덟. 이 생물에서 유일하게 가는 것들입니다 |
+| **덩굴손 끝** | 용수철처럼 두세 바퀴 **말립니다.** 식물만 하는 짓입니다 |
+
+세로로 파인 골도 넣었습니다 — 밧줄은 꼬임이 **비스듬하고** 줄기의 결은
+**세로**입니다.
 
 3번 칸에 **고리가 정확히 둘**입니다. 대상이 2명인 유일한 기술이라, 세는 것이
 곧 읽는 것입니다. 나머지 덩굴 넷은 낮게 빼서 둘이 묻히지 않게 합니다.""",
@@ -1266,8 +1343,8 @@ BOSSES = [
           'so ALL TWELVE BRANCHES HAVE SWUNG THE SAME WAY AT ONCE. The even radial '
           'burst of the idle cell has been combed flat into a single direction: '
           'every branch now lies roughly parallel, swept hard to one side, '
-          'stretched out and bent under the speed, reaching off the far edge of the '
-          'cell. The small trunk is dragged over with them and leans almost '
+          'stretched out and bent under the speed, reaching almost to the far edge '
+          'of the cell but stopping clear of it. The small trunk is dragged over with them and leans almost '
           'horizontal on its knot of roots. The impaled skull, helm and ribcage '
           'have swung out to the far end and lead. It is the WIDEST cell by a long '
           'way and it is LOW — this is a rake across the whole party, not an '
@@ -1327,7 +1404,8 @@ BOSSES = [
           'straightened out of their curls and now radiate up and out ahead of the '
           'trunk in a wide fan, each one straight, rigid and ending in a hard '
           'splintered point, spread across the full width and height of the cell '
-          'and reaching past its edges. THEY ARE ALL IN THE AIR — clear of one '
+          'and stopping just short of its edges. THEY ARE ALL IN THE AIR — clear '
+          'of one '
           'another and clear of any surface. Do not draw ground, a floor line, or '
           'anything for them to have come out of; they are simply thrust. The trunk '
           'behind them has reared back and is nearly hidden by its own roots. It is '
@@ -1349,56 +1427,82 @@ BOSSES = [
 
     boss(
         'b20_silvanus', '숲의 의지를 품은 고대 수호수', '실바누스', 20, 'growth', 86,
-        'The oldest thing in the garden, and the only one that was never sick. It '
-        'is the last enemy the player meets.' + NL
+        'The oldest thing in the garden. Everything else here answers to it, and '
+        'the ones that would not are in its roots. It is the last enemy the player '
+        'meets and it has never lost.' + NL
         + 'BODY: a COLOSSAL TREE, the largest and tallest silhouette of the entire '
         'game, filling nearly its whole cell. A single vast trunk, straight and '
         'unbroken, widening into a heavy buttressed base. Unlike every other boss '
-        'in this chapter IT IS NOT ROTTEN, NOT BROKEN AND NOT LEANING — it is '
-        'upright, whole, and symmetrical enough to look deliberate. That '
-        'soundness is the read: everything else here is falling apart and this one '
-        'is not.' + NL
-        + 'THE CROWN: SIX great limbs rise from the top of the trunk, evenly '
-        'spaced, curving up and outward and then inward again at the tips, so the '
-        'crown closes over itself like a cage or a cupped hand. It is a dome, not '
-        'a spray.' + NL
+        'in this chapter IT IS NOT ROTTEN, NOT BROKEN AND NOT LEANING — and that '
+        'is not peace, it is the reason nothing has ever killed it. Everything '
+        'else in this garden is coming apart; this one has been WINNING.' + NL
+        + 'THE CROWN — THIS IS WHAT SAYS KING, and it is the first thing to get '
+        'right. SIX great limbs rise from the top of the trunk and sweep outward '
+        'and UP into a ring of hard upswept HORNS, each tapering to a spike, each '
+        'a different length, the longest twice the shortest. Between every horn '
+        'you can see black sky. There are NO leaves, no twigs and no soft mass '
+        'anywhere in it. It is a crown of points, not a canopy and not a dome — a '
+        'thing that could gore, worn by something that grew it. It rises well '
+        'above the trunk and it is the widest part of the creature.' + NL
+        + 'HELD UP IN THE CROWN — THE SPOILS. Gripped between the horns, one per '
+        'limb, are FIVE things it beat and never put down: the SNAPPED TRUNK of '
+        'another tree half its own thickness, held like a stick; a BELL; a SHIELD '
+        'with a horn driven clean through it; a RIBCAGE; and the SKULL OF A BEAST '
+        'larger than any mob in the game. They hang at different heights and wrong '
+        'angles, all of them raised ABOVE the mouth and the eyes. A king puts what '
+        'it beat where everyone can see it. These are also the scale reference: '
+        'the beast skull should look small up there.' + NL
         + 'THE PASSIVE — draw it in every cell: the trunk is armoured in HEAVY '
         'OVERLAPPING BARK PLATES, thick slabs with deep hard-edged grooves between '
         'them, layered like scales from the base to the crown. They are grown, not '
         'fitted. They are what makes it hard to hurt and they are never absent, not '
         'even in the struck cell.' + NL
-        + 'THE MOUTH is a wide horizontal split across the trunk beneath the crown, '
-        'straight-edged and grim, with EIGHT heavy square teeth of solid wood.' + NL
-        + 'EYES: SIX, set in a rough ring around the trunk at the same level, just '
-        'above the mouth — the only boss whose eyes are ARRANGED rather than '
-        'scattered, and all six look the same way at once. This is the only '
-        'creature in the game that appears to have decided something.' + NL
+        + 'THE MOUTH is a wide horizontal rift across the trunk beneath the crown, '
+        'pulled open and grim, with TWELVE heavy teeth of solid wood — the four '
+        'longest overshoot the opposite lip and stand outside the mouth even when '
+        'it is closed. It is the widest mouth in the game and it runs most of the '
+        'way across the trunk.' + NL
+        + 'EYES: SIX, set in a ring around the trunk at the same level just above '
+        'the mouth — the only boss whose eyes are ARRANGED rather than scattered, '
+        'and all six are aimed DOWN AND FORWARD at the same single point. Every '
+        'other creature in this game looks about; this one has already picked what '
+        'it is looking at, and that agreement between the six is the whole threat '
+        'of the face.' + NL
         + 'THE ACCIDENT — this one only: ONE of the six crown limbs has hardened '
         'into a BLADE. It is flattened, straight-edged and tapering to a point '
         'along its whole length, clearly different from the other five, and it is '
         'the only part of the creature that is not organic in outline.' + NL
-        + 'THE BASE: six buttress roots spread wide and sunk, gripping. It does not '
-        'travel and it never has.',
-        'standing upright and enormous, the six crown limbs closed over into their '
-        'dome, all six eyes looking the same way, the blade limb held with the '
-        'others. Bark plates layered from base to crown. It is completely still and '
-        'it is the largest thing the player has seen.',
-        'the strike. TWO of the crown limbs have come down and forward together, '
-        'out past the front of the trunk at head height, the dome opened just '
-        'enough to let them through. The trunk has not moved at all and the base '
-        'has not shifted. Measured and short — it does not need to lean.',
+        + 'THE BASE: six buttress roots spread wide and sunk deep — and CAUGHT IN '
+        'THEM, half swallowed and lifted clear off the ground, are the broken '
+        'STUMPS OF THREE SMALLER TREES it pulled up whole. Their own roots still '
+        'trail from them. It does not travel and it never has: it made the others '
+        'come to it.',
+        'standing at full height, the crown of horns raised, the five spoils hung '
+        'among them, all six eyes aimed down and forward at the same point. Bark '
+        'plates layered from base to crown, three uprooted stumps in the roots. It '
+        'is completely still — and the stillness is not waiting, it is a thing that '
+        'has already decided and is not in a hurry about it.',
+        'the strike. TWO of the crown limbs have swung down and forward together, '
+        'out past the front of the trunk at head height, horns leading, the crown '
+        'opened just enough to let them through. The trunk has not moved at all and '
+        'the base has not shifted. It does not lean, it does not step and it does '
+        'not brace — it simply reaches down, the way you reach for something on the '
+        'floor. Short and contemptuous.',
         [('skill1', '태고의 성난 벼락',
           '아군 전체에 공격력의 150%만큼 물리 피해, 대상의 스킬 게이지를 '
           '50% 강제 차감 (평타 6대마다)',
           'THE FURY — it hits EVERYONE and strips what they were charging, so the '
-          'creature OPENS UPWARD and takes the whole cell. The crown dome has been '
+          'creature OPENS UPWARD and takes the whole cell. The crown has been '
           'THROWN WIDE: all six limbs have swung up and out to full spread, '
-          'straightened, reaching past the top and both side edges of the cell, so '
-          'the closed hand of the idle pose has become an open one. The trunk has '
-          'arched back and the bark plates have lifted and separated along the '
-          'grooves, standing out from the trunk all down its length. Ten torn '
-          'splinters and bark flakes hang in the air around the crown. It is the '
-          'TALLEST AND WIDEST cell of the sheet. Draw no lightning, no bolt, no '
+          'straightened, reaching almost to the top and to both side edges of the '
+          'cell but stopping clear of all three, so '
+          'the ring of horns has become a spread of spears aimed outward. The '
+          'trunk has arched back and every bark plate has LIFTED and separated '
+          'along its grooves, standing out from the trunk all down its length like '
+          'a beast raising its hackles. The five spoils have been flung out with '
+          'the limbs and swing wide. Ten torn splinters and bark flakes hang in '
+          'the air around the crown. It is the TALLEST AND WIDEST cell of the '
+          'sheet, and the one moment the creature looks angry rather than certain. Draw no lightning, no bolt, no '
           'glow — the game draws its own effects and a bolt in the sprite becomes a '
           'permanent white smear.'),
          ('skill2', '자비없는 칼날',
@@ -1407,29 +1511,53 @@ BOSSES = [
           'THE EXECUTION — it picks the ONE weakest character and finishes them, so '
           'this cell is the opposite of the fury in every way. The crown stays '
           'CLOSED and still, exactly as in idle, and the trunk stays upright. ONLY '
-          'THE BLADE LIMB has moved: it has come down and thrust FORWARD AND '
-          'SLIGHTLY DOWN in one straight line, fully extended, reaching off the far '
-          'edge of the cell at a single point below head height. It is the only '
+          'THE BLADE LIMB has moved, and the spoils have not even swung: it has '
+          'come down and thrust FORWARD AND '
+          'SLIGHTLY DOWN in one straight line, fully extended, reaching almost to '
+          'the far edge of the cell but stopping clear of it, at a single point '
+          'below head height. It is the only '
           'thing out of place on the whole creature. Nothing has left the body, '
           'nothing hangs in the air, and no bark has lifted. All six eyes have '
           'turned to look along the blade. It is the NARROWEST and STILLEST '
           'attacking cell in the game — and it must read as colder than the fury, '
           'not weaker.')],
-        'struck. The bark plates have shattered off one whole side of the trunk and '
-        'the wood beneath is split and pale, three crown limbs snapped and hanging '
-        'by strips. The blade limb is cracked halfway along. For the first time the '
-        'trunk is out of vertical — and the six eyes are no longer looking the same '
-        'way.',
+        'struck. The bark plates have SHATTERED off one whole side of the trunk and '
+        'the pale wood beneath is split open, three crown horns snapped and hanging '
+        'by strips of bark, the blade limb cracked halfway along. Two of the five '
+        'spoils have fallen out of the crown and one of the uprooted stumps has '
+        'rolled clear of the roots. For the first time the trunk is out of vertical '
+        '— and the six eyes are no longer looking the same way, which is the only '
+        'cell in which they disagree.',
         """20스테이지 우두머리. **마지막 적이고, 이 게임에서 제일 큽니다** (86%).
 
 **혼자만 안 썩었습니다.** 이 챕터의 다른 아홉은 전부 부러지고 기울고 구멍이
-났는데 이놈만 곧고 온전합니다. 그 멀쩡함이 실루엣이고, 마지막이라는 신호입니다.
+났는데 이놈만 곧고 온전합니다. 다만 그 온전함이 **평온으로 읽히면 안 됩니다** —
+"그래서 고요하다" 가 아니라 **"그래서 아무도 못 죽였다"** 입니다.
 
-**여섯 칸입니다.** 두 기술이 정반대여야 합니다:
+## 왕으로 읽히게 하는 것 셋
+
+| | 무엇 |
+|---|---|
+| **왕관** | 여섯 가지가 덮는 지붕이 아니라 **위로 솟은 뿔의 고리**입니다. 잎이 없고 뿔 사이로 검은 하늘이 보입니다 |
+| **전리품** | 이긴 것을 **머리 위에 걸고** 있습니다 — 뽑아 든 나무 한 그루, 종, 뿔이 꿰뚫은 방패, 갈비뼈, 잡몹보다 큰 짐승 두개골 |
+| **발밑** | 다른 나무 **셋을 통째로 뽑아** 뿌리에 물고 있습니다. 다른 열아홉이 썩는 동안 이놈이 뭘 하고 있었는지가 여기서 나옵니다 |
+
+왕관은 **몸에서 자란 것**이라 `BOSS_IS` 가 금지하는 "쓴 것" 이 아닙니다.
+얹혀 있으면 실패고, 줄기에서 솟아 있어야 합니다.
+
+짐승 두개골은 크기 잣대이기도 합니다 — 저 위에 걸린 것이 **작아 보여야**
+이놈이 얼마나 큰지가 읽힙니다.
+
+입이 이 게임에서 제일 넓고, 이빨 넷은 다물어도 밖으로 나와 있습니다. 눈
+여섯은 흩어져 있지 않고 **한 점을 내려다봅니다** — 다른 것들은 두리번거리는데
+이놈만 이미 골랐습니다.
+
+**다섯 칸입니다** (대기 · 평타 · 스킬1 · 스킬2 · 피격). 두 기술이 정반대여야
+합니다:
 
 | | 벼락 (스킬1) | 칼날 (스킬2) |
 |---|---|---|
-| 우듬지 | 활짝 열림 | **대기 그대로 닫힘** |
+| 왕관 | 활짝 벌어짐 | **대기 그대로** |
 | 움직인 것 | 전부 | 칼날 가지 하나 |
 | 공중에 뜬 것 | 파편 열 개 | **없음** |
 | 칸에서 | 제일 크다 | 제일 좁고 고요하다 |
@@ -1542,6 +1670,17 @@ SILHOUETTE ALONE at 60 pixels tall. Redraw so that each cell breaks out of the
 creature's ordinary shape in a different direction: the ordinary attack reaches
 forward and stays short, and each skill cell goes the way its own description
 says — wide, or tall, or long and narrow. Do not distinguish them by detail.
+```
+
+**잘려 나왔을 때** (칸 경계를 넘었을 때)
+
+```
+Part of the creature crosses the magenta separator lines and is cut off. Every
+cell must contain the WHOLE creature with at least 8px of empty black between its
+outermost pixel and every magenta line. Do not crop the creature to fix this and
+do not move the magenta lines — redraw the creature SMALLER inside its cell, and
+if it is a long shape, coil it or double it back on itself instead of extending
+it. Keep the poses and the proportions the same.
 ```
 
 **바닥이 그려져 나왔을 때**
@@ -1724,11 +1863,27 @@ def page(b):
         SKILL_CELL,
         PASSIVE_MARK if b['passive'] else '',
         ALIVE,
-        'NOTHING MAY BE CUT OFF.' + NL
-        + '- It fills about %d%% of the cell height in the idle cell. It is the '
-        'only creature on the field and it must read as such.' % b['fill'] + NL
+        'NOTHING MAY BE CUT OFF, AND NOTHING MAY LEAVE ITS CELL.' + NL
+        + '- In the idle cell it fills about %d%% of the cell along its LONGER '
+        'dimension — the height if it is taller than wide, the WIDTH if it is '
+        'wider than tall. The other dimension follows from its proportions. It is '
+        'the only creature on the field and it must read as such.' % b['fill'] + NL
         + '- Size the sheet from the LARGEST cell, not from idle. The skill cells '
         'break out of the body and they must still fit.' + NL
+        + '- THE GAME DRAWS EACH SPRITE INSIDE A SQUARE BOX and shrinks it to fit. '
+        'A creature drawn three times wider than it is tall therefore arrives on '
+        'screen SMALL — the width is what got scaled down, and the height is left '
+        'empty. Aim for a shape that sits comfortably in a square: at most about '
+        'half again as wide as it is tall, in every cell.' + NL
+        + '- THE WIDEST CELL SPANS AT MOST 90% OF THE CELL WIDTH, and the tallest '
+        'at most 90% of its height. Where a cell says a pose is "three times its '
+        'idle width" or "twice the height of the idle cell", that is an '
+        'instruction about the IDLE pose too: draw idle small enough that the big '
+        'pose still fits. Never solve it by letting the big pose overflow.' + NL
+        + '- IF IT IS MEANT TO BE VERY LONG, show that by COILING, DOUBLING BACK '
+        'or STACKING it — never by running it off the edge. Length that leaves the '
+        'cell does not read as length; it reads as a drawing that got cut, and the '
+        'slicer cannot find the cell boundary afterwards.' + NL
         + '- Every cell holds the WHOLE creature plus every loose piece. If any of '
         'it touches a magenta line, that cell has failed.' + NL
         + '- Leave at least 8px of empty black between the outermost pixel and '

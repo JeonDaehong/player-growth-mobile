@@ -13,7 +13,7 @@
 
 10스테이지 우두머리. **전반 챕터의 마지막이고, 이 게임에서 제일 큽니다.**
 
-**여섯 칸입니다** — 기술이 둘이라서입니다. 두 기술이 서로 안 닮는 것이 이
+**다섯 칸입니다** (대기 · 평타 · 스킬1 · 스킬2 · 피격) — 기술이 둘이라서입니다. 두 기술이 서로 안 닮는 것이 이
 시트에서 제일 어려운 부분입니다:
 
 | | 해일 (스킬1) | 포식 (스킬2) |
@@ -80,8 +80,8 @@ The 5 cells, in this exact order:
 
 Cell 1 — standing at full height, crown slumped forward, the great rift half open, threads hanging from the whole lower half, the bent gate showing through from crown to base. It is the largest silhouette in the game and it is not doing anything yet.
 Cell 2 — the surge. The front of the mass has driven forward off the base, the rift opened wider, and the crown has come down with it — but the body stays upright and the reach is short. Only the front commits. The threads swing back behind it.
-Cell 3 — THE WAVE — it hits EVERYONE with the biggest hit in the chapter and then poisons them, so it takes the ENTIRE CELL. The whole creature has reared up and curled FORWARD AND OVER into one huge breaking crest that arches from the base, up past the top edge, and back down across the full width of the cell — the body itself is the wave. The rift is open along the whole inside of the curl with every tooth showing. Under the curl the threads have been dragged out into a hanging fringe and eight loose gobbets hang in the air. The bent gate is carried up in the crest and is the highest thing in the cell. It is the WIDEST AND TALLEST cell of the entire game.
-Cell 4 — THE FEED — it picks out ONE weakened character, hits them, and heals itself with it, so this cell is a REACH AND A PULL, not a wave. The body stays upright and compact — very close to its idle shape and clearly smaller than the wave cell — while ONE long tube of sludge has shot out from the rift, thin and straight, reaching off the far edge of the cell at head height, ending in a SECOND SMALL MOUTH at the tip, open, with four teeth of its own. The tube is the only thing that has left the body. The great eye in the crown has turned to follow it and is the only eye not looking forward. Nothing else moves; the threads hang straight down. It is the NARROWEST attacking cell on the sheet.
+Cell 3 — THE WAVE — it hits EVERYONE with the biggest hit in the chapter and then poisons them, so it takes the ENTIRE CELL. The whole creature has reared up and curled FORWARD AND OVER into one huge breaking crest that arches from the base, up to just under the top edge, and back down across the full width of the cell without touching any edge — the body itself is the wave. The rift is open along the whole inside of the curl with every tooth showing. Under the curl the threads have been dragged out into a hanging fringe and eight loose gobbets hang in the air. The bent gate is carried up in the crest and is the highest thing in the cell. It is the WIDEST AND TALLEST cell of the entire game.
+Cell 4 — THE FEED — it picks out ONE weakened character, hits them, and heals itself with it, so this cell is a REACH AND A PULL, not a wave. The body stays upright and compact — very close to its idle shape and clearly smaller than the wave cell — while ONE long tube of sludge has shot out from the rift, thin and straight, reaching almost to the far edge of the cell but stopping clear of it, at head height, ending in a SECOND SMALL MOUTH at the tip, open, with four teeth of its own. The tube is the only thing that has left the body. The great eye in the crown has turned to follow it and is the only eye not looking forward. Nothing else moves; the threads hang straight down. It is the NARROWEST attacking cell on the sheet.
 Cell 5 — struck. The crown has caved in and the body has split down one of the long healed seams from top to base, the two halves leaning apart. The bent gate is sliding out through the split. Half the threads are torn away and four of the six eyes are gone with the collapsed crown.
 
 STYLE (strict, non-negotiable):
@@ -317,9 +317,12 @@ as a creature that is about to do something. Even the resting frame leans forwar
 Facing LEFT is wrong. Draw it facing RIGHT; the game mirrors it in code so it turns
 to face the party.
 
-NOTHING MAY BE CUT OFF.
-- It fills about 80% of the cell height in the idle cell. It is the only creature on the field and it must read as such.
+NOTHING MAY BE CUT OFF, AND NOTHING MAY LEAVE ITS CELL.
+- In the idle cell it fills about 80% of the cell along its LONGER dimension — the height if it is taller than wide, the WIDTH if it is wider than tall. The other dimension follows from its proportions. It is the only creature on the field and it must read as such.
 - Size the sheet from the LARGEST cell, not from idle. The skill cells break out of the body and they must still fit.
+- THE GAME DRAWS EACH SPRITE INSIDE A SQUARE BOX and shrinks it to fit. A creature drawn three times wider than it is tall therefore arrives on screen SMALL — the width is what got scaled down, and the height is left empty. Aim for a shape that sits comfortably in a square: at most about half again as wide as it is tall, in every cell.
+- THE WIDEST CELL SPANS AT MOST 90% OF THE CELL WIDTH, and the tallest at most 90% of its height. Where a cell says a pose is "three times its idle width" or "twice the height of the idle cell", that is an instruction about the IDLE pose too: draw idle small enough that the big pose still fits. Never solve it by letting the big pose overflow.
+- IF IT IS MEANT TO BE VERY LONG, show that by COILING, DOUBLING BACK or STACKING it — never by running it off the edge. Length that leaves the cell does not read as length; it reads as a drawing that got cut, and the slicer cannot find the cell boundary afterwards.
 - Every cell holds the WHOLE creature plus every loose piece. If any of it touches a magenta line, that cell has failed.
 - Leave at least 8px of empty black between the outermost pixel and every magenta line.
 
@@ -359,6 +362,17 @@ SILHOUETTE ALONE at 60 pixels tall. Redraw so that each cell breaks out of the
 creature's ordinary shape in a different direction: the ordinary attack reaches
 forward and stays short, and each skill cell goes the way its own description
 says — wide, or tall, or long and narrow. Do not distinguish them by detail.
+```
+
+**잘려 나왔을 때** (칸 경계를 넘었을 때)
+
+```
+Part of the creature crosses the magenta separator lines and is cut off. Every
+cell must contain the WHOLE creature with at least 8px of empty black between its
+outermost pixel and every magenta line. Do not crop the creature to fix this and
+do not move the magenta lines — redraw the creature SMALLER inside its cell, and
+if it is a long shape, coil it or double it back on itself instead of extending
+it. Keep the poses and the proportions the same.
 ```
 
 **바닥이 그려져 나왔을 때**

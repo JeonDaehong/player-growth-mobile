@@ -14,13 +14,33 @@
 20스테이지 우두머리. **마지막 적이고, 이 게임에서 제일 큽니다** (86%).
 
 **혼자만 안 썩었습니다.** 이 챕터의 다른 아홉은 전부 부러지고 기울고 구멍이
-났는데 이놈만 곧고 온전합니다. 그 멀쩡함이 실루엣이고, 마지막이라는 신호입니다.
+났는데 이놈만 곧고 온전합니다. 다만 그 온전함이 **평온으로 읽히면 안 됩니다** —
+"그래서 고요하다" 가 아니라 **"그래서 아무도 못 죽였다"** 입니다.
 
-**여섯 칸입니다.** 두 기술이 정반대여야 합니다:
+## 왕으로 읽히게 하는 것 셋
+
+| | 무엇 |
+|---|---|
+| **왕관** | 여섯 가지가 덮는 지붕이 아니라 **위로 솟은 뿔의 고리**입니다. 잎이 없고 뿔 사이로 검은 하늘이 보입니다 |
+| **전리품** | 이긴 것을 **머리 위에 걸고** 있습니다 — 뽑아 든 나무 한 그루, 종, 뿔이 꿰뚫은 방패, 갈비뼈, 잡몹보다 큰 짐승 두개골 |
+| **발밑** | 다른 나무 **셋을 통째로 뽑아** 뿌리에 물고 있습니다. 다른 열아홉이 썩는 동안 이놈이 뭘 하고 있었는지가 여기서 나옵니다 |
+
+왕관은 **몸에서 자란 것**이라 `BOSS_IS` 가 금지하는 "쓴 것" 이 아닙니다.
+얹혀 있으면 실패고, 줄기에서 솟아 있어야 합니다.
+
+짐승 두개골은 크기 잣대이기도 합니다 — 저 위에 걸린 것이 **작아 보여야**
+이놈이 얼마나 큰지가 읽힙니다.
+
+입이 이 게임에서 제일 넓고, 이빨 넷은 다물어도 밖으로 나와 있습니다. 눈
+여섯은 흩어져 있지 않고 **한 점을 내려다봅니다** — 다른 것들은 두리번거리는데
+이놈만 이미 골랐습니다.
+
+**다섯 칸입니다** (대기 · 평타 · 스킬1 · 스킬2 · 피격). 두 기술이 정반대여야
+합니다:
 
 | | 벼락 (스킬1) | 칼날 (스킬2) |
 |---|---|---|
-| 우듬지 | 활짝 열림 | **대기 그대로 닫힘** |
+| 왕관 | 활짝 벌어짐 | **대기 그대로** |
 | 움직인 것 | 전부 | 칼날 가지 하나 |
 | 공중에 뜬 것 | 파편 열 개 | **없음** |
 | 칸에서 | 제일 크다 | 제일 좁고 고요하다 |
@@ -73,22 +93,23 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 SUBJECT: a 5-frame animation sheet of ONE single creature, left to right. The creature is in every cell.
 
 THE CREATURE (the same one in all 5 cells):
-The oldest thing in the garden, and the only one that was never sick. It is the last enemy the player meets.
-BODY: a COLOSSAL TREE, the largest and tallest silhouette of the entire game, filling nearly its whole cell. A single vast trunk, straight and unbroken, widening into a heavy buttressed base. Unlike every other boss in this chapter IT IS NOT ROTTEN, NOT BROKEN AND NOT LEANING — it is upright, whole, and symmetrical enough to look deliberate. That soundness is the read: everything else here is falling apart and this one is not.
-THE CROWN: SIX great limbs rise from the top of the trunk, evenly spaced, curving up and outward and then inward again at the tips, so the crown closes over itself like a cage or a cupped hand. It is a dome, not a spray.
+The oldest thing in the garden. Everything else here answers to it, and the ones that would not are in its roots. It is the last enemy the player meets and it has never lost.
+BODY: a COLOSSAL TREE, the largest and tallest silhouette of the entire game, filling nearly its whole cell. A single vast trunk, straight and unbroken, widening into a heavy buttressed base. Unlike every other boss in this chapter IT IS NOT ROTTEN, NOT BROKEN AND NOT LEANING — and that is not peace, it is the reason nothing has ever killed it. Everything else in this garden is coming apart; this one has been WINNING.
+THE CROWN — THIS IS WHAT SAYS KING, and it is the first thing to get right. SIX great limbs rise from the top of the trunk and sweep outward and UP into a ring of hard upswept HORNS, each tapering to a spike, each a different length, the longest twice the shortest. Between every horn you can see black sky. There are NO leaves, no twigs and no soft mass anywhere in it. It is a crown of points, not a canopy and not a dome — a thing that could gore, worn by something that grew it. It rises well above the trunk and it is the widest part of the creature.
+HELD UP IN THE CROWN — THE SPOILS. Gripped between the horns, one per limb, are FIVE things it beat and never put down: the SNAPPED TRUNK of another tree half its own thickness, held like a stick; a BELL; a SHIELD with a horn driven clean through it; a RIBCAGE; and the SKULL OF A BEAST larger than any mob in the game. They hang at different heights and wrong angles, all of them raised ABOVE the mouth and the eyes. A king puts what it beat where everyone can see it. These are also the scale reference: the beast skull should look small up there.
 THE PASSIVE — draw it in every cell: the trunk is armoured in HEAVY OVERLAPPING BARK PLATES, thick slabs with deep hard-edged grooves between them, layered like scales from the base to the crown. They are grown, not fitted. They are what makes it hard to hurt and they are never absent, not even in the struck cell.
-THE MOUTH is a wide horizontal split across the trunk beneath the crown, straight-edged and grim, with EIGHT heavy square teeth of solid wood.
-EYES: SIX, set in a rough ring around the trunk at the same level, just above the mouth — the only boss whose eyes are ARRANGED rather than scattered, and all six look the same way at once. This is the only creature in the game that appears to have decided something.
+THE MOUTH is a wide horizontal rift across the trunk beneath the crown, pulled open and grim, with TWELVE heavy teeth of solid wood — the four longest overshoot the opposite lip and stand outside the mouth even when it is closed. It is the widest mouth in the game and it runs most of the way across the trunk.
+EYES: SIX, set in a ring around the trunk at the same level just above the mouth — the only boss whose eyes are ARRANGED rather than scattered, and all six are aimed DOWN AND FORWARD at the same single point. Every other creature in this game looks about; this one has already picked what it is looking at, and that agreement between the six is the whole threat of the face.
 THE ACCIDENT — this one only: ONE of the six crown limbs has hardened into a BLADE. It is flattened, straight-edged and tapering to a point along its whole length, clearly different from the other five, and it is the only part of the creature that is not organic in outline.
-THE BASE: six buttress roots spread wide and sunk, gripping. It does not travel and it never has.
+THE BASE: six buttress roots spread wide and sunk deep — and CAUGHT IN THEM, half swallowed and lifted clear off the ground, are the broken STUMPS OF THREE SMALLER TREES it pulled up whole. Their own roots still trail from them. It does not travel and it never has: it made the others come to it.
 
 The 5 cells, in this exact order:
 
-Cell 1 — standing upright and enormous, the six crown limbs closed over into their dome, all six eyes looking the same way, the blade limb held with the others. Bark plates layered from base to crown. It is completely still and it is the largest thing the player has seen.
-Cell 2 — the strike. TWO of the crown limbs have come down and forward together, out past the front of the trunk at head height, the dome opened just enough to let them through. The trunk has not moved at all and the base has not shifted. Measured and short — it does not need to lean.
-Cell 3 — THE FURY — it hits EVERYONE and strips what they were charging, so the creature OPENS UPWARD and takes the whole cell. The crown dome has been THROWN WIDE: all six limbs have swung up and out to full spread, straightened, reaching past the top and both side edges of the cell, so the closed hand of the idle pose has become an open one. The trunk has arched back and the bark plates have lifted and separated along the grooves, standing out from the trunk all down its length. Ten torn splinters and bark flakes hang in the air around the crown. It is the TALLEST AND WIDEST cell of the sheet. Draw no lightning, no bolt, no glow — the game draws its own effects and a bolt in the sprite becomes a permanent white smear.
-Cell 4 — THE EXECUTION — it picks the ONE weakest character and finishes them, so this cell is the opposite of the fury in every way. The crown stays CLOSED and still, exactly as in idle, and the trunk stays upright. ONLY THE BLADE LIMB has moved: it has come down and thrust FORWARD AND SLIGHTLY DOWN in one straight line, fully extended, reaching off the far edge of the cell at a single point below head height. It is the only thing out of place on the whole creature. Nothing has left the body, nothing hangs in the air, and no bark has lifted. All six eyes have turned to look along the blade. It is the NARROWEST and STILLEST attacking cell in the game — and it must read as colder than the fury, not weaker.
-Cell 5 — struck. The bark plates have shattered off one whole side of the trunk and the wood beneath is split and pale, three crown limbs snapped and hanging by strips. The blade limb is cracked halfway along. For the first time the trunk is out of vertical — and the six eyes are no longer looking the same way.
+Cell 1 — standing at full height, the crown of horns raised, the five spoils hung among them, all six eyes aimed down and forward at the same point. Bark plates layered from base to crown, three uprooted stumps in the roots. It is completely still — and the stillness is not waiting, it is a thing that has already decided and is not in a hurry about it.
+Cell 2 — the strike. TWO of the crown limbs have swung down and forward together, out past the front of the trunk at head height, horns leading, the crown opened just enough to let them through. The trunk has not moved at all and the base has not shifted. It does not lean, it does not step and it does not brace — it simply reaches down, the way you reach for something on the floor. Short and contemptuous.
+Cell 3 — THE FURY — it hits EVERYONE and strips what they were charging, so the creature OPENS UPWARD and takes the whole cell. The crown has been THROWN WIDE: all six limbs have swung up and out to full spread, straightened, reaching almost to the top and to both side edges of the cell but stopping clear of all three, so the ring of horns has become a spread of spears aimed outward. The trunk has arched back and every bark plate has LIFTED and separated along its grooves, standing out from the trunk all down its length like a beast raising its hackles. The five spoils have been flung out with the limbs and swing wide. Ten torn splinters and bark flakes hang in the air around the crown. It is the TALLEST AND WIDEST cell of the sheet, and the one moment the creature looks angry rather than certain. Draw no lightning, no bolt, no glow — the game draws its own effects and a bolt in the sprite becomes a permanent white smear.
+Cell 4 — THE EXECUTION — it picks the ONE weakest character and finishes them, so this cell is the opposite of the fury in every way. The crown stays CLOSED and still, exactly as in idle, and the trunk stays upright. ONLY THE BLADE LIMB has moved, and the spoils have not even swung: it has come down and thrust FORWARD AND SLIGHTLY DOWN in one straight line, fully extended, reaching almost to the far edge of the cell but stopping clear of it, at a single point below head height. It is the only thing out of place on the whole creature. Nothing has left the body, nothing hangs in the air, and no bark has lifted. All six eyes have turned to look along the blade. It is the NARROWEST and STILLEST attacking cell in the game — and it must read as colder than the fury, not weaker.
+Cell 5 — struck. The bark plates have SHATTERED off one whole side of the trunk and the pale wood beneath is split open, three crown horns snapped and hanging by strips of bark, the blade limb cracked halfway along. Two of the five spoils have fallen out of the crown and one of the uprooted stumps has rolled clear of the roots. For the first time the trunk is out of vertical — and the six eyes are no longer looking the same way, which is the only cell in which they disagree.
 
 STYLE (strict, non-negotiable):
 - 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
@@ -322,9 +343,12 @@ as a creature that is about to do something. Even the resting frame leans forwar
 Facing LEFT is wrong. Draw it facing RIGHT; the game mirrors it in code so it turns
 to face the party.
 
-NOTHING MAY BE CUT OFF.
-- It fills about 86% of the cell height in the idle cell. It is the only creature on the field and it must read as such.
+NOTHING MAY BE CUT OFF, AND NOTHING MAY LEAVE ITS CELL.
+- In the idle cell it fills about 86% of the cell along its LONGER dimension — the height if it is taller than wide, the WIDTH if it is wider than tall. The other dimension follows from its proportions. It is the only creature on the field and it must read as such.
 - Size the sheet from the LARGEST cell, not from idle. The skill cells break out of the body and they must still fit.
+- THE GAME DRAWS EACH SPRITE INSIDE A SQUARE BOX and shrinks it to fit. A creature drawn three times wider than it is tall therefore arrives on screen SMALL — the width is what got scaled down, and the height is left empty. Aim for a shape that sits comfortably in a square: at most about half again as wide as it is tall, in every cell.
+- THE WIDEST CELL SPANS AT MOST 90% OF THE CELL WIDTH, and the tallest at most 90% of its height. Where a cell says a pose is "three times its idle width" or "twice the height of the idle cell", that is an instruction about the IDLE pose too: draw idle small enough that the big pose still fits. Never solve it by letting the big pose overflow.
+- IF IT IS MEANT TO BE VERY LONG, show that by COILING, DOUBLING BACK or STACKING it — never by running it off the edge. Length that leaves the cell does not read as length; it reads as a drawing that got cut, and the slicer cannot find the cell boundary afterwards.
 - Every cell holds the WHOLE creature plus every loose piece. If any of it touches a magenta line, that cell has failed.
 - Leave at least 8px of empty black between the outermost pixel and every magenta line.
 
@@ -364,6 +388,17 @@ SILHOUETTE ALONE at 60 pixels tall. Redraw so that each cell breaks out of the
 creature's ordinary shape in a different direction: the ordinary attack reaches
 forward and stays short, and each skill cell goes the way its own description
 says — wide, or tall, or long and narrow. Do not distinguish them by detail.
+```
+
+**잘려 나왔을 때** (칸 경계를 넘었을 때)
+
+```
+Part of the creature crosses the magenta separator lines and is cut off. Every
+cell must contain the WHOLE creature with at least 8px of empty black between its
+outermost pixel and every magenta line. Do not crop the creature to fix this and
+do not move the magenta lines — redraw the creature SMALLER inside its cell, and
+if it is a long shape, coil it or double it back on itself instead of extending
+it. Keep the poses and the proportions the same.
 ```
 
 **바닥이 그려져 나왔을 때**
