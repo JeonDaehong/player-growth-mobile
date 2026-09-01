@@ -2472,7 +2472,20 @@ console.log('── 통계 파생 계산 ──');
     ok('주간도 보너스까지 6칸', wAll.length === ms.WEEKLY_MISSIONS.length + 1);
     const wRewards = wAll.map((id) =>
       (id === 'all' ? ms.WEEKLY_ALL_REWARD : ms.WEEKLY_MISSIONS.find((m) => m.id === id)!.reward));
-    ok('주간 일괄에 다이아가 들어간다', ms.bulkLabel(wRewards).includes('다이아'),
+    /*
+      ── 다이아가 아니라 골드다 ──
+
+      이 줄은 오랫동안 빨간 채로 있었다. 화폐를 골드 하나로 모으면서
+      `WEEKLY_ALL_REWARD` 에서 다이아를 뺐는데(바로 아래 줄이 그 규칙을
+      적어 두고 있다) 이 검사만 남았다.
+
+      낡은 것은 검사 쪽이었다 — 코드가 아니라. 그래서 지금 규칙을 적는다:
+      주간 일괄도 **골드와 주문서**로만 준다.
+    */
+    ok('주간 일괄은 골드와 주문서로만',
+      ms.bulkLabel(wRewards).includes('골드')
+      && ms.bulkLabel(wRewards).includes('주문서')
+      && !ms.bulkLabel(wRewards).includes('다이아'),
       ms.bulkLabel(wRewards));
   }
 

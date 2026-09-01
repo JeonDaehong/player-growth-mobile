@@ -14,7 +14,9 @@
 **한 덩어리로** 읽혀야 한다. 같은 스타일 규칙(`artstyle`)을 쓰되 그 위에 얹는
 것이 정반대라 파일을 나눴다.
 """
+import io
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -88,6 +90,46 @@ SKILLS = [
      'light coming off it. No hands, no person, no circle.'),
 ]
 
+# ══ 두 번째 기술 넷 ═══════════════════════════════════════════
+#
+# 넷이 **첫 넷과도** 안 겹쳐야 한다. 목록에서 여덟이 세로로 줄지어 뜨므로
+# (`SkillPanel`), 위아래로 닮은 것이 하나라도 있으면 목록이 안 읽힌다.
+#
+#   첫 넷   초승달 · 아래 쐐기와 폭발 · 나란한 화살 셋 · 십자와 빛살
+#   이 넷   퍼지는 호 셋 · 위로 솟는 기둥 · 오른쪽 이중 갈매기 · 그릇과 흩어짐
+#
+# 22px 에 뜨므로(캐릭터 창) 12px 짜리 상태 로고보다는 여유가 있다. 그래도
+# 규칙은 같다 — **바깥 모양 하나로** 갈린다.
+
+SKILLS2 = [
+    ('sk_taunt', '도발', '이졸데',
+     'A SHOUT SPREADING. THREE nested open ARCS, like ripples, all opening to the '
+     'RIGHT and sharing one centre just off the left edge — smallest on the left, '
+     'largest on the right, each a thick crescent band with a clear black gap '
+     'between them. They must be OPEN arcs, not closed rings. It is the only icon '
+     'in the set made of repeated curves. No mouth, no face, no horn, no lines.'),
+    ('sk_volcano', '화산', '비앙카',
+     'AN ERUPTION RISING. A wide flat solid BASE along the bottom edge, and from '
+     'its centre one thick COLUMN shooting straight UP to the top of the cell, '
+     'splitting near the top into two or three short tongues. The column is narrow '
+     'where it leaves the base and swells as it rises. The whole mass grows '
+     'UPWARD — nothing radiates sideways or downward. It is the only icon that is '
+     'heavy at the bottom and reaching at the top. No mountain outline, no smoke, '
+     'no sparks, no axe.'),
+    ('sk_frenzy', '광란', '리안느',
+     'A DOUBLE CHEVRON. TWO thick V shapes lying on their sides and pointing '
+     'RIGHT, one behind the other with a black gap between them, like a fast '
+     'forward symbol. Each arm is a quarter of the cell wide with flat square '
+     'ends. Both point the same way and they are the same size. It is the only '
+     'icon that points sideways. No arrow shaft, no bow, no motion lines.'),
+    ('sk_purify', '정화', '아녜스',
+     'SOMETHING LIFTED AWAY. A thick open BOWL in the lower half — a half-ring, '
+     'flat cut ends pointing up, like a wide U — and above it THREE separate small '
+     'solid CHUNKS of different sizes drifting up and apart, none touching the '
+     'bowl or each other. It reads as dirt leaving a cupped hand. It is the only '
+     'icon with loose floating pieces. No hands, no cross, no sparkle stars.'),
+]
+
 
 TPL = """# 아이콘 프롬프트
 
@@ -100,7 +142,8 @@ TPL = """# 아이콘 프롬프트
 | 벌 | 폴더 | 어디에 쓰나 |
 |---|---|---|
 | 전투 타입 4종 | `assets/sprites/role_icon/` | 파티 칸 · 캐릭터 창의 이름 옆 |
-| 스킬 4종 | `assets/sprites/skill_icon/` | 캐릭터 창의 스킬 목록 (`SkillPanel`) |
+| 스킬 4종 (첫 기술) | `assets/sprites/skill_icon/` | 캐릭터 창의 스킬 목록 (`SkillPanel`) |
+| 스킬 4종 (두 번째 기술) | `assets/sprites/skill_icon/` | 같은 목록의 아래쪽 |
 
 ## 12px 에서는 윤곽뿐입니다
 
@@ -165,6 +208,38 @@ TPL = """# 아이콘 프롬프트
 
 ---
 
+## 스킬 아이콘 — 두 번째 기술 넷
+
+넷이 두 번째 기술을 하나씩 갖습니다. 첫 기술은 자주 나가는 것이고, 이쪽은
+**비싸고 때가 맞아야** 나갑니다 (`core/chars` 의 `SkillDef.cost`).
+
+**첫 넷과도 안 겹쳐야 합니다.** 목록에서 여덟이 세로로 줄지어 뜨므로, 위아래로
+닮은 것이 하나라도 있으면 목록이 안 읽힙니다.
+
+| | 첫 기술 | 두 번째 기술 |
+|---|---|---|
+| 이졸데 | 검기 — 초승달 | 도발 — **퍼지는 호 셋** |
+| 비앙카 | 강타 — 아래 쐐기와 폭발 | 화산 — **위로 솟는 기둥** |
+| 리안느 | 화살비 — 나란한 화살 셋 | 광란 — **오른쪽 이중 갈매기** |
+| 아녜스 | 기도 — 십자와 빛살 | 정화 — **그릇과 흩어지는 조각** |
+
+### 셀 순서
+
+%(skill2_table)s
+### 프롬프트
+
+%(skill2_prompt)s
+### 슬라이서 설정
+
+같은 폴더에 **덧붙입니다** (`append`) — 첫 넷을 다시 뽑을 필요가 없습니다.
+
+```json
+{ "file": "<파일명>", "name": "skill_icon", "expect": [4, 1], "append": true,
+  "labels": [%(skill2_labels)s] }
+```
+
+---
+
 ## 다시 뽑을 때
 
 **너무 자잘하게 나왔을 때**
@@ -217,7 +292,18 @@ page = TPL % {
     'skill_table': table_of([(i[0], i[1], '%s의 기술' % i[2]) for i in SKILLS]),
     'skill_prompt': sheet(SKILLS),
     'skill_labels': labels_of([(i[0], '', '') for i in SKILLS]),
+    'skill2_table': table_of([(i[0], i[1], '%s의 두 번째 기술' % i[2]) for i in SKILLS2]),
+    'skill2_prompt': sheet(SKILLS2),
+    'skill2_labels': labels_of([(i[0], '', '') for i in SKILLS2]),
 }
 
 open('docs/ICON_PROMPTS.md', 'w', encoding='utf-8').write(page)
-print('아이콘 %d + 스킬 %d → docs/ICON_PROMPTS.md' % (len(ROLES), len(SKILLS)))
+print('아이콘 %d + 스킬 %d + 두 번째 기술 %d → docs/ICON_PROMPTS.md'
+      % (len(ROLES), len(SKILLS), len(SKILLS2)))
+
+# 코드와 어긋나지 않는지 본다 — 여기 없는 기술이 코드에 있으면 로고가 빈다
+_want = {i[0] for i in SKILLS} | {i[0] for i in SKILLS2}
+_src = io.open('src/core/chars.ts', encoding='utf-8').read()
+_have = set(re.findall(r"art: '(sk_[a-z_]+)'", _src))
+assert _have <= _want, '코드에만 있는 스킬 로고: %s' % (_have - _want)
+assert _want <= _have, '문서에만 있는 스킬 로고: %s' % (_want - _have)

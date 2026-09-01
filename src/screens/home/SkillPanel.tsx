@@ -27,28 +27,95 @@
  * "가끔 일어나는 일" 이고 패시브는 "늘 그런 사람" 이라 뒤엣것이 배경이 된다.
  */
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { useGame } from '@/state/store';
 import {
   CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillsOf, statOf, swingMs,
 } from '@/core/chars';
 import { passiveOf } from '@/core/passives';
 import { Party, allyAtk, members } from '@/core/party';
 import { skillBase, strikeFor } from '@/core/autoBattle';
+import {
+  CLEANSE_OPTS, CleanseOpt, OPT_DESC, OPT_NAME, cleanseOptOf,
+} from '@/core/skillOpt';
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
-import { BORDER, SP } from '@/ui/theme';
+import { BLACK, BORDER, SP, WHITE } from '@/ui/theme';
 
 /**
- * 이 기술이 몇 초마다 나가나.
+ * 이 기술이 **빨라야 몇 초마다** 나가나.
  *
- * 쿨타임이 **초로 잡혀 있지 않다.** `every` 번째 공격마다 평타 대신 나가므로,
- * 실제 간격은 그 사람의 공격 속도에 걸려 있다 — 빠른 사람은 같은 `every` 라도
- * 더 자주 쓴다. 화면에는 초로 적어야 비교가 되므로 여기서 환산한다.
+ * 쿨타임이 초로 잡혀 있지 않다. 평타 한 번에 코스트가 1 씩 차므로
+ * (`SkillDef.cost`), 실제 간격은 그 사람의 공격 속도에 걸려 있다 — 빠른
+ * 사람은 같은 코스트라도 더 자주 쓴다. 화면에는 초로 적어야 비교가 되므로
+ * 여기서 환산한다.
  *
- * (그래서 강화로 공격력이 올라도 이 값은 안 변한다. `spd` 는 안 자란다.)
+ * **"빨라야" 인 이유**: 조건이 붙은 기술은 다 차도 안 나갈 수 있다 (정화는
+ * 걷어낼 것이 없으면 기다린다). 그래서 이 값은 상한이지 약속이 아니다.
+ *
+ * (강화로 공격력이 올라도 이 값은 안 변한다. `spd` 는 안 자란다.)
  */
 export function skillEverySec(c: OwnedChar, sk: SkillDef): number {
-  return (swingMs(statOf(c).spd) * sk.every) / 1000;
+  return (swingMs(statOf(c).spd) * sk.cost) / 1000;
+}
+
+/**
+ * ── 정화를 언제 쓸까 ── 네 갈래 중 하나를 고른다 (`core/skillOpt`).
+ *
+ * ## 왜 설정이 붙나
+ *
+ * 이 게임의 전투는 사람이 안 누른다. 그러면 "언제 쓰느냐" 를 정하는 것이 곧
+ * 조작이고, 그 판단이 하나도 없으면 전투에서 사람이 할 일이 없다.
+ *
+ * 정화가 특히 그렇다 — 코스트 20 을 **기절**에 쓸지 **출혈**에 쓸지는 파티에
+ * 따라 다르다. 기절은 그 사람이 아무것도 못 하는 것이라 즉시 걷어야 하고,
+ * 출혈은 아프기만 할 뿐 5초 뒤에 저절로 풀린다.
+ *
+ * 네 칸을 가로로 늘어놓고, 고른 것만 반전시킨다. 드롭다운이 아니라 칸으로
+ * 둔 이유는 **넷을 한눈에 비교해야** 고를 수 있어서다.
+ */
+function CleanseOption({ who, slot }: { who: string; slot: number }) {
+  const opts = useGame((s) => s.skillOpts);
+  const setSkillOpt = useGame((s) => s.setSkillOpt);
+  const cur: CleanseOpt = cleanseOptOf(opts, who, slot);
+
+  return (
+    <View style={{ marginTop: SP.sm }}>
+      <T size={10} bold>언제 쓸까</T>
+      <Row gap={3} style={{ marginTop: SP.xs }}>
+        {CLEANSE_OPTS.map((o) => {
+          const picked = o === cur;
+          return (
+            <Pressable
+              key={o}
+              onPress={() => setSkillOpt(who as never, slot, o)}
+              style={({ pressed }) => [
+                BORDER,
+                {
+                  flex: 1,
+                  paddingVertical: 3,
+                  alignItems: 'center',
+                  /* 고른 것만 반전 — 흑백에서 "켜짐" 을 말하는 방법이다 */
+                  backgroundColor: picked ? WHITE : 'transparent',
+                  opacity: pressed ? 0.6 : 1,
+                },
+              ]}
+            >
+              <T size={9} bold={picked} style={picked ? { color: BLACK } : undefined}>
+                {OPT_NAME[o]}
+              </T>
+            </Pressable>
+          );
+        })}
+      </Row>
+      <T size={9} dim="dim" style={{ marginTop: 3 }}>{OPT_DESC[cur]}</T>
+      <T size={9} dim="dim" style={{ marginTop: 2 }}>
+        걸어 둔 조건에 맞는 대상이 없으면 코스트가 꽉 차도 안 씁니다 — 모아 둔
+        스무 번을 아무 일 없이 버리지 않습니다. 본인이 기절·침묵에 걸려 있으면
+        기술 자체가 안 나갑니다.
+      </T>
+    </View>
+  );
 }
 
 /**
@@ -132,7 +199,7 @@ export function SkillPanel({
         <T size={9} dim="dim">눌러서 자세히</T>
       </Row>
 
-      {list.map((sk) => {
+      {list.map((sk, slot) => {
         const on = open === sk.name;
         const sec = skillEverySec(c, sk);
         /* 한 대의 피해. **계산과 같은 함수**를 쓴다 — 적어 둔 수와 박히는 수가 갈리면 안 된다 */
@@ -168,8 +235,36 @@ export function SkillPanel({
             />
             {on && (
               <View style={[BORDER, { padding: SP.sm, marginBottom: SP.xs }]}>
-                <KV k="쿨타임" v={`${sec.toFixed(1)}초 (공격 ${sk.every}회마다)`} />
+                <KV
+                  k="스킬 코스트"
+                  v={`${sk.cost} (평타 한 번에 1 씩 찹니다)`}
+                />
+                <KV k="빨라야" v={`${sec.toFixed(1)}초마다`} />
                 <KV k="대상" v={targetText(sk)} />
+                {/*
+                  ── 때리지도 채우지도 않는 기술들 ──
+
+                  도발·광란·정화는 수치가 아니라 **무슨 일이 일어나나**로
+                  적어야 읽힌다. "공격력의 0%" 를 적어 두면 고장 난 기술로
+                  보인다.
+                */}
+                {!!sk.taunt && (
+                  <KV k="지속" v={`${sk.taunt}초 동안 적 전부가 이 사람만 노립니다`} />
+                )}
+                {!!sk.self && (
+                  <KV
+                    k="자기 강화"
+                    v={`${sk.self.sec}초간 공격속도 ${sk.self.mul}배`
+                      + (sk.self.noCharge ? ' (그동안 코스트가 안 찹니다)' : '')}
+                  />
+                )}
+                {!!sk.foeHex && (
+                  <KV
+                    k="맞은 적에게"
+                    v={`${sk.foeHex.sec}초간 받는 회복량 `
+                      + `${Math.round((1 - sk.foeHex.mul) * 100)}% 감소`}
+                  />
+                )}
                 {sk.heal > 0 ? (
                   <>
                     <KV
@@ -213,6 +308,7 @@ export function SkillPanel({
                     </T>
                   </>
                 )}
+                {sk.opt && <CleanseOption who={c.id} slot={slot} />}
               </View>
             )}
           </View>

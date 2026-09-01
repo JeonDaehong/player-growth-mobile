@@ -97,9 +97,19 @@ export function livingMembers(
   party: Party,
   chars: Record<string, OwnedChar>,
   hp?: Record<string, number>,
+  /**
+   * 쓰러졌지만 **버프가 아직 사그라드는 중인** 사람들 (`BattleState.fade`).
+   *
+   * 여기 든 사람은 살아 있는 것으로 친다. 아녜스가 죽는 순간 넷의 공격력이
+   * 아무 표시 없이 10% 떨어지던 것을, 2초 동안 깜빡이며 사그라들게 바꿨다
+   * (`core/passives` 의 `FADE_MS`). 깜빡이는 동안에는 **실제로도 걸려
+   * 있어야** 로고가 거짓말을 안 한다.
+   */
+  fade?: Record<string, number>,
 ): OwnedChar[] {
   const ms = members(party, chars);
-  return hp ? ms.filter((c) => hpOf(c, hp) > 0) : ms;
+  if (!hp) return ms;
+  return ms.filter((c) => hpOf(c, hp) > 0 || (fade?.[c.id] ?? 0) > 0);
 }
 
 /**
@@ -114,14 +124,17 @@ export function livingMembers(
  * 지금은 **아녜스의 패시브 10%** 다 (`core/passives` 의 `PASSIVES`). 그
  * 사람이 서 있어야 오르고, 쓰러지면 그 순간 꺼진다.
  *
- * @param hp 주면 쓰러진 사람의 패시브를 뺀다. 안 주면 전원이 살아 있는 것으로
+ * @param hp   주면 쓰러진 사람의 패시브를 뺀다. 안 주면 전원이 살아 있는 것으로
+ * @param fade 쓰러졌지만 아직 사그라드는 중인 사람들 (`BattleState.fade`) —
+ *             그 2초 동안은 버프가 실제로 걸려 있다 (`core/passives` 의 `FADE_MS`)
  */
 export function allyAtk(
   party: Party,
   chars: Record<string, OwnedChar>,
   hp?: Record<string, number>,
+  fade?: Record<string, number>,
 ): number {
-  return allyAtkMul(livingMembers(party, chars, hp));
+  return allyAtkMul(livingMembers(party, chars, hp, fade));
 }
 
 /** 파티 전체 공격속도에 더해지는 값 — 리안느의 +0.1 */
@@ -129,8 +142,9 @@ export function allySpd(
   party: Party,
   chars: Record<string, OwnedChar>,
   hp?: Record<string, number>,
+  fade?: Record<string, number>,
 ): number {
-  return allySpdAdd(livingMembers(party, chars, hp));
+  return allySpdAdd(livingMembers(party, chars, hp, fade));
 }
 
 /**

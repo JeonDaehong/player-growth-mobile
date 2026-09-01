@@ -300,6 +300,17 @@ export function migrateState(persisted: unknown): GameState {
     cut: {},
     bossMs: 0,
     swingSeq: 0,
+    /*
+      나중에 생긴 칸들. 저장본에 있어도 안 읽는다 — 위와 같은 이유로 판은
+      늘 처음부터 다시 선다.
+    */
+    fade: {},
+    taunt: null,
+    foeHex: {},
+    foeHeal: { seq: 0, amt: 0 },
+    struck: [],
+    /* 코스트도 0 부터다. 켜자마자 정화가 나가면 어디서 찼는지 알 수 없다 */
+    costSeq: 0,
   };
 
   return {
@@ -307,6 +318,16 @@ export function migrateState(persisted: unknown): GameState {
     chars,
     party,
     battle,
+    /*
+      스킬 설정은 **이어받는다.** 판은 처음부터 다시 서지만 설정은 사람이
+      고른 것이라, 껐다 켜면 사라지는 종류의 값이 아니다.
+
+      값을 검사하지 않는다 — 읽는 쪽이 모르는 값이면 기본값으로 떨어뜨린다
+      (`core/skillOpt` 의 `cleanseOptOf`). 저장본을 믿지 않는 일을 한 곳에서만
+      한다.
+    */
+    skillOpts: (p.skillOpts && typeof p.skillOpts === 'object'
+      ? p.skillOpts : {}) as Record<string, string>,
 
     // 원시값
     /*

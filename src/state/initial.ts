@@ -108,6 +108,8 @@ export const initial = (): GameState => {
       STARTING_CHARS[3] ?? null,
     ],
     battle: newBattle(),
+    /* 아무도 안 건드린 상태 — 읽을 때 기본값으로 떨어진다 (`cleanseOptOf`) */
+    skillOpts: {},
 
     // 시작 장비를 16슬롯 다 채우면 아이템레벨이 10 → 160 으로 뛴다.
     // 퀘스트 보증금은 아이템레벨에 비례하므로(§7-3) 소지금 50쿠퍼로는 가장 쉬운

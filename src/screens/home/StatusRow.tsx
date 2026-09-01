@@ -20,11 +20,27 @@
  * 그래서 **줄은 늘 있고 내용만 바뀐다** (`ROW_H`). 빈 줄은 눈에 안 띄지만
  * 자리를 지킨다.
  *
- * ## 좋고 나쁨은 순서로 말한다
+ * ## 좋고 나쁨은 테두리 색이 말한다
  *
- * 흑백 2색이라 초록·빨강 테두리를 못 쓴다 (`ui/theme`). 무대에 있을 때는
- * 왼쪽/오른쪽 끝으로 갈랐는데, 파티 칸은 폭이 좁아서 하나만 걸리면 한쪽에
- * 치우쳐 보인다. 여기서는 **가운데 모아 놓고 좋은 것을 먼저** 둔다.
+ * 오랫동안 자리로만 갈랐다 — 좋은 것을 먼저, 나쁜 것을 뒤에. 그런데 파티 칸에
+ * 로고가 **하나만** 뜨면 그게 어느 쪽 자리인지 알 방법이 없다. 결국 열두
+ * 그림을 다 외운 사람만 읽을 수 있는 표시였다.
+ *
+ * 이제 테두리가 초록(좋은 것)과 빨강(나쁜 것)으로 갈린다 (`ui/theme` 의
+ * `GOOD_C`·`BAD_C`). **안쪽 그림은 그대로 흰색**이라 팔레트가 무너지지 않는다 —
+ * 1px 테두리만 물들고, 그 색이 말하는 것은 좋은가 나쁜가 한 가지뿐이다.
+ *
+ * 자리 순서는 그대로 둔다. 색과 자리가 같은 것을 말하므로 서로를 받쳐 준다.
+ *
+ * ## 꺼지기 전에 깜빡인다
+ *
+ * 남은 시간이 2초 아래로 내려가면 그 칸이 깜빡인다 (`core/status` 의
+ * `BLINK_MS`). 로고는 붙어 있다가 **어느 순간 그냥 없어지는데**, 그러면
+ * "언제 풀렸지" 를 알 수가 없다.
+ *
+ * 버프를 주던 사람이 쓰러졌을 때도 같은 깜빡임이다 (`core/passives` 의
+ * `FADE_MS`) — 아녜스가 죽으면 네 칸의 `pv_ash` 가 2초 동안 깜빡이다 사라진다.
+ * 그 2초 동안은 **실제로도 버프가 걸려 있으므로** 로고가 거짓말을 안 한다.
  *
  * ## 두 세트가 섞인다
  *
@@ -41,11 +57,11 @@
  * 판이 끝날 때까지 안 바뀌는 것이라 한둘이 밀려도 잃는 게 적다 — 궁금하면
  * 캐릭터 창에 다 적혀 있다.
  */
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, View } from 'react-native';
 import { Mark } from '@/core/passives';
 import { Sprite } from '@/ui/Sprite';
-import { BLACK, WHITE } from '@/ui/theme';
+import { BAD_C, BLACK, GOOD_C } from '@/ui/theme';
 
 /**
  * 로고 하나의 크기.
@@ -85,18 +101,74 @@ const BAD_CAP = 3;
  *
  * 안을 검게 채우는 것은 파티 칸의 테두리와 겹쳐 뜨기 때문이다.
  */
-function Slot({ mark }: { mark: Mark }) {
+function Slot({ mark, size = ICON }: { mark: Mark; size?: number }) {
+  /*
+    깜빡임.
+
+    **하나의 `Animated.Value` 를 계속 돌린다.** 켜고 끄기를 `setState` 로 하면
+    0.35초마다 파티 칸이 다시 그려지고, 그게 넷이면 초당 열두 번이다.
+    투명도만 흔들면 화면을 다시 그리지 않는다.
+  */
+  const t = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!mark.blink) { t.setValue(1); return undefined; }
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(t, { toValue: 0.15, duration: 240, useNativeDriver: true }),
+      Animated.timing(t, { toValue: 1, duration: 240, useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => { loop.stop(); t.setValue(1); };
+  }, [mark.blink, t]);
+
   return (
-    <View
+    <Animated.View
       style={{
         borderWidth: 1,
-        borderColor: WHITE,
+        /* 색이 말하는 것은 한 가지뿐이다 — 좋은가 나쁜가 (`ui/theme`) */
+        borderColor: mark.good ? GOOD_C : BAD_C,
         backgroundColor: BLACK,
         padding: PAD,
+        opacity: t,
       }}
     >
       {/* 세트를 칸이 들고 온다 — 패시브 로고와 상태 로고가 섞여 뜬다 */}
-      <Sprite set={mark.set} name={mark.name} size={ICON} />
+      <Sprite set={mark.set} name={mark.name} size={size} />
+    </Animated.View>
+  );
+}
+
+/**
+ * **적 머리 위**의 로고 줄.
+ *
+ * 파티 칸 것(`StatusRow`)과 부품은 같고 배치가 다르다 — 저쪽은 칸 안에 자리를
+ * 잡고 비어 있어도 높이를 지키지만, 여기는 인물 위에 떠 있는 것이라 **없으면
+ * 아무것도 안 그린다.** 빈 줄을 남겨 두면 적 머리 위에 설명 없는 여백이 생기고,
+ * 그만큼 인물이 아래로 내려앉는다.
+ *
+ * 로고도 더 작다 (8px). 적은 40~50px 이고 그 위에 피해 숫자와 말풍선이 같이
+ * 뜨므로, 파티 칸과 같은 10px 을 쓰면 셋이 서로를 가린다.
+ */
+export function FoeMarks({ status }: { status: readonly Mark[] }) {
+  if (!status.length) return null;
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        bottom: '100%',
+        left: -12,
+        right: -12,
+        marginBottom: 2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 2,
+        zIndex: 42,
+      }}
+    >
+      {status.slice(0, 3).map((m, i) => (
+        <Slot key={`f${m.name}${i}`} mark={m} size={8} />
+      ))}
     </View>
   );
 }

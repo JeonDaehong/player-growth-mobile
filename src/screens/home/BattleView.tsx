@@ -31,18 +31,20 @@ import { Animated, Easing, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  MOB_CAP, STAGE_MS, bossReady, fightHeld, foeOf, healPlan, pickAim, rowMelee,
-  skillDamage,
+  MOB_CAP, STAGE_MS, bossReady, fightHeld, foeHexOf, foeOf, healPlan, pickAim,
+  raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf, skillsOf } from '@/core/chars';
-import { hpOf, members, partyStat } from '@/core/party';
+import { hpOf, livingMembers, members, partyStat } from '@/core/party';
 import { hasHex, hexOf } from '@/core/status';
-import { liveSpd } from '@/core/passives';
+import { foeMarksOf, liveSpd } from '@/core/passives';
+import { cleanseOptOf, cleanseTargets } from '@/core/skillOpt';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
-import { BORDER, SP, WHITE } from '@/ui/theme';
+import { BAD_C, BORDER, SP, WHITE } from '@/ui/theme';
+import { FoeMarks } from './StatusRow';
 import {
   BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, SkillShout,
   useShake,
@@ -327,6 +329,7 @@ export function BattleView() {
   const chars = useGame((s) => s.chars);
   const strikeFoe = useGame((s) => s.strikeFoe);
   const skillFoe = useGame((s) => s.skillFoe);
+  const skillOpts = useGame((s) => s.skillOpts);
   const goStage = useGame((s) => s.goStage);
   const callBossNow = useGame((s) => s.callBossNow);
 
@@ -344,7 +347,17 @@ export function BattleView() {
     쓰러진 사람의 패시브는 꺼진다 (`core/passives`). 그래서 사제가 죽으면
     남은 셋의 공격력이, 활잡이가 죽으면 넷의 공격속도가 그 자리에서 떨어진다.
   */
-  const aliveLine = line.filter((c) => hpOf(c, battle.hp) > 0);
+  /*
+    쓰러졌지만 버프가 아직 사그라드는 중인 사람도 센다 (`FADE_MS`).
+
+    아녜스가 죽어도 2초 동안은 넷의 공격력이 그대로다 — 그동안 로고가
+    깜빡이며 "곧 없어진다" 를 말한다. 계산과 화면이 **같은 목록**을 봐야
+    깜빡임이 끝나는 순간과 수치가 떨어지는 순간이 같아진다.
+  */
+  const aliveLine = livingMembers(party, chars, battle.hp, battle.fade);
+
+  /** 판 연출 중인가 — 그동안은 아무도 안 휘두른다 (`Fighter` 의 `held`) */
+  const held = fightHeld(battle);
 
   const down = battle.down > 0;
   const empty = ps.count === 0;
@@ -420,8 +433,47 @@ export function BattleView() {
    * 건넨다. 렌더가 끝날 때마다 최신으로 갈아 끼우므로, 콜백이 불릴 때 읽는
    * 값은 언제나 방금 렌더의 것이다.
    */
-  const now = useRef({ battle, party, chars });
-  now.current = { battle, party, chars };
+  const now = useRef({ battle, party, chars, skillOpts });
+  now.current = { battle, party, chars, skillOpts };
+
+  /**
+   * 이 기술을 **지금 실제로 쓸 수 있나** — `Fighter` 가 물어본다.
+   *
+   * 코스트가 다 차도 여기서 거절하면 안 나가고 찬 채로 기다린다. 파티 전체에
+   * 무엇이 걸려 있는지를 아는 것은 여기라, 판단도 여기서 한다.
+   *
+   * 셋 다 **헛되이 쓰는 것**을 막는다:
+   *
+   *   정화  걷어낼 것이 없으면 (사람이 고른 조건 기준) 안 쓴다
+   *   도발  적이 없거나 이미 걸려 있으면 안 쓴다
+   *   광란  이미 켜져 있으면 안 쓴다
+   *
+   * 도발과 광란은 사양에 없는 조건이지만, 없으면 코스트가 찰 때마다 이미
+   * 걸린 것을 덮어써서 화면에는 아무 변화도 없이 코스트만 사라진다.
+   */
+  const canCast = React.useCallback((id: string, slot: number) => {
+    const { battle: b, party: pt, chars: ch, skillOpts: op } = now.current;
+    const sk = skillsOf(id)[slot];
+    if (!sk) return false;
+    if (sk.cleanse) {
+      return cleanseTargets(cleanseOptOf(op, id, slot), pt, ch, b.hp, b.hex).length > 0;
+    }
+    if (sk.taunt) return b.foes.length > 0 && !(b.taunt && b.taunt.ms > 0);
+    if (sk.self) return !hasHex(hexOf(b.hex, id), sk.self.id);
+    return true;
+  }, []);
+
+  /**
+   * 코스트가 바뀌었다 — 파티 칸이 그린다 (`state/battleUi`).
+   *
+   * 스토어에서 직접 꺼내 쓴다. `useBattleUi((s) => s.setCharge)` 로 받아
+   * 의존성에 넣으면 이 콜백이 다시 만들어질 수 있고, 그러면 `Fighter` 넷이
+   * 통째로 다시 그려진다 (`now` ref 와 같은 이유). 액션은 스토어가 사는 동안
+   * 안 바뀌므로 그때그때 꺼내는 편이 안전하다.
+   */
+  const onCharge = React.useCallback((id: string, on: readonly number[]) => {
+    useBattleUi.getState().setCharge(id, on);
+  }, []);
 
   const hitSeq = useRef(0);
   /**
@@ -514,8 +566,16 @@ export function BattleView() {
     파티 칸(`PartyBar`)이 같은 값을 그린다. 여기 지역 상태로 두면 무대에서만
     보이고, 두 군데서 따로 세면 언젠가 어긋난다.
   */
-  const bumpCharge = useBattleUi((s) => s.bumpCharge);
-  const resetCharge = useBattleUi((s) => s.resetCharge);
+  /*
+    코스트를 **여기서 안 센다.**
+
+    `Fighter` 가 제 스윙 순환 안에서 세고 (`onCharge` 로 밀어 넣는다), 파티
+    칸이 그것을 그린다 (`state/battleUi`).
+
+    한동안 두 곳에서 따로 셌다 — `Fighter` 안의 스윙 횟수(실제로 기술을
+    내보내는 쪽)와 여기의 충전 칸(그리는 쪽). 같은 규칙을 두 번 구현한 셈이라
+    언젠가는 어긋날 수밖에 없었고, 실제로 기절이 걸렸다 풀릴 때 둘이 갈렸다.
+  */
 
   /*
     우두머리가 방금 나왔나.
@@ -560,6 +620,56 @@ export function BattleView() {
     const off = setTimeout(() => setPatShown(false), FOE_BEAT_MS + 300);
     return () => clearTimeout(off);
   }, [battle.patSeq]);
+
+  /*
+    ── 특수기에 맞은 사람 ──
+
+    `battle.struck` 은 특수기가 나간 틱에만 채워진다. 사람마다 번호를 하나씩
+    올려서 `Fighter` 에게 넘기면, 그 사람만 표적이 씌워진다.
+
+    번호를 사람별로 두는 이유는 `patSeq` 하나로는 "누가" 를 못 말하기
+    때문이다 — 전원기와 한 명기를 가르는 것이 이 표시의 존재 이유다.
+  */
+  const [struck, setStruck] = useState<Record<string, number>>({});
+  const lastStruck = useRef(battle.patSeq ?? 0);
+  useEffect(() => {
+    const at = battle.patSeq ?? 0;
+    if (at <= lastStruck.current) { lastStruck.current = at; return; }
+    lastStruck.current = at;
+    const who = battle.struck ?? [];
+    if (!who.length) return;
+    setStruck((old) => {
+      const next = { ...old };
+      for (const id of who) next[id] = (next[id] ?? 0) + 1;
+      return next;
+    });
+  }, [battle.patSeq, battle.struck]);
+
+  /*
+    ── 우두머리가 스스로 채웠다 ──
+
+    초록 `+N` 이 머리 위에 뜬다 (`DamageNumber` 의 `good`). 흰 숫자로 뜨면
+    피해와 구분이 안 돼서, 20판에서 15초마다 일어나던 회복을 아무도 회복인
+    줄 몰랐다.
+  */
+  const [heals, setHeals] = useState<{ key: number; amt: number }[]>([]);
+  const lastHeal = useRef(battle.foeHeal?.seq ?? 0);
+  useEffect(() => {
+    const at = battle.foeHeal?.seq ?? 0;
+    if (at <= lastHeal.current) { lastHeal.current = at; return undefined; }
+    lastHeal.current = at;
+    const amt = battle.foeHeal?.amt ?? 0;
+    if (amt <= 0) return undefined;
+    const key = hitSeq.current++;
+    setHeals((old) => [...old.slice(-3), { key, amt }]);
+    const off = setTimeout(() => {
+      setHeals((old) => old.filter((h) => h.key !== key));
+    }, 760);
+    return () => clearTimeout(off);
+  }, [battle.foeHeal]);
+
+  /** 지금 광폭화 중인가 — 붉게 물들고 두 배로 때린다 (`core/autoBattle`) */
+  const rage = raging(battle);
 
   const [bossCall, setBossCall] = useState(0);
   const wasBoss = useRef(battle.boss);
@@ -662,9 +772,6 @@ export function BattleView() {
       적 체력이 닳고 휘둘렀는데 아무 일도 안 일어났다.
     */
     /* 때리기 **전에** 어느 놈을 노리고 있었는지 읽는다 — 때리고 나면 목록이 바뀐다 */
-    /* 평타 한 번 = 스킬까지 한 칸 */
-    bumpCharge(sw.id);
-
     /*
       **자리를 골라 계산에 넘긴다** — 앞에 설수록 많이 맞는다 (`pickAim`).
 
@@ -704,7 +811,7 @@ export function BattleView() {
       Animated.timing(knock, { toValue: 1, duration: 60, useNativeDriver: true }),
       Animated.timing(knock, { toValue: 0, duration: 130, useNativeDriver: true }),
     ]).start();
-  }, [knock, shake, strikeFoe, bumpCharge, spotOf]);
+  }, [knock, shake, strikeFoe, spotOf]);
 
   // 화면을 떠날 때 남은 타이머를 치운다
   useEffect(() => () => {
@@ -718,9 +825,6 @@ export function BattleView() {
   */
   const onSkill = React.useCallback((id: string, slot: number) => {
     if (fightHeld(now.current.battle)) return;
-    /* 나갔으니 처음부터 다시 센다 */
-    resetCharge(id);
-
     const { battle: b, party: pt, chars: ch } = now.current;
     const me = ch[id];
     if (!me) { skillFoe(id, undefined, slot); return; }
@@ -810,7 +914,7 @@ export function BattleView() {
     setFlinch(idx.map(posAt));
     if (flinchT.current) clearTimeout(flinchT.current);
     flinchT.current = setTimeout(() => setFlinch([]), 180);
-  }, [skillFoe, shake, resetCharge, spotOf]);
+  }, [skillFoe, shake, spotOf]);
 
   /*
     타격 연출을 치운다.
@@ -864,6 +968,58 @@ export function BattleView() {
     const off = setTimeout(() => setFoeSwing(false), 320);
     return () => clearTimeout(off);
   }, [patCall]);
+
+  /*
+    ── 특수기가 나가면 무대가 통째로 움직인다 ──
+
+    한동안 특수기와 평타가 화면에서 **거의 같아 보였다.** 말풍선이 하나 뜨고,
+    같은 크기로 팔을 한 번 휘두르는 것이 전부였다. 우두머리가 2배짜리 기술을
+    써도 잡몹이 때리는 것과 인상이 다르지 않았다.
+
+    세 가지를 한꺼번에 건다:
+
+      돌진   우두머리가 아군 쪽으로 크게 나왔다 돌아온다. 몸이 커지므로
+             (`scale`) 화면에서 차지하는 자리도 잠깐 늘어난다
+      암전   무대 전체가 한 번 어두워졌다 밝아진다 — 다음에 일어날 일에
+             눈이 가게 만드는, 제일 싼 방법이다
+      흔들   평타(0.55)보다 훨씬 세게 (2.2)
+
+    셋 다 400ms 안에 끝난다. 길게 끌면 그 사이에 다음 평타가 겹쳐서 무슨
+    동작인지 알 수 없게 된다.
+  */
+  const rush = useRef(new Animated.Value(0)).current;
+  const flash = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!patCall) return undefined;
+    shake.fire(2.2);
+    const a = Animated.parallel([
+      Animated.sequence([
+        Animated.timing(rush, {
+          toValue: 1, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true,
+        }),
+        Animated.timing(rush, {
+          toValue: 0, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(flash, { toValue: 1, duration: 90, useNativeDriver: true }),
+        Animated.timing(flash, { toValue: 0, duration: 260, useNativeDriver: true }),
+      ]),
+    ]);
+    a.start();
+    return () => a.stop();
+  }, [patCall, rush, flash, shake]);
+
+  /* `interpolate` 는 한 번만 만든다 — 렌더마다 부르면 가지가 쌓인다 */
+  const rushX = useMemo(() => rush.interpolate({
+    inputRange: [0, 1], outputRange: [0, -Math.round(34 * ZOOM)],
+  }), [rush]);
+  const rushScale = useMemo(() => rush.interpolate({
+    inputRange: [0, 1], outputRange: [1, 1.18],
+  }), [rush]);
+  const flashOn = useMemo(() => flash.interpolate({
+    inputRange: [0, 1], outputRange: [0, 0.55],
+  }), [flash]);
 
   useEffect(() => {
     /*
@@ -1316,6 +1472,22 @@ export function BattleView() {
                     stun={hasHex(hexOf(battle.hex, c.id), 'st_stun')}
                     silent={hasHex(hexOf(battle.hex, c.id), 'st_silence')}
                     cut={battle.cut?.[c.id] ?? 0}
+                    /*
+                      판 연출 중에는 몸도 멈춘다. 계산은 이미 막혀 있지만
+                      (`fightHeld`) 몸이 계속 휘두르면 막이 걷히는 순간 검기가
+                      화면을 가로지른다 (`Fighter` 의 `held`).
+                    */
+                    held={held}
+                    /* 광란이 켜져 있는 동안은 코스트가 안 찬다 */
+                    noCharge={skillsOf(c.id).some(
+                      (sk) => !!sk.self?.noCharge
+                        && hasHex(hexOf(battle.hex, c.id), sk.self.id),
+                    )}
+                    canCast={canCast}
+                    costSeq={battle.costSeq ?? 0}
+                    struck={struck[c.id] ?? 0}
+                    struckName={battle.pat ?? ''}
+                    onCharge={onCharge}
                     damage={pops.filter((pp) => pp.who === c.id)}
                     bless={bless}
                     /*
@@ -1439,8 +1611,9 @@ export function BattleView() {
                 const foeFrame = flinch.includes(back) && !down ? 'down'
                   : foeSwing ? (battle.boss && patShown ? 'skill1' : 'attack')
                     : 'idle';
+                const bossOne = battle.boss && back === 0;
                 return (
-                  <View
+                  <Animated.View
                     /*
                       키는 **그 마리의 고유 번호**다 (`FoeSlot.id`).
 
@@ -1478,6 +1651,11 @@ export function BattleView() {
                             outputRange: [0, Math.max(0, stageW - spotOf(back).x)],
                           }),
                         }] : []),
+                        /*
+                          특수기를 쓸 때 아군 쪽으로 크게 나왔다 돌아온다.
+                          우두머리에게만 얹는다 — 잡몹은 특수기를 안 쓴다.
+                        */
+                        ...(bossOne ? [{ translateX: rushX }, { scale: rushScale }] : []),
                       ],
                     }}
                   >
@@ -1493,7 +1671,7 @@ export function BattleView() {
                       특수기를 쓰게 되는 날 조용히 잡몹 머리 위에 뜨지 않게
                       하기 위해서다.
                     */}
-                    {battle.boss && back === 0 && (
+                    {bossOne && (
                       <View
                         pointerEvents="none"
                         style={{
@@ -1506,6 +1684,72 @@ export function BattleView() {
                         }}
                       >
                         <SkillShout nonce={patCall} name={battle.pat ?? ''} burst />
+                      </View>
+                    )}
+
+                    {/*
+                      ── 이 마리에게 걸려 있는 것 ──
+
+                      비앙카의 화산이 거는 시듦과, 판 전체에 걸린 도발이 여기
+                      뜬다. 안 보이면 걸렸는지 알 방법이 없다 — 회복량이
+                      줄어드는 것은 두 판을 비교해야 보인다.
+                    */}
+                    <FoeMarks
+                      status={foeMarksOf(
+                        foeHexOf(battle.foeHex, f.id),
+                        !!battle.taunt && battle.taunt.ms > 0,
+                        battle.taunt?.ms ?? 0,
+                      )}
+                    />
+
+                    {/*
+                      ── 우두머리가 스스로 채운 양 ──
+
+                      **초록**이다 (`ui/theme` 의 `GOOD_C`). 흰 숫자로 뜨면
+                      피해와 구분이 안 돼서, 때렸는데 왜 체력이 오르는지가
+                      화면에서 설명되지 않는다.
+                    */}
+                    {bossOne && heals.map((h, hi) => (
+                      <View
+                        key={h.key}
+                        pointerEvents="none"
+                        style={{
+                          position: 'absolute',
+                          bottom: foeSize + 20 + hi * 12,
+                          left: foeSize * 0.3,
+                          zIndex: 48,
+                        }}
+                      >
+                        <DamageNumber text={`+${h.amt}`} dx={0} dy={0} good onDone={NOOP} />
+                      </View>
+                    ))}
+
+                    {/*
+                      ── 광폭화 ──
+
+                      2분이 지나면 붉게 물들고 공격력·공격속도가 두 배가 된다
+                      (`core/autoBattle` 의 `RAGE_MS`). 그림은 흰 픽셀이라
+                      `tint` 한 줄이면 통째로 붉어진다 — 새 시트를 안 받아도
+                      "저놈이 달라졌다" 가 한눈에 보인다.
+
+                      머리 위에 딱지도 붙인다. 색만으로는 흑백 화면에서
+                      "빨간 놈" 이 그냥 다른 종처럼 읽힐 수 있다.
+                    */}
+                    {bossOne && rage && (
+                      <View
+                        pointerEvents="none"
+                        style={{
+                          position: 'absolute',
+                          bottom: -18,
+                          left: -14,
+                          right: -14,
+                          alignItems: 'center',
+                          zIndex: 41,
+                        }}
+                      >
+                        <View style={{ borderWidth: 1, borderColor: BAD_C, paddingHorizontal: 3 }}>
+                          <T size={9} bold style={{ color: BAD_C }}>광폭화</T>
+                        </View>
                       </View>
                     )}
 
@@ -1579,8 +1823,10 @@ export function BattleView() {
                       */
                       fallbackSet={foeFrame === 'skill1' ? kf.art : 'creature'}
                       fallbackName={foeFrame === 'skill1' ? 'attack' : 'slime'}
+                      /* 광폭화한 우두머리만 붉다 — 흰 픽셀이라 한 줄로 물든다 */
+                      tint={bossOne && rage ? BAD_C : undefined}
                     />
-                  </View>
+                  </Animated.View>
                 );
               })}
             </Animated.View>
@@ -1698,6 +1944,30 @@ export function BattleView() {
 
           지금은 적 줄 안에서 그린다 (아래 `foes.map`).
         */}
+
+        {/*
+          ── 특수기 암전 ──
+
+          우두머리 특수기가 나가는 순간 무대가 한 번 어두워졌다 밝아진다.
+
+          평타와 특수기가 화면에서 거의 같아 보이던 것을 가르는 셋 중 하나다
+          (나머지는 돌진과 흔들림 — `rush` 주석). 어둡게 하는 쪽을 고른 이유는
+          이 게임이 흰 그림에 검은 배경이라, **밝히면 그림이 묻히고 어둡게
+          하면 그림이 남기** 때문이다.
+
+          `pointerEvents="none"` 이라 단추를 안 가린다. `StageVeil` 보다
+          아래층이라 판이 열리는 막과 다투지 않는다.
+        */}
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: BAD_C,
+            opacity: flashOn,
+            zIndex: 60,
+          }}
+        />
 
         {/*
           판이 열리고 닫히는 막 — 무대 안의 맨 위 층.

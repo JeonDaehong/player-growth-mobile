@@ -3663,6 +3663,35 @@
       ]
     },
     {
+      "file": "status-4.jpg",
+      "name": "status_icon",
+      "expect": [
+        1,
+        1
+      ],
+      "append": true,
+      "note": "상태 효과 로고 D장 — 도발 한 칸 (docs/STATUS_ICON_PROMPTS.md). 이졸데의 도발이 생기면서 하나만 늘었다 — 앞의 열둘을 다시 뽑을 이유가 없어 한 칸만 덧붙인다",
+      "labels": [
+        "st_taunt"
+      ]
+    },
+    {
+      "file": "icon-3.jpg",
+      "name": "skill_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "append": true,
+      "note": "두 번째 기술 4종 — 도발·화산·광란·정화 (docs/ICON_PROMPTS.md)",
+      "labels": [
+        "sk_taunt",
+        "sk_volcano",
+        "sk_frenzy",
+        "sk_purify"
+      ]
+    },
+    {
       "file": "13.jpg",
       "name": "passive_icon",
       "expect": [

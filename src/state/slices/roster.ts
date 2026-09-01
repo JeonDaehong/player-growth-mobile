@@ -14,6 +14,7 @@ import {
 } from '@/core/chars';
 import { PARTY_SIZE, Party, cleanParty } from '@/core/party';
 import { drawChar, poolOf, recruitCost } from '@/core/recruit';
+import { optKey } from '@/core/skillOpt';
 import {
   BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, leaveFor,
   TICK_MS,
@@ -37,6 +38,14 @@ export interface RosterActions {
    * 돈 없이 만렙이 되는 길이 되면 안 된다.
    */
   setGear: (id: CharId, lv: number) => void;
+  /**
+   * 스킬 설정을 바꾼다 (`core/skillOpt`).
+   *
+   * 기본값과 같은 값을 골라도 그대로 적어 둔다. 지우면 "고른 적 없음" 과
+   * 구분이 안 되고, 나중에 기본값을 바꾸면 사람이 골라 둔 것이 조용히 같이
+   * 바뀐다.
+   */
+  setSkillOpt: (who: CharId, slot: number, opt: string) => void;
   /** 자동 전투 한 틱 — 시간·등장·적 공격 */
   battleTickOnce: () => void;
   /**
@@ -161,6 +170,13 @@ export const createRosterSlice = (
     set({ chars: { ...st.chars, [id]: { ...c, gearLv: next } } });
   },
 
+  setSkillOpt: (who, slot, opt) => {
+    const st = get();
+    const key = optKey(who, slot);
+    if (st.skillOpts[key] === opt) return;
+    set({ skillOpts: { ...st.skillOpts, [key]: opt } });
+  },
+
   recruitDraw: () => {
     const st = get();
     const owned = Object.keys(st.chars);
@@ -215,15 +231,19 @@ export const createRosterSlice = (
     const st = get();
     if (fightHeld(st.battle)) return;
     const { battle, ev } = applySkill(
-      st.battle, who, st.party, st.chars, Math.random, at, slot ?? 0,
+      st.battle, who, st.party, st.chars, Math.random, at, slot ?? 0, st.skillOpts,
     );
     /*
-      회복형은 피해가 0 이다.
+      ── 아무 일도 안 일어났나 ──
 
       `ev.hit <= 0` 만 보고 돌아가고 있었다. 그러면 사제가 기도를 해도 채워진
-      체력이 저장되지 않는다 — 계산은 맞는데 아무 일도 안 일어난다.
+      체력이 저장되지 않는다 — 계산은 맞는데 아무 일도 안 일어난다. 그래서
+      회복을 조건에 더했고, 도발·광란·정화가 생기면서 또 같은 일이 났다.
+
+      이제 **엔진이 "바뀌었다" 를 말한다** (`TickEvent.applied`). 갈래가 늘
+      때마다 여기에 항을 더하는 방식은 늘 뒤늦게 고쳐진다.
     */
-    if (ev.hit <= 0 && ev.healed <= 0) return;
+    if (!ev.applied && ev.hit <= 0 && ev.healed <= 0) return;
     if (!ev.killed) { set({ battle }); return; }
 
     /*

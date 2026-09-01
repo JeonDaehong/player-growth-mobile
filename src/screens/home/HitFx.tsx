@@ -23,7 +23,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 import type { HitFx } from '@/core/chars';
 import { Sprite } from '@/ui/Sprite';
-import { BLACK, MONO, WHITE } from '@/ui/theme';
+import { BAD_C, BLACK, GOOD_C, MONO, WHITE } from '@/ui/theme';
+import { T } from '@/ui/atoms';
 
 /** 이펙트 한 판의 길이 */
 export const FX_MS = 260;
@@ -778,8 +779,22 @@ export function FallingArrow({
  * 자리는 부르는 쪽(`BattleView`)이 잡는다. 여기서는 뜨는 동작만 한다.
  */
 export function DamageNumber({
-  text, dx, dy, big, onDone,
-}: { text: string; dx: number; dy: number; big?: boolean; onDone: () => void }) {
+  text, dx, dy, big, good, onDone,
+}: {
+  text: string;
+  dx: number;
+  dy: number;
+  big?: boolean;
+  /**
+   * 회복인가 — **초록으로** 뜬다 (`ui/theme` 의 `GOOD_C`).
+   *
+   * 우두머리가 스스로 채울 때 쓴다. 흰 숫자로 뜨면 피해와 구분이 안 돼서,
+   * 화면에서는 "왜 때렸는데 체력이 오르지" 가 된다 — 실제로 20판에서
+   * 15초마다 그런 순간이 있었고 아무도 그게 회복인 줄 몰랐다.
+   */
+  good?: boolean;
+  onDone: () => void;
+}) {
   const t = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -809,7 +824,7 @@ export function DamageNumber({
         position: 'absolute',
         left: dx,
         top: dy,
-        color: '#FFFFFF',
+        color: good ? GOOD_C : WHITE,
         fontFamily: 'monospace',
         fontWeight: 'bold',
         fontSize: big ? 20 : 15,
@@ -833,6 +848,111 @@ export function DamageNumber({
     >
       {text}
     </Animated.Text>
+  );
+}
+
+/**
+ * ── 표적 ── 우두머리 특수기에 **맞은 사람**에게 씌운다.
+ *
+ * ## 왜 필요했나
+ *
+ * 특수기를 맞으면 피해 숫자가 떴다. 그게 전부였다. 그래서 넷이 동시에 맞는
+ * 전원기(`aim: 'all'`)와 한 명만 맞는 기술(`aim: 'one'`)이 화면에서 **똑같이
+ * 보였다** — 숫자가 몇 개 뜨는지로 세는 수밖에 없는데, 평타 숫자도 같은
+ * 자리에 같이 뜨므로 그것도 안 된다.
+ *
+ * 붉은 네 귀퉁이가 몸을 감싸고 기술 이름이 붙는다. "이 사람이, 이 기술에,
+ * 방금 맞았다" 가 한 덩어리로 읽힌다.
+ *
+ * ## 왜 네 귀퉁이인가
+ *
+ * 사각형 테두리로 감싸면 54px 짜리 인물이 상자에 갇힌 것으로 보인다. 귀퉁이
+ * 넷만 그리면 **표적을 잡은 것**으로 읽히고, 인물이 안 가려진다.
+ *
+ * 두 번 깜빡인다. 한 번이면 못 보고 지나가고, 계속 켜져 있으면 다음 기술이
+ * 올 때까지 안 꺼져서 표시가 아니라 배경이 된다.
+ */
+const STRUCK_MS = 900;
+
+export function StruckMark({
+  nonce, name, size,
+}: { nonce: number; name: string; size: number }) {
+  const t = useRef(new Animated.Value(0)).current;
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    if (nonce <= 0) return undefined;
+    setOn(true);
+    t.setValue(0);
+    let alive = true;
+    const a = Animated.timing(t, {
+      toValue: 1, duration: STRUCK_MS, easing: Easing.linear, useNativeDriver: true,
+    });
+    a.start(() => { if (alive) setOn(false); });
+    return () => { alive = false; a.stop(); };
+  }, [nonce, t]);
+
+  /* 두 번 깜빡이고 사라진다 — `interpolate` 는 한 번만 만든다 */
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.1, 0.3, 0.45, 0.65, 1],
+    outputRange: [0, 1, 0.15, 1, 0.15, 0],
+  }), [t]);
+  /* 밖에서 조여든다 — 조준하는 동작이다 */
+  const grow = useMemo(() => t.interpolate({
+    inputRange: [0, 0.25, 1], outputRange: [1.5, 1, 1],
+  }), [t]);
+
+  if (!on) return null;
+
+  /** 귀퉁이 한 조각 — ㄱ 자 두 획 */
+  const arm = Math.max(5, Math.round(size * 0.22));
+  const corner = (top: boolean, left: boolean) => (
+    <View
+      style={{
+        position: 'absolute',
+        [top ? 'top' : 'bottom']: 0,
+        [left ? 'left' : 'right']: 0,
+        width: arm,
+        height: arm,
+        [top ? 'borderTopWidth' : 'borderBottomWidth']: 2,
+        [left ? 'borderLeftWidth' : 'borderRightWidth']: 2,
+        borderColor: BAD_C,
+      }}
+    />
+  );
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: -3,
+        right: -3,
+        top: -3,
+        height: size + 6,
+        opacity: fade,
+        transform: [{ scale: grow }],
+        zIndex: 44,
+      }}
+    >
+      {corner(true, true)}
+      {corner(true, false)}
+      {corner(false, true)}
+      {corner(false, false)}
+      {/*
+        기술 이름 — 표적 **아래**에 붙인다.
+
+        위는 이미 말풍선(`SkillShout`)과 피해 숫자가 쓰는 자리다. 셋이 겹치면
+        정작 제일 중요한 숫자가 가려진다.
+      */}
+      {!!name && (
+        <View style={{ position: 'absolute', left: -20, right: -20, bottom: -13, alignItems: 'center' }}>
+          <View style={{ backgroundColor: BLACK, borderWidth: 1, borderColor: BAD_C, paddingHorizontal: 3 }}>
+            <T size={9} style={{ color: BAD_C }}>{name}</T>
+          </View>
+        </View>
+      )}
+    </Animated.View>
   );
 }
 

@@ -127,6 +127,17 @@ STATUS = [
      'cell wide. There is NO arm above the crossbar. It is the regen cross with '
      'the top broken off, and that missing arm is the whole read. Squint test: a T.'),
 
+    ('st_taunt', '도발', '나쁜', '건 사람만 노리게 된다 (적에게 걸린다)',
+     r'도발',
+     'A HORN LYING SIDEWAYS. One solid TRAPEZOID spanning the full width of the '
+     'cell — narrow at the LEFT edge (about a fifth of the cell tall) and widening '
+     'evenly all the way to the RIGHT edge (about three quarters of the cell '
+     'tall), both ends cut flat and vertical. It is a megaphone seen from the '
+     'side, filled solid. It is the only icon in the whole set that is ASYMMETRIC '
+     'LEFT TO RIGHT — thin on one side, thick on the other — and that wedge is the '
+     'entire read. No mouth, no face, no sound lines, no rim. '
+     'Squint test: a sideways wedge, thin left, thick right.'),
+
     # ── 버프 ────────────────────────────────────────────────
     ('st_rage', '격노', '좋은', '공격력 증가', None,
      'A WHOLE BLADE. A tall narrow wedge standing upright and filling the FULL '
@@ -183,6 +194,12 @@ SHEETS = [
      ['st_wither', 'st_regen', 'st_slow', 'st_haste'],
      '**두 쌍입니다.** 1·2번이 같은 십자(위 팔이 없는 것 / 있는 것), 3·4번이 '
      '같은 갈매기(아래 하나 / 위 둘).'),
+    ('D', '도발',
+     ['st_taunt'],
+     '**한 칸짜리입니다.** 이졸데의 도발이 생기면서 하나만 늘었습니다 — 앞의 '
+     '열둘을 다시 뽑을 이유가 없으므로 이 한 장만 그려서 덧붙입니다. '
+     '이건 **적 머리 위에** 뜨는 유일한 로고이고, 열셋 중 유일하게 좌우가 '
+     '다릅니다.'),
 ]
 
 
@@ -198,6 +215,7 @@ SHAPES = [
     ('st_stun', '번개(ㄹ 꺾임)'), ('st_silence', '가로 막대 하나'),
     ('st_slow', '아래 갈매기 하나'), ('st_haste', '위 갈매기 둘'),
     ('st_rage', '길쭉한 칼'), ('st_weak', '부러진 짧은 칼'),
+    ('st_taunt', '가로 쐐기 (왼쪽이 얇다)'),
     ('st_guard', '꽉 찬 사각'), ('st_break', '귀퉁이 떨어진 사각'),
     ('st_regen', '십자'), ('st_wither', 'ㅜ 자'),
     ('bp_thorn', '여섯 갈래 별 (보스 패시브)'),
@@ -447,19 +465,22 @@ def build():
             'spikier or gloomier than another. The game says good or bad by '
             'where it puts them on screen; the icon only says WHAT.' + NL
             + '- Every icon uses the same stroke weight and the same solid fill.',
-            'THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side '
-            'and squint until they blur. If any two have a similar outline, '
-            'redraw the weaker one — the outline is the only thing that survives '
-            'at 14 pixels.',
-            grid(4, 1),
+            ('THEY MUST NOT BE CONFUSABLE. Put the %d finished icons side by '
+             'side and squint until they blur. If any two have a similar '
+             'outline, redraw the weaker one — the outline is the only thing '
+             'that survives at 14 pixels.' % len(cells)) if len(cells) > 1 else
+            ('IT MUST NOT LOOK LIKE THE OTHERS. This icon joins twelve that '
+             'already exist; squint at it and make sure its outline is not '
+             'close to any of them.'),
+            grid(len(cells), 1),
         )
         blocks.append(SHEET_TPL % {
             'tag': tag, 'title': title, 'note': note,
             'table': table_of(cells), 'prompt': prompt,
         })
         cfg.append(
-            '{ "file": "status-%d.jpg", "name": "status_icon", "expect": [4, 1],%s'
-            % (n + 1, ' "append": true,' if n else '')
+            '{ "file": "status-%d.jpg", "name": "status_icon", "expect": [%d, 1],%s'
+            % (n + 1, len(cells), ' "append": true,' if n else '')
             + NL + '  "labels": [%s] }' % labels_of(cells))
 
     return PAGE % {

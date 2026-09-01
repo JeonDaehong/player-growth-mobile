@@ -31,6 +31,7 @@
 | `st_weak` | 약화 | 나쁜 | 공격력 감소 | 17판 우두머리 |
 | `st_break` | 파쇄 | 나쁜 | 방어력 감소 (0으로 만드는 것 포함) | 15·16판 우두머리 |
 | `st_wither` | 시듦 | 나쁜 | 받는 치유량 감소 | 14판 우두머리 |
+| `st_taunt` | 도발 | 나쁜 | 건 사람만 노리게 된다 (적에게 걸린다) | — |
 | `st_rage` | 격노 | 좋은 | 공격력 증가 | 보조가 곁에 섰을 때 (`core/party` 의 `supportMul`) |
 | `st_guard` | 견고 | 좋은 | 방어력 증가 | 20판 우두머리 |
 | `st_regen` | 재생 | 좋은 | 지속 회복 | 20판 우두머리 |
@@ -70,6 +71,7 @@
 | `st_haste` | 위 갈매기 둘 |
 | `st_rage` | 길쭉한 칼 |
 | `st_weak` | 부러진 짧은 칼 |
+| `st_taunt` | 가로 쐐기 (왼쪽이 얇다) |
 | `st_guard` | 꽉 찬 사각 |
 | `st_break` | 귀퉁이 떨어진 사각 |
 | `st_regen` | 십자 |
@@ -382,6 +384,96 @@ SHEET LAYOUT:
   clipped.
 ```
 
+## D장 — 도발
+
+**한 칸짜리입니다.** 이졸데의 도발이 생기면서 하나만 늘었습니다 — 앞의 열둘을 다시 뽑을 이유가 없으므로 이 한 장만 그려서 덧붙입니다. 이건 **적 머리 위에** 뜨는 유일한 로고이고, 열셋 중 유일하게 좌우가 다릅니다.
+
+### 셀 순서
+
+| 셀 | 1 |
+|---|---|
+| | 도발 |
+| id | `st_taunt` |
+
+### 프롬프트
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+
+The 4 cells, in this exact order:
+
+Cell 1 — A HORN LYING SIDEWAYS. One solid TRAPEZOID spanning the full width of the cell — narrow at the LEFT edge (about a fifth of the cell tall) and widening evenly all the way to the RIGHT edge (about three quarters of the cell tall), both ends cut flat and vertical. It is a megaphone seen from the side, filled solid. It is the only icon in the whole set that is ASYMMETRIC LEFT TO RIGHT — thin on one side, thick on the other — and that wedge is the entire read. No mouth, no face, no sound lines, no rim. Squint test: a sideways wedge, thin left, thick right.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 12 TO 16 PIXELS. That is smaller than the text next to it.
+Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon must read as a single silhouette at a glance. Not a
+  scene, not an object sitting on a background, not two things next to each other.
+- FILL THE CELL. The shape touches or nearly touches all four sides of its cell.
+  An icon drawn small inside its cell disappears entirely when scaled down.
+- SOLID, NOT OUTLINED. Draw it as a filled white mass. A hollow outline at 14px
+  becomes a grey smudge, because the outline and the hole merge.
+- NO INTERIOR DETAIL. No rivets, no wood grain, no gem facets, no shading, no
+  highlights. If you can only see it at full size, it is noise.
+- ONE NOTCH OR CUT-OUT AT MOST, and it must be at least a fifth of the width.
+  Anything finer closes up.
+- STRAIGHT AND CHUNKY. Thick strokes, hard angles, flat ends. Thin tapering lines
+  vanish; a 1px point at full size is nothing at icon size.
+- NO PERSPECTIVE. Flat and front-on, like a road sign. These are the only images
+  in this game that are NOT drawn in three-quarter view.
+- CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
+  text and a tilted icon looks like a mistake.
+
+TEST: squint until the image is a blur. If you can still name it, it is right.
+If it becomes a grey blob, the shape is too busy.
+
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING.
+- Every edge is a HARD STEP between solid white and solid black. Do not soften, feather or anti-alias anything, and do not fake a grey by alternating black and white pixels along an edge.
+- A checkerboard border turns into grey fuzz at 14 pixels and the shape loses its outline, which is the only thing that identifies it. An earlier attempt came back with dithered edges and half the icons were unreadable.
+- Two colours exist in this image: pure white and pure black. Nothing in between, anywhere.
+
+THEY ALL WEIGH THE SAME.
+- Some of these are bad things and some are good, but NOTHING in the drawing may say which is which. No icon is darker, thinner, spikier or gloomier than another. The game says good or bad by where it puts them on screen; the icon only says WHAT.
+- Every icon uses the same stroke weight and the same solid fill.
+
+IT MUST NOT LOOK LIKE THE OTHERS. This icon joins twelve that already exist; squint at it and make sure its outline is not close to any of them.
+
+SHEET LAYOUT:
+- Arrange the cells in an exact uniform grid: 1 column x 1 row.
+- Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a magenta
+  border around the outer edge of the whole sheet.
+- Magenta appears ONLY on these separator lines, never inside a cell.
+- Every cell is exactly the same size. Reading order is left to right, then top to
+  bottom.
+- Do not add extra rows of variants. Exactly 1 row, exactly 1 cells.
+- EVERY CELL MUST BE SQUARE. With a 1x1 grid that means the whole sheet is
+  1:1 — output it at 512x512.
+  A square cell is required. A tall narrow cell cannot hold a weapon swung forward,
+  and a short wide cell cannot hold one raised. Both have been tried and both
+  clipped.
+```
+
 ## 슬라이서 설정
 
 세 장을 **한 세트로 이어 붙입니다** (`append`). 그래야
@@ -393,7 +485,9 @@ SHEET LAYOUT:
 { "file": "status-2.jpg", "name": "status_icon", "expect": [4, 1], "append": true,
   "labels": ["st_weak", "st_rage", "st_break", "st_guard"] },
 { "file": "status-3.jpg", "name": "status_icon", "expect": [4, 1], "append": true,
-  "labels": ["st_wither", "st_regen", "st_slow", "st_haste"] }
+  "labels": ["st_wither", "st_regen", "st_slow", "st_haste"] },
+{ "file": "status-4.jpg", "name": "status_icon", "expect": [1, 1], "append": true,
+  "labels": ["st_taunt"] }
 ```
 
 ## 다시 뽑을 때

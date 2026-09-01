@@ -16,11 +16,21 @@
  * 못 부르는 파일이 된다. 여기는 아무것도 안 물게 두고(피해 종류 하나뿐),
  * 조립은 위에서 한다.
  *
- * ## 좋고 나쁨은 그림이 아니라 자리가 말한다
+ * ## 좋고 나쁨은 테두리 색이 말한다
  *
- * 흑백 2색이라 초록 테두리·빨간 테두리를 쓸 수 없다 (`ui/theme`). 그래서
- * 로고는 **무엇인지만** 말하고, 좋은 것인지 나쁜 것인지는 화면이 **어느 쪽에
- * 먼저 두느냐**로 말한다 (`StatusRow`).
+ * 오랫동안 흑백 2색이라 자리로만 갈랐다 — 좋은 것을 왼쪽에, 나쁜 것을
+ * 오른쪽에. 그런데 넷이 나란히 선 파티 칸에서 로고가 한둘씩만 뜨면 그 자리가
+ * 어느 쪽인지 알 수 없어서, 결국 그림을 외운 사람만 읽을 수 있었다.
+ *
+ * 이제 **테두리에만** 색을 쓴다 (`ui/theme` 의 `GOOD_C`·`BAD_C`). 초록이면
+ * 도움이 되는 것, 빨강이면 나쁜 것이다. 안쪽 그림은 그대로 흑백이라 팔레트가
+ * 무너지지 않는다 — 색이 말하는 것은 "좋은가 나쁜가" 한 가지뿐이다.
+ *
+ * ## 꺼지기 전에 깜빡인다
+ *
+ * 남은 시간이 `BLINK_MS` 아래로 내려가면 화면이 그 칸을 깜빡인다. 로고는
+ * 붙어 있다가 **어느 순간 그냥 없어지는데**, 그러면 "언제 풀렸지" 를 알 수가
+ * 없다 — 특히 기절처럼 풀리는 순간에 맞춰 뭘 해야 하는 것이 그렇다.
  */
 import { DmgType } from './chars';
 
@@ -35,6 +45,7 @@ export type StatusId =
   | 'st_weak'     // 약화 — 공격력 감소
   | 'st_break'    // 파쇄 — 방어력 감소
   | 'st_wither'   // 시듦 — 받는 치유량 감소
+  | 'st_taunt'    // 도발 — 건 사람만 노리게 된다 (적에게 걸린다)
   /* ── 좋은 것 ── */
   | 'st_rage'     // 격노 — 공격력 증가
   | 'st_guard'    // 견고 — 방어력 증가
@@ -51,6 +62,7 @@ export const STATUS_NAME: Record<StatusId, string> = {
   st_weak: '약화',
   st_break: '파쇄',
   st_wither: '시듦',
+  st_taunt: '도발',
   st_rage: '격노',
   st_guard: '견고',
   st_regen: '재생',
@@ -78,6 +90,22 @@ export const GOOD: ReadonlySet<StatusId> = new Set<StatusId>([
  * 때문이다 — 저쪽이 이쪽을 문다. 대신 검사에서 둘이 같은지 본다.
  */
 export const HEX_TICK_MS = 500;
+
+/**
+ * 꺼지기 얼마 전부터 깜빡이나 (ms).
+ *
+ * 2초다. 0.5초 틱이라 네 번 깜빡이고 사라진다 — 한두 번이면 못 보고 지나가고,
+ * 열 번이면 그냥 "깜빡이는 로고" 가 되어 곧 꺼진다는 뜻을 잃는다.
+ *
+ * 버프를 주던 사람이 쓰러졌을 때 그 버프가 남아 있는 시간도 이 값이다
+ * (`core/passives` 의 `FADE_MS`). 두 가지가 화면에서 똑같이 보여야 한다 —
+ * 어느 쪽이든 "이제 곧 없어진다" 는 같은 뜻이다.
+ */
+export const BLINK_MS = 2000;
+
+/** 이제 곧 꺼지나 — 화면이 이걸로 깜빡일지 정한다 */
+export const dying = (ms: number): boolean =>
+  Number.isFinite(ms) && ms > 0 && ms <= BLINK_MS;
 
 /**
  * 지금 걸려 있는 것 하나.
@@ -148,6 +176,29 @@ export function mulOf(list: readonly Hex[], id: StatusId): number {
     if (h.id !== id || h.ms <= 0) continue;
     const v = Math.max(0, 1 - (1 - h.mul) * Math.max(1, h.n));
     if (v < out) out = v;
+  }
+  return out;
+}
+
+/**
+ * 이 종류가 지금 거는 **올려 주는** 배수. 안 걸려 있으면 1.
+ *
+ * `mulOf` 와 짝이고 방향만 반대다. 저쪽은 깎는 것(둔화·약화·파쇄)을 위해
+ * **제일 작은 값**을 고르고, 이쪽은 올리는 것(신속)을 위해 **제일 큰 값**을
+ * 고른다.
+ *
+ * 하나로 합칠 수도 있었지만 그러면 "1 에서 멀어진 쪽" 같은 규칙이 필요해지고,
+ * 둔화 0.9 와 신속 2.0 이 같이 걸렸을 때 어느 쪽이 이기는지가 애매해진다.
+ * 지금은 둘 다 살아서 곱해진다 — 둔화에 걸린 채로 광란을 쓰면 1.8 배다.
+ *
+ * 겹은 안 센다. 올려 주는 것은 지금 리안느의 광란 하나뿐이고, 같은 것을 두
+ * 번 걸면 `putHex` 가 더 센 쪽으로 새로 고친다.
+ */
+export function upOf(list: readonly Hex[], id: StatusId): number {
+  let out = 1;
+  for (const h of list) {
+    if (h.id !== id || h.ms <= 0) continue;
+    if (h.mul > out) out = h.mul;
   }
   return out;
 }

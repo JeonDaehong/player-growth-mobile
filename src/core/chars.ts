@@ -44,6 +44,8 @@
  * 장(전투·베기·흉상·일러스트)이 전부 들어온 사람이 기준이다.
  * 다음 사람을 만들면 여기 한 줄, `CHARS` 에 한 덩어리를 더한다.
  */
+import type { StatusId } from './status';
+
 export const CHAR_IDS = ['knightgirl', 'bunnyaxe', 'elfarcher', 'nun'] as const;
 
 export type CharId = (typeof CHAR_IDS)[number];
@@ -307,7 +309,7 @@ export interface CharDef {
   range: Range;
 
   /**
-   * 네 번째 공격마다 나가는 기술 (`SKILLS`).
+   * **첫 번째** 기술 (`SKILLS`). 자주 나가는 쪽이다.
    *
    * 무기가 정한다 — 대검은 검기를 날리고, 도끼는 뛰어들어 찍고, 활은
    * 하늘로 쏘고, 향로는 아군을 회복시킨다.
@@ -322,11 +324,13 @@ export interface CharDef {
    *
    * ## 여럿이면 한 스윙에 하나씩 나간다
    *
-   * 주기가 서로 달라(`SkillDef.every`) 같은 차례에 둘이 걸릴 수 있는데,
-   * 그때 한꺼번에 안 나간다 — 하나를 내보내고 나머지는 다음 스윙으로
-   * 밀린다 (`nextSkill`). 그래서 실제 간격은 그 사람의 공격 속도가 정한다.
+   * 값이 서로 달라(`SkillDef.cost`) 같은 차례에 둘이 다 찰 수 있는데,
+   * 그때 한꺼번에 안 나간다 — **비싼 쪽을 먼저** 내보내고 나머지는 찬 채로
+   * 기다린다 (`readySkill`). 비싼 쪽이 먼저인 이유는, 싼 것이 먼저 나가도
+   * 비싼 칸은 안 줄어들기 때문이다 — 순서만 미룰 뿐 손해가 없다.
    *
-   * 지금은 아무도 없다. 넷 다 하나씩이라 이 줄은 비어 있다.
+   * 넷 다 두 번째 기술을 갖는다. 첫 번째는 자주 나가는 것이고, 두 번째는
+   * 비싸고 **때가 맞아야** 나간다.
    */
   extra?: readonly SkillKind[];
 
@@ -360,13 +364,23 @@ export type Range = 'melee' | 'ranged';
 /**
  * 스킬의 종류.
  *
- * 몇 번째 공격마다 평타 대신 나가는지는 기술이 정한다 (`every`).
+ * 한 번 쓰는 데 드는 코스트는 기술이 정한다 (`cost`). 평타 한 번에 1 씩 찬다.
  *
  * 처음에는 전원이 "검기를 날린다" 하나였다. 그런데 그러면 도끼든 활이든
  * 향로든 결국 같은 것이 앞으로 날아가고, 캐릭터를 모을 이유가 숫자 차이밖에
  * 안 남는다. **무기가 하는 짓이 달라야 모을 이유가 생긴다.**
  */
-export type SkillKind = 'wave' | 'leap' | 'rain' | 'heal';
+export type SkillKind =
+  /* ── 첫 번째 기술 — 넷이 처음부터 갖고 있던 것 ── */
+  | 'wave'     // 검기 (이졸데)
+  | 'leap'     // 강타 (비앙카)
+  | 'rain'     // 화살비 (리안느)
+  | 'heal'     // 기도 (아녜스)
+  /* ── 두 번째 기술 — 비싸고, 때가 맞아야 나간다 ── */
+  | 'taunt'    // 도발 (이졸데)
+  | 'volcano'  // 화산 (비앙카)
+  | 'frenzy'   // 광란 (리안느)
+  | 'purify';  // 정화 (아녜스)
 
 export interface SkillDef {
   /** 화면에 적는 이름 */
@@ -463,12 +477,68 @@ export interface SkillDef {
    */
   flies: boolean;
   /**
-   * 몇 번째 공격마다 나가나.
+   * 한 번 쓰는 데 드는 **스킬 코스트.**
    *
-   * 기술마다 다르다. 무겁고 크게 들어가는 것일수록 드물어야 한다 — 도약은
-   * 한 방이 평타의 두 배이고 화면도 크게 움직이므로 다섯 번에 한 번이다.
+   * ## 예전에는 "몇 번째 공격마다" 였다 (`every`)
+   *
+   * 하는 일은 똑같다 — 평타 한 번에 코스트가 1 씩 차고, 다 차면 나가고,
+   * 나가면 그만큼 빠진다. 4 짜리는 여전히 네 번에 한 번 나간다.
+   *
+   * 이름을 바꾼 이유는 **기술이 하나씩이 아니게 됐기 때문**이다. "4번째마다"
+   * 는 기술이 하나일 때만 말이 되는 표현이라, 4 짜리와 20 짜리를 같이 가진
+   * 사람에게는 "20번째마다" 가 실제로 안 맞는다 (4 짜리가 중간에 나가도
+   * 20 짜리 칸은 그대로 차 있어야 한다).
+   *
+   * 칸을 **기술마다 따로** 센다 (`Charge`). 그래서 값이 큰 기술은 오래
+   * 모아야 하고, 조건이 안 맞아 못 쓰면 **찬 채로 기다린다.**
    */
-  every: number;
+  cost: number;
+  /**
+   * 걸려 있는 나쁜 것을 걷어내나 — 아녜스의 정화 하나뿐이다.
+   *
+   * 무엇을 걷을지는 사람이 고른다 (`core/skillOpt`). 여기서는 "이 기술이
+   * 그런 종류다" 만 말한다.
+   */
+  cleanse?: boolean;
+  /**
+   * 적 전부를 몇 초 동안 **쓰는 사람에게만** 달려들게 하나.
+   *
+   * 이졸데의 도발 하나다. 걸려 있는 동안 적의 자리 확률(`AIM`)이 통째로
+   * 무시되고 전부 이 사람을 노린다 (`core/autoBattle` 의 `aimOf`).
+   */
+  taunt?: number;
+  /**
+   * 쓰는 사람 **스스로에게** 거는 것.
+   *
+   * 리안느의 광란 하나다 — 5초 동안 제 공격속도가 두 배가 된다.
+   */
+  self?: {
+    id: StatusId;
+    sec: number;
+    /** 배수. 1 보다 크면 좋아지는 쪽이다 (`core/status` 의 `upOf`) */
+    mul: number;
+    /**
+     * 걸려 있는 동안 **코스트가 안 차나.**
+     *
+     * 이게 없으면 광란이 스스로를 되먹인다 — 두 배로 때리니 코스트도 두 배로
+     * 차고, 5초가 끝나기 전에 다시 켤 만큼 모인다. 그러면 켜 두는 것이
+     * 기본값이 되어 고를 것이 없어진다.
+     */
+    noCharge?: boolean;
+  };
+  /**
+   * 맞은 **적에게** 거는 것.
+   *
+   * 비앙카의 화산 하나다 — 5초 동안 그놈이 받는 회복이 절반이 된다.
+   */
+  foeHex?: { id: StatusId; sec: number; mul: number };
+  /**
+   * 켜고 끄는 것을 사람이 고를 수 있나 (`core/skillOpt`).
+   *
+   * 정화 하나뿐이다. 나머지는 차면 나간다 — 고를 것이 없는 기술에 설정을
+   * 달아 두면 창만 복잡해진다.
+   */
+  opt?: boolean;
   /**
    * 맞은 자리에서 터지는 그림.
    *
@@ -536,7 +606,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     /* 검으로 벤다 — 날아가도 베는 것이다 */
     dmg: 'phys',
     mul: 1.4, defMul: 1.0, heal: 0, healPct: 0,
-    flies: true, landOn: 2, every: 4, aura: 'ring', leaps: false,
+    flies: true, landOn: 2, cost: 4, aura: 'ring', leaps: false,
     /* 이졸데의 평타는 `holy`(빛). 스킬은 길게 훑는 베기라 조각이 튄다 */
     fx: 'cross',
     desc: '지나가는 길의 적을 모두 벤다',
@@ -556,7 +626,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     */
     name: '강타', art: 'sk_leap', hits: 1, pick: 'kind', targets: 2, dmg: 'phys',
     mul: 1.5, defMul: 0, heal: 0, healPct: 0,
-    flies: false, landOn: 3, every: 5, aura: 'none', leaps: true,
+    flies: false, landOn: 3, cost: 5, aura: 'none', leaps: true,
     /* 솟음 · 낙하 · 착지. 떠 있는 시간이 곧 높이다 */
     beat: [260, 170, 250],
     /* 평타도 `smash` 지만 이쪽은 1.4배로 터진다 (`blast`) — 크기가 구분한다 */
@@ -584,7 +654,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     name: '화살비', art: 'sk_rain', hits: 3, pick: 'random', targets: 3, dmg: 'phys',
     mul: 1.5, defMul: 0, heal: 0, healPct: 0,
     /* 무릎 꿇고 자리를 잡는 기술이라 발밑에 마법진이 어울린다 */
-    flies: false, landOn: 3, every: 4, aura: 'rune', leaps: false,
+    flies: false, landOn: 3, cost: 4, aura: 'rune', leaps: false,
     /*
       평타는 `thrust`(정면으로 터지는 빛) — 화살 한 대가 꽂히는 그림이다.
       화살비는 하늘에서 떨어져 땅에 박히는 것이라 **흙먼지**가 맞다.
@@ -619,7 +689,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
       무릎 꿇는 기도. 기도의 이펙트는 제 발밑이 아니라 **받는 사람 머리 위**
       에서 내려온다 (`BlessGlow`).
     */
-    flies: false, landOn: 2, every: 4, aura: 'none', leaps: false,
+    flies: false, landOn: 2, cost: 4, aura: 'none', leaps: false,
     /*
       느리다. 무릎 꿇고 → 기도하고 → 일어선다 를 0.49초에 하면 주저앉았다
       벌떡 일어나는 것으로 보인다. 가운데(기도하는 칸)를 길게 잡는다 —
@@ -627,6 +697,105 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     */
     beat: [300, 520, 300],
     desc: '아군 전원의 체력을 채운다',
+  },
+
+  /*
+    ── 두 번째 기술 넷 ──
+
+    첫 넷과 **다른 일을 한다.** 저쪽은 전부 "때리거나 채운다" 였는데, 이쪽은
+    도발 · 정화 · 자기 강화 · 회복 차단이다. 같은 축을 하나 더 얹으면 그냥
+    센 기술이 되고, 그러면 파티를 짤 때 고를 것이 안 늘어난다.
+
+    코스트가 비싸서 판마다 몇 번 안 나간다 (8 ~ 20). 그래서 **나가는 순간이
+    보여야 한다** — 넷 다 몸짓이 크고 발밑 표시가 첫 기술과 다르다.
+  */
+
+  /*
+    도발 — 크게 포효해 적 전부를 자기 쪽으로 끌어온다.
+
+    맨 앞에 서서 안 비키는 사람의 기술이다. 자리 확률(`AIM`)은 앞에 선
+    사람이 절반을 받는다는 뜻이라, 뒤에 선 셋도 나머지 절반을 나눠 맞는다 —
+    리안느(체력 150)가 그 절반에 두 번 걸리면 그냥 죽는다.
+
+    10초 동안 그 확률이 **통째로 사라진다.** 이졸데가 다 받는다.
+  */
+  taunt: {
+    name: '도발', art: 'sk_taunt', hits: 1, pick: 'none', targets: 0,
+    /* 아무도 안 때린다. 쓰는 사람을 따라 물리로 적는다 */
+    dmg: 'phys',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 2, cost: 15, aura: 'rune', leaps: false,
+    taunt: 10,
+    /* 숨을 들이켜고 → 외치고 → 자세를 되돌린다. 가운데가 길어야 포효로 보인다 */
+    beat: [220, 400, 220],
+    desc: '10초간 적 전부가 자신만 노리게 한다',
+  },
+
+  /*
+    화산 — 제자리에서 땅을 내리치면 적 발밑에서 불길이 솟는다.
+
+    **한 마리만** 맞는다. 강타(둘)보다 좁은 대신 배수가 크고, 무엇보다
+    5초 동안 그놈이 받는 회복을 절반으로 깎는다 — 스스로 차는 우두머리
+    (10판 흡혈 · 20판 15초 회복 · 광폭화의 초당 1%)를 상대할 유일한 수단이다.
+
+    비앙카가 **안 움직인다.** 강타는 몸이 날아가고 이건 발밑에서 터지므로,
+    같은 사람이 쓰는 두 기술이 화면에서 확실히 갈린다.
+  */
+  volcano: {
+    name: '화산', art: 'sk_volcano', hits: 1, pick: 'random', targets: 1,
+    /* 도끼로 때리는 사람인데 이건 **불**이다 — 마법저항력이 막는다 */
+    dmg: 'magic',
+    mul: 2.4, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 3, cost: 8, aura: 'ring', leaps: false,
+    /* 회복을 반으로 — 걸리는 쪽이 **적**이다 (`applySkill`) */
+    foeHex: { id: 'st_wither', sec: 5, mul: 0.5 },
+    /* 평타도 `smash` 지만 이건 불이라 마법진 폭발로 터진다 */
+    fx: 'arcane',
+    /* 내리치고 → 땅이 갈라지고 → 솟는다. 마지막 칸에서 맞는다 */
+    beat: [200, 170, 320],
+    desc: '한 마리 발밑에서 불길이 솟는다. 5초간 그 적의 회복량 50% 감소',
+  },
+
+  /*
+    광란 — 5초 동안 제 공격속도가 두 배.
+
+    **코스트가 안 찬다** (`self.noCharge`). 그게 없으면 두 배로 때리는 동안
+    코스트도 두 배로 차서, 5초가 끝나기 전에 다시 켤 만큼 모인다 — 켜 두는
+    것이 기본값이 되면 고를 것이 없어진다.
+
+    그래서 실제로는 "화살비를 잠깐 포기하고 평타를 두 배로 쏟는다" 가 된다.
+  */
+  frenzy: {
+    name: '광란', art: 'sk_frenzy', hits: 1, pick: 'none', targets: 0, dmg: 'phys',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 2, cost: 10, aura: 'ash', leaps: false,
+    self: { id: 'st_haste', sec: 5, mul: 2, noCharge: true },
+    beat: [180, 260, 180],
+    desc: '5초간 자신의 공격속도가 두 배가 된다 (그동안 코스트가 안 찬다)',
+  },
+
+  /*
+    정화 — 아군에게 걸린 나쁜 것을 걷어낸다.
+
+    ## 걷을 것이 없으면 안 쓴다
+
+    코스트가 꽉 차도 그냥 들고 있는다 (`core/skillOpt` 의 `cleanseTargets`).
+    스무 번을 모아서 아무것도 안 걷어내면 그건 스무 번을 버린 것이다.
+
+    ## 본인이 기절해 있으면 못 쓴다
+
+    기절은 몸이 안 움직이는 것이라 기술 자체가 안 나간다 (`Fighter`).
+    침묵도 마찬가지다. 대신 **자기 몸에 걸린 것은 스스로 걷을 수 있다** —
+    나쁜 것이 다 CC 는 아니기 때문이다.
+  */
+  purify: {
+    name: '정화', art: 'sk_purify', hits: 1, pick: 'none', targets: 0, dmg: 'magic',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 2, cost: 20, aura: 'ash', leaps: false,
+    cleanse: true, opt: true,
+    /* 기도와 같은 자세라 박자도 비슷하게. 가운데에서 걷힌다 */
+    beat: [280, 420, 260],
+    desc: '아군에게 걸린 나쁜 것을 걷어낸다',
   },
 };
 
@@ -686,47 +855,103 @@ export function skillsOf(id: string): SkillDef[] {
 }
 
 /**
- * 이 사람의 기술 중 **제일 자주 도는 것**의 주기.
+ * ── 스킬 코스트 ──
  *
- * 머리 위·파티 칸의 충전 칸이 이걸 기준으로 찬다 (`state/battleUi`). 여럿을
- * 가진 사람에게 칸 하나로 말할 수 있는 것은 "다음 기술까지" 뿐이고, 그건
- * 제일 빨리 돌아오는 것이 정한다.
+ * 사람마다 **기술 수만큼의 칸**을 들고 있다. 평타를 한 번 칠 때마다 모든
+ * 칸이 1 씩 차고, 어떤 기술이 나가면 **그 칸에서만** 그 기술의 값을 뺀다.
+ *
+ * ## 왜 칸을 따로 두나
+ *
+ * 예전에는 스윙 횟수 하나만 세고 `n % every === 0` 으로 봤다. 기술이 하나일
+ * 때는 같은 말이지만, 4 짜리와 20 짜리를 같이 가지면 어긋난다 — 4 짜리가
+ * 나갔다고 20 짜리 칸까지 0 이 되면 20 짜리는 영영 안 나간다.
+ *
+ * 칸이 따로면 **비싼 것은 오래 모으고, 싼 것은 그 사이에 계속 나간다.**
+ * 그게 코스트라는 말이 실제로 뜻하는 바다.
+ *
+ * ## 다 차도 안 쓸 수 있다
+ *
+ * 정화는 걷어낼 것이 없으면 **찬 채로 기다린다** (`readySkill` 의 `allow`).
+ * 다 찼다고 무조건 쓰면 스무 번 모은 것을 아무 일 없이 버린다.
  */
-export function soonestEvery(id: string): number {
+export type Charge = readonly number[];
+
+/** 갓 시작한 사람의 칸들 — 전부 0 */
+export const newCharge = (id: string): number[] => skillsOf(id).map(() => 0);
+
+/**
+ * 저장된(또는 파티가 바뀌어 길이가 안 맞는) 칸을 다듬는다.
+ *
+ * 기술 수가 바뀌면 길이가 안 맞는다. 짧으면 0 으로 채우고, 길면 자른다 —
+ * 없는 자리를 읽어 `undefined` 로 비교하면 그 기술이 영영 안 나간다.
+ */
+export function fitCharge(id: string, on: Charge | undefined): number[] {
   const list = skillsOf(id);
-  return list.reduce((a, sk) => Math.min(a, sk.every), list[0]?.every ?? 4);
+  return list.map((sk, i) => {
+    const v = on?.[i];
+    return Number.isFinite(v) ? Math.max(0, Math.min(sk.cost, v as number)) : 0;
+  });
 }
 
 /**
- * 이번 스윙에 나갈 기술의 **자리 번호** — 평타면 -1.
+ * 평타 한 번 — 모든 칸이 `by` 만큼 찬다.
  *
- * ## 한 스윙에 하나만
- *
- * 기술이 여럿이면 같은 차례에 둘 이상이 걸릴 수 있다 (주기가 4 와 6 이면
- * 12번째 스윙에서 겹친다). 그때 **한꺼번에 안 나간다** — 하나를 내보내고
- * 나머지는 `queue` 에 남아 다음 스윙에서 하나씩 나간다. 그러니 실제 간격은
- * 그 사람의 공격 속도가 정한다.
- *
- * 한꺼번에 내보내면 그 한 스윙만 피해가 몇 배로 튀고, 화면에서는 말풍선
- * 여럿과 이펙트 여럿이 한 프레임에 겹쳐 뜬다 — 무슨 일이 일어났는지 읽을
- * 방법이 없다.
- *
- * ## 왜 줄을 밖에서 들고 있나
- *
- * 밀린 것을 기억해야 하므로 상태가 필요한데, 이 함수를 상태를 가진 물건으로
- * 만들면 시험이 어려워진다. 대신 **부르는 쪽이 줄을 들고** 여기서는 그
- * 줄을 고친다 — `Fighter` 의 스윙 순환이 제 클로저에 하나 두고 있다.
- *
- * @param queue 밀려 있는 기술 자리들. **이 배열을 고친다** (넣고 뺀다)
+ * **제 값에서 멈춘다.** 넘치게 두면 못 쓰는 동안 쌓였다가 조건이 맞는
+ * 순간에 두세 번이 연달아 나간다 — 코스트가 20 인 뜻이 사라진다.
  */
-export function nextSkill(id: string, n: number, queue: number[]): number {
+export function chargeUp(id: string, on: Charge, by = 1): number[] {
   const list = skillsOf(id);
-  for (let i = 0; i < list.length; i++) {
-    /* `every` 가 0 이하면 안 도는 기술이다 — 나눗셈이 늘 0 이라 매번 걸린다 */
-    if (list[i].every > 0 && n % list[i].every === 0) queue.push(i);
-  }
-  return queue.length ? (queue.shift() as number) : -1;
+  return list.map((sk, i) => Math.min(sk.cost, (on[i] ?? 0) + by));
 }
+
+/**
+ * 지금 나갈 수 있는 기술의 자리 — 없으면 -1 (평타).
+ *
+ * **비싼 것이 먼저다.** 둘이 같이 찼을 때 싼 것을 먼저 내보내면 비싼 칸은
+ * 그대로 차 있으므로 다음 스윙에 나간다 — 순서만 미룰 뿐 손해가 없다.
+ * 반대로 하면 비싼 것이 나가는 동안 싼 것이 계속 밀린다.
+ *
+ * @param allow 그 자리를 지금 실제로 쓸 수 있나. 안 주면 다 쓸 수 있다.
+ *              정화가 이걸로 "걷을 것이 없으면 안 쓴다" 를 말한다
+ */
+export function readySkill(
+  id: string, on: Charge, allow?: (slot: number) => boolean,
+): number {
+  const list = skillsOf(id);
+  let best = -1;
+  let bestCost = -1;
+  for (let i = 0; i < list.length; i++) {
+    const sk = list[i];
+    /* 값이 0 이하면 안 도는 기술이다 — 늘 차 있는 셈이라 매 스윙 나간다 */
+    if (sk.cost <= 0) continue;
+    if ((on[i] ?? 0) < sk.cost) continue;
+    if (allow && !allow(i)) continue;
+    if (sk.cost > bestCost) { best = i; bestCost = sk.cost; }
+  }
+  return best;
+}
+
+/** 그 기술을 썼다 — **그 칸에서만** 값을 뺀다 */
+export function spendCharge(id: string, on: Charge, slot: number): number[] {
+  const list = skillsOf(id);
+  return list.map((sk, i) => (
+    i === slot ? Math.max(0, (on[i] ?? 0) - sk.cost) : Math.min(sk.cost, on[i] ?? 0)
+  ));
+}
+
+/**
+ * 강제로 깎인다 — 20판 태고의 성난 벼락.
+ *
+ * **절반으로 되돌린다.** 0 으로 만들면 기술이 갓 나간 직후에 맞았을 때
+ * 아무 일도 안 일어난 것과 같아서, 맞은 사람은 뭘 잃었는지 모른다.
+ */
+export function cutCharge(id: string, on: Charge, ratio = 0.5): number[] {
+  return skillsOf(id).map((_sk, i) => Math.floor((on[i] ?? 0) * ratio));
+}
+
+/** 그 자리 기술의 코스트 (없는 자리는 0) */
+export const costOf = (id: string, slot: number): number =>
+  skillsOf(id)[slot]?.cost ?? 0;
 
 export type HitFx =
   | 'slash'    // 한 번 베기 — 검
@@ -780,7 +1005,8 @@ export const CHARS: Record<CharId, CharDef> = {
     atk: 15, hp: 300, def: 5, res: 1, spd: 0.8, crit: 0, critDmg: 1.5,
     /* 검으로 벤다 */
     dmg: 'phys',
-    from: '업적 · 파티 강화 합계 60 달성', fx: 'holy', range: 'melee', skill: 'wave', art: 'knightgirl',
+    from: '업적 · 파티 강화 합계 60 달성', fx: 'holy', range: 'melee', skill: 'wave',
+    extra: ['taunt'], art: 'knightgirl',
   },
 
   /*
@@ -793,7 +1019,7 @@ export const CHARS: Record<CharId, CharDef> = {
     공격 간격이 제일 느리다. 도끼는 한 번 돌면 제 무게로 계속 돌아서 되돌아
     오는 데 시간이 걸린다는 설정이고, 스킬이 **공격 횟수**로 도는 지금 구조
     에서는 그게 곧 "스킬이 드물다" 가 된다. 도약 강타는 거기에 더해 다섯 번에
-    한 번이라(`SKILLS.leap.every`), 한 방이 센 대신 정말 가끔 나간다.
+    코스트가 5 라(`SKILLS.leap.cost`), 한 방이 센 대신 정말 가끔 나간다.
   */
   bunnyaxe: {
     id: 'bunnyaxe', name: '비앙카', title: '연회장의 도끼',
@@ -804,7 +1030,8 @@ export const CHARS: Record<CharId, CharDef> = {
     atk: 25, hp: 200, def: 2, res: 0, spd: 0.7, crit: 0, critDmg: 2.0,
     /* 도끼로 찍는다 */
     dmg: 'phys',
-    from: '모집', fx: 'smash', range: 'melee', skill: 'leap', art: 'bunnyaxe',
+    from: '모집', fx: 'smash', range: 'melee', skill: 'leap',
+    extra: ['volcano'], art: 'bunnyaxe',
   },
 
   /*
@@ -815,7 +1042,7 @@ export const CHARS: Record<CharId, CharDef> = {
     덕이 아니라 앞에 방어가 있어서다. 그게 파티를 짜는 이유가 된다.
 
     공격 간격이 제일 짧다. 활은 한 번 당겼다 놓으면 끝이라 되돌아올 무게가
-    없다. 스킬이 공격 횟수로 도는 구조라(`SkillDef.every`) 그만큼 화살비도
+    없다. 스킬이 평타 횟수로 차는 구조라(`SkillDef.cost`) 그만큼 화살비도
     자주 나간다 — 한 방은 약한 대신 자주 흩뿌리는 쪽이다.
   */
   elfarcher: {
@@ -827,7 +1054,8 @@ export const CHARS: Record<CharId, CharDef> = {
     atk: 20, hp: 150, def: 1, res: 0, spd: 1.1, crit: 0, critDmg: 2.0,
     /* 화살이다 */
     dmg: 'phys',
-    from: '모집', fx: 'thrust', range: 'ranged', skill: 'rain', art: 'elfarcher',
+    from: '모집', fx: 'thrust', range: 'ranged', skill: 'rain',
+    extra: ['frenzy'], art: 'elfarcher',
   },
 
   /*
@@ -858,7 +1086,8 @@ export const CHARS: Record<CharId, CharDef> = {
       때문이다.
     */
     dmg: 'magic',
-    from: '모집', fx: 'arcane', range: 'melee', skill: 'heal', art: 'nun',
+    from: '모집', fx: 'arcane', range: 'melee', skill: 'heal',
+    extra: ['purify'], art: 'nun',
   },
 };
 

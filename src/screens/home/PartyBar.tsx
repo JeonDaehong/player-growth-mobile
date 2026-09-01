@@ -18,6 +18,7 @@ import {
 import {
   MAX_PARTY_GEAR, PARTY_SIZE, hpOf, livingMembers, partyGear, partyPower,
 } from '@/core/party';
+import { fitCharge } from '@/core/chars';
 import { hexOf } from '@/core/status';
 import { marksOf } from '@/core/passives';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
@@ -45,15 +46,26 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
   */
   const hexMap = useGame((s) => s.battle.hex);
   /*
-    스킬이 몇 칸 찼나.
+    스킬 코스트가 얼마나 찼나 — **기술 자리마다 하나씩.**
 
-    무대 머리 위에 있던 것을 여기로 옮겼다 (`Fighter`). 기술이 한 명당 여러
-    개가 되면 점 몇 줄로는 무엇이 차고 있는지 말할 수 없어서다.
+    무대 머리 위에 있던 것을 여기로 옮겼다 (`Fighter`). 기술이 한 명당 둘이
+    되면서 점 한 줄로는 무엇이 차고 있는지 말할 수 없어졌다.
+
+    세는 곳은 `Fighter` 다. 여기는 그 사람이 밀어 넣어 준 것을 그리기만
+    한다 (`state/battleUi` 머리말).
 
     버프·디버프 로고도 같은 이유로 여기로 왔다 (`StatusRow`) — 머리 위는
     피해 숫자와 말풍선이 이미 쓰는 자리다.
   */
   const charge = useBattleUi((s) => s.charge);
+  /*
+    쓰러졌지만 버프가 아직 사그라드는 중인 사람들.
+
+    아녜스가 죽어도 2초 동안은 `pv_ash` 가 **깜빡이며 남아 있다**
+    (`core/passives` 의 `FADE_MS`). 그 2초는 실제로도 버프가 걸려 있는
+    시간이다.
+  */
+  const fadeMap = useGame((s) => s.battle.fade);
 
   /*
     살아 있는 사람들 — **패시브가 이걸 본다.**
@@ -61,7 +73,7 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
     아녜스가 쓰러지면 네 칸에서 `pv_ash` 가 한꺼번에 사라진다. 그게 곧
     "화력이 떨어졌다" 는 신호다 (`core/passives` 의 `marksOf`).
   */
-  const alive = livingMembers(party, chars, hpMap);
+  const alive = livingMembers(party, chars, hpMap, fadeMap);
 
   const gear = partyGear(party, chars);
   const power = partyPower(party, chars);
@@ -145,43 +157,49 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                   */}
                   <StatusRow
                     status={marksOf(
-                      c.id, hpOf(c, hpMap), statOf(c).hp, hexOf(hexMap, c.id), alive,
+                      c.id, hpOf(c, hpMap), statOf(c).hp, hexOf(hexMap, c.id),
+                      alive, fadeMap,
                     )}
                   />
 
                   {/*
-                    스킬 쿨 — 기술마다 한 줄.
+                    ── 스킬 코스트 — 기술마다 한 줄 ──
 
-                    칸이 차 가는 것만 보여도 "다음 번이다" 가 읽힌다. 숫자로
-                    적지 않는 이유는, 이게 초가 아니라 **평타 횟수**라서다 —
-                    그 사람이 얼마나 빨리 치느냐에 걸려 있고, 초로 적으면 실제로
-                    나가는 순간과 안 맞는다. 몇 초짜리인지는 창에서 본다
-                    (`SkillPanel`).
+                    칸이 차 가는 것만 보여도 "다음 번이다" 가 읽힌다. 초로
+                    안 적는 이유는 이게 시간이 아니라 **평타 횟수**라서다 —
+                    그 사람이 얼마나 빨리 치느냐에 걸려 있고, 초로 적으면
+                    실제로 나가는 순간과 안 맞는다.
 
-                    기술이 늘면 줄이 는다. 머리 위에서는 못 하던 것이다.
+                    **칸 수를 코스트만큼 그리지 않는다.** 정화가 20 이라
+                    스무 칸을 그리면 한 칸이 1px 이 되어 뭉갠다. 대신 여덟
+                    칸으로 나눠 비율로 채운다 — 4 짜리는 여전히 한 번에 두
+                    칸씩 차므로 "네 번" 이 그대로 보인다.
                   */}
-                  {skillsOf(c.id).map((sk) => {
-                    const on = charge[c.id] ?? 0;
-                    const full = on >= sk.every - 1;
+                  {skillsOf(c.id).map((sk, si) => {
+                    const on = fitCharge(c.id, charge[c.id])[si] ?? 0;
+                    const full = on >= sk.cost;
+                    /* 스무 칸은 1px 이 되어 뭉갠다 — 여덟 칸에 비율로 채운다 */
+                    const cells = Math.min(8, Math.max(1, sk.cost));
+                    const lit = Math.round((on / Math.max(1, sk.cost)) * cells);
                     return (
                       <View key={sk.name} style={{ alignSelf: 'stretch', marginTop: 3, paddingHorizontal: 3 }}>
                         <Row gap={1}>
-                          {Array.from({ length: sk.every }, (_v, k) => (
+                          {Array.from({ length: cells }, (_v, k) => (
                             <View
                               key={k}
                               style={{
                                 flex: 1,
                                 height: 3,
                                 /* 다 차면 꽉 찬다 — 마지막 칸이 눈에 띄어야 한다 */
-                                backgroundColor: k <= on ? WHITE : 'transparent',
+                                backgroundColor: k < lit ? WHITE : 'transparent',
                                 borderWidth: 1,
-                                borderColor: k <= on ? WHITE : '#FFFFFF55',
+                                borderColor: k < lit ? WHITE : '#FFFFFF55',
                               }}
                             />
                           ))}
                         </Row>
                         <T size={8} center dim={full ? undefined : 'dim'} style={{ marginTop: 1 }}>
-                          {full ? `${sk.name} 준비` : sk.name}
+                          {full ? `${sk.name} 준비` : `${sk.name} ${on}/${sk.cost}`}
                         </T>
                       </View>
                     );

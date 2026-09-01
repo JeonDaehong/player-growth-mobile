@@ -59,8 +59,9 @@ import {
   Hex, StatusId, hexOf, mulOf, putHex, tickHex,
 } from './status';
 import {
-  allyAtkMul, healMulOf, liveArmor, liveSpd, regenOf,
+  FADE_MS, allyAtkMul, healMulOf, liveArmor, liveSpd, regenOf,
 } from './passives';
+import { CleanseOpt, cleanseOptOf, cleansed } from './skillOpt';
 
 /** 한 틱의 길이 */
 export const TICK_MS = 500;
@@ -596,6 +597,50 @@ export const BOSS_PASSIVES: Record<number, BossPassive> = {
  * `n` 은 1부터 센다. 0 번째는 없다 — `n % every === 0` 이 0 에서 참이 되어
  * 첫 공격부터 특수기가 나가면 우두머리가 나오자마자 전원이 맞는다.
  */
+/**
+ * ── 광폭화 ──
+ *
+ * 우두머리가 나온 지 2분이 지나면 붉게 변하면서 **공격력과 공격속도가 두
+ * 배**가 되고, 초당 최대 체력의 1% 를 채운다.
+ *
+ * ## 왜 필요한가
+ *
+ * 우두머리전에는 제한 시간이 없다. 그래서 "이길 수 없지만 지지도 않는" 판이
+ * 생긴다 — 이졸데가 초당 1% 를 채우고 우두머리도 안 죽으면 십 분이고 이십
+ * 분이고 그대로다. 화면에서는 아무 일도 안 일어나는데 끝나지도 않는다.
+ *
+ * 2분이 그 판을 **끝낸다.** 넘겼으면 이긴 것이고, 못 넘겼으면 강화가 모자란
+ * 것이다. 둘 중 하나로 갈리는 편이 무한히 버티는 것보다 낫다.
+ *
+ * ## 왜 하필 셋 다인가
+ *
+ * 공격력만 두 배면 그냥 아파질 뿐이라 방어를 올린 파티는 여전히 버틴다.
+ * 회복만 있으면 딜이 모자란 파티만 막힌다. 셋이 같이 걸려야 **어느 쪽으로도
+ * 못 버틴다** — 그게 제한 시간이 하는 일이다.
+ */
+export const RAGE_MS = 120_000;
+
+/** 공격력·공격속도가 몇 배가 되나 */
+export const RAGE_MUL = 2;
+
+/** 1초에 최대 체력의 몇 할을 채우나 */
+export const RAGE_REGEN = 0.01;
+
+/**
+ * 지금 광폭화 중인가.
+ *
+ * 우두머리가 서 있는 동안의 시간만 센다 (`BattleState.bossMs`) — 잡몹
+ * 구간에서 흘린 시간은 안 들어간다. 사냥을 오래 했다고 우두머리가 화나
+ * 있으면 이상하다.
+ */
+export const raging = (st: { boss: boolean; bossMs: number }): boolean =>
+  st.boss && Number.isFinite(st.bossMs) && st.bossMs >= RAGE_MS;
+
+/** 광폭화까지 남은 시간 (ms). 이미 넘었으면 0 */
+export const rageIn = (st: { boss: boolean; bossMs: number }): number => (
+  st.boss ? Math.max(0, RAGE_MS - (Number.isFinite(st.bossMs) ? st.bossMs : 0)) : RAGE_MS
+);
+
 export function patternAt(
   n: number, list: readonly BossPattern[] = BOSS_PATTERNS,
 ): BossPattern | null {
@@ -1387,6 +1432,62 @@ export interface BattleState {
    * 중독이면 열 번이다.
    */
   swingSeq: number;
+  /**
+   * 쓰러진 사람의 버프가 **사그라들기까지** 남은 시간 (ms). 키는 CharId.
+   *
+   * 아녜스가 죽으면 여기에 2초가 적히고, 그동안 네 칸의 `pv_ash` 가 깜빡이며
+   * 버프도 실제로 계속 걸려 있다 (`core/passives` 의 `FADE_MS`). 다 흐르면
+   * 키가 사라지고 그때 공격력이 떨어진다.
+   *
+   * 다시 일어서면(판을 다시 시작하면) 통째로 비워진다.
+   */
+  fade: Record<string, number>;
+  /**
+   * 지금 도발이 걸려 있나 — 누구에게, 몇 ms 남았나.
+   *
+   * 이졸데의 도발 하나가 쓴다. 걸려 있는 동안 적의 자리 확률(`AIM`)이 통째로
+   * 무시되고 전부 그 사람을 노린다 (`aimOf`).
+   *
+   * **적이 아니라 판이 들고 있다.** 도발은 서 있는 놈 전부에게 한꺼번에
+   * 걸리고, 그 사이에 걸어 들어온 놈에게도 걸려야 한다 — 마리마다 들고
+   * 있으면 새로 온 놈만 안 걸려서, 화면에서는 한 마리가 딴 데를 때린다.
+   */
+  taunt: { who: string; ms: number } | null;
+  /**
+   * 적에게 걸려 있는 것들. 키는 **마리의 고유 번호** (`FoeSlot.id`).
+   *
+   * 자리 번호로 잡으면 한 마리가 죽는 순간 남은 놈들의 번호가 밀려서, 걸려
+   * 있던 것이 엉뚱한 놈에게 옮겨 간다. 고유 번호는 죽을 때까지 안 바뀐다.
+   *
+   * 지금 여기 들어오는 것은 비앙카의 화산이 거는 시듦 하나다.
+   */
+  foeHex: Record<number, Hex[]>;
+  /**
+   * 적이 **회복한** 마지막 한 번 — 번호와 양.
+   *
+   * 화면이 우두머리 머리 위에 초록 `+N` 을 띄운다. 번호를 같이 두는 이유는
+   * 같은 양을 연달아 회복할 때 화면이 못 알아보기 때문이다 (`patSeq` 와
+   * 같은 얼개).
+   */
+  foeHeal: { seq: number; amt: number };
+  /**
+   * 이번 틱에 우두머리 특수기를 **맞은 사람들** (CharId).
+   *
+   * 화면이 이걸 보고 맞은 사람에게 표적을 씌운다. 예전에는 피해 숫자만 떴는데,
+   * 전원기(`aim: 'all'`)와 한 명기(`aim: 'one'`)가 화면에서 똑같이 보였다 —
+   * 누가 맞았는지도, 몇이 맞았는지도 알 수 없었다.
+   *
+   * `patSeq` 와 같이 움직인다. 특수기가 안 나간 틱에는 빈 배열이다.
+   */
+  struck: readonly string[];
+  /**
+   * 판이 바뀐 횟수 — 계속 올라가기만 한다.
+   *
+   * 화면이 이 숫자가 오르면 **스킬 코스트를 0 으로** 되돌린다 (`Fighter`).
+   * 코스트를 세는 것이 화면이라(휘두르는 박자가 캐릭터마다 달라 틱과 무관
+   * 하다) 여기서는 신호만 남긴다 — `cut` 과 같은 얼개다.
+   */
+  costSeq: number;
 }
 
 /**
@@ -1494,6 +1595,8 @@ export const newBattle = (): BattleState => {
     openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
     called: false, pat: null, patSeq: 0,
     hex: {}, cut: {}, bossMs: 0, swingSeq: 0,
+    fade: {}, taunt: null, foeHex: {}, foeHeal: { seq: 0, amt: 0 },
+    struck: [], costSeq: 0,
   };
 };
 
@@ -1574,6 +1677,21 @@ export function enterStage(
     hex: {},
     cut: {},
     bossMs: 0,
+    /*
+      ── 판이 바뀌면 처음부터다 ──
+
+      쓰러졌던 사람이 일어서고, 체력이 가득 차고 (`hp` 는 부르는 쪽이
+      가득 채워 넘긴다), 스킬 코스트가 0 이 된다.
+
+      코스트를 안 지우면 판을 넘나드는 것이 **모아 두는 수단**이 된다 —
+      앞 판에서 스무 번 때려 정화를 채워 놓고 우두머리 앞에서 꺼내는 식이다.
+      판이 바뀌면 다시 모아야 한다.
+    */
+    fade: {},
+    taunt: null,
+    foeHex: {},
+    struck: [],
+    costSeq: (Number.isFinite(st.costSeq) ? st.costSeq : 0) + 1,
   };
 }
 
@@ -1748,6 +1866,18 @@ export interface TickEvent {
    * 알 수가 없다.
    */
   pattern: string | null;
+  /**
+   * 피해도 회복도 없지만 **상태는 바뀌었나.**
+   *
+   * 도발 · 광란 · 정화가 그렇다. 부르는 쪽은 `hit <= 0 && healed <= 0` 이면
+   * 아무 일도 안 일어난 것으로 보고 저장을 건너뛰는데 (`state/slices/roster`),
+   * 그러면 이 셋이 계산은 되고 저장은 안 되어 **아무 일도 안 일어난다.**
+   *
+   * 예전에 회복형에서 똑같이 당했다 — `ev.hit` 만 보고 있어서 기도가 통째로
+   * 사라졌다. 갈래가 늘 때마다 그 조건에 항을 더하는 대신, "바뀌었다" 를
+   * 한 칸으로 말한다.
+   */
+  applied: boolean;
 }
 
 export interface TickResult {
@@ -1758,6 +1888,7 @@ export interface TickResult {
 const NOTHING: TickEvent = {
   hit: 0, taken: 0, hurt: null, fell: null, killed: 0, cleared: false,
   bossCame: false, wiped: false, gold: 0, healed: 0, pattern: null,
+  applied: false,
 };
 
 /**
@@ -1780,12 +1911,28 @@ function aimOf(
   alive: readonly OwnedChar[],
   hp: Record<string, number>,
   rand: () => number,
+  /**
+   * 지금 도발을 걸어 둔 사람 (CharId). 없으면 null.
+   *
+   * **한 명을 고르는 공격만** 여기로 끌려온다 (평타 · `one` · `front` ·
+   * `low`). 전원기(`all`)와 둘(`two`)은 그대로다 — 도발은 "나를 노려라" 이지
+   * "저 기술을 나만 맞겠다" 가 아니고, 화면에서도 전원기가 한 명에게만
+   * 들어가면 무슨 기술인지 알 수가 없다.
+   */
+  taunt: string | null,
 ): OwnedChar[] {
   if (!alive.length) return [];
-  if (!pat || pat.aim === 'one') return [alive[pickAim(alive.length, rand)]];
+  /*
+    도발은 자리 확률(`AIM`)을 통째로 덮는다. 건 사람이 그 사이에 쓰러졌으면
+    안 걸린 것으로 친다 — 시체를 계속 때리면 나머지 셋이 공짜로 논다.
+  */
+  const bait = taunt ? alive.find((c) => c.id === taunt) : null;
+  const one = (): OwnedChar[] => [bait ?? alive[pickAim(alive.length, rand)]];
+  if (!pat || pat.aim === 'one') return one();
   if (pat.aim === 'all') return [...alive];
-  if (pat.aim === 'front') return [alive[0]];
+  if (pat.aim === 'front') return bait ? [bait] : [alive[0]];
   if (pat.aim === 'low') {
+    if (bait) return [bait];
     /*
       **비율로** 잰다. 남은 양으로 재면 원래 체력이 적은 사람(리안느 150)이
       가득 차 있어도 늘 걸려서, "마무리를 노린다" 가 "제일 약한 사람만
@@ -1827,6 +1974,30 @@ export function foeArmor(f: Foe, left: number): Armor {
 export const foeTough = (f: Foe): number => f.passive?.tough ?? 1;
 
 /**
+ * 지금 이 적이 실제로 내는 힘과 박자.
+ *
+ * 광폭화 중이면 둘 다 두 배다 (`RAGE_MUL`). **잡몹은 절대 안 걸린다** —
+ * 우두머리가 서 있는 동안만 시계가 도므로 (`bossMs`) 여기서도 `boss` 를
+ * 같이 본다.
+ *
+ * 한 함수에 묶어 둔 이유: 공격력만 올리고 공격속도를 빠뜨리면 화면에서는
+ * 평소 박자로 두 배 아픈 것이 되어, "빨라졌다" 가 안 보인다. 실제로 그
+ * 갈래를 두 군데에 나눠 뒀다가 한쪽만 고친 적이 있다 (`ticked` 의 `t.atk`).
+ */
+export function foeNow(f: Foe, rage: boolean): { atk: number; spd: number } {
+  const on = rage && f.boss;
+  return {
+    atk: on ? Math.round(f.atk * RAGE_MUL) : f.atk,
+    spd: on ? f.spd * RAGE_MUL : f.spd,
+  };
+}
+
+/** 이 마리에게 걸려 있는 것들 (`BattleState.foeHex`) */
+export const foeHexOf = (
+  map: Record<number, Hex[]> | undefined, id: number,
+): readonly Hex[] => map?.[id] ?? [];
+
+/**
  * 한 틱.
  *
  * @param st    지금 전투 상태
@@ -1862,11 +2033,22 @@ export function battleTick(
       다 어두워졌다 — 이제 옮긴다.
 
       `goTo` 가 있으면 거기로 (`< >` 로 고른 판), 없으면 다음 판으로
-      (우두머리를 잡았을 때). 체력은 그대로 간다 — 판을 옮겼다고 회복시키면
-      위험할 때마다 한 판 갔다 오는 것이 제일 싼 회복 수단이 된다.
+      (우두머리를 잡았을 때).
+
+      ── 체력은 가득 차고, 쓰러진 사람은 일어선다 ──
+
+      한동안 체력을 **그대로** 넘겼다. "위험할 때마다 한 판 갔다 오는 것이
+      제일 싼 회복 수단이 된다" 는 이유였는데, 실제로 켜 보니 반대쪽이 훨씬
+      나빴다: 우두머리를 잡고 다음 판에 넘어가면 셋이 쓰러진 채로 시작해서,
+      새 판의 첫 무리에게 그대로 전멸했다. 판을 깬 보상이 **다음 판의 전멸**
+      이었다.
+
+      싼 회복 수단이 되는 것도 실제로는 안 된다 — 옮기는 데 `MOVE_MS` 가
+      걸리고, 옮긴 판은 사냥 시간이 처음부터라 우두머리를 다시 1분 기다려야
+      한다 (`STAGE_MS`). 그 값이 회복보다 크다.
     */
     const to = Number.isFinite(st.goTo) && st.goTo ? st.goTo : nextStage(st.stage);
-    return { battle: enterStage(st, to, st.hp), ev: NOTHING };
+    return { battle: enterStage(st, to, fullHp(party, chars)), ev: NOTHING };
   }
 
   const openIn = Number.isFinite(st.openIn) ? st.openIn : 0;
@@ -1911,6 +2093,30 @@ export function battleTick(
   let bossMs = Number.isFinite(st.bossMs) ? st.bossMs : 0;
   let swingSeq = Number.isFinite(st.swingSeq) ? st.swingSeq : 0;
   const cut = { ...(st.cut ?? {}) };
+  /*
+    ── 광폭화 ──
+
+    이번 틱의 시계로 본다. `bossMs` 는 아래에서 오르므로, 여기서 읽은 값은
+    **이번 틱이 시작할 때**의 것이다 — 넘어서는 그 틱은 아직 평소 수치로
+    친다. 한 틱(0.5초) 차이지만, 두 군데(공격력·회복)가 서로 다른 시점을
+    보면 회복만 먼저 시작되는 프레임이 생긴다.
+  */
+  const rage = raging({ boss: st.boss, bossMs });
+  let foeHeal = st.foeHeal ?? { seq: 0, amt: 0 };
+  /** 이번 틱에 우두머리 특수기를 맞은 사람들 — 화면이 표적을 씌운다 */
+  const struck: string[] = [];
+
+  /*
+    ── 도발이 흐른다 ──
+
+    건 사람이 쓰러지면 그 자리에서 걷힌다. 시체를 계속 때리면 나머지 셋이
+    공짜로 노는 판이 된다.
+  */
+  let taunt = st.taunt ?? null;
+  if (taunt) {
+    const left = (Number.isFinite(taunt.ms) ? taunt.ms : 0) - TICK_MS;
+    taunt = left > 0 && (st.hp[taunt.who] ?? 1) > 0 ? { ...taunt, ms: left } : null;
+  }
 
   /*
     ── 걸려 있는 것들이 흐른다 ──
@@ -1965,7 +2171,8 @@ export function battleTick(
   */
   let healed = 0;
   for (const c of members(party, chars)) {
-    const per = regenOf(c.id);
+    /* 최대 체력의 1% 다 — 키운 만큼 같이 자란다 (`core/passives`) */
+    const per = regenOf(c);
     if (per <= 0 || hp[c.id] <= 0) continue;
     const max = statOf(c).hp;
     if (hp[c.id] >= max) continue;
@@ -2063,9 +2270,60 @@ export function battleTick(
     오라는 **매 틱 다시 건다.** 시간이 지나 풀리게 두면 우두머리가 살아
     있는데도 깜빡이고, 매 틱 새로 고치면 우두머리가 죽는 순간 자연히 걷힌다.
   */
+  /*
+    ── 적에게 걸린 것이 흐른다 ──
+
+    지금 여기 들어오는 것은 비앙카의 화산이 거는 시듦 하나다. 지속 피해는
+    아직 없어서 `dot` 은 버린다 — 생기면 아군 쪽과 같은 문(`strikeFor`)을
+    지나야 한다.
+
+    **죽은 놈의 기록은 여기서 사라진다.** 서 있는 놈만 훑으므로, 죽어서
+    목록에서 빠지면 그 번호는 다음 판까지 안 돌아온다.
+  */
+  const foeHex: Record<number, Hex[]> = {};
+  for (const f of foes) {
+    const was = foeHexOf(st.foeHex, f.id);
+    if (!was.length) continue;
+    const { left } = tickHex(was, TICK_MS);
+    if (left.length) foeHex[f.id] = left;
+  }
+
+  /** 이 마리가 지금 받는 회복 배수 — 시듦이 걸려 있으면 깎인다 */
+  const foeHealMul = (id: number): number => healMulOf(foeHex[id] ?? []);
+
+  /**
+   * 우두머리를 채운다. **실제로 찬 만큼**을 돌려준다.
+   *
+   * 회복이 세 갈래(흡혈 · 20판의 15초 회복 · 광폭화의 초당 1%)라 한 곳으로
+   * 모았다. 갈래마다 따로 쓰면 시듦을 한 군데만 적용하는 일이 생기고,
+   * 화면에 띄우는 `+N` 도 갈래마다 빠뜨리게 된다.
+   */
+  const healBoss = (want: number): number => {
+    if (want <= 0 || !foes.length || !isBoss) return 0;
+    const b = foes[0];
+    if (!b || b.hp <= 0) return 0;
+    const amt = Math.round(want * foeHealMul(b.id));
+    const gain = Math.min(bossFoe.hp - b.hp, amt);
+    if (gain <= 0) return 0;
+    foes = [...foes];
+    foes[0] = { ...b, hp: b.hp + gain };
+    return gain;
+  };
+
   const pas = isBoss ? (bossFoe.passive ?? null) : null;
   if (isBoss) {
     bossMs += TICK_MS;
+    /*
+      광폭화의 초당 1%.
+
+      **틱마다 나눠서** 넣는다 (0.5초에 0.5%). 1초에 한 번 몰아넣으면 숫자가
+      1초 간격으로 툭툭 뜨는데, 그 사이에 우두머리가 죽으면 마지막 몫이 통째로
+      사라져 "회복을 하는 놈" 이라는 인상이 안 남는다.
+    */
+    if (rage) {
+      const got = healBoss(bossFoe.hp * RAGE_REGEN * (TICK_MS / 1000));
+      if (got > 0) foeHeal = { seq: foeHeal.seq + 1, amt: got };
+    }
     if (pas?.aura) {
       for (const c of members(party, chars)) {
         if (hp[c.id] <= 0 || CHARS[c.id].role !== pas.aura.role) continue;
@@ -2085,14 +2343,8 @@ export function battleTick(
     if (pas?.regen && foes.length) {
       const per = Math.max(TICK_MS, pas.regen.sec * 1000);
       if (Math.floor(bossMs / per) > Math.floor((bossMs - TICK_MS) / per)) {
-        const b = foes[0];
-        if (b && b.hp > 0) {
-          foes = [...foes];
-          foes[0] = {
-            ...b,
-            hp: Math.min(bossFoe.hp, b.hp + Math.round(bossFoe.hp * pas.regen.pct)),
-          };
-        }
+        const got = healBoss(bossFoe.hp * pas.regen.pct);
+        if (got > 0) foeHeal = { seq: foeHeal.seq + 1, amt: got };
       }
     }
   } else {
@@ -2109,6 +2361,8 @@ export function battleTick(
       치게 된다 — 그리고 그건 표를 아무리 들여다봐도 안 보인다.
     */
     const kind = foeOf(st.stage, isBoss, f.k);
+    /* 광폭화 중이면 공격력도 박자도 두 배다 (`foeNow`) */
+    const live = foeNow(kind, rage);
     /*
       **없는 시계는 0 으로 친다.**
 
@@ -2131,14 +2385,14 @@ export function battleTick(
     while (cd <= 0 && swings < 4) {
       swings += 1;
       n += 1;
-      cd += swingMs(kind.spd);
+      cd += swingMs(live.spd);
       /*
         **우두머리만** 패턴을 쓴다. 잡몹도 횟수는 세지만(갈래를 안 늘리려고)
         고르지는 않는다 — 잡몹 넷이 각자 특수기를 쓰면 화면이 읽히지 않는다.
       */
       at.push(isBoss ? patternAt(n, kind.patterns ?? BOSS_PATTERNS) : null);
     }
-    return { slot: { ...f, cd, n, pos }, atk: kind.atk, blow: foeBlow(kind), swings, at };
+    return { slot: { ...f, cd, n, pos }, atk: live.atk, blow: foeBlow(kind), swings, at };
   });
   /* 줄어든 시계를 실제로 들고 나간다 — 안 그러면 시계가 영영 안 준다 */
   foes = ticked.map((t) => t.slot);
@@ -2172,7 +2426,9 @@ export function battleTick(
     /* 실제로 한 대 휘둘렀다 — 화면이 이 숫자로 팔을 움직인다 */
     swingSeq += 1;
 
-    const marks = aimOf(h.pat, alive, hp, rand);
+    const marks = aimOf(h.pat, alive, hp, rand, taunt?.who ?? null);
+    /* 특수기에 맞은 사람은 화면이 표적으로 씌운다 (`BattleState.struck`) */
+    if (h.pat) for (const m of marks) if (!struck.includes(m.id)) struck.push(m.id);
 
     /*
       기술은 **제 피해 종류와 관통을 따로 갖는다** (`BossPattern.dmg`).
@@ -2237,12 +2493,35 @@ export function battleTick(
     한 번에 몰아서 더한다. 맞는 사람마다 나눠 더하면 그 사이에 우두머리가
     최대치를 넘었다가 다시 깎이는 중간 상태가 생긴다.
   */
-  if (drained > 0 && foes.length && isBoss) {
-    const b = foes[0];
-    if (b && b.hp > 0) {
-      foes = [...foes];
-      foes[0] = { ...b, hp: Math.min(bossFoe.hp, b.hp + drained) };
+  if (drained > 0) {
+    const got = healBoss(drained);
+    if (got > 0) foeHeal = { seq: foeHeal.seq + 1, amt: got };
+  }
+
+  /*
+    ── 쓰러진 사람의 버프가 사그라든다 ──
+
+    **틱이 다 끝난 뒤에** 센다. 위에서 세면 이번 틱에 쓰러진 사람이 빠진다 —
+    지속 피해로 죽는 경우가 그렇고, 그건 우두머리전에서 흔한 죽음이다.
+
+    아녜스가 죽은 그 틱에 2초가 적히고, 매 틱 줄어든다. 그동안
+    `livingMembers` 가 그 사람을 살아 있는 것으로 세므로 (`core/party`) 버프가
+    실제로 계속 걸려 있고, 화면에서는 로고가 깜빡인다
+    (`core/passives` 의 `FADE_MS`).
+
+    **다시 일어서면 즉시 사라진다** — 살아 있는 사람에게는 아예 칸을 안 만든다.
+  */
+  const fade: Record<string, number> = {};
+  for (const c of members(party, chars)) {
+    if (hp[c.id] > 0) continue;
+    const was = st.fade?.[c.id];
+    if (was === undefined) {
+      /* 이번 틱에 쓰러졌나 — 틱이 시작할 때는 서 있었나로 본다 */
+      if (hpOf(c, st.hp) > 0) fade[c.id] = FADE_MS;
+      continue;
     }
+    const left = (Number.isFinite(was) ? was : 0) - TICK_MS;
+    if (left > 0) fade[c.id] = left;
   }
 
   if (allDown(party, chars, hp)) {
@@ -2265,10 +2544,19 @@ export function battleTick(
         cut: {},
         bossMs: 0,
         swingSeq,
+        /* 전멸했으면 사그라들 버프도 없다 — 넷이 다 쓰러졌다 */
+        fade: {},
+        taunt: null,
+        foeHex: {},
+        foeHeal,
+        struck: [],
+        /* 다시 일어설 때도 코스트는 0 부터다 (`enterStage` 와 같은 규칙) */
+        costSeq: (Number.isFinite(st.costSeq) ? st.costSeq : 0) + 1,
       },
       ev: {
         hit, taken, hurt: hurtId, fell, pattern,
         killed, cleared: false, bossCame, wiped: true, gold, healed,
+        applied: true,
       },
     };
   }
@@ -2286,10 +2574,21 @@ export function battleTick(
       pat: pattern ?? st.pat ?? null,
       patSeq: pattern ? (Number.isFinite(st.patSeq) ? st.patSeq : 0) + 1 : (st.patSeq ?? 0),
       hex, cut, bossMs, swingSeq,
+      fade, taunt, foeHex, foeHeal,
+      /*
+        맞은 사람 명단은 **특수기가 나간 틱에만** 채운다. 안 나간 틱에 지난
+        명단을 들고 있으면 표적이 화면에 눌러앉는다.
+
+        빈 배열을 매번 새로 만들면 `battleTickOnce` 의 통째 비교가 늘 "바뀌었다"
+        가 되지만, 그건 `JSON.stringify` 비교라 값이 같으면 같다.
+      */
+      struck: pattern ? struck : [],
+      costSeq: Number.isFinite(st.costSeq) ? st.costSeq : 0,
     },
     ev: {
       hit, taken, hurt: hurtId, fell, pattern,
       killed, cleared: false, bossCame, wiped: false, gold, healed,
+      applied: true,
     },
   };
 }
@@ -2363,7 +2662,8 @@ export function applyHit(
     (`core/passives`). 쓰러진 사람의 패시브는 안 센다 — 그래서 사제가 죽으면
     남은 셋의 피해가 그 자리에서 떨어진다.
   */
-  const alive = livingMembers(party, chars, st.hp);
+  /* 쓰러졌지만 아직 사그라드는 중인 사람의 버프도 산다 (`FADE_MS`) */
+  const alive = livingMembers(party, chars, st.hp, st.fade);
   const mineHex = hexOf(st.hex, who);
   const kind = foeOf(st.stage, st.boss, foes[at].k);
   const dmg = Math.max(1, Math.round(strikeFor(
@@ -2708,6 +3008,13 @@ export function applySkill(
    * 정해서 넘긴다.
    */
   slot = 0,
+  /**
+   * 사람이 고른 스킬 설정 (`core/skillOpt` 의 `optKey`).
+   *
+   * 정화 하나가 읽는다. 안 주면 기본값(전부 걷음)으로 본다 — 서버 계산과
+   * 검사에서는 설정이 없다.
+   */
+  opts?: Record<string, string>,
 ): TickResult {
   const me = chars[who];
   if (!me || !party.includes(who as never) || st.down > 0) {
@@ -2716,6 +3023,69 @@ export function applySkill(
   if (hpOf(me, st.hp) <= 0) return { battle: st, ev: NOTHING };
 
   const sk = skillsOf(me.id)[slot] ?? skillOf(me.id);
+
+  /*
+    ── 도발 — 적 전부를 자기 쪽으로 ──
+
+    적을 안 건드리므로 적이 없어도 나간다... 는 아니다. 아무도 안 서 있는데
+    포효하면 코스트만 버린다. 서 있는 놈이 있을 때만 건다.
+  */
+  if (sk.taunt) {
+    if (!st.foes.length) return { battle: st, ev: NOTHING };
+    return {
+      battle: { ...st, taunt: { who, ms: Math.round(sk.taunt * 1000) } },
+      /* 피해도 회복도 0 이라 `ev` 로는 아무 일도 안 일어난 것처럼 보인다.
+         부르는 쪽(`state/slices/roster`)이 그걸로 판단하면 안 되므로
+         `applied` 를 켜서 "상태는 바뀌었다" 를 알린다 */
+      ev: { ...NOTHING, applied: true },
+    };
+  }
+
+  /*
+    ── 자기 강화 — 리안느의 광란 ──
+
+    적이 없어도 나간다. 다음 무리가 걸어 들어오기 직전에 켜 두는 것이
+    이상한 일이 아니다.
+  */
+  if (sk.self) {
+    const put = putHex(hexOf(st.hex, who), {
+      id: sk.self.id,
+      ms: Math.round(sk.self.sec * 1000),
+      dot: 0,
+      dmg: 'magic',
+      mul: sk.self.mul,
+      n: 1,
+    }, 1);
+    return {
+      battle: { ...st, hex: { ...st.hex, [who]: put } },
+      ev: { ...NOTHING, applied: true },
+    };
+  }
+
+  /*
+    ── 정화 — 걸린 나쁜 것을 걷어낸다 ──
+
+    무엇을 걷을지는 사람이 고른 설정이 정한다 (`core/skillOpt`). **걷을 것이
+    없으면 아무 일도 안 일어난다** — 그런 상황에서 애초에 안 나가게 막는 것은
+    화면 쪽이지만 (`readySkill` 의 `allow`), 여기서도 한 번 더 본다: 손을
+    떠나고 닿기까지의 사이에 상태가 바뀔 수 있다.
+  */
+  if (sk.cleanse) {
+    const opt = cleanseOptOf(opts, who, slot);
+    const hex: Record<string, Hex[]> = { ...st.hex };
+    let any = false;
+    for (const c of members(party, chars)) {
+      if (hpOf(c, st.hp) <= 0) continue;
+      const was = hexOf(st.hex, c.id);
+      const now2 = cleansed(opt, was);
+      if (now2 === was) continue;
+      any = true;
+      if (now2.length) hex[c.id] = [...now2];
+      else delete hex[c.id];
+    }
+    if (!any) return { battle: st, ev: NOTHING };
+    return { battle: { ...st, hex }, ev: { ...NOTHING, applied: true } };
+  }
 
   /* ── 회복형 — 적은 안 건드린다 ── */
   if (sk.heal > 0) {
@@ -2735,7 +3105,7 @@ export function applySkill(
 
   const mine = statOf(me);
   const foes = [...st.foes];
-  const alive = livingMembers(party, chars, st.hp);
+  const alive = livingMembers(party, chars, st.hp, st.fade);
   const mineHex = hexOf(st.hex, who);
   /* 파티 패시브와 약화가 같이 걸린다 — 평타(`applyHit`)와 같은 값이어야 한다 */
   const sup = allyAtkMul(alive) * mulOf(mineHex, 'st_weak');
@@ -2757,12 +3127,30 @@ export function applySkill(
   */
   /* 이 기술 한 대가 들고 나가는 것 — 종류와 관통. 한 번만 만든다 */
   const blow = blowOf(me.id, sk);
+  /*
+    맞은 적에게 거는 것 — 비앙카의 화산이 거는 시듦 하나다.
+
+    **마리의 고유 번호로** 적어 둔다 (`BattleState.foeHex`). 자리 번호로
+    잡으면 이 스킬로 앞줄이 죽는 순간 남은 놈들의 번호가 밀려서, 방금 건
+    시듦이 엉뚱한 놈에게 옮겨 간다.
+  */
+  const foeHex: Record<number, Hex[]> = { ...(st.foeHex ?? {}) };
   for (const i of idx) {
     const kind = foeOf(st.stage, st.boss, foes[i].k);
     const dmg = Math.max(1, Math.round(strikeFor(
       skillBase(mine, sk, sup), rollCrit(mine, rand),
       foeArmor(kind, foes[i].hp), blow,
     ) * foeTough(kind)));
+    if (sk.foeHex) {
+      foeHex[foes[i].id] = putHex(foeHexOf(st.foeHex, foes[i].id), {
+        id: sk.foeHex.id,
+        ms: Math.round(sk.foeHex.sec * 1000),
+        dot: 0,
+        dmg: 'magic',
+        mul: sk.foeHex.mul,
+        n: 1,
+      }, 1);
+    }
     foes[i] = { ...foes[i], hp: foes[i].hp - dmg };
     hit += dmg;
     /* 여러 마리를 치는 기술은 **친 만큼** 되돌아온다 (`applyHit` 과 같은 규칙) */
@@ -2784,7 +3172,11 @@ export function applySkill(
   }
 
   if (!killed) {
-    return { battle: { ...st, foes, hp }, ev: { ...NOTHING, hit } };
+    return { battle: { ...st, foes, hp, foeHex }, ev: { ...NOTHING, hit } };
+  }
+  /* 죽은 놈에게 걸려 있던 것은 같이 지운다 — 번호가 남으면 영영 안 없어진다 */
+  for (const id of Object.keys(foeHex)) {
+    if (!foes.some((f) => f.id === Number(id))) delete foeHex[Number(id)];
   }
 
   const gold = killGold(st.stage, st.boss) * killed;
@@ -2807,6 +3199,7 @@ export function applySkill(
         hp,
         slain: st.slain + killed,
         target: 0,
+        foeHex,
         clearIn: CLEAR_MS,
         clearKind: 'boss',
         goTo: nextStage(st.stage),
@@ -2817,7 +3210,12 @@ export function applySkill(
 
   return {
     battle: {
-      ...st, foes, hp, slain: st.slain + killed, target: pickTarget(foes.length, rand),
+      ...st,
+      foes,
+      hp,
+      foeHex,
+      slain: st.slain + killed,
+      target: pickTarget(foes.length, rand),
     },
     ev: { ...NOTHING, hit, killed, gold },
   };

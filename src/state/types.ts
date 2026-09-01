@@ -131,6 +131,14 @@ export interface GameState {
   party: Party;
   /** 자동 전투 진행 상태 */
   battle: BattleState;
+  /**
+   * 스킬 설정 — 열쇠는 `<캐릭터>:<기술 자리>` (`core/skillOpt` 의 `optKey`).
+   *
+   * 지금은 아녜스의 정화 하나가 쓴다. 값이 없으면 기본값으로 읽으므로
+   * (`cleanseOptOf`) 여기는 **사람이 실제로 건드린 것만** 들어 있다 —
+   * 기본값을 다 적어 두면 나중에 기본값을 바꿔도 아무에게도 안 먹는다.
+   */
+  skillOpts: Record<string, string>;
 
   // 기본
   money: number;
@@ -432,6 +440,8 @@ export interface GameActions {
   enhanceGear: (id: CharId) => 'up' | 'fail' | 'max' | 'poor' | 'none';
   /** 강화 수치를 바로 정한다 — 테스트용 (`FREE_ENHANCE` 가 꺼지면 아무 일도 안 한다) */
   setGear: (id: CharId, lv: number) => void;
+  /** 스킬 설정을 바꾼다 (`core/skillOpt`) */
+  setSkillOpt: (who: CharId, slot: number, opt: string) => void;
   /** 자동 전투 한 틱 — 시간·등장·적 공격 */
   battleTickOnce: () => void;
   /**

@@ -32,14 +32,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { Row } from '@/ui/atoms';
 import {
-  CHARS, HitFx, OwnedChar, nextSkill, skillOf, skillsOf, statOf, swingMs,
+  CHARS, HitFx, OwnedChar, chargeUp, cutCharge, newCharge, readySkill, skillOf,
+  skillsOf, spendCharge, statOf, swingMs,
 } from '@/core/chars';
 
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap } from '@/ui/spriteAssets';
 import { WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
-import { DamageNumber, HealMarks, HitBurst, SkillShout } from './HitFx';
+import { DamageNumber, HealMarks, HitBurst, SkillShout, StruckMark } from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
 
@@ -145,7 +146,8 @@ type Frame = 'guard' | 'lose'
   | (typeof CUT_FRAMES)[number] | (typeof SK_FRAMES)[number];
 
 function FighterView({
-  ch, back, down, hp, spd, stun, silent, cut, damage, bless, advance, leapTo,
+  ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
+  struck, struckName, cut, onCharge, damage, bless, advance, leapTo,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -175,12 +177,68 @@ function FighterView({
   /** 침묵인가 — 기술을 못 쓴다. 평타는 그대로 나간다 */
   silent: boolean;
   /**
-   * 스킬 게이지를 강제로 깎인 횟수 (`BattleState.cut`).
+   * 판 연출 중인가 (`core/autoBattle` 의 `fightHeld`).
    *
-   * 숫자가 올라갈 때마다 여기서 한 번 깎는다. 게이지를 세는 것은 이
-   * 안이라(스윙 횟수) 밖에서는 못 깎고, 그래서 **신호만** 받는다.
+   * ## 판이 열릴 때 검기가 날아오던 것
+   *
+   * 계산은 이미 막혀 있었다 (`strikeFoe`/`skillFoe` 가 `fightHeld` 를 본다).
+   * 그런데 **몸은 계속 휘둘렀다.** 검은 막 뒤에서 스윙 순환이 돌다가, 막이
+   * 걷히는 순간 이미 날아가고 있던 검기가 화면을 가로질렀다 — 아무도 아직
+   * 안 싸우는데 검기만 지나갔다.
+   *
+   * 여기서 막으면 몸도 같이 멈춘다. 다시 풀릴 때 순환이 처음부터 시작하므로
+   * (각자 다른 순간에) 판이 열리는 순간은 언제나 조용하다.
+   */
+  held: boolean;
+  /**
+   * 지금 스킬 코스트가 **안 차나** (리안느의 광란).
+   *
+   * 켜져 있는 동안 평타를 아무리 쳐도 칸이 안 오른다. 그게 없으면 광란이
+   * 스스로를 되먹여서 늘 켜 두는 것이 정답이 된다 (`SKILLS.frenzy`).
+   */
+  noCharge: boolean;
+  /**
+   * 이 자리 기술을 **지금 실제로 쓸 수 있나.**
+   *
+   * 코스트가 다 차도 여기서 거절하면 안 나가고 **찬 채로 기다린다.** 정화가
+   * "걷어낼 것이 없으면 안 쓴다" 를 이걸로 말한다 (`core/skillOpt`).
+   *
+   * 무대가 넘긴다 — 파티 전체에 무엇이 걸려 있는지는 저쪽이 안다.
+   */
+  canCast: (id: string, slot: number) => boolean;
+  /**
+   * 판이 바뀐 횟수 (`BattleState.costSeq`).
+   *
+   * 오를 때마다 코스트를 **0 으로** 되돌린다. 판을 넘나들며 모아 두는 것을
+   * 막는다 — 앞 판에서 스무 번 때려 정화를 채워 놓고 우두머리 앞에서 꺼내는
+   * 식이 되면, 코스트가 뜻하는 바가 사라진다.
+   */
+  costSeq: number;
+  /**
+   * 이 사람이 우두머리 특수기에 맞은 횟수 (`BattleState.struck`).
+   *
+   * 오를 때마다 몸에 붉은 표적이 씌워진다. 예전에는 피해 숫자만 떴는데,
+   * 전원기와 한 명기가 화면에서 똑같아 보여서 **누가 맞았는지**를 알 수가
+   * 없었다.
+   */
+  struck: number;
+  /** 그때 맞은 기술의 이름 — 표적 위에 같이 뜬다 */
+  struckName: string;
+  /**
+   * 스킬 코스트를 강제로 깎인 횟수 (`BattleState.cut`).
+   *
+   * 숫자가 올라갈 때마다 여기서 한 번 깎는다. 코스트를 세는 것은 이
+   * 안이라(스윙마다) 밖에서는 못 깎고, 그래서 **신호만** 받는다.
    */
   cut: number;
+  /**
+   * 코스트가 바뀔 때마다 밀어 넣는다 — 파티 칸이 이걸 그린다
+   * (`state/battleUi`).
+   *
+   * 세는 곳과 그리는 곳을 갈라 놓되, **세는 곳은 하나**다. 한동안 여기서
+   * 스윙을 세고 스토어에서도 따로 세다가 둘이 어긋났다.
+   */
+  onCharge: (id: string, on: readonly number[]) => void;
   /**
    * 이 사람 머리 위에 띄울 피해 숫자들.
    *
@@ -310,20 +368,34 @@ function FighterView({
   /** 침묵도 같은 이유로 ref 다 — 5초짜리라 고리를 두 번 끊는다 */
   const silentRef = useRef(silent);
   silentRef.current = silent;
+  /* 광란이 켜졌다 꺼지는 동안 고리를 끊으면 안 된다 — 같은 이유로 ref */
+  const noChargeRef = useRef(noCharge);
+  noChargeRef.current = noCharge;
+  const canCastRef = useRef(canCast);
+  canCastRef.current = canCast;
+  const onChargeRef = useRef(onCharge);
+  onChargeRef.current = onCharge;
 
   /**
-   * 몇 번째 스윙인가 — 고리 밖에 둔다.
+   * ── 스킬 코스트 ── **기술 자리마다 하나씩** (`core/chars` 의 `Charge`).
    *
-   * 고리 안의 지역 변수였다. 그러면 고리가 다시 시작할 때마다 0 으로
-   * 돌아가서, 기절이 한 번 걸렸다 풀릴 때마다 스킬 게이지가 통째로
-   * 사라진다. 밖에 두면 멈췄다 이어져도 세던 것을 이어 센다.
+   * 고리 밖에 둔다. 고리 안의 지역 변수였을 때는 고리가 다시 시작할 때마다
+   * 0 으로 돌아가서, 기절이 한 번 걸렸다 풀릴 때마다 모아 둔 것이 통째로
+   * 사라졌다. 밖에 두면 멈췄다 이어져도 세던 것을 이어 센다.
+   *
+   * ## 왜 화면이 세나
+   *
+   * 코스트는 **평타 한 번에 1** 이고, 평타의 박자는 캐릭터마다 다르며
+   * 0.5초 틱과 아무 관계가 없다 (`swingMs`). 엔진이 세려면 네 사람의 스윙
+   * 시각을 따로 흉내 내야 하는데, 그러면 화면이 실제로 휘두르는 순간과
+   * 어긋난다 — 예전에 피해 계산에서 똑같이 겪었다 (`applyHit` 머리말).
    */
-  const nRef = useRef(0);
-  /** 차례가 됐지만 아직 안 나간 기술들 — 같은 이유로 밖에 있다 */
-  const queueRef = useRef<number[]>([]);
+  const chargeRef = useRef<number[]>(newCharge(ch.id));
+  /** 바뀐 칸을 파티 칸으로 밀어 넣는다 (`state/battleUi`) */
+  const pushCharge = () => onChargeRef.current(ch.id, chargeRef.current);
 
   /*
-    게이지를 깎으라는 신호가 왔다 (20판 태고의 성난 벼락).
+    코스트를 깎으라는 신호가 왔다 (20판 태고의 성난 벼락).
 
     **절반으로 되돌린다.** 0 으로 만들면 기술이 갓 나간 직후에 맞았을 때
     아무 일도 안 일어난 것과 같아서, 맞은 사람 입장에서는 뭘 잃었는지 모른다.
@@ -332,9 +404,26 @@ function FighterView({
   useEffect(() => {
     if (cut === cutRef.current) return;
     cutRef.current = cut;
-    nRef.current = Math.floor(nRef.current / 2);
-    queueRef.current.length = 0;
-  }, [cut]);
+    chargeRef.current = cutCharge(ch.id, chargeRef.current);
+    pushCharge();
+    /* `pushCharge` 는 ref 만 읽으므로 의존성이 아니다 */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cut, ch.id]);
+
+  /*
+    판이 바뀌었다 — **처음부터 모은다** (`BattleState.costSeq`).
+
+    쓰러졌다 일어설 때도 오른다. 다시 서는 판은 새 판과 같아야 한다 —
+    죽기 직전에 채워 둔 정화를 들고 일어서면, 죽는 것이 이득인 순간이 생긴다.
+  */
+  const costSeqRef = useRef(costSeq);
+  useEffect(() => {
+    if (costSeq === costSeqRef.current) return;
+    costSeqRef.current = costSeq;
+    chargeRef.current = newCharge(ch.id);
+    pushCharge();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [costSeq, ch.id]);
 
   /**
    * 쓰러진 뒤의 사라짐.
@@ -444,6 +533,14 @@ function FighterView({
     */
     if (down || fallen) { setFrame('lose'); return; }
     /*
+      판 연출 중 — **아무것도 안 한다.**
+
+      검은 막 뒤에서 계속 휘두르면, 막이 걷히는 순간 이미 날아가고 있던
+      검기가 화면을 가로지른다 (`held` 주석). 계산은 이미 막혀 있으므로
+      그 검기는 아무도 안 때리는, 설명할 수 없는 그림이었다.
+    */
+    if (held) { setFrame('guard'); return; }
+    /*
       기절 — **서 있지만 아무것도 안 한다.**
 
       쓰러진 것과 다르므로 `lose` 를 쓰지 않는다. `guard` 로 굳어 있으면
@@ -469,33 +566,33 @@ function FighterView({
     /** 지금 이 순간의 간격 — 스윙을 예약할 때마다 다시 읽는다 */
     const beatNow = () => swingMs(spdRef.current);
 
-    /**
-     * 차례가 됐지만 아직 안 나간 기술들의 자리.
-     *
-     * **한 스윙에 하나만** 나간다 (`nextSkill`). 기술이 여럿인 사람에게
-     * 둘 이상이 같은 차례에 걸릴 수 있는데, 한꺼번에 내보내면 그 한 스윙만
-     * 피해가 몇 배로 튀고 화면에서는 말풍선과 이펙트가 한 프레임에 겹친다.
-     * 밀린 것은 다음 스윙에서 나가므로, 실제 간격은 공격 속도가 정한다.
-     *
-     * 지금은 한 명당 기술이 하나뿐이라 이 줄은 늘 비어 있다.
-     */
-    const queue = queueRef.current;
-
     const cycle = () => {
       if (!alive) return;
-      nRef.current += 1;
-      const n = nRef.current;
-      /* 몇 번째마다 나가는지는 기술이 정한다 — 무거운 것일수록 드물다 */
       const list = skillsOf(ch.id);
+
+      /*
+        ── 코스트가 찬다 ──
+
+        평타 한 번에 모든 칸이 1 씩. 광란이 켜져 있으면 안 찬다 (`noCharge`).
+      */
+      if (!noChargeRef.current) chargeRef.current = chargeUp(ch.id, chargeRef.current);
+
       /**
        * 이번 스윙에 나갈 기술의 자리. -1 이면 평타다.
        *
-       * **침묵이면 아예 안 고른다.** 고르고 나서 막으면 그 기술은 차례를
-       * 쓴 채로 사라진다 — 15판 부패의 악취가 5초를 거는데, 그동안 돌아온
-       * 차례가 통째로 없어지면 침묵이 풀린 뒤에도 한참 기술이 안 나간다.
+       * **침묵이면 아예 안 고른다.** 고르고 나서 막으면 그 기술은 코스트를
+       * 쓴 채로 사라진다 — 15판 부패의 악취가 5초를 거는데, 그동안 모은 것이
+       * 통째로 없어지면 침묵이 풀린 뒤에도 한참 기술이 안 나간다.
+       *
+       * 다 찼어도 **지금 쓸 수 있는지**를 한 번 더 묻는다 (`canCast`). 정화가
+       * 걷어낼 것이 없으면 여기서 거절당하고, 코스트는 그대로 남는다.
        */
-      const slot = silentRef.current ? -1 : nextSkill(ch.id, n, queue);
+      const slot = silentRef.current
+        ? -1
+        : readySkill(ch.id, chargeRef.current, (i) => canCastRef.current(ch.id, i));
       const skill = slot >= 0;
+      if (skill) chargeRef.current = spendCharge(ch.id, chargeRef.current, slot);
+      pushCharge();
       const sk = list[Math.max(0, slot)] ?? skillOf(ch.id);
       setCasting(slot);
 
@@ -648,7 +745,8 @@ function FighterView({
       여기 남은 것들은 실제로 고리를 다시 세워야 하는 것들뿐이다: 사람이
       바뀌었거나, 쓰러졌거나, 기절했거나.
     */
-  }, [ch.id, d.fx, down, fallen, stun, step, leapX, leapY]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ch.id, d.fx, down, fallen, stun, held, step, leapX, leapY]);
 
   /*
     쿼터뷰 깊이.
@@ -841,6 +939,18 @@ function FighterView({
       <HealMarks nonce={bless} size={size} />
 
       {/*
+        ── 우두머리 특수기에 맞았다 ──
+
+        붉은 표적이 씌워지고 기술 이름이 같이 뜬다. 예전에는 피해 숫자만
+        떴는데, 넷이 동시에 맞는 전원기와 한 명만 맞는 기술이 화면에서
+        똑같아 보였다 — 무슨 일이 일어났는지 읽을 방법이 없었다.
+
+        평타에는 안 뜬다. 평타는 계속 맞는 것이라 표적이 늘 켜져 있게 되고,
+        그러면 아무것도 안 알려 주면서 화면만 시끄러워진다.
+      */}
+      <StruckMark nonce={struck} name={struckName} size={size} />
+
+      {/*
         맞은 숫자 — **머리 바로 위**에서 뜬다.
 
         -18 에서 시작해 38px 을 더 떠올랐다. 시작 자리도 높고 올라가는 거리도
@@ -972,6 +1082,13 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.stun === b.stun
   && a.silent === b.silent
   && a.cut === b.cut
+  && a.held === b.held
+  && a.noCharge === b.noCharge
+  && a.costSeq === b.costSeq
+  && a.struck === b.struck
+  && a.struckName === b.struckName
+  && a.canCast === b.canCast
+  && a.onCharge === b.onCharge
   && a.bless === b.bless
   && a.squeeze === b.squeeze
   && a.width === b.width

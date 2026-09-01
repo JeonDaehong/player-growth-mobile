@@ -24,7 +24,9 @@
 import {
   Armor, CharId, OwnedChar, statOf,
 } from './chars';
-import { Hex, STATUS_NAME, StatusId, mulOf } from './status';
+import {
+  BLINK_MS, GOOD, Hex, STATUS_NAME, StatusId, dying, mulOf, upOf,
+} from './status';
 
 /**
  * 패시브 하나.
@@ -46,8 +48,20 @@ export interface PassiveDef {
   allyAtk?: number;
   /** 이 사람이 서 있으면 **파티 전원**의 공격속도에 더해지는 값 (초당 횟수) */
   allySpd?: number;
-  /** 스스로 1초에 회복하는 양 */
-  regen?: number;
+  /**
+   * 스스로 1초에 채우는 양 — **최대 체력의 비율.**
+   *
+   * ## 고정값이었다 (초당 2)
+   *
+   * 처음에는 그냥 2 였다. 이졸데의 체력이 340 이라 초당 0.6% 였는데, 강화를
+   * 올려 체력이 1,500 이 되면 0.13% 가 된다 — 키울수록 패시브가 쓸모없어졌다.
+   * 우두머리 한 대가 200 을 깎는 판에서 초당 2 는 없는 것과 같다.
+   *
+   * 비율이면 **키운 만큼 같이 자란다.** 초당 1% 는 100초에 한 번 완전
+   * 회복이라, 맞고 있는 동안에는 여전히 밀리지만 잡몹 사이의 빈 시간에
+   * 혼자 일어선다 — 그게 이 패시브가 하려던 일이다.
+   */
+  regenPct?: number;
   /**
    * 체력이 낮을수록 빨라진다.
    *
@@ -91,14 +105,14 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
   /*
     앞에 서서 안 비키는 사람이라, 패시브도 **버티는 쪽**이다.
 
-    초당 2 는 작아 보이지만 이 게임에는 저절로 차는 체력이 아예 없다
+    초당 1% 는 작아 보이지만 이 게임에는 저절로 차는 체력이 아예 없다
     (`core/autoBattle` 머리말). 유일한 회복이 사제의 기도였고, 사제가 없거나
     죽으면 파티는 깎이기만 했다. 이졸데는 그 상황에서도 **혼자서는** 버틴다.
   */
   knightgirl: {
     name: '불굴의 맹세',
-    text: '1초마다 체력 2 회복',
-    regen: 2,
+    text: '1초마다 최대 체력의 1% 회복',
+    regenPct: 0.01,
     art: 'pv_oath',
     icon: 'st_regen',
   },
@@ -172,8 +186,19 @@ export function allySpdAdd(alive: readonly OwnedChar[]): number {
   return out;
 }
 
-/** 이 사람이 1초에 스스로 채우는 체력 */
-export const regenOf = (id: string): number => passiveOf(id)?.regen ?? 0;
+/** 이 사람이 1초에 스스로 채우는 **비율** (0 이면 그런 패시브가 없다) */
+export const regenPctOf = (id: string): number => passiveOf(id)?.regenPct ?? 0;
+
+/**
+ * 이 사람이 1초에 스스로 채우는 **양.**
+ *
+ * 비율에 제 최대 체력을 곱한다. 최소 1 이다 — 반올림해서 0 이 되면 패시브가
+ * 켜져 있는데 아무 일도 안 일어난다.
+ */
+export function regenOf(c: OwnedChar): number {
+  const pct = regenPctOf(c.id);
+  return pct > 0 ? Math.max(1, statOf(c).hp * pct) : 0;
+}
 
 /**
  * 다칠수록 빨라지는 배수. 그런 패시브가 없으면 늘 1.
@@ -202,6 +227,33 @@ export function frenzyMul(id: string, cur: number, max: number): number {
 export const FRENZY_SHOW = 1.10;
 
 /**
+ * 버프를 주던 사람이 쓰러진 뒤 **그 버프가 남아 있는 시간** (ms).
+ *
+ * ## 왜 그 자리에서 안 끄나
+ *
+ * 아녜스가 죽는 순간 넷의 공격력이 10% 떨어지는데, 예전에는 화면에서 그
+ * 일이 **아무 표시 없이** 일어났다. 로고 네 개가 한 프레임에 사라지므로
+ * 눈으로 좇을 수가 없고, 사라진 뒤에는 원래 없었던 것과 구분이 안 된다.
+ *
+ * 2초를 더 살려 두고 그동안 **깜빡인다** (`core/status` 의 `BLINK_MS`).
+ * 네 번 깜빡이는 동안 "아녜스가 죽었고, 곧 이 버프가 없어진다" 가 읽힌다.
+ *
+ * 값을 `BLINK_MS` 와 같게 두는 것이 중요하다. 깜빡이는 동안에도 버프가
+ * 실제로 걸려 있어야 로고가 거짓말을 안 한다 — 깜빡임이 끝나는 순간과
+ * 효과가 꺼지는 순간이 같은 순간이다.
+ */
+export const FADE_MS = BLINK_MS;
+
+/**
+ * 쓰러졌지만 아직 버프가 남아 있나 (`FADE_MS`).
+ *
+ * @param fade 사람별 남은 시간 (ms). `BattleState.fade`
+ */
+export const fadingOut = (
+  fade: Record<string, number> | undefined, who: string,
+): boolean => (fade?.[who] ?? 0) > 0;
+
+/**
  * 지금 이 사람의 **실제 공격력**.
  *
  * 원래 공격력 × 파티 배수 × 약화.
@@ -218,7 +270,7 @@ export function liveAtk(
 /**
  * 지금 이 사람의 **실제 공격속도** (초당 횟수).
  *
- *   (원래 + 아군 보너스) × 다칠수록 빨라지는 배수 × 둔화
+ *   (원래 + 아군 보너스) × 다칠수록 빨라지는 배수 × 둔화 × 신속
  *
  * 아군 보너스가 **덧셈이라 제일 먼저** 들어간다. 나중에 더하면 둔화가 그
  * 보너스를 안 깎아서, 둔화에 걸린 채로도 원래보다 빠른 일이 생긴다.
@@ -233,7 +285,15 @@ export function liveSpd(
   hex: readonly Hex[],
 ): number {
   const base = statOf(c).spd + allySpdAdd(alive);
-  const mul = frenzyMul(c.id, cur, statOf(c).hp) * mulOf(hex, 'st_slow');
+  /*
+    셋이 다 곱해진다 — 다칠수록 빨라지는 것(비앙카), 둔화, 신속.
+
+    신속은 **올려 주는 쪽**이라 `upOf` 로 읽는다 (`core/status`). 리안느의
+    광란이 거는 2배가 여기 들어온다. 둔화에 걸린 채로 광란을 쓰면 1.8 배가
+    되는데, 그게 맞다 — 둘 다 실제로 걸려 있다.
+  */
+  const mul = frenzyMul(c.id, cur, statOf(c).hp)
+    * mulOf(hex, 'st_slow') * upOf(hex, 'st_haste');
   return Math.max(0.05, base * mul);
 }
 
@@ -274,6 +334,14 @@ export interface Mark {
   good: boolean;
   /** 사람이 읽는 이름. 아직 쓰는 데는 없지만 로고만으로 안 통할 때를 위해 */
   label: string;
+  /**
+   * 이제 곧 꺼지나 — 화면이 이 칸을 깜빡인다 (`screens/home/StatusRow`).
+   *
+   * 두 경우에 켜진다. 걸린 것이 `BLINK_MS` 안에 풀릴 때, 그리고 버프를 주던
+   * 사람이 쓰러져 그 버프가 사그라드는 중일 때 (`FADE_MS`). 둘 다 뜻이
+   * 같으므로 화면에서도 같아야 한다 — **곧 없어진다.**
+   */
+  blink: boolean;
 }
 
 /**
@@ -310,25 +378,38 @@ export function marksOf(
   max: number,
   hex: readonly Hex[],
   alive: readonly OwnedChar[] = [],
+  /**
+   * 쓰러졌지만 버프가 아직 사그라드는 중인 사람들 (`BattleState.fade`).
+   *
+   * 여기 들어 있는 사람의 버프는 **깜빡이면서** 뜬다. 안 주면 아무도 안
+   * 깜빡인다 — 화면 밖(캐릭터 창 미리보기 같은 곳)에서는 판이 안 돌아가므로
+   * 사그라들 것도 없다.
+   */
+  fade?: Record<string, number>,
 ): readonly Mark[] {
   /* 쓰러진 사람에게는 아무것도 안 뜬다 — 시체에 붙은 버프는 거짓말이다 */
   if (cur <= 0) return NO_MARK;
 
   const good: Mark[] = [];
-  const mark = (p: PassiveDef): Mark => ({
-    set: 'passive_icon', name: p.art, good: true, label: p.name,
+  const mark = (p: PassiveDef, blink: boolean): Mark => ({
+    set: 'passive_icon', name: p.art, good: true, label: p.name, blink,
   });
 
   /* 제 것이 먼저 — 이 칸은 이 사람의 칸이다 */
   const mine = passiveOf(who);
-  if (mine?.regen) good.push(mark(mine));
-  if (mine?.frenzy && frenzyMul(who, cur, max) >= FRENZY_SHOW) good.push(mark(mine));
+  if (mine?.regenPct) good.push(mark(mine, false));
+  if (mine?.frenzy && frenzyMul(who, cur, max) >= FRENZY_SHOW) good.push(mark(mine, false));
 
-  /* 그다음이 남이 주는 것 — 파티 자리 순서라 매번 같은 차례로 뜬다 */
+  /*
+    그다음이 남이 주는 것 — 파티 자리 순서라 매번 같은 차례로 뜬다.
+
+    `alive` 에는 **쓰러졌지만 아직 사그라드는 중인 사람**도 들어 있다
+    (`core/party` 의 `livingMembers`). 그 사람이 주는 버프는 깜빡인다.
+  */
   for (const c of alive) {
     const p = passiveOf(c.id);
     if (!p || !(p.allyAtk || p.allySpd)) continue;
-    good.push(mark(p));
+    good.push(mark(p, fadingOut(fade, c.id)));
   }
 
   const bad: Mark[] = hex
@@ -336,12 +417,57 @@ export function marksOf(
     .map((h) => ({
       set: 'status_icon' as const,
       name: h.id,
-      good: false,
+      /*
+        **걸린 것도 좋은 것일 수 있다.** 리안느의 광란이 거는 신속이 그렇다
+        — 기술이 건 것이라 상태 로고로 뜨지만, 나쁜 것이 아니다.
+      */
+      good: GOOD.has(h.id),
       label: STATUS_NAME[h.id],
+      /* 풀리기 2초 전부터 깜빡인다 — 언제 풀렸는지 알 수 있게 */
+      blink: dying(h.ms),
     }));
 
-  if (!good.length && !bad.length) return NO_MARK;
-  return [...good, ...bad];
+  const all = [...good, ...bad.filter((m) => m.good), ...bad.filter((m) => !m.good)];
+  if (!all.length) return NO_MARK;
+  return all;
+}
+
+/**
+ * **적** 머리 위에 뜨는 것들.
+ *
+ * 아군 쪽(`marksOf`)보다 훨씬 단순하다 — 적에게는 패시브가 없으므로 전부
+ * 상태 로고이고, 좋은 것도 없다 (걸리는 것이 다 아군이 건 것이다).
+ *
+ * ## 왜 적에게도 띄우나
+ *
+ * 비앙카의 화산이 5초 동안 회복을 반으로 깎는데, 그게 화면 어디에도 안 나오면
+ * **걸렸는지 안 걸렸는지 알 수가 없다.** 우두머리가 회복하는 순간에 숫자가
+ * 작아지는 것으로 짐작하는 수밖에 없는데, 그건 두 판을 비교해야 보인다.
+ *
+ * 도발도 여기 뜬다. 그건 적 하나하나에 걸린 것이 아니라 판 전체에 걸린
+ * 것이지만 (`BattleState.taunt`), 보는 사람 입장에서는 "저놈들이 지금 이졸데만
+ * 노린다" 라서 적 머리 위가 맞는 자리다.
+ *
+ * @param taunted 지금 도발에 걸려 있나 (`BattleState.taunt`)
+ */
+export function foeMarksOf(
+  hex: readonly Hex[], taunted: boolean, tauntMs = 0,
+): readonly Mark[] {
+  const out: Mark[] = [];
+  if (taunted) {
+    out.push({
+      set: 'status_icon', name: 'st_taunt', good: false,
+      label: STATUS_NAME.st_taunt, blink: dying(tauntMs),
+    });
+  }
+  for (const h of hex) {
+    if (h.ms <= 0) continue;
+    out.push({
+      set: 'status_icon', name: h.id, good: GOOD.has(h.id),
+      label: STATUS_NAME[h.id], blink: dying(h.ms),
+    });
+  }
+  return out.length ? out : NO_MARK;
 }
 
 /** 아무것도 안 걸린 상태 — 매번 새 배열을 만들면 화면이 계속 다시 그려진다 */
