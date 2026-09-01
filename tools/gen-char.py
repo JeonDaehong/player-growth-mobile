@@ -1896,7 +1896,8 @@ VERTICAL COMPOSITION 에 있습니다.
 
 ⚠ 여기도 `"append": true` 가 필요합니다 — §A·§D 와 같은 폴더입니다.
 
-%(e2)s"""
+%(e2)s
+%(f)s"""
 
 
 os.makedirs(OUT_DIR, exist_ok=True)

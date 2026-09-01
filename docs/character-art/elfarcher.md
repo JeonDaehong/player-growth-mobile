@@ -937,3 +937,166 @@ SHEET LAYOUT:
 
 ⚠ 여기도 `"append": true` 가 필요합니다 — §A·§D 와 같은 폴더입니다.
 
+
+
+---
+
+## §F. 두 번째 기술 — 광란 3프레임 (Gemini)
+
+**§E 는 무릎을 꿇고 이건 서 있습니다.** 화살비는 자리를 잡고 하늘로
+쏘는 기술이고, 광란은 제 몸을 조였다 푸는 기술입니다.
+
+**화살을 안 겁니다.** 세 칸 어디에도 시위에 걸린 화살이 없어야 합니다 —
+걸리는 순간 화살비와 같은 기술이 됩니다.
+
+1번은 제일 좁고 2번은 제일 넓습니다. 그 대비가 "터졌다" 를 만듭니다.
+
+속도선과 잔상은 **안 그립니다** — 화면이 도형으로 그립니다
+(`screens/home/SkillFx` 의 `haste`).
+
+### 왜 칸을 따로 받나
+
+넷이 기술을 하나씩 가지던 때는 `sk_1..3` 한 벌이면 됐습니다. 이제 **둘씩**
+가지는데, 같은 칸을 쓰면 코스트 15~20 짜리 기술이 4~5 짜리와 화면에서
+똑같아 보입니다.
+
+아직 안 들어온 동안에는 §E 칸으로 떨어지므로 게임은 그대로 돌아갑니다
+(`screens/home/Fighter` 의 `skFramesOf`) — 도착하는 순간 저절로 바뀝니다.
+
+| 셀 | 1 | 2 | 3 |
+|---|---|---|---|
+| | 1 조임 | 2 터짐 | 3 다시 겨눔 |
+| id | `sk2_1` | `sk2_2` | `sk2_3` |
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a 3-frame animation of ONE single character WINDING HERSELF UP — she is not shooting anything. She stands throughout.
+
+A slight elf woman, watchful and economical — she never makes a movement she does not need. She is the last of something and does not talk about it.
+EARS: long and swept back, clearly elven, and they are the first thing anyone notices.
+HAIR: gathered into a long high ponytail that falls to her waist, with two thin braids hanging in front of her ears. A single feather is tied into the gather of the ponytail.
+CLOTHING — LIGHT, NOTHING RIGID: a short hooded tunic belted at the waist, worn over a fitted long-sleeved underlayer. The hood is DOWN in every frame. A single leather bracer laced on her LEFT forearm (the bow arm), a half-cloak hanging behind her right shoulder, wrapped leggings and soft boots laced to the knee. No plate anywhere.
+QUIVER: a slim quiver worn low on her RIGHT hip, not on her back, with four or five fletched shafts standing out of it.
+WEAPON: a SHORT recurve bow, about half her height — chin to hip when stood on end. Pale dry wood with a pronounced double curve and bound grip. It is small, and that is the point.
+SILHOUETTE (protect this above all): long swept ears and a long high ponytail above a small light figure, plus the compact double-curved bow. Fast and thin, nothing heavy anywhere. That is how she is recognised at 54 pixels.
+
+The 3 cells, in this exact order:
+
+Cell 1 — coiling. She has dropped her stance — knees bent, weight low and centred, bow held horizontally across her body in BOTH hands and pulled in tight against her chest. Shoulders hunched forward, head down. Everything is pulled IN. This is the NARROWEST cell.
+Cell 2 — the release. Her head has snapped UP and both arms have thrown WIDE and back — bow out in the left hand, right hand open and empty, chest forward, one foot driven back. The ponytail is thrown straight out behind her. Everything is pushed OUT. This is the WIDEST cell.
+Cell 3 — ready again. She has come back to a shooting stance — side-on, bow held upright in the left hand, right hand at the string but not drawing, weight forward on the front foot. She is lower and tighter than her §A idle: she is going to move fast now.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+CAMERA — SLIGHT HIGH-ANGLE SIDE VIEW (three-quarter). This is not a flat side view.
+
+- The camera sits a little ABOVE the character and slightly to the side, looking down
+  at roughly 15-20 degrees. You can see a little of the top of the shoulders and the
+  upper surface of the boots.
+- The body is turned about 20 degrees toward the viewer from pure profile — the far
+  shoulder is visible behind the near one, and you can see both eyes on the face.
+- The FEET sit slightly forward and lower than the torso, as if standing on a floor
+  plane that recedes upward into the background. This is the single most important
+  part: the game draws a receding floor under this sprite, and a flat side-on figure
+  will look like it is standing in a different world from the ground.
+- Facing RIGHT. Every frame faces right. The game mirrors sprites in code where it
+  needs them facing the other way — never draw a left-facing frame.
+
+NEVER DRAW THE GROUND.
+
+The game draws its own floor under these sprites (a receding quarter-view plane) and
+composites the artwork on top of it. Anything floor-like inside a cell lands on the
+screen as a white slab sitting in mid-air.
+
+So there is NO ground line, NO horizon, NO floor plane, NO paving, NO grass, NO dirt,
+NO rubble, NO cracks, NO drop shadow, and NO dust lying on a surface. Not even a thin
+line under the feet.
+
+THE GROUND IS IMPLIED BY THE POSE, NOT DRAWN. Where a description says a weapon is
+"planted in the ground", or a knee is "on the floor", or something "bursts out of the
+ground", it means: draw the figure and the effect at that height, standing on nothing.
+The bottom of the boots, the point of the blade, the base of the burst — they simply
+stop, with pure black beneath them.
+
+Contact is sold by the POSE (a bent knee, a braced arm, a low burst opening upward),
+never by drawing what is being touched.
+
+MOE / ANIME REGISTER — she is one of the pretty ones.
+
+- Modern Japanese moe anime style. Soft face with a small pointed chin, and LARGE
+  expressive eyes taking up roughly a third of the face height, each with one big
+  white catchlight left unfilled.
+- Nose is one pixel notch or nothing. Small mouth. No realistic facial structure —
+  no cheekbones, no jaw shading, no nostrils.
+- Head slightly large for the body: about a 1:6.5 head-to-body ratio, NOT a realistic
+  1:8. Slim waist, soft sloping shoulders, long legs.
+- HAIR IS THE SILHOUETTE. Loose flowing strands, and one stray cowlick standing up
+  from the crown.
+- Charming and appealing, never grim, never grubby. She is solemn, but soft.
+
+ONE CHARACTER, MANY FRAMES.
+
+- Every cell is THE SAME PERSON: same face, same hair length and shape, same armour
+  and clothing down to every strap and buckle, same weapon, same proportions.
+- ONLY the pose changes between cells. Nothing else, ever.
+- ASYMMETRY IS LOCKED. Anything the description places on her LEFT or RIGHT stays on
+  that side of HER BODY in every frame, including frames where she turns.
+- Draw all cells in one pass as a single animation sheet, not as separate drawings
+  that happen to share a description.
+- Do NOT offer variations, alternate outfits, or design options. This is production
+  art, not a concept exploration.
+
+READABILITY — this is displayed at about 54 pixels tall in game.
+
+- The silhouette must be identifiable at that size with every detail thrown away.
+  Her one unmistakable shape is stated in the description — protect it above all else.
+- The face needs at most two eyes, two brows, one mouth line and a hair shape.
+  A nose is one pixel notch or nothing.
+- Do not render fabric texture, individual hair strands, or skin shading. At this
+  size they become noise. Big shapes, hard edges, wide dither fields.
+- Weapon and cape read as bold solid shapes, not as thin outlines.
+
+NOTHING MAY BE CUT OFF.
+- SHE STANDS IN ALL THREE CELLS. The §E sheet has her kneeling; if she kneels here the two skills read the same at 54 pixels.
+- No arrow is nocked and none is fired in any cell.
+- Her body fills about 55% of the cell height. Cell 2 is the widest — size the sheet from it.
+- Her feet sit at the same HEIGHT in all three cells — an alignment, not a drawn line.
+- Leave at least 8px of empty black between the outermost pixel and every magenta line.
+
+SHEET LAYOUT:
+- Arrange the cells in an exact uniform grid: 3 columns x 1 row.
+- Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a magenta
+  border around the outer edge of the whole sheet.
+- Magenta appears ONLY on these separator lines, never inside a cell.
+- Every cell is exactly the same size. Reading order is left to right, then top to
+  bottom.
+- Do not add extra rows of variants. Exactly 1 row, exactly 3 cells.
+- EVERY CELL MUST BE SQUARE. With a 3x1 grid that means the whole sheet is
+  3:1 — output it at 1536x512.
+  A square cell is required. A tall narrow cell cannot hold a weapon swung forward,
+  and a short wide cell cannot hold one raised. Both have been tried and both
+  clipped.
+```
+
+```json
+{ "file": "<§F 파일명>", "name": "elfarcher", "expect": [3, 1], "append": true,
+  "labels": ["sk2_1", "sk2_2", "sk2_3"] }
+```
+
+`append` 입니다 — 같은 폴더에 **덧붙입니다.** 빼면 §A 여덟 칸이 지워집니다.
