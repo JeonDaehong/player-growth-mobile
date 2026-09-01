@@ -1373,38 +1373,75 @@ SECOND = {
 
     'elfarcher': {
         'name': '광란',
-        'head': 'SUBJECT: a 3-frame animation of ONE single character WINDING '
-                'HERSELF UP — she is not shooting anything. She stands throughout.'
+        'head': 'SUBJECT: a 3-frame animation of ONE single character GATHERING '
+                'HERSELF — drawing power in, holding it, and letting it settle '
+                'into her. She is not shooting anything and she stands throughout.'
                 + NL + NL + '@LOCK@',
         'frames': [
-            ('sk2_1', '1 조임',
-             'coiling. She has dropped her stance — knees bent, weight low and '
-             'centred, bow held horizontally across her body in BOTH hands and '
-             'pulled in tight against her chest. Shoulders hunched forward, head '
-             'down. Everything is pulled IN. This is the NARROWEST cell.'),
-            ('sk2_2', '2 터짐',
-             'the release. Her head has snapped UP and both arms have thrown WIDE '
-             'and back — bow out in the left hand, right hand open and empty, chest '
-             'forward, one foot driven back. The ponytail is thrown straight out '
-             'behind her. Everything is pushed OUT. This is the WIDEST cell.'),
-            ('sk2_3', '3 다시 겨눔',
-             'ready again. She has come back to a shooting stance — side-on, bow '
-             'held upright in the left hand, right hand at the string but not '
-             'drawing, weight forward on the front foot. She is lower and tighter '
-             'than her §A idle: she is going to move fast now.'),
+            ('sk2_1', '1 끌어모음',
+             'drawing it in. She stands with feet planted and has brought BOTH '
+             'hands in to her chest, one closed over the other, elbows tucked '
+             'tight, shoulders rounded forward, head bowed over her hands. The bow '
+             'is held vertically in the crook of her left arm, not being used. Her '
+             'ponytail and half-cloak have been pulled INWARD and forward toward '
+             'her hands, as if everything loose is being drawn to that one point. '
+             'This is the NARROWEST and most closed cell.'),
+            ('sk2_2', '2 참음',
+             'the hold. Still standing on the same spot, she has NOT opened yet — '
+             'this is the cell where she is containing it. Her head has come UP and '
+             'back, eyes closed, jaw set; her hands are still clasped at her chest '
+             'but the arms are now RIGID and trembling-tight, elbows pushed down '
+             'and out. Her back has arched slightly. Ponytail and cloak are lifting '
+             'STRAIGHT UP off her shoulders, floating, no longer hanging.' + NL
+             + '  This is the TALLEST cell. Nothing has been released — the whole '
+             'pose is a body holding something in.'),
+            ('sk2_3', '3 실림',
+             'it has settled into her. She has come back to a shooting stance — '
+             'side-on, bow now gripped upright in the left hand, right hand at the '
+             'string but not drawing, weight forward on the front foot, chin down '
+             'and eyes forward. Lower, tighter and more coiled than her §A idle. '
+             'The hair and cloak are coming back down but have not settled yet.'),
         ],
-        'rules': '- SHE STANDS IN ALL THREE CELLS. The §E sheet has her kneeling; '
-                 'if she kneels here the two skills read the same at 54 pixels.' + NL
-                 + '- No arrow is nocked and none is fired in any cell.' + NL
+        'rules': '- SHE STANDS IN ALL THREE CELLS and her feet never move. The §E '
+                 'sheet has her kneeling; if she kneels here the two skills read '
+                 'the same at 54 pixels.' + NL
+                 + '- NOTHING LEAVES HER BODY in any cell. No arrow, no shot, no '
+                 'burst, no thrown light. What she gathers stays in her — that is '
+                 'the difference between this skill and every other one she has.'
+                 + NL
+                 + '- No arrow is nocked in any cell.' + NL
+                 + '- The HAIR AND CLOAK carry the whole effect: pulled inward in '
+                 'cell 1, floating straight up in cell 2, falling in cell 3. That '
+                 'is the only way to draw invisible force in two colours.' + NL
                  + '- Her body fills about 55% of the cell height. Cell 2 is the '
-                 'widest — size the sheet from it.',
-        'intro': """**§E 는 무릎을 꿇고 이건 서 있습니다.** 화살비는 자리를 잡고 하늘로
-쏘는 기술이고, 광란은 제 몸을 조였다 푸는 기술입니다.
+                 'tallest — size the sheet from it and leave room above her head '
+                 'for the lifted hair.',
+        'intro': """**기를 모으는 동작입니다.** 쏘는 것도 터뜨리는 것도 아니고, 끌어모아서
+참았다가 제 몸에 싣습니다.
 
-**화살을 안 겁니다.** 세 칸 어디에도 시위에 걸린 화살이 없어야 합니다 —
-걸리는 순간 화살비와 같은 기술이 됩니다.
+## 아무것도 몸을 안 떠납니다
 
-1번은 제일 좁고 2번은 제일 넓습니다. 그 대비가 "터졌다" 를 만듭니다.
+세 칸 어디에도 화살·빛·파동이 나가면 안 됩니다. 나가는 순간 화살비(§E)와
+같은 종류의 기술이 되고, "5초간 제 공격속도가 두 배" 라는 것이 화면에서
+사라집니다.
+
+## 머리카락과 망토가 연출 전부입니다
+
+흑백 2색에는 오라도 광채도 없습니다. 보이지 않는 힘을 그리는 방법은 **거기
+휩쓸리는 것**을 그리는 것뿐입니다 —
+
+| 칸 | 머리카락·망토 |
+|---|---|
+| 1 끌어모음 | 손 쪽으로 **안으로** 딸려 온다 |
+| 2 참음 | 어깨에서 **똑바로 위로** 떠 있다 |
+| 3 실림 | 내려오는 중이다 |
+
+2번 칸이 제일 높습니다. 머리 위로 뜬 머리카락이 들어갈 자리를 남기세요.
+
+## §E 는 무릎 꿇고 이건 서 있습니다
+
+화살비는 자리를 잡고 하늘로 쏘는 기술이고, 광란은 선 채로 제 몸을 조이는
+기술입니다. 그 하나로 54px 에서 갈립니다.
 
 속도선과 잔상은 **안 그립니다** — 화면이 도형으로 그립니다
 (`screens/home/SkillFx` 의 `haste`).""",

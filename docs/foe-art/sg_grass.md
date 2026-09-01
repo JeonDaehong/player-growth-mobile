@@ -240,6 +240,23 @@ SHEET LAYOUT:
 
 ## 다시 뽑을 때
 
+**선만 남았을 때** (덩어리 없이 가는 획이 엉킴)
+
+```
+The creature has come out as a tangle of thin white strokes with no solid mass
+anywhere. At game size those strokes merge into each other and it reads as a
+smudge, not a creature.
+
+It needs a BODY. Find the single largest part of it — the trunk, the abdomen, the
+head, the main mound — and draw that as ONE SOLID FILLED WHITE MASS at least a
+third of the creature's height, with hard unbroken edges. Everything thin (limbs,
+vines, branches, tendrils, antennae) grows OUT of that mass and must be at least
+three pixels thick where it leaves it.
+
+Fewer, thicker parts. Delete half the thin strokes; make the survivors twice as
+thick. Keep the pose and the identity exactly as they are.
+```
+
 **흰 덩어리로 나왔을 때** (실루엣 안이 통째로 메워짐)
 
 ```
