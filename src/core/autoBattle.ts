@@ -1239,6 +1239,27 @@ export const rowMelee = (stage: number): boolean[] => {
 export const STAGE_HP_POW = 0;
 export const STAGE_ATK_POW = 0;
 
+/**
+ * ⚠ **테스트 모드 — 1~20판 적 수치를 한 값으로 눌러 둔다.**
+ *
+ * 스무 판을 손으로 굴려 보려면 판마다 다른 체력이 오히려 방해가 된다. 어디가
+ * 벽인지 보려는 게 아니라 **기술과 연출이 제대로 도는지**를 보려는 것이라,
+ * 모든 판이 같은 두께여야 비교가 된다.
+ *
+ * ## 표를 안 갈아엎는다
+ *
+ * `STAGES` 의 수치는 손으로 맞춘 것이고 `docs/FOE_TABLE.md` 가 그 표를 그대로
+ * 싣는다. 거기를 직접 고치면 맞춰 둔 값이 사라져서 **되돌릴 수가 없다.**
+ * 여기서 읽을 때만 덮어쓰면 표는 그대로 남고, 이 상수 하나를 `null` 로
+ * 바꾸는 순간 원래대로 돌아온다.
+ *
+ * `FREE_ENHANCE`(`core/chars`) · `FREE_BOSS` 와 짝이다 — 셋 다 직접 굴려
+ * 보려고 켜 둔 스위치이고, **출시 전에 같이 끈다.**
+ */
+export const FLAT_FOES: {
+  hp: number; atk: number; bossHp: number; bossAtk: number;
+} | null = { hp: 2000, atk: 20, bossHp: 30000, bossAtk: 20 };
+
 export function foeOf(stage: number, boss: boolean, k = 0): Foe {
   const s = Math.max(1, Math.floor(stage));
   const st = stageOf(s);
@@ -1267,8 +1288,16 @@ export function foeOf(stage: number, boss: boolean, k = 0): Foe {
       체력은 0.85, 공격은 0.35 로 낮췄다. 체력이 더 가파른 이유는, 오래 걸리는
       쪽은 지루할 뿐이지만 아픈 쪽은 곧바로 벽이 되기 때문이다.
     */
-    hp: Math.max(1, Math.round(kind.hp * Math.pow(s, STAGE_HP_POW))),
-    atk: Math.max(1, Math.round(kind.atk * Math.pow(s, STAGE_ATK_POW))),
+    /*
+      테스트 스위치가 켜져 있으면 여기서 눌러 쓴다 (`FLAT_FOES`). 종의 수치도
+      판의 배수도 그대로 남고, **읽는 순간에만** 덮인다.
+    */
+    hp: FLAT_FOES
+      ? (boss ? FLAT_FOES.bossHp : FLAT_FOES.hp)
+      : Math.max(1, Math.round(kind.hp * Math.pow(s, STAGE_HP_POW))),
+    atk: FLAT_FOES
+      ? (boss ? FLAT_FOES.bossAtk : FLAT_FOES.atk)
+      : Math.max(1, Math.round(kind.atk * Math.pow(s, STAGE_ATK_POW))),
     spd: kind.spd,
     def: kind.def ?? 0,
     res: kind.res ?? 0,
@@ -1289,6 +1318,32 @@ export function foeOf(stage: number, boss: boolean, k = 0): Foe {
 }
 
 /** 잡았을 때 주는 골드 */
+/**
+ * **표에 적힌 그대로**의 수치 — 테스트 스위치를 안 탄다 (`FLAT_FOES`).
+ *
+ * `foeOf` 는 스위치가 켜져 있으면 눌러 쓴 값을 준다. 그건 실제로 싸울 때
+ * 맞는 값이라 그래야 하지만, **곡선을 보는 검사**는 그걸 보면 안 된다 —
+ * "판이 오를수록 두꺼워지나" 를 물었는데 스위치 때문에 전부 같으면, 검사가
+ * 잡아야 할 것(표가 망가졌다)과 잡지 말아야 할 것(스위치가 켜져 있다)을
+ * 구분 못 한다.
+ *
+ * 그래서 표를 직접 읽는 창구를 하나 연다. 여기는 언제나 진짜 값이다.
+ */
+export function foeSpec(
+  stage: number, boss: boolean, k = 0,
+): { hp: number; atk: number; spd: number; melee: boolean } {
+  const s = Math.max(1, Math.floor(stage));
+  const st = stageOf(s);
+  const kind = boss ? st.boss : st.kinds[k] ?? st.kinds[0];
+  return {
+    hp: Math.max(1, Math.round(kind.hp * Math.pow(s, STAGE_HP_POW))),
+    atk: Math.max(1, Math.round(kind.atk * Math.pow(s, STAGE_ATK_POW))),
+    spd: kind.spd,
+    /* 붙어 싸우나 — 스위치와 상관없는 표의 성질이라 여기서도 그대로 준다 */
+    melee: kind.melee,
+  };
+}
+
 export function killGold(stage: number, boss: boolean): number {
   const s = Math.max(1, Math.floor(stage));
   return Math.floor(6 * Math.pow(s, 1.05) * (boss ? 20 : 1));
