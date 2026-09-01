@@ -70,6 +70,36 @@ export const STATUS_NAME: Record<StatusId, string> = {
 };
 
 /**
+ * **무슨 일이 일어나는가** — 이름 말고 효과.
+ *
+ * 이름만으로는 안 통했다. `출혈` 도 `중독` 도 `시듦` 도, 처음 보는 사람에게는
+ * 그냥 낱말이다 — 로고를 외운 사람만 읽을 수 있는 표시라는 점에서 로고와
+ * 다를 게 없다.
+ *
+ * 그래서 걸리는 순간 머리 위에 이걸 띄운다 (`screens/home/Fighter` 의
+ * `StatusNote`). 한 번만 뜨고 사라지므로 화면이 안 붐비고, 그 한 번으로
+ * 로고와 뜻이 묶인다.
+ *
+ * 짧게 적는다. 인물 하나 폭에 한 줄로 들어가야 하고, 자세한 것은 캐릭터
+ * 창이 맡는다.
+ */
+export const STATUS_WHAT: Record<StatusId, string> = {
+  st_bleed: '지속 피해',
+  st_poison: '지속 피해',
+  st_stun: '행동 불가',
+  st_silence: '스킬 봉인',
+  st_slow: '공격속도 감소',
+  st_weak: '공격력 감소',
+  st_break: '방어력 감소',
+  st_wither: '받는 치유 감소',
+  st_taunt: '이쪽만 노린다',
+  st_rage: '공격력 증가',
+  st_guard: '방어력 증가',
+  st_regen: '지속 회복',
+  st_haste: '공격속도 증가',
+};
+
+/**
  * 좋은 것인가.
  *
  * 화면이 이걸로 **차례를 가른다** — 좋은 것이 먼저, 나쁜 것이 뒤.

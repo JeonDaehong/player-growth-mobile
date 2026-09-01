@@ -838,6 +838,19 @@ export function DamageNumber({
         fontFamily: 'monospace',
         fontWeight: 'bold',
         fontSize: big ? 20 : 15,
+        /*
+          ── 검은 그림자를 지고 다닌다 ──
+
+          흰 숫자가 **흰 그림 위에** 놓이는 일이 생겼다. 우두머리는 몸이
+          커서 머리 위에 두 줄밖에 안 들어가고, 넘치는 줄은 제 몸 위로
+          내려 쌓기 때문이다 (`BattleView` 의 `numTop`).
+
+          그림자가 없으면 그 줄들은 흰 데 흰 것이라 통째로 안 보인다.
+          배경이 밝은 판에서도 같은 일이 있었다.
+        */
+        textShadowColor: BLACK,
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
         opacity: fade,
         transform: [
           /* 처음 20% 에서 확 튀어 오르고, 나머지는 천천히 떠오른다 */
@@ -963,6 +976,112 @@ export function HurtTint({
       }}
     >
       {children}
+    </Animated.View>
+  );
+}
+
+/** 한 줄이 떴다 사라지기까지 (ms) */
+export const NOTE_MS = 1600;
+
+/**
+ * ── 걸리는 순간 머리 위에 뜨는 한 줄 ──
+ *
+ * ## 로고만으로는 안 통했다
+ *
+ * 걸려 있는 것은 파티 칸에 로고로 뜬다 (`StatusRow`). 테두리 색이 좋고
+ * 나쁨을 말하고 자리가 차례를 말하지만, **그 로고가 무슨 뜻인지**는 아무
+ * 데도 안 적혀 있었다. 열두 그림을 외운 사람만 읽을 수 있는 표시였다.
+ *
+ * 그렇다고 로고 옆에 늘 글을 붙이면 파티 칸 넷이 통째로 글자밭이 된다.
+ * 86px 짜리 칸에 넷까지 들어가는 자리다.
+ *
+ * ## 처음 한 번만 말한다
+ *
+ * 걸리는 **그 순간에만** 머리 위에서 한 줄이 떴다 사라진다. 그때 로고도
+ * 같이 켜지므로, 한 번 보면 그림과 뜻이 묶인다 — 그다음부터는 로고만으로
+ * 읽힌다. 화면에 남는 것은 결국 로고뿐이라 붐비지 않는다.
+ *
+ * 상시로 걸리는 것(패시브)은 **판마다 한 번**이다. 판이 바뀔 때마다 다시
+ * 붙는 것이라 매번 말하면 잔소리가 되고, 아예 안 하면 판을 넘겨 온 사람은
+ * 영영 못 본다.
+ *
+ * ## 글자만 띄운다
+ *
+ * 상자도 테두리도 안 두른다. 이 자리는 피해 숫자와 말풍선이 이미 쓰는
+ * 자리고, 여기에 상자 하나를 더 얹으면 정작 숫자가 안 보인다. 검은
+ * 그림자만 지워서 밝은 배경에서도 읽히게 한다.
+ */
+export function StatusNote({
+  text, good, i,
+}: {
+  text: string;
+  /** 좋은 것인가 — 초록과 빨강으로 갈린다 (`ui/theme`) */
+  good: boolean;
+  /** 몇 번째 줄인가 — 한꺼번에 여럿 걸리면 위로 쌓인다 */
+  i: number;
+}) {
+  const t = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const a = Animated.timing(t, {
+      toValue: 1, duration: NOTE_MS, easing: Easing.linear, useNativeDriver: true,
+    });
+    a.start();
+    /* 멈출 때 되돌린다 — `stop()` 은 그 자리에 두고 멈춘다 */
+    return () => { a.stop(); t.setValue(0); };
+  }, [t]);
+
+  /*
+    **떴다가 머물다 서서히 사라진다.**
+
+    앞 8% 에서 켜지고, 6할까지 그대로 있다가, 남은 4할 동안 스러진다.
+    읽는 데 필요한 것은 머무는 시간이라 그쪽을 길게 잡았다.
+
+    `interpolate` 는 한 번만 만든다 — 렌더마다 부르면 값에 가지가 쌓인다.
+  */
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.08, 0.6, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+  /* 아주 조금 떠오른다 — 많이 올리면 숫자와 자리를 다툰다 */
+  const rise = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [0, -7],
+  }), [t]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        /*
+          머리 **한참 위**다. 피해 숫자가 머리 바로 위를 쓰고(`top: -11`)
+          말풍선이 그 위를 쓰므로, 셋이 같은 자리를 다투면 제일 급한 숫자가
+          가려진다.
+        */
+        bottom: '100%',
+        marginBottom: 16 + i * 12,
+        /* 인물보다 넓어도 좋다 — `받는 치유 감소` 는 한 줄이 인물 두 배다 */
+        left: -30,
+        right: -30,
+        alignItems: 'center',
+        opacity: fade,
+        transform: [{ translateY: rise }],
+        zIndex: 48,
+      }}
+    >
+      <Animated.Text
+        style={{
+          color: good ? GOOD_C : BAD_C,
+          fontFamily: MONO,
+          fontSize: 9,
+          fontWeight: '700',
+          /* 배경이 밝은 판에서도 읽히게 (`DamageNumber` 와 같은 이유) */
+          textShadowColor: BLACK,
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 3,
+        }}
+      >
+        {text}
+      </Animated.Text>
     </Animated.View>
   );
 }

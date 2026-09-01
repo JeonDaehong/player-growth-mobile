@@ -38,9 +38,12 @@ import {
 
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
+import type { Mark } from '@/core/passives';
 import { BAD_C, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
-import { DamageNumber, HealMarks, HitBurst, HurtTint, SkillShout } from './HitFx';
+import {
+  DamageNumber, HealMarks, HitBurst, HurtTint, NOTE_MS, SkillShout, StatusNote,
+} from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
 import { BodyFlash, SkillFx } from './SkillFx';
@@ -178,7 +181,7 @@ type Frame = 'guard' | 'lose'
 
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
-  struck, purify, cut, onCharge, damage, bless, advance, leapTo,
+  struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -256,6 +259,20 @@ function FighterView({
    * 있어서, 맞은 사람 발밑에 또 달면 같은 말이 두 번 나온다.
    */
   struck: number;
+  /**
+   * 지금 이 사람에게 걸려 있는 것들 (`core/passives` 의 `marksOf`).
+   *
+   * 화면에 늘 그리는 것은 파티 칸이 맡는다 (`StatusRow`). 여기서는 **새로
+   * 걸린 것만** 골라서 머리 위에 한 줄 띄운다.
+   */
+  marks: readonly Mark[];
+  /**
+   * 그 목록의 **열쇠만 이어 붙인 글자** — `passive_icon:pv_ash,status_icon:st_poison`.
+   *
+   * 배열은 매 렌더마다 새로 만들어지므로 참조로는 "바뀌었나" 를 물을 수가
+   * 없다. 열쇠가 같으면 걸려 있는 것도 같다.
+   */
+  markKey: string;
   /**
    * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
    *
@@ -505,6 +522,65 @@ function FighterView({
     나온다) 이걸 세는 것만으로 이펙트가 정확한 사람에게 간다. 값 자체는
     `HitBurst` 의 `nonce` 로만 쓰이고, 0 이면 아무것도 안 터진다.
   */
+  /*
+    ── 새로 걸린 것을 머리 위에 한 줄로 알린다 ──
+
+    로고만으로는 뜻이 안 통했다 (`HitFx` 의 `StatusNote`). 걸리는 그 순간에
+    한 번만 말하고, 그다음부터는 로고가 맡는다.
+
+    두 가지를 기억해야 한다.
+
+      `had`   바로 앞 순간에 붙어 있던 것. 여기 없던 것이 곧 **새로 걸린 것**
+      `told`  이 판에서 이미 말한 **상시효과**. 패시브는 판이 바뀔 때마다
+              다시 붙으므로 이것이 없으면 잡몹 한 마리 잡을 때마다 말한다
+
+    판이 바뀌면 둘 다 비운다 — `costSeq` 가 그 신호다 (판을 옮기면 스킬
+    코스트가 0 이 되므로 그때 하나 오른다, `core/autoBattle` 의 `enterStage`).
+  */
+  const [notes, setNotes] = useState<{ key: number; text: string; good: boolean }[]>([]);
+  const noteSeq = useRef(0);
+  const had = useRef<Set<string>>(new Set());
+  const told = useRef<Set<string>>(new Set());
+  const lastStage = useRef(costSeq);
+
+  useEffect(() => {
+    if (costSeq !== lastStage.current) {
+      lastStage.current = costSeq;
+      had.current = new Set();
+      told.current = new Set();
+    }
+    const now = new Set<string>();
+    const fresh: { key: number; text: string; good: boolean }[] = [];
+    for (const m of marks) {
+      const k = `${m.set}:${m.name}`;
+      now.add(k);
+      if (had.current.has(k)) continue;
+      /* 상시효과는 판마다 한 번만 — 매번 말하면 잔소리가 된다 */
+      if (m.set === 'passive_icon') {
+        if (told.current.has(k)) continue;
+        told.current.add(k);
+      }
+      fresh.push({
+        key: noteSeq.current++,
+        text: `${m.good ? '버프' : '디버프'}:${m.what}`,
+        good: m.good,
+      });
+    }
+    had.current = now;
+    if (!fresh.length) return undefined;
+    /* 한꺼번에 셋 넘게 걸리면 앞엣것부터 버린다 — 넷이 쌓이면 벽이 된다 */
+    setNotes((old) => [...old, ...fresh].slice(-3));
+    const off = setTimeout(() => {
+      setNotes((old) => old.filter((n) => !fresh.some((f) => f.key === n.key)));
+    }, NOTE_MS);
+    return () => clearTimeout(off);
+    /*
+      `marks` 는 **일부러 뺀다.** 매 렌더마다 새 배열이라 넣으면 이 갈래가
+      끊임없이 돈다. 열쇠(`markKey`)가 같으면 내용도 같다.
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markKey, costSeq]);
+
   const [hurtNo, setHurtNo] = useState(0);
   const lastDmg = useRef(-1);
   const hurt = useRef(new Animated.Value(0)).current;
@@ -980,6 +1056,16 @@ function FighterView({
       <HealMarks nonce={bless} size={size} />
 
       {/*
+        ── 방금 걸린 것이 무엇인지 ──
+
+        `디버프:지속 피해` 처럼 한 줄이 머리 위에 떴다 사라진다. 걸리는 그
+        순간에만 뜨고, 그다음부터는 파티 칸의 로고가 맡는다 (`StatusRow`).
+      */}
+      {notes.map((n, k) => (
+        <StatusNote key={n.key} text={n.text} good={n.good} i={k} />
+      ))}
+
+      {/*
         ── 기술이 나갈 때의 큰 연출 ──
 
         두 번째 기술 넷 중 셋이 **아무도 안 때린다** (도발 · 광란 · 정화).
@@ -1194,6 +1280,8 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.noCharge === b.noCharge
   && a.costSeq === b.costSeq
   && a.struck === b.struck
+  /* 걸려 있는 것이 바뀌었나 — 배열이 아니라 열쇠로 본다 */
+  && a.markKey === b.markKey
   && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge

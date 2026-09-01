@@ -25,7 +25,7 @@ import {
   Armor, CharId, OwnedChar, statOf,
 } from './chars';
 import {
-  BLINK_MS, GOOD, Hex, STATUS_NAME, StatusId, dying, mulOf, upOf,
+  BLINK_MS, GOOD, Hex, STATUS_NAME, STATUS_WHAT, StatusId, dying, mulOf, upOf,
 } from './status';
 
 /**
@@ -39,6 +39,14 @@ export interface PassiveDef {
   name: string;
   /** 캐릭터 창에 그대로 적는 한 줄 */
   text: string;
+  /**
+   * 머리 위에 뜨는 **한 마디** (`core/status` 의 `STATUS_WHAT` 과 짝).
+   *
+   * `text` 를 그대로 쓸 수가 없다 — 저건 캐릭터 창에서 읽는 설명이라
+   * 조건과 수치가 다 들어 있어서(`체력이 낮을수록 공격속도 증가 (체력
+   * 10%에서 1.5배)`) 인물 하나 폭에 안 들어간다.
+   */
+  short: string;
   /**
    * 이 사람이 서 있으면 **파티 전원**의 공격력에 더해지는 비율.
    *
@@ -112,6 +120,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
   knightgirl: {
     name: '불굴의 맹세',
     text: '1초마다 최대 체력의 1% 회복',
+    short: '지속 회복',
     regenPct: 0.01,
     art: 'pv_oath',
     icon: 'st_regen',
@@ -130,6 +139,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
   bunnyaxe: {
     name: '최후의 한 곡',
     text: '체력이 낮을수록 공격속도 증가 (체력 10%에서 1.5배)',
+    short: '공격속도 증가',
     frenzy: { at: 0.10, mul: 1.5 },
     art: 'pv_encore',
     icon: 'st_haste',
@@ -145,6 +155,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
   elfarcher: {
     name: '숲의 박자',
     text: '아군 전체 공격속도 +0.1',
+    short: '공격속도 증가',
     allySpd: 0.1,
     art: 'pv_tempo',
     icon: 'st_haste',
@@ -159,6 +170,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
   nun: {
     name: '재의 축복',
     text: '아군 전체 공격력 +10%',
+    short: '공격력 증가',
     allyAtk: 0.10,
     art: 'pv_ash',
     icon: 'st_rage',
@@ -332,8 +344,16 @@ export interface Mark {
   name: string;
   /** 좋은 것인가 — 화면이 이걸로 차례를 가른다 */
   good: boolean;
-  /** 사람이 읽는 이름. 아직 쓰는 데는 없지만 로고만으로 안 통할 때를 위해 */
+  /** 사람이 읽는 이름 — 캐릭터 창과 검사에서 쓴다 */
   label: string;
+  /**
+   * **무슨 일이 일어나는가** 한 마디 (`core/status` 의 `STATUS_WHAT`).
+   *
+   * 걸리는 순간 머리 위에 뜨는 글이 이것이다 (`screens/home/Fighter`).
+   * 이름(`label`)이 아니라 효과인 이유는, 로고를 외운 사람만 읽을 수 있는
+   * 표시를 하나 더 만들어 봐야 소용이 없기 때문이다.
+   */
+  what: string;
   /**
    * 이제 곧 꺼지나 — 화면이 이 칸을 깜빡인다 (`screens/home/StatusRow`).
    *
@@ -392,7 +412,8 @@ export function marksOf(
 
   const good: Mark[] = [];
   const mark = (p: PassiveDef, blink: boolean): Mark => ({
-    set: 'passive_icon', name: p.art, good: true, label: p.name, blink,
+    set: 'passive_icon', name: p.art, good: true,
+    label: p.name, what: p.short, blink,
   });
 
   /* 제 것이 먼저 — 이 칸은 이 사람의 칸이다 */
@@ -423,6 +444,7 @@ export function marksOf(
       */
       good: GOOD.has(h.id),
       label: STATUS_NAME[h.id],
+      what: STATUS_WHAT[h.id],
       /* 풀리기 2초 전부터 깜빡인다 — 언제 풀렸는지 알 수 있게 */
       blink: dying(h.ms),
     }));
@@ -457,21 +479,23 @@ export function foeMarksOf(
   if (taunted) {
     out.push({
       set: 'status_icon', name: 'st_taunt', good: false,
-      label: STATUS_NAME.st_taunt, blink: dying(tauntMs),
+      label: STATUS_NAME.st_taunt, what: STATUS_WHAT.st_taunt,
+      blink: dying(tauntMs),
     });
   }
   for (const h of hex) {
     if (h.ms <= 0) continue;
     out.push({
       set: 'status_icon', name: h.id, good: GOOD.has(h.id),
-      label: STATUS_NAME[h.id], blink: dying(h.ms),
+      label: STATUS_NAME[h.id], what: STATUS_WHAT[h.id],
+      blink: dying(h.ms),
     });
   }
   return out.length ? out : NO_MARK;
 }
 
 /** 아무것도 안 걸린 상태 — 매번 새 배열을 만들면 화면이 계속 다시 그려진다 */
-const NO_MARK: readonly Mark[] = [];
+export const NO_MARK: readonly Mark[] = [];
 
 /**
  * 원래 값 옆에 붙는 **차이** — `10 (+2)` 의 괄호 안.

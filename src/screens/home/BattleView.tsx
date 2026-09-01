@@ -35,10 +35,10 @@ import {
   raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
-import { CHARS, projFrame, projSet, skillOf, skillsOf } from '@/core/chars';
+import { CHARS, projFrame, projSet, skillOf, skillsOf, statOf } from '@/core/chars';
 import { hpOf, livingMembers, members, partyStat } from '@/core/party';
 import { hasHex, hexOf } from '@/core/status';
-import { foeMarksOf, liveSpd } from '@/core/passives';
+import { Mark, NO_MARK, foeMarksOf, liveSpd, marksOf } from '@/core/passives';
 import { cleanseOptOf, cleanseTargets } from '@/core/skillOpt';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
@@ -147,6 +147,50 @@ const NUM_GAP = Math.round(28 * ZOOM);
 
 function rowFor(live: readonly { x: number }[], x: number): number {
   return live.filter((h) => Math.abs(h.x - x) < NUM_GAP).length;
+}
+
+/** 한 줄이 먹는 높이 */
+const NUM_STEP = 12;
+/**
+ * 숫자가 **스스로 떠오르는** 높이 (`HitFx` 의 `DamageNumber`).
+ *
+ * 놓인 자리에서 위로 20px 을 더 간다. 그러니 놓는 자리가 그보다 낮으면
+ * 떠오르는 동안 무대 밖으로 나가고, 거기는 잘린다 (`overflow: hidden`).
+ */
+const NUM_RISE = 22;
+
+/**
+ * 피해 숫자를 **어느 높이에** 놓을까.
+ *
+ * ## 우두머리가 커지면서 잘렸다
+ *
+ * 숫자는 늘 머리 위로 쌓았다. 겹치는 것마다 12px 씩 더 위로 — 잡몹은 몸이
+ * 73px 이라 머리 위에 100px 가까이 남으므로 일곱 줄을 쌓아도 남는다.
+ *
+ * 우두머리는 132px 이다. 머리가 무대 천장에서 49px 아래에 있고, 숫자는
+ * 놓인 자리에서 22px 을 더 떠오른다. **두 줄이면 천장에 닿는다.** 셋째
+ * 줄부터는 무대 밖에 놓여서 통째로 안 보였다 — 파티 넷이 한 놈을 치면
+ * 늘 그렇게 된다.
+ *
+ * ## 자리가 없으면 방향을 바꾼다
+ *
+ * 위로 쌓을 수 있는 줄 수를 먼저 센다. 그 안에 드는 줄은 그대로 머리 위로,
+ * 넘치는 줄은 **머리 아래로** 내려 쌓는다 — 우두머리는 몸이 크므로 그
+ * 자리가 곧 제 몸 위다.
+ *
+ * 몸 위에 놓인 흰 숫자가 흰 그림에 묻히지 않는 것은 숫자 쪽이 검은 그림자를
+ * 지고 있기 때문이다 (`DamageNumber`).
+ *
+ * 잡몹은 이 함수가 있으나 마나다 — `fits` 가 일곱이라 늘 첫째 갈래로 간다.
+ * 우두머리에게만 필요한 규칙을 우두머리라고 적지 않은 이유는, **몸 크기가
+ * 정하는 일**이라서다. 우두머리를 더 키우거나 잡몹을 키워도 따라온다.
+ */
+function numTop(y: number, row: number): number {
+  const head = y - 11;
+  const fits = Math.max(1, Math.floor((head - NUM_RISE) / NUM_STEP) + 1);
+  return row < fits
+    ? head - row * NUM_STEP
+    : head + (row - fits + 1) * NUM_STEP;
 }
 
 /**
@@ -356,6 +400,39 @@ export function BattleView() {
     깜빡임이 끝나는 순간과 수치가 떨어지는 순간이 같아진다.
   */
   const aliveLine = livingMembers(party, chars, battle.hp, battle.fade);
+
+  /*
+    ── 사람마다 지금 걸려 있는 것 ──
+
+    파티 칸도 같은 것을 잰다 (`PartyBar` → `StatusRow`). 저쪽은 **늘 그리는**
+    쪽이고 이쪽은 **새로 걸린 것만 골라 한 줄 띄우는** 쪽이라, 같은 목록을
+    두 군데서 읽는다.
+
+    한 군데서 재서 넘기지 않는 이유는 두 화면이 형제라서다 — 공통 조상은
+    `HomeScreen` 인데 거기까지 올리면 걸린 것 하나 바뀔 때마다 화면 전체가
+    다시 그려진다. `marksOf` 는 배열 몇 개를 훑는 것이 전부다.
+
+    **열쇠만 이어 붙인 글자를 같이 만든다.** 배열은 매번 새로 만들어지므로
+    참조로는 "바뀌었나" 를 물을 수가 없다 (`Fighter` 의 `markKey`).
+  */
+  const markOf = React.useMemo(() => {
+    const out: Record<string, { marks: readonly Mark[]; key: string }> = {};
+    for (const c of members(party, chars)) {
+      const marks = marksOf(
+        c.id,
+        hpOf(c, battle.hp),
+        statOf(c).hp,
+        hexOf(battle.hex, c.id),
+        aliveLine,
+        battle.fade,
+      );
+      out[c.id] = {
+        marks,
+        key: marks.map((m) => `${m.set}:${m.name}`).join(','),
+      };
+    }
+    return out;
+  }, [party, chars, battle.hp, battle.hex, battle.fade, aliveLine]);
 
   /** 판 연출 중인가 — 그동안은 아무도 안 휘두른다 (`Fighter` 의 `held`) */
   const held = fightHeld(battle);
@@ -1530,6 +1607,9 @@ export function BattleView() {
                     canCast={canCast}
                     costSeq={battle.costSeq ?? 0}
                     struck={struck[c.id] ?? 0}
+                    /* 새로 걸린 것만 골라 머리 위에 한 줄 띄운다 */
+                    marks={markOf[c.id]?.marks ?? NO_MARK}
+                    markKey={markOf[c.id]?.key ?? ''}
                     /* 정화로 걷힌 사람에게서만 조각이 떠오른다 */
                     purify={purified[c.id] ?? 0}
                     onCharge={onCharge}
@@ -1985,7 +2065,7 @@ export function BattleView() {
                   width: h.size,
                   alignItems: 'center',
                   /* 적도 머리 바로 위 — 아군과 같은 규칙 */
-                  top: h.y - 11 - h.row * 12,
+                  top: numTop(h.y, h.row),
                   zIndex: 70,
                 }}
               >
