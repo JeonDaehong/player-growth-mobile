@@ -1034,6 +1034,9 @@ export const KNIGHTGIRL_SPRITES = {
   'hit': require('../../assets/sprites/knightgirl/hit.png'),
   'lose': require('../../assets/sprites/knightgirl/lose.png'),
   'recover': require('../../assets/sprites/knightgirl/recover.png'),
+  'sk2_1': require('../../assets/sprites/knightgirl/sk2_1.png'),
+  'sk2_2': require('../../assets/sprites/knightgirl/sk2_2.png'),
+  'sk2_3': require('../../assets/sprites/knightgirl/sk2_3.png'),
   'sk_1': require('../../assets/sprites/knightgirl/sk_1.png'),
   'sk_2': require('../../assets/sprites/knightgirl/sk_2.png'),
   'sk_3': require('../../assets/sprites/knightgirl/sk_3.png'),
@@ -1057,6 +1060,9 @@ export const BUNNYAXE_SPRITES = {
   'hit': require('../../assets/sprites/bunnyaxe/hit.png'),
   'lose': require('../../assets/sprites/bunnyaxe/lose.png'),
   'recover': require('../../assets/sprites/bunnyaxe/recover.png'),
+  'sk2_1': require('../../assets/sprites/bunnyaxe/sk2_1.png'),
+  'sk2_2': require('../../assets/sprites/bunnyaxe/sk2_2.png'),
+  'sk2_3': require('../../assets/sprites/bunnyaxe/sk2_3.png'),
   'sk_1': require('../../assets/sprites/bunnyaxe/sk_1.png'),
   'sk_2': require('../../assets/sprites/bunnyaxe/sk_2.png'),
   'sk_3': require('../../assets/sprites/bunnyaxe/sk_3.png'),
@@ -1074,6 +1080,9 @@ export const ELFARCHER_SPRITES = {
   'hit': require('../../assets/sprites/elfarcher/hit.png'),
   'lose': require('../../assets/sprites/elfarcher/lose.png'),
   'recover': require('../../assets/sprites/elfarcher/recover.png'),
+  'sk2_1': require('../../assets/sprites/elfarcher/sk2_1.png'),
+  'sk2_2': require('../../assets/sprites/elfarcher/sk2_2.png'),
+  'sk2_3': require('../../assets/sprites/elfarcher/sk2_3.png'),
   'sk_1': require('../../assets/sprites/elfarcher/sk_1.png'),
   'sk_2': require('../../assets/sprites/elfarcher/sk_2.png'),
   'sk_3': require('../../assets/sprites/elfarcher/sk_3.png'),
@@ -1097,6 +1106,9 @@ export const NUN_SPRITES = {
   'hit': require('../../assets/sprites/nun/hit.png'),
   'lose': require('../../assets/sprites/nun/lose.png'),
   'recover': require('../../assets/sprites/nun/recover.png'),
+  'sk2_1': require('../../assets/sprites/nun/sk2_1.png'),
+  'sk2_2': require('../../assets/sprites/nun/sk2_2.png'),
+  'sk2_3': require('../../assets/sprites/nun/sk2_3.png'),
   'sk_1': require('../../assets/sprites/nun/sk_1.png'),
   'sk_2': require('../../assets/sprites/nun/sk_2.png'),
   'sk_3': require('../../assets/sprites/nun/sk_3.png'),
@@ -1621,6 +1633,12 @@ export const STATUS_ICON_SPRITES = {
   'st_wither': require('../../assets/sprites/status_icon/st_wither.png'),
 } as const;
 
+export const SFX_ERUPT_SPRITES = {
+  '1': require('../../assets/sprites/sfx_erupt/1.png'),
+  '2': require('../../assets/sprites/sfx_erupt/2.png'),
+  '3': require('../../assets/sprites/sfx_erupt/3.png'),
+} as const;
+
 export const PASSIVE_ICON_SPRITES = {
   'pv_ash': require('../../assets/sprites/passive_icon/pv_ash.png'),
   'pv_encore': require('../../assets/sprites/passive_icon/pv_encore.png'),
@@ -1628,7 +1646,7 @@ export const PASSIVE_ICON_SPRITES = {
   'pv_tempo': require('../../assets/sprites/passive_icon/pv_tempo.png'),
 } as const;
 
-export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'boss_passive' | 'status_icon' | 'passive_icon';
+export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'boss_passive' | 'status_icon' | 'sfx_erupt' | 'passive_icon';
 
 export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   scroll: SCROLL_SPRITES,
@@ -1797,6 +1815,7 @@ export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   bfx_bolt: BFX_BOLT_SPRITES,
   boss_passive: BOSS_PASSIVE_SPRITES,
   status_icon: STATUS_ICON_SPRITES,
+  sfx_erupt: SFX_ERUPT_SPRITES,
   passive_icon: PASSIVE_ICON_SPRITES,
 };
 
@@ -2019,6 +2038,9 @@ export const SPRITE_RATIO: Record<string, number> = {
   'bunnyaxe/hit': 1.2,
   'bunnyaxe/lose': 0.8021,
   'bunnyaxe/recover': 1.2387,
+  'bunnyaxe/sk2_1': 1.4436,
+  'bunnyaxe/sk2_2': 1.0,
+  'bunnyaxe/sk2_3': 1.1852,
   'bunnyaxe/sk_1': 1.0492,
   'bunnyaxe/sk_2': 1.4015,
   'bunnyaxe/sk_3': 0.8125,
@@ -2147,6 +2169,9 @@ export const SPRITE_RATIO: Record<string, number> = {
   'elfarcher/hit': 1.2468,
   'elfarcher/lose': 1.1034,
   'elfarcher/recover': 1.4545,
+  'elfarcher/sk2_1': 1.3151,
+  'elfarcher/sk2_2': 1.2013,
+  'elfarcher/sk2_3': 1.4656,
   'elfarcher/sk_1': 1.2075,
   'elfarcher/sk_2': 1.0,
   'elfarcher/sk_3': 1.0323,
@@ -2488,6 +2513,9 @@ export const SPRITE_RATIO: Record<string, number> = {
   'knightgirl/hit': 1.3061,
   'knightgirl/lose': 0.7552,
   'knightgirl/recover': 1.2,
+  'knightgirl/sk2_1': 1.3061,
+  'knightgirl/sk2_2': 1.2308,
+  'knightgirl/sk2_3': 1.4118,
   'knightgirl/sk_1': 1.1779,
   'knightgirl/sk_2': 0.9167,
   'knightgirl/sk_3': 1.0105,
@@ -2540,6 +2568,9 @@ export const SPRITE_RATIO: Record<string, number> = {
   'nun/hit': 1.4194,
   'nun/lose': 1.4455,
   'nun/recover': 1.5446,
+  'nun/sk2_1': 2.4304,
+  'nun/sk2_2': 1.7944,
+  'nun/sk2_3': 1.5118,
   'nun/sk_1': 1.2845,
   'nun/sk_2': 1.092,
   'nun/sk_3': 1.0833,
@@ -2709,6 +2740,9 @@ export const SPRITE_RATIO: Record<string, number> = {
   'scroll/succ_high': 1.1034,
   'scroll/succ_low': 1.1098,
   'scroll/succ_mid': 1.1228,
+  'sfx_erupt/1': 0.6979,
+  'sfx_erupt/2': 0.8325,
+  'sfx_erupt/3': 0.7865,
   'sg_acid/attack': 0.849,
   'sg_acid/down': 1.0323,
   'sg_acid/idle': 1.0608,

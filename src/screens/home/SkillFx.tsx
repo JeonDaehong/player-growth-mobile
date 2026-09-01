@@ -1,36 +1,43 @@
 /**
- * 두 번째 기술 넷의 **큰 연출** — 그림 없이 도형으로만.
+ * 두 번째 기술 넷의 **큰 연출.**
  *
- * ## 왜 시트를 안 받나
+ * ## 셋은 도형, 하나는 시트
  *
  * 넷 중 셋이 **아무도 안 때린다** (도발 · 광란 · 정화). 때리는 기술은 맞은
  * 자리에서 불꽃이 터지고 숫자가 뜨므로 화면이 알아서 설명되는데, 이쪽은 몸짓
  * 말고는 아무 일도 안 일어난다 — 코스트 20 을 모아 쓴 정화가 화면에서는
  * "잠깐 무릎 꿇었다" 로 끝난다.
  *
- * 그래서 연출이 필요한데, **1-bit 흑백에서 이런 종류는 시트로 받으면 안
- * 된다.** 퍼지는 소리도, 잔상도, 솟는 불기둥도 전부 "반투명하게 옅어지는 것"
- * 이 본질인데 2색에는 옅음이 없다. 시트로 받으면 흰 얼룩 몇 장이 되고, 실제로
- * 타격 이펙트(`fx/`)에서 그 한계를 이미 겪었다 — 저건 **한 번 터지고 마는**
- * 것이라 다섯 장으로 되지만, 이건 몇 백 ms 동안 자라거나 흘러야 한다.
+ * 그 셋은 **그림을 안 받는다.** 퍼지는 소리도, 흐르는 잔상도, 떠오르는
+ * 조각도 전부 "옅어지며 자란다" 가 본질인데 2색에는 옅음이 없다. 시트로
+ * 받으면 흰 얼룩 몇 장이 된다. 도형은 불투명도와 크기를 **연속으로** 바꿀
+ * 수 있고, 그게 시트가 못 하는 유일한 것이자 저 셋에 필요한 전부다.
  *
- * 도형은 **불투명도와 크기를 연속으로** 바꿀 수 있다. 그게 시트가 못 하는
- * 유일한 것이고, 마침 이 넷에 필요한 전부다.
+ * 화산만 다르다. 저건 **한 번 터지고 마는 것**이라 세 칸이면 되고, 갈라지는
+ * 불꽃과 튀는 조각은 도형으로 흉내 낼 수 있는 종류가 아니다 — 손으로 기둥
+ * 셋을 그려 봤다가 받은 시트로 갈았다 (`sfx_erupt`). 타격 이펙트(`fx/`)가
+ * 다섯 칸 시트인 것과 같은 갈림길이다.
  *
  * ## 넷이 서로 안 닮아야 한다
  *
  *   roar     밖으로 퍼지는 고리 셋      — 옆으로 자란다
- *   haste    뒤로 흐르는 빗금 넷        — 옆으로 흐른다
+ *   haste    뒤로 흐르는 빗금 넷 + 별빛 — 옆으로 흐른다
  *   cleanse  위로 떠오르는 조각 다섯    — 위로 간다
- *   erupt    아래서 위로 솟는 기둥 셋   — 아래서 위로 간다
+ *   erupt    발밑에서 솟는 폭발         — 아래서 위로 간다
  *
  * 방향이 넷 다 다르다. 54px 짜리 인물 위에서 색도 모양도 못 쓰므로, **어느
  * 쪽으로 움직이나**가 유일하게 남는 구분이다.
+ *
+ * ## 흰 그림은 밝게 못 한다
+ *
+ * `BodyFlash` 가 그 문제를 푼다 — 에셋이 이미 흰 픽셀이라 색을 흰색으로
+ * 갈아도 아무 일이 안 일어나므로, 대신 **제 실루엣을 뒤에 깔고 키운다.**
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import type { CastFx } from '@/core/chars';
-import { BAD_C, GOOD_C, WHITE } from '@/ui/theme';
+import { Sprite } from '@/ui/Sprite';
+import { GOOD_C, WHITE } from '@/ui/theme';
 
 /** 한 번 도는 데 걸리는 시간 (ms) — 기술 동작(510~700ms)보다 조금 길게 */
 const FX_MS = 760;
@@ -42,7 +49,7 @@ const FX_MS = 760;
  * 꺼진 동안 `null` 을 돌려주는 것이 중요하다 — 안 그러면 안 쓰는 도형 여남은
  * 개가 파티원 넷의 머리 위에 계속 얹혀 있다.
  */
-function useOnce(nonce: number, ms = FX_MS) {
+function useOnce(nonce: number, ms = FX_MS): { t: Animated.Value; on: boolean } {
   const t = useRef(new Animated.Value(0)).current;
   const [on, setOn] = useState(false);
 
@@ -58,7 +65,17 @@ function useOnce(nonce: number, ms = FX_MS) {
     return () => { alive = false; a.stop(); };
   }, [nonce, ms, t]);
 
-  return on ? t : null;
+  /*
+    시계는 **늘 돌려준다** — 꺼져 있어도.
+
+    `on ? t : null` 로 두면 부르는 쪽에서 `t?.interpolate()` 를 쓰게 되고,
+    그 결과는 `undefined` 일 수 있는 타입이라 `transform` 에 못 넣는다.
+    훅은 조건부로 못 부르므로 보간을 `if` 뒤로 미룰 수도 없다.
+
+    값과 켜짐을 갈라 두면 보간은 늘 만들어지고(공짜다 — `useMemo` 안이라
+    한 번뿐이다) 그릴지 말지만 `on` 이 정한다.
+  */
+  return { t, on };
 }
 
 /**
@@ -136,8 +153,43 @@ function Haste({ t, size }: { t: Animated.Value; size: number }) {
     }),
   })), [t, size]);
 
+  /*
+    빗금만으로는 **켜진 순간**이 안 보인다. 빗금은 흘러가는 것이라 "빠르다"
+    는 말하지만 "지금 켰다" 는 못 말한다.
+
+    그래서 몸 한가운데에서 네 갈래 별빛이 한 번 크게 터졌다 사라진다. 뒤의
+    몸 번쩍임(`BodyFlash`)과 같은 순간에 나므로 둘이 한 번의 섬광으로 읽힌다.
+  */
+  const star = useMemo(() => ({
+    fade: t.interpolate({
+      inputRange: [0, 0.06, 0.3, 1], outputRange: [0, 1, 0.5, 0],
+    }),
+    grow: t.interpolate({
+      inputRange: [0, 0.25, 1], outputRange: [0.2, 1, 1.5],
+    }),
+  }), [t]);
+  const arm = Math.round(size * 0.62);
+  const thick = Math.max(2, Math.round(size * 0.055));
+
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 33 }}>
+      {/* 네 갈래 별빛 — 가로 · 세로 두 막대가 겹쳐 십자가 된다 */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: size * 0.5 - arm / 2,
+          top: size * 0.34,
+          width: arm,
+          height: arm,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: star.fade,
+          transform: [{ scale: star.grow }],
+        }}
+      >
+        <View style={{ position: 'absolute', width: arm, height: thick, backgroundColor: WHITE }} />
+        <View style={{ position: 'absolute', width: thick, height: arm, backgroundColor: WHITE }} />
+      </Animated.View>
       {bars.map((b, i) => (
         <Animated.View
           key={i}
@@ -209,75 +261,128 @@ function Cleanse({ t, size }: { t: Animated.Value; size: number }) {
 }
 
 /**
- * ── 화산 ── 맞은 적 발밑에서 기둥 셋이 **아래에서 위로** 솟는다.
+ * ── 화산 ── 맞은 적 발밑에서 불기둥이 솟는다.
  *
- * 이 하나만 **적 자리**에서 그린다. 비앙카는 제자리에서 땅을 내리치기만
- * 하므로, 그녀 쪽에서 뭔가 나가면 "던졌다" 가 되어 사양과 어긋난다.
+ * ## 이것만 그림을 쓴다
  *
- * 자라는 방식이 중요하다. `scaleY` 를 아래 모서리에 고정해서 **바닥에서
- * 위로 뻗게** 한다 — 가운데에서 자라면 위아래로 동시에 늘어나 폭발로 보인다.
- * 솟았다가 꼭대기부터 흩어진다.
+ * 나머지 셋(포효 · 광란 · 정화)은 도형이다. 저것들은 "옅어지며 자란다" 가
+ * 본질이라 2색 시트로는 못 그린다.
+ *
+ * 폭발은 반대다. **한 번 터지고 마는 것**이라 세 칸이면 충분하고, 손으로
+ * 그린 기둥 셋보다 받은 그림이 훨씬 낫다 — 갈라지는 불꽃과 튀는 조각은
+ * 도형으로 흉내 낼 수 있는 종류가 아니다. 타격 이펙트(`fx/`)가 다섯 칸
+ * 시트인 것과 같은 이유다.
+ *
+ * ## 발밑에 바닥을 맞춘다
+ *
+ * 그림이 **아래가 넓고 위로 뻗는** 모양이라, 가운데에 맞추면 땅속에서
+ * 절반이 터진다. 상자 아래쪽을 적의 발 높이에 붙인다 (`bottom: 0`).
  */
 function Erupt({ t, size }: { t: Animated.Value; size: number }) {
-  const cols = useMemo(() => [0, 0.1, 0.2].map((delay, i) => ({
-    left: size * (0.28 + i * 0.2),
-    w: Math.max(3, Math.round(size * (i === 1 ? 0.16 : 0.1))),
-    h: size * (i === 1 ? 1.15 : 0.8),
-    grow: t.interpolate({
-      inputRange: [0, delay, Math.min(1, delay + 0.22), Math.min(1, delay + 0.6), 1],
-      outputRange: [0, 0, 1, 1, 0.15],
-      extrapolate: 'clamp',
-    }),
-    fade: t.interpolate({
-      inputRange: [0, delay, Math.min(1, delay + 0.1), Math.min(1, delay + 0.45), Math.min(1, delay + 0.7), 1],
-      outputRange: [0, 0, 1, 0.8, 0, 0],
-      extrapolate: 'clamp',
-    }),
-  })), [t, size]);
+  const [frame, setFrame] = useState(1);
 
+  /*
+    세 칸을 순서대로 넘긴다.
+
+    `Animated.Value` 는 화면을 다시 그리지 않고 흐르므로, 칸을 넘기려면
+    타이머가 따로 있어야 한다. `t` 를 구독(`addListener`)해도 되지만 그건
+    프레임마다 콜백이 도는 것이라 훨씬 비싸다 — 셋뿐이니 타이머 둘이면 된다.
+  */
+  useEffect(() => {
+    setFrame(1);
+    const a = setTimeout(() => setFrame(2), ERUPT_MS / 3);
+    const b = setTimeout(() => setFrame(3), (ERUPT_MS * 2) / 3);
+    return () => { clearTimeout(a); clearTimeout(b); };
+  }, [t]);
+
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.1, 0.75, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+  /* 솟는 동안 조금 커진다 — 멈춰 있으면 그림 세 장이 갈아 끼워지는 것으로 보인다 */
+  const grow = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [0.9, 1.25],
+  }), [t]);
+
+  const w = Math.round(size * 1.5);
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, zIndex: 45 }}>
-      {cols.map((c, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: c.left,
-            /* 발밑에 바닥을 맞춘다 — 여기가 0 이어야 위로만 자란다 */
-            bottom: 0,
-            width: c.w,
-            height: c.h,
-            backgroundColor: WHITE,
-            opacity: c.fade,
-            transform: [
-              /*
-                `scaleY` 는 **가운데**를 기준으로 늘어난다. 아래 모서리에서
-                자라게 하려면 늘어난 만큼의 절반을 다시 내려 줘야 한다 —
-                안 그러면 기둥이 땅을 뚫고 아래로도 자란다.
-              */
-              { translateY: Animated.multiply(c.grow, (c.h / 2)) },
-              { scaleY: c.grow },
-            ],
-          }}
-        />
-      ))}
-      {/* 솟은 자리에 남는 잔불 — 기둥이 꺼진 뒤에도 잠깐 */}
-      <Animated.View
-        style={{
-          position: 'absolute',
-          left: size * 0.22,
-          bottom: -2,
-          width: size * 0.5,
-          height: 3,
-          backgroundColor: BAD_C,
-          opacity: t.interpolate({
-            inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 0.9, 0.6, 0],
-          }),
-        }}
-      />
-    </View>
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        /* 적의 발 높이에 바닥을 맞춘다 — 그림이 아래가 넓고 위로 뻗는다 */
+        bottom: 0,
+        left: (size - w) / 2,
+        width: w,
+        opacity: fade,
+        transform: [{ scale: grow }],
+        zIndex: 45,
+      }}
+    >
+      <Sprite set="sfx_erupt" name={String(frame)} size={w} />
+    </Animated.View>
   );
 }
+
+/** 폭발 세 칸이 도는 시간 — `FX_MS` 보다 짧다. 터지는 것은 빨라야 한다 */
+const ERUPT_MS = 420;
+
+/**
+ * ── 몸이 번쩍인다 ──
+ *
+ * ## 왜 필요했나
+ *
+ * 리안느의 광란은 **아무것도 몸을 안 떠난다.** 화살도, 빛도, 파동도 없다 —
+ * 5초 동안 제 공격속도가 두 배가 될 뿐이다. 그래서 §F 그림이 아무리 좋아도
+ * 화면에서는 "활을 든 채 자세를 바꿨다" 로 끝났다. 코스트 10 을 모아 쓴
+ * 기술인데.
+ *
+ * ## 흰 그림 위에서 어떻게 번쩍이나
+ *
+ * 에셋이 이미 흰 픽셀이라 **밝게 할 수가 없다.** 색을 흰색으로 갈아도
+ * (`tint`) 아무 일도 안 일어난다.
+ *
+ * 그래서 **제 실루엣을 뒤에 한 장 더 깔고 키운다.** 같은 모양이 몸보다
+ * 조금 크게 뒤에 있다가 퍼지며 사라지므로, 몸 가장자리에서 빛이 한 번
+ * 새어 나온 것으로 읽힌다. 자세가 바뀌면 그 모양도 같이 바뀌므로 늘
+ * 정확히 그 사람의 윤곽이다.
+ *
+ * @param children 그 순간의 몸 그림 — 부르는 쪽이 넘긴다 (`Fighter`)
+ */
+export function BodyFlash({
+  nonce, size, children,
+}: { nonce: number; size: number; children: React.ReactNode }) {
+  const { t, on } = useOnce(nonce, FLASH_MS);
+
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.08, 1], outputRange: [0, 0.85, 0],
+  }), [t]);
+  const grow = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [1.02, 1.45],
+  }), [t]);
+
+  if (!on) return null;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: size,
+        height: size,
+        opacity: fade,
+        transform: [{ scale: grow }],
+        /* 몸(기본 층)보다 **뒤**다 — 앞에 오면 인물을 덮어 버린다 */
+        zIndex: 1,
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+/** 번쩍임이 도는 시간 — 짧아야 번쩍인 것이 된다 */
+const FLASH_MS = 420;
 
 /**
  * 기술이 나갈 때 터지는 연출 하나.
@@ -288,8 +393,8 @@ function Erupt({ t, size }: { t: Animated.Value; size: number }) {
 export function SkillFx({
   kind, nonce, size,
 }: { kind: CastFx | null | undefined; nonce: number; size: number }) {
-  const t = useOnce(kind ? nonce : 0);
-  if (!kind || !t) return null;
+  const { t, on } = useOnce(kind ? nonce : 0);
+  if (!kind || !on) return null;
   if (kind === 'roar') return <Roar t={t} size={size} />;
   if (kind === 'haste') return <Haste t={t} size={size} />;
   if (kind === 'cleanse') return <Cleanse t={t} size={size} />;

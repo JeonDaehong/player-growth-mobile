@@ -3772,6 +3772,80 @@
       ]
     },
     {
+      "file": "dobal.jpg",
+      "name": "knightgirl",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "§F 두 번째 기술(도발) 3프레임 (docs/character-art/knightgirl.md). append 를 빼면 §A 여덟 칸이 지워진다",
+      "labels": [
+        "sk2_1",
+        "sk2_2",
+        "sk2_3"
+      ]
+    },
+    {
+      "file": "hwasan-pokbal-motion.jpg",
+      "name": "bunnyaxe",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "§F 두 번째 기술(화산) 3프레임 — 제자리에서 도끼를 발밑에 꽂는다 (docs/character-art/bunnyaxe.md)",
+      "labels": [
+        "sk2_1",
+        "sk2_2",
+        "sk2_3"
+      ]
+    },
+    {
+      "file": "gwangran.jpg",
+      "name": "elfarcher",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "§F 두 번째 기술(광란) 3프레임 (docs/character-art/elfarcher.md). 아무것도 몸을 안 떠나는 기술이라 화면이 몸을 번쩍이게 한다 (SkillFx 의 flash)",
+      "labels": [
+        "sk2_1",
+        "sk2_2",
+        "sk2_3"
+      ]
+    },
+    {
+      "file": "junghwa.jpg",
+      "name": "nun",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "§F 두 번째 기술(정화) 3프레임 (docs/character-art/nun.md)",
+      "labels": [
+        "sk2_1",
+        "sk2_2",
+        "sk2_3"
+      ]
+    },
+    {
+      "file": "hwasan-pokbal.jpg",
+      "name": "sfx_erupt",
+      "expect": [
+        3,
+        1
+      ],
+      "note": "화산이 적 발밑에서 솟는 폭발 3프레임. 도형으로 그리던 것을 이걸로 갈았다 (screens/home/SkillFx 의 erupt). 아래가 넓고 위로 뻗는 그림이라 floor 를 안 건다 — 발밑에 바닥을 맞춰 붙인다",
+      "labels": [
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
       "file": "13.jpg",
       "name": "passive_icon",
       "expect": [

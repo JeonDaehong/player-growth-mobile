@@ -1443,16 +1443,27 @@ export interface BattleState {
    */
   fade: Record<string, number>;
   /**
-   * 지금 도발이 걸려 있나 — 누구에게, 몇 ms 남았나.
+   * 지금 도발이 걸려 있나 — 누구에게, 몇 ms 남았나, **누구를 걸었나.**
    *
-   * 이졸데의 도발 하나가 쓴다. 걸려 있는 동안 적의 자리 확률(`AIM`)이 통째로
-   * 무시되고 전부 그 사람을 노린다 (`aimOf`).
+   * 이졸데의 도발 하나가 쓴다. 걸린 놈은 자리 확률(`AIM`)을 무시하고 그
+   * 사람만 노린다 (`aimOf`).
    *
-   * **적이 아니라 판이 들고 있다.** 도발은 서 있는 놈 전부에게 한꺼번에
-   * 걸리고, 그 사이에 걸어 들어온 놈에게도 걸려야 한다 — 마리마다 들고
-   * 있으면 새로 온 놈만 안 걸려서, 화면에서는 한 마리가 딴 데를 때린다.
+   * ## 쓰는 순간 서 있던 놈들에게만 걸린다
+   *
+   * `foes` 에 그때의 고유 번호(`FoeSlot.id`)를 찍어 둔다. 한동안 이 칸이
+   * 없어서 **10초 안에 걸어 들어온 놈까지 도발에 걸렸다** — 포효를 한 번
+   * 지르면 그 뒤에 온 무리도 알아서 탱커에게 달려드는 셈이라, 잡몹 구간에서
+   * 도발이 사실상 영구 방벽이 됐다.
+   *
+   * 소리는 그 자리에 있던 놈만 듣는다. 나중에 온 놈은 못 들었다.
+   *
+   * ## 판이 들고 있는 이유
+   *
+   * 마리마다 들고 있으면 `foes` 배열을 갈아 끼우는 열 군데를 다 고쳐야 한다.
+   * 한 곳만 빠뜨려도 조용히 사라진다 — 실제로 `foeHex` 를 그렇게 만들려다
+   * 그만뒀다.
    */
-  taunt: { who: string; ms: number } | null;
+  taunt: { who: string; ms: number; foes: readonly number[] } | null;
   /**
    * 적에게 걸려 있는 것들. 키는 **마리의 고유 번호** (`FoeSlot.id`).
    *
@@ -1912,12 +1923,12 @@ function aimOf(
   hp: Record<string, number>,
   rand: () => number,
   /**
-   * 지금 도발을 걸어 둔 사람 (CharId). 없으면 null.
+   * 지금 이 마리가 도발에 걸려 있으면 그 사람 (CharId). 아니면 null.
    *
    * **한 명을 고르는 공격만** 여기로 끌려온다 (평타 · `one` · `front` ·
-   * `low`). 전원기(`all`)와 둘(`two`)은 그대로다 — 도발은 "나를 노려라" 이지
-   * "저 기술을 나만 맞겠다" 가 아니고, 화면에서도 전원기가 한 명에게만
-   * 들어가면 무슨 기술인지 알 수가 없다.
+   * `low`). 전원기(`all`)와 둘을 치는 것(`two`)은 그대로다 — 도발은 "나를
+   * 노려라" 이지 "저 기술을 나만 맞겠다" 가 아니다. 범위기가 한 명에게만
+   * 들어가면 그건 범위기가 아니고, 화면에서도 무슨 기술인지 알 수가 없다.
    */
   taunt: string | null,
 ): OwnedChar[] {
@@ -2115,7 +2126,16 @@ export function battleTick(
   let taunt = st.taunt ?? null;
   if (taunt) {
     const left = (Number.isFinite(taunt.ms) ? taunt.ms : 0) - TICK_MS;
-    taunt = left > 0 && (st.hp[taunt.who] ?? 1) > 0 ? { ...taunt, ms: left } : null;
+    /*
+      명단이 없으면 **걷어낸다.**
+
+      `foes` 는 나중에 생긴 칸이라 그 전 저장본에는 없다. 없을 때 "전부에게
+      걸린 것" 으로 치면 이 칸을 만든 이유(나중에 온 놈은 안 걸린다)가
+      그 판에서만 조용히 사라진다. 10초짜리라 잃어도 손해가 없으므로,
+      애매하면 안 거는 쪽이 맞다.
+    */
+    const ok = Array.isArray(taunt.foes) && left > 0 && (st.hp[taunt.who] ?? 1) > 0;
+    taunt = ok ? { ...taunt, ms: left } : null;
   }
 
   /*
@@ -2405,11 +2425,16 @@ export function battleTick(
     일이 생기고, 실제로 시계는 잡몹 것을 쓰면서 공격력만 우두머리 것을 쓰고
     있었다.
   */
-  const hits: { atk: number; blow: Blow; pat: BossPattern | null }[] = [];
+  const hits: { atk: number; blow: Blow; pat: BossPattern | null; id: number }[] = [];
   for (const t of ticked) {
     for (let i = 0; i < t.swings; i++) {
-      /* 무슨 피해인지도 한 대마다 달고 간다 — 종마다 다를 수 있다 (`FoeKind.dmg`) */
-      hits.push({ atk: t.atk, blow: t.blow, pat: t.at[i] ?? null });
+      /*
+        무슨 피해인지도, **어느 마리가 쳤는지도** 한 대마다 달고 간다.
+
+        마리 번호는 도발이 쓴다 — 그때 서 있던 놈만 걸리므로, 치는 순간
+        "이놈이 그때 있었나" 를 물어야 한다 (`BattleState.taunt.foes`).
+      */
+      hits.push({ atk: t.atk, blow: t.blow, pat: t.at[i] ?? null, id: t.slot.id });
     }
   }
 
@@ -2426,7 +2451,9 @@ export function battleTick(
     /* 실제로 한 대 휘둘렀다 — 화면이 이 숫자로 팔을 움직인다 */
     swingSeq += 1;
 
-    const marks = aimOf(h.pat, alive, hp, rand, taunt?.who ?? null);
+    /* 도발은 **쓸 때 서 있던 놈**에게만 걸렸다 — 나중에 온 놈은 못 들었다 */
+    const baited = taunt && taunt.foes.includes(h.id) ? taunt.who : null;
+    const marks = aimOf(h.pat, alive, hp, rand, baited);
     /* 특수기에 맞은 사람은 화면이 표적으로 씌운다 (`BattleState.struck`) */
     if (h.pat) for (const m of marks) if (!struck.includes(m.id)) struck.push(m.id);
 
@@ -3033,7 +3060,20 @@ export function applySkill(
   if (sk.taunt) {
     if (!st.foes.length) return { battle: st, ev: NOTHING };
     return {
-      battle: { ...st, taunt: { who, ms: Math.round(sk.taunt * 1000) } },
+      battle: {
+        ...st,
+        taunt: {
+          who,
+          ms: Math.round(sk.taunt * 1000),
+          /*
+            **그 순간 서 있던 놈들**만 적어 둔다.
+
+            안 적어 두면 10초 안에 걸어 들어온 무리까지 걸려서, 포효 한 번이
+            잡몹 구간의 영구 방벽이 된다. 소리는 그 자리에 있던 놈만 듣는다.
+          */
+          foes: st.foes.map((f) => f.id),
+        },
+      },
       /* 피해도 회복도 0 이라 `ev` 로는 아무 일도 안 일어난 것처럼 보인다.
          부르는 쪽(`state/slices/roster`)이 그걸로 판단하면 안 되므로
          `applied` 를 켜서 "상태는 바뀌었다" 를 알린다 */

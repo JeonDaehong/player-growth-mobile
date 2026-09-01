@@ -232,6 +232,26 @@ SHEET LAYOUT:
 
 ## 다시 뽑을 때
 
+**색이 반전돼 나왔을 때** (바탕이 희고 그림이 검음)
+
+```
+The values are inverted. In this image the creature has come out as DARK shapes
+sitting on a LIGHT ground — or as a light-filled panel with the creature drawn
+into it in black.
+
+It must be the other way round. THE GROUND IS PURE BLACK AND IT IS EMPTY. The
+creature is drawn in PURE WHITE on top of it: a white filled silhouette, with its
+interior detail — eyes, mouth, seams, the gaps between limbs — cut back OUT of that
+white as black holes.
+
+There is no light background, no panel, no card, no frame, no vignette and no white
+rectangle anywhere. If you flood-fill the corner of a cell it must run all the way
+around the creature without meeting a wall.
+
+Keep the design, the pose and the proportions exactly as they are. Only the values
+swap.
+```
+
 **선만 남았을 때** (덩어리 없이 가는 획이 엉킴)
 
 ```

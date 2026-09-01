@@ -1467,33 +1467,48 @@ BOSSES = [
         'The oldest thing in the garden. Everything else here answers to it, and '
         'the ones that would not are in its roots. It is the last enemy the player '
         'meets and it has never lost.' + NL
-        + 'BODY: a COLOSSAL TREE, the largest and tallest silhouette of the entire '
-        'game, filling nearly its whole cell. A single vast trunk, straight and '
-        'unbroken, widening into a heavy buttressed base. Unlike every other boss '
-        'in this chapter IT IS NOT ROTTEN, NOT BROKEN AND NOT LEANING — and that '
-        'is not peace, it is the reason nothing has ever killed it. Everything '
-        'else in this garden is coming apart; this one has been WINNING.' + NL
-        + 'THE CROWN — THIS IS WHAT SAYS KING, and it is the first thing to get '
-        'right. SIX great limbs rise from the top of the trunk and sweep outward '
-        'and UP into a ring of hard upswept HORNS, each tapering to a spike, each '
-        'a different length, the longest twice the shortest. Between every horn '
-        'you can see black sky. There are NO leaves, no twigs and no soft mass '
-        'anywhere in it. It is a crown of points, not a canopy and not a dome — a '
-        'thing that could gore, worn by something that grew it. It rises well '
-        'above the trunk and it is the widest part of the creature.' + NL
-        + 'HELD UP IN THE CROWN — THE SPOILS. Gripped between the horns, one per '
-        'limb, are FIVE things it beat and never put down: the SNAPPED TRUNK of '
-        'another tree half its own thickness, held like a stick; a BELL; a SHIELD '
-        'with a horn driven clean through it; a RIBCAGE; and the SKULL OF A BEAST '
-        'larger than any mob in the game. They hang at different heights and wrong '
-        'angles, all of them raised ABOVE the mouth and the eyes. A king puts what '
-        'it beat where everyone can see it. These are also the scale reference: '
-        'the beast skull should look small up there.' + NL
+        + 'BODY — READ THIS TWICE, IT IS THE WHOLE PROBLEM WITH THIS CREATURE. '
+        'The TRUNK is ONE ENORMOUS SOLID FILLED COLUMN of white and it is the '
+        'single largest unbroken mass in the entire game. It runs from the bottom '
+        'of the cell to two-thirds height, it is AT LEAST A THIRD OF THE CELL WIDE '
+        'along its whole length, and it is FILLED — not outlined, not hatched, not '
+        'open. If you can see black through the middle of the trunk, the drawing '
+        'has failed.' + NL
+        + 'Everything else on this creature hangs off that column. The column is '
+        'what the player sees from across the field; the detail is what they find '
+        'when they look. Draw the column first and refuse to make it thinner.' + NL
+        + 'It is straight and UNBROKEN, widening into a heavy buttressed base. '
+        'Unlike every other boss in this chapter IT IS NOT ROTTEN, NOT BROKEN AND '
+        'NOT LEANING — and that is not peace, it is the reason nothing has ever '
+        'killed it. Everything else in this garden is coming apart; this one has '
+        'been WINNING.' + NL
+        + 'THE CROWN — THIS IS WHAT SAYS KING. SIX great limbs rise from the top '
+        'of the trunk and sweep outward and UP into a ring of hard upswept HORNS. '
+        'They are HORNS, NOT TWIGS: each one leaves the trunk AS THICK AS A '
+        'QUARTER OF THE TRUNK ITSELF, stays thick for most of its length, and only '
+        'tapers in the last third. Each is a different length, the longest twice '
+        'the shortest. Between every horn you can see black sky.' + NL
+        + 'SIX AND NO MORE. Do not add small branches, twigs, forks or offshoots '
+        'anywhere — the crown must read as six heavy shapes against the sky, not '
+        'as a thicket. There are NO leaves and no soft mass anywhere in it. It is '
+        'a crown of points, not a canopy — a thing that could gore, worn by '
+        'something that grew it. It rises well above the trunk and it is the '
+        'widest part of the creature.' + NL
+        + 'HELD UP IN THE CROWN — THE SPOILS. Gripped between the horns are '
+        'THREE things it beat and never put down: a SHIELD with a horn driven '
+        'clean through it, a BELL, and the SKULL OF A BEAST larger than any mob in '
+        'the game. THREE, not more — five was tried and the crown became clutter '
+        'that vanished at game size. Each is a SOLID heavy shape big enough to '
+        'read on its own, hung at a different height and a wrong angle, all of '
+        'them raised ABOVE the mouth and the eyes. A king puts what it beat where '
+        'everyone can see it.' + NL
         + 'THE PASSIVE — draw it in every cell: the trunk is armoured in HEAVY '
-        'OVERLAPPING BARK PLATES, thick slabs with deep hard-edged grooves between '
-        'them, layered like scales from the base to the crown. They are grown, not '
-        'fitted. They are what makes it hard to hurt and they are never absent, not '
-        'even in the struck cell.' + NL
+        'OVERLAPPING BARK PLATES. There are about EIGHT of them from base to '
+        'crown, each one a BIG SOLID SLAB as tall as a tenth of the trunk, '
+        'separated by a single deep black groove. EIGHT BIG PLATES, NOT FIFTY '
+        'SMALL SCALES — fine scaling turns into grey mush at game size and takes '
+        'the trunk down with it. They are grown, not fitted, and they are never '
+        'absent, not even in the struck cell.' + NL
         + 'THE MOUTH is a wide horizontal rift across the trunk beneath the crown, '
         'pulled open and grim, with TWELVE heavy teeth of solid wood — the four '
         'longest overshoot the opposite lip and stand outside the mouth even when '
@@ -1509,11 +1524,16 @@ BOSSES = [
         'into a BLADE. It is flattened, straight-edged and tapering to a point '
         'along its whole length, clearly different from the other five, and it is '
         'the only part of the creature that is not organic in outline.' + NL
-        + 'THE BASE: six buttress roots spread wide and sunk deep — and CAUGHT IN '
-        'THEM, half swallowed and lifted clear off the ground, are the broken '
-        'STUMPS OF THREE SMALLER TREES it pulled up whole. Their own roots still '
-        'trail from them. It does not travel and it never has: it made the others '
-        'come to it.',
+        + 'THE BASE: FOUR buttress roots, each a thick solid wedge as wide at the '
+        'trunk as the trunk is deep, spreading wide and sunk into the ground — so '
+        'the bottom of the creature is the WIDEST part after the crown, and the '
+        'whole silhouette reads as an hourglass standing on a heavy foot. Caught '
+        'between two of them, half swallowed and lifted clear of the ground, is '
+        'ONE broken STUMP of a smaller tree it pulled up whole. It does not travel '
+        'and it never has: it made the others come to it.' + NL
+        + 'NO TRAILING ROOT HAIRS, no fibres, no scattered debris around the base. '
+        'Four heavy wedges and one stump. Everything thin has been tried on this '
+        'creature and it came back as a scribble.',
         'standing at full height, the crown of horns raised, the five spoils hung '
         'among them, all six eyes aimed down and forward at the same point. Bark '
         'plates layered from base to crown, three uprooted stumps in the roots. It '
@@ -1526,7 +1546,7 @@ BOSSES = [
         'not brace — it simply reaches down, the way you reach for something on the '
         'floor. Short and contemptuous.',
         [('skill1', '태고의 성난 벼락',
-          '아군 전체에 공격력의 150%만큼 물리 피해, 대상의 스킬 게이지를 '
+          '아군 전체에 공격력의 150%만큼 물리 피해, 대상의 스킬 코스트를 '
           '50% 강제 차감 (평타 6대마다)',
           'THE FURY — it hits EVERYONE and strips what they were charging, so the '
           'creature OPENS UPWARD and takes the whole cell. The crown has been '
@@ -2569,6 +2589,26 @@ TEMPLATE = """# %(name)s, %(latin)s
 ---
 
 ## 다시 뽑을 때
+
+**색이 반전돼 나왔을 때** (바탕이 희고 그림이 검음)
+
+```
+The values are inverted. In this image the creature has come out as DARK shapes
+sitting on a LIGHT ground — or as a light-filled panel with the creature drawn
+into it in black.
+
+It must be the other way round. THE GROUND IS PURE BLACK AND IT IS EMPTY. The
+creature is drawn in PURE WHITE on top of it: a white filled silhouette, with its
+interior detail — eyes, mouth, seams, the gaps between limbs — cut back OUT of that
+white as black holes.
+
+There is no light background, no panel, no card, no frame, no vignette and no white
+rectangle anywhere. If you flood-fill the corner of a cell it must run all the way
+around the creature without meeting a wall.
+
+Keep the design, the pose and the proportions exactly as they are. Only the values
+swap.
+```
 
 **선만 남았을 때** (덩어리 없이 가는 획이 엉킴)
 

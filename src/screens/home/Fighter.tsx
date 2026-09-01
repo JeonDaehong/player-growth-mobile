@@ -43,7 +43,7 @@ import { ZOOM, depthAt } from './Ground';
 import { DamageNumber, HealMarks, HitBurst, SkillShout, StruckMark } from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
-import { SkillFx } from './SkillFx';
+import { BodyFlash, SkillFx } from './SkillFx';
 
 /**
  * 베는 동작 세 칸의 길이 (ms).
@@ -993,6 +993,29 @@ function FighterView({
         nonce={shout.no}
         size={size}
       />
+
+      {/*
+        ── 몸이 한 번 번쩍인다 ── 리안느의 광란 하나다.
+
+        저 기술은 **아무것도 몸을 안 떠난다** — 화살도 빛도 파동도 없이 5초간
+        제 공격속도가 두 배가 될 뿐이라, 그림이 아무리 좋아도 화면에서는
+        "자세를 바꿨다" 로 끝났다.
+
+        에셋이 이미 흰 픽셀이라 밝게 할 수가 없다. 대신 **제 실루엣을 한 장
+        더 뒤에 깔고 키운다** — 같은 모양이 몸보다 조금 크게 뒤에 있다가
+        퍼지며 사라지므로, 가장자리에서 빛이 샌 것으로 읽힌다. 자세가 바뀌면
+        그 모양도 같이 바뀌므로 늘 정확히 이 사람의 윤곽이다.
+      */}
+      <BodyFlash nonce={castSk?.cast === 'haste' ? shout.no : 0} size={size}>
+        <Sprite
+          set={ch.id}
+          name={frame}
+          size={size}
+          style={{ transform: [{ translateY: Math.round(size * spriteGap(ch.id, frame)) }] }}
+          fallbackSet="duel"
+          fallbackName={SK_FALLBACK[frame] ?? CUT_FALLBACK[frame] ?? frame}
+        />
+      </BodyFlash>
       {/* 정화를 맞은 쪽 — 쓴 사람과 상관없이 걷힌 사람에게서 난다 */}
       <SkillFx kind="cleanse" nonce={purify} size={size} />
 
