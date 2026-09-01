@@ -78,6 +78,8 @@ THE CREATURE (the same one in all 6 cells):
 A centipede so long it was cut in half once and both halves kept walking.
 BODY: a LONG segmented tube, held in a wide flat S so the whole length fits — head low and forward on the left, the middle rising, the tail doubling back above. TWELVE plates, each overlapping the next, each a little narrower toward the tail. The plate rhythm is the creature.
 THE MIDDLE SEAM — this one only: exactly halfway along the body, ONE plate is not like the others. It is a double plate, thicker than its neighbours, with a clean straight SPLIT LINE running all the way across it and a row of five short interlocking hooks along that line, like a clasp. It is the only straight line on the whole animal and it says the body comes apart there. It must be visible in EVERY cell.
+THE INFESTATION — this one: the CLASP SEAM at the middle of the body is not holding by itself any more. The growth has come up through it from inside, packing the gap between the two halves and standing out along the whole clasp line, so the one straight line on the animal is now a ridge of broken mineral. It is what will split, and it looks it.
+THE REPLACED PART: of the two fangs, the LEFT one is not hollow bone — it is a straight faceted shaft with no groove and no curve, and it is longer than the right. What it injects is not its own.
 LEGS: eight pairs down the front half, six down the back, all bending up then down, all ending in a hook. Three are broken to stumps.
 HEAD: small, a fifth of the body height. Two hard FANGS curve inward from the sides, each as long as the head is wide, with a visible groove running their length — they are hollow and they inject.
 EYES: a cluster of six small domes on each side of the head, uneven.
@@ -217,6 +219,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

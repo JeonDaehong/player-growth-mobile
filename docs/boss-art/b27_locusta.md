@@ -71,6 +71,8 @@ BODY: a long armoured trunk held at a low forward angle, WIDER THAN TALL, front 
 THE MOUTH IS THE ANIMAL. It takes up the entire front quarter of the body: FOUR hard chewing plates arranged around a square opening, opening SIDEWAYS in two pairs, each plate ridged with a coarse row of grinding teeth along its inner edge. It is far too big to close properly and it never does.
 HIND LEGS: one enormous pair, folded into a tight Z that stands HIGHER THAN THE BACK — the thigh as thick as the body. Four smaller front legs below. That folded Z is the second thing you see after the mouth.
 WHAT IT ATE — this one only: hard things are lodged in the mouth plates and in the throat behind them, half ground down and never swallowed — a ploughshare, a bent horseshoe, two broken fence staves. They stand in the gaps between the plates at wrong angles. Nothing else in the region has worked metal in it.
+THE INFESTATION — this one: the growth has come out of the THROAT behind the mouth plates, forcing the two plates behind the head apart so you can see into it. On a creature whose whole read is a mouth, the breach is in the thing it eats with.
+THE REPLACED PART: one of the four chewing plates is a flat faceted slab with no grinding ridge along its inner edge. It does not match the three around it and it cannot chew — it only holds.
 WINGS: a short hard pair folded flat along the back, too small to lift anything this size, both chipped along the trailing edge.
 HEAD: two dull compound domes set far apart on the sides, and two short antennae, one snapped.
 ABDOMEN: distended and banded, dragging.
@@ -206,6 +208,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

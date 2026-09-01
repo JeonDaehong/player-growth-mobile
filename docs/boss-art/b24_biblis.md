@@ -72,6 +72,8 @@ SUBJECT: a 4-frame animation sheet of ONE single creature, left to right. The cr
 THE CREATURE (the same one in all 4 cells):
 A moth that has been dead long enough that the dust does the flying.
 BODY: a narrow furred thorax and a short tapering abdomen, small and almost an afterthought — the WINGS are the animal. The body hangs vertically, head up.
+THE INFESTATION — this one: the growth has come through the THORAX between the wing roots, a cluster big enough to force the upper pair apart so they no longer sit level with each other. On a creature that is mostly wings, the thing that holds them has been broken open.
+THE REPLACED PART: one of the two EYE-SPOTS on the upper wings is not a marking. It is a real faceted lump grown through the wing membrane in the shape of the spot, standing proud on both sides, and it is the one that does not match the other.
 WINGS: TWO enormous pairs, spread wide and held FLAT, together three times the width of the body. They are ragged: the outer edges are eaten into deep scallops, three holes are punched clean through the upper pair, and the lower pair is torn to half length on one side. Across each upper wing is ONE huge EYE-SPOT — a thick ring with a solid centre, as wide as the thorax. The two eye-spots are DIFFERENT SIZES and sit at different heights.
 THE REAL EYES are small, two dull domes on a head half buried in fur, and they are far less noticeable than the false ones. That mismatch is the whole idea: the thing looking at you is not looking at you.
 THE DUST — this one only: fine loose FLAKES are coming off the wing edges and hanging in the black. Draw them as a scatter of separate small solid shapes, biggest near the wing and smaller further out, thinning to nothing. Never as a cloud, never as a gradient. They are in every cell and they are how the passive shows.
@@ -209,6 +211,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

@@ -63,6 +63,8 @@ THE CREATURE (the same one in all 3 cells):
 A mantis that has not moved from this spot in a very long time and is still not finished waiting.
 BODY: an UPRIGHT narrow trunk, TALLER THAN WIDE, standing almost vertical on the back four legs with the front third of the body raised clear off the ground. It is the only mob in the region that stands up.
 THE SCYTHES — this one only, and it is the silhouette: TWO enormous forelimbs held FOLDED and RAISED in front of the chest, each folded into a tight Z whose upper edge stands HIGHER THAN THE HEAD. Each blade is a flat hard hook lined with SIX inward spines along its inner edge, and the two are held slightly apart so you can see black between them.
+THE BREACH — this one: the growth has come out through the joint of the LEFT scythe where it folds, so that arm cannot close all the way and is held a little more open than the right one. On a creature whose whole read is two matched hooks, one that will not shut is the first thing you see.
+THE REPLACED PART: three of the six inward spines on that same left blade are not spines — they are flat faceted teeth, squarer and duller than the others.
 THAT IS THE READ: two hooks standing above a thin upright body. Nothing else in this game holds a weapon above itself — everything else reaches forward or hangs down.
 HEAD: a small hard triangle turned to face the viewer while the body faces sideways — the only creature in the game whose head is turned against its own body. Two large compound domes fill the upper corners; between them two short mouth plates opening sideways.
 ANTENNAE: two long thin feelers swept back, one broken to half.
@@ -195,6 +197,46 @@ knights with antennae. Segmented, chitinous animals built out of hard plates.
 
 THEY ARE NOT WET. The slime chapter owns drips; do not borrow them. These are dry,
 hard and dusty.
+
+THE INFESTATION — EVERY CREATURE IN THIS REGION HAS IT, AND IT IS WHAT MAKES THEM
+DIFFERENT FROM INSECTS.
+
+These are not bugs. They are bugs that something got into. The earlier chapters
+each carry a mark like this — the slimes hold what they swallowed, the plants grow
+new wood out of their own dead — and this chapter was drawn without one, which is
+exactly why the first attempts came back looking like ordinary entomology. Draw
+BOTH of the following on every creature, in every cell.
+
+1. THE BREACH. Somewhere on the body the chitin has SPLIT OPEN — a hard-edged
+   crack with the plate lifted and curled back around it, and the gap behind it
+   BLACK. Pushing out through that gap is GROWTH that does not belong to the
+   animal: three to five hard FACETED lumps, flat-sided and angular like broken
+   mineral, of clearly different sizes, packed together and standing proud of the
+   shell.
+   - It is HARD AND FLAT-SIDED. Not fungus, not slime, not fur, not smoke, not
+     flame, and not a star of crystal spikes. Think broken stone forced up through
+     a crack from underneath.
+   - It has NO glow, NO aura, NO particles, NO haze. Two colours cannot draw any
+     of those and every attempt becomes a white smear that never goes away.
+   - It is the SAME material on every creature in the region. Only the PLACE
+     changes, and the place is named in the description above.
+   - The black of the gap is part of the shape. Do not fill it in.
+
+2. THE PART THAT IS NO LONGER ITS OWN. One piece of the animal has been REPLACED
+   by that same growth — an eye socket filled with a blind faceted lump, a leg
+   whose lower half is a straight angular shaft instead of a joint, one jaw plate
+   grown over solid. It is grown roughly into the shape of the missing part but it
+   is WRONG: too straight, too angular, and it does not match its pair on the
+   other side.
+   - This is NOT a healed injury. A stump that closed over says the animal
+     survived something. This says the animal LOST that part and something else
+     is using the space.
+   - Exactly ONE part per creature. Two makes it a pile of rocks.
+
+THE ASYMMETRY IS THE READ. At game size nobody will see facets. What they will see
+is that ONE SIDE OF THE CREATURE IS WRONG — a dark hole with something jagged in
+it, and a limb that does not match its twin. Make that difference big enough to
+survive the size.
 
 IT IS ALIVE AND IT IS COMING FOR YOU.
 

@@ -77,6 +77,8 @@ A firefly that swallowed its own light and has been swelling ever since.
 BODY: a long soft segmented GRUB, TALLER THAN WIDE, held upright and curved back like a comma — heavy round tail end at the bottom, narrow head reaching forward at the top. NINE segments, each a fat ring, each ring divided from the next by a deep pinch.
 THE LIGHT ORGANS — this one only: the last THREE segments before the tail are not soft. They are hard, translucent CHAMBERS, drawn as thick rings with hollow black centres, and each one is packed with a coarse grid of small cells like a honeycomb seen edge-on. They are the only hollow shapes on the whole animal, and they are what is about to go off.
 THE SKIN IS TOO TIGHT. Between every pair of segments the surface has SPLIT into a short crack, four of them, and something pale is showing through. It is over-full.
+THE INFESTATION — this one: the growth is INSIDE the three light chambers. Their hollow rings are packed with faceted lumps instead of the honeycomb grid, pressing against the walls from within so the chambers bulge out of round. That is what makes it over-full, and that is what goes off.
+THE REPLACED PART: the last tail segment is not a segment. It is one solid faceted block in roughly the shape of a ring, with no pinch between it and the one before — the body ends in something that did not grow there.
 LEGS: six short pairs down the front half, stubby and hooked, plus four fleshy prolegs at the back that grip. All small — it barely walks.
 HEAD: tiny, a hard capsule with two mouth plates opening sideways and a pair of very short blunt horns. Eyes are four dull dots, almost lost.
 DRIPS: two heavy drops hang off the underside of the tail and stop in empty black.
@@ -213,6 +215,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

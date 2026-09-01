@@ -71,6 +71,8 @@ THE CREATURE (the same one in all 4 cells):
 A mosquito that has fed so long it can no longer fly straight.
 BODY: a thin, LONG, needle-straight abdomen held at a steep angle, attached to a small hunched thorax. The abdomen is the length of the whole rest of the animal and it is SWOLLEN in its middle third — a taut bulge with the segment bands stretched apart around it. Empty at both ends, full in the middle.
 THE PROBOSCIS is the point of the creature: a single rigid needle projecting forward from the head, AS LONG AS THE ABDOMEN, dead straight, with a hair-fine taper and three tiny backward barbs near the tip. It is the longest straight line in the region.
+THE INFESTATION — this one: the growth has come through the SWOLLEN section of the abdomen, splitting one of the two healed punctures open again and standing out of it in a heavy cluster. It is the only thick part of an animal made of lines, and it has been broken into.
+THE REPLACED PART: the base collar of the needle is faceted, and so is the first third of the needle itself — straight, flat-sided, and visibly a different material from the fine taper beyond it. What it drains through is not its own.
 LEGS: three pairs, absurdly long and thin, each bending twice, splayed wide so the body hangs low between them. One is broken at the second joint and hangs. They are drawn as hard hairlines with visible joints, never as smooth curves.
 WINGS: one pair only, narrow and held back, both scarred with two long tears each. Too small for the swollen body.
 HEAD: mostly two compound domes, and between them the base of the needle, thickened into a hard collar.
@@ -208,6 +210,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

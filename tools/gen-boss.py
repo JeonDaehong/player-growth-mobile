@@ -207,7 +207,29 @@ cart.
   broken short. They are the only soft-looking thing on it.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
-  thinking, the drawing must not say."""
+  thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in."""""
 
 
 PASSIVE_MARK = """IT IS ALWAYS DOING SOMETHING, EVEN STANDING STILL.
@@ -1704,7 +1726,7 @@ BOSSES += [
         'it and a row of five short interlocking hooks along that line, like a '
         'clasp. It is the only straight line on the whole animal and it says the '
         'body comes apart there. It must be visible in EVERY cell.' + NL
-        + 'LEGS: eight pairs down the front half, six down the back, all bending '
+        + 'THE INFESTATION — this one: the CLASP SEAM at the middle of the body is not holding by itself any more. The growth has come up through it from inside, packing the gap between the two halves and standing out along the whole clasp line, so the one straight line on the animal is now a ridge of broken mineral. It is what will split, and it looks it.' + NL        + 'THE REPLACED PART: of the two fangs, the LEFT one is not hollow bone — it is a straight faceted shaft with no groove and no curve, and it is longer than the right. What it injects is not its own.' + NL        + 'LEGS: eight pairs down the front half, six down the back, all bending '
         'up then down, all ending in a hook. Three are broken to stumps.' + NL
         + 'HEAD: small, a fifth of the body height. Two hard FANGS curve inward '
         'from the sides, each as long as the head is wide, with a visible groove '
@@ -1792,7 +1814,7 @@ BOSSES += [
         'shaped, TALLER THAN WIDE, hanging as if the weight is all at the bottom. '
         'The abdomen is banded in SEVEN thick plates. It does not stand on the '
         'ground; it hangs in the air.' + NL
-        + 'WINGS: FOUR, held out and back, thin and hard, each one a flat blade '
+        + 'THE INFESTATION — this one: the growth has come up through the COMB fused to its shoulders, splitting three of the hexagonal cells open from beneath and filling them with faceted lumps instead of wax. The one thing on this creature that was built has been overrun.' + NL        + 'THE REPLACED PART: the STING is not a barbed spike any more. It is a straight faceted lance, thicker and blunter, growing out of a hardened socket where the abdomen tip split around it.' + NL        + 'WINGS: FOUR, held out and back, thin and hard, each one a flat blade '
         'with a coarse grid of veins showing through. Two are whole. One is torn '
         'to two-thirds. One is a stub. Uneven wings are what stop it looking '
         'decorative.' + NL
@@ -1863,7 +1885,7 @@ BOSSES += [
         'ram, flat on top, blunt at the tip, as wide as the head and reaching '
         'forward past everything else. It is not a spike — it is a wall on the '
         'front of the body. It has three deep dents in it that never healed.' + NL
-        + 'LEGS: three pairs, short and thick, spread wide and braced, each knee '
+        + 'THE INFESTATION — this one: the MOULT RIDGE down the middle of the carapace has burst. Between the third and fourth crossbar stitches the shell has torn wide open and a heavy cluster of growth stands up out of it — the seam that is supposed to hold the armour shut is the place the armour failed.' + NL        + 'THE REPLACED PART: the horn is no longer solid bone across its whole width. Its right half is faceted, flat-sided and squared off, and the two halves do not meet cleanly — the ram is half its own and half something else.' + NL        + 'LEGS: three pairs, short and thick, spread wide and braced, each knee '
         'bending up then down, each foot a broad hook that grips. It is built low '
         'and it is built to push.' + NL
         + 'HEAD: almost hidden under the horn. Two small compound domes visible '
@@ -1937,7 +1959,7 @@ BOSSES += [
         + 'BODY: a narrow furred thorax and a short tapering abdomen, small and '
         'almost an afterthought — the WINGS are the animal. The body hangs '
         'vertically, head up.' + NL
-        + 'WINGS: TWO enormous pairs, spread wide and held FLAT, together three '
+        + 'THE INFESTATION — this one: the growth has come through the THORAX between the wing roots, a cluster big enough to force the upper pair apart so they no longer sit level with each other. On a creature that is mostly wings, the thing that holds them has been broken open.' + NL        + 'THE REPLACED PART: one of the two EYE-SPOTS on the upper wings is not a marking. It is a real faceted lump grown through the wing membrane in the shape of the spot, standing proud on both sides, and it is the one that does not match the other.' + NL        + 'WINGS: TWO enormous pairs, spread wide and held FLAT, together three '
         'times the width of the body. They are ragged: the outer edges are eaten '
         'into deep scallops, three holes are punched clean through the upper '
         'pair, and the lower pair is torn to half length on one side. Across each '
@@ -2012,7 +2034,7 @@ BOSSES += [
         'cephalothorax in front, and behind it an ENORMOUS swollen abdomen, twice '
         'its size, hanging low and heavy. The abdomen is not armoured: it is soft, '
         'stretched, and banded with strain lines. That contrast is the animal.' + NL
-        + 'LEGS: FOUR pairs, long, each folding up above the body before coming '
+        + 'THE INFESTATION — this one: the growth has come out through the WAIST, the narrow join between her two masses, packing it like a collar so the front half and the abdomen are held together by the thing in her rather than by her. It is visible from every angle and it is the reason her moult never finished.' + NL        + 'THE REPLACED PART: three of the EIGHT EYES are gone. In their sockets sit blind faceted lumps, flat-sided, all three on the same side of the bank — half her face still watches and half of it cannot.' + NL        + 'LEGS: FOUR pairs, long, each folding up above the body before coming '
         'down — so the knees stand HIGHER THAN THE BACK and the body hangs slung '
         'between them. Two legs are shorter than the rest and one ends in a stump. '
         'The span of the legs is twice the span of the body.' + NL
@@ -2114,7 +2136,7 @@ BOSSES += [
         + 'THE SKIN IS TOO TIGHT. Between every pair of segments the surface has '
         'SPLIT into a short crack, four of them, and something pale is showing '
         'through. It is over-full.' + NL
-        + 'LEGS: six short pairs down the front half, stubby and hooked, plus four '
+        + 'THE INFESTATION — this one: the growth is INSIDE the three light chambers. Their hollow rings are packed with faceted lumps instead of the honeycomb grid, pressing against the walls from within so the chambers bulge out of round. That is what makes it over-full, and that is what goes off.' + NL        + 'THE REPLACED PART: the last tail segment is not a segment. It is one solid faceted block in roughly the shape of a ring, with no pinch between it and the one before — the body ends in something that did not grow there.' + NL        + 'LEGS: six short pairs down the front half, stubby and hooked, plus four '
         'fleshy prolegs at the back that grip. All small — it barely walks.' + NL
         + 'HEAD: tiny, a hard capsule with two mouth plates opening sideways and '
         'a pair of very short blunt horns. Eyes are four dull dots, almost lost.'
@@ -2196,7 +2218,7 @@ BOSSES += [
         'ploughshare, a bent horseshoe, two broken fence staves. They stand in the '
         'gaps between the plates at wrong angles. Nothing else in the region has '
         'worked metal in it.' + NL
-        + 'WINGS: a short hard pair folded flat along the back, too small to lift '
+        + 'THE INFESTATION — this one: the growth has come out of the THROAT behind the mouth plates, forcing the two plates behind the head apart so you can see into it. On a creature whose whole read is a mouth, the breach is in the thing it eats with.' + NL        + 'THE REPLACED PART: one of the four chewing plates is a flat faceted slab with no grinding ridge along its inner edge. It does not match the three around it and it cannot chew — it only holds.' + NL        + 'WINGS: a short hard pair folded flat along the back, too small to lift '
         'anything this size, both chipped along the trailing edge.' + NL
         + 'HEAD: two dull compound domes set far apart on the sides, and two short '
         'antennae, one snapped.' + NL
@@ -2259,7 +2281,7 @@ BOSSES += [
         'projecting forward from the head, AS LONG AS THE ABDOMEN, dead straight, '
         'with a hair-fine taper and three tiny backward barbs near the tip. It is '
         'the longest straight line in the region.' + NL
-        + 'LEGS: three pairs, absurdly long and thin, each bending twice, splayed '
+        + 'THE INFESTATION — this one: the growth has come through the SWOLLEN section of the abdomen, splitting one of the two healed punctures open again and standing out of it in a heavy cluster. It is the only thick part of an animal made of lines, and it has been broken into.' + NL        + 'THE REPLACED PART: the base collar of the needle is faceted, and so is the first third of the needle itself — straight, flat-sided, and visibly a different material from the fine taper beyond it. What it drains through is not its own.' + NL        + 'LEGS: three pairs, absurdly long and thin, each bending twice, splayed '
         'wide so the body hangs low between them. One is broken at the second '
         'joint and hangs. They are drawn as hard hairlines with visible joints, '
         'never as smooth curves.' + NL
@@ -2337,7 +2359,7 @@ BOSSES += [
         + 'THAT IS THE SILHOUETTE: a low insect body with a crown of five clubs '
         'standing above it, all different heights. Nothing else in the game grows '
         'up out of itself like that.' + NL
-        + 'LEGS: three pairs, locked stiff and splayed — the joints have set and '
+        + 'THE INFESTATION — this one is nearly complete, and it is the point of the creature: the ant is a husk and the growth has come through it in FOUR places at once — both waists and two of the caved-in shell panels — so the body is held together more by the mineral than by the chitin. Each breach is a black hole with faceted lumps standing out of it.' + NL        + 'THE REPLACED PART: the MANDIBLES. Both are gone; what is locked half open in their place are two straight faceted shafts, unmatched in length, that cannot close.' + NL        + 'LEGS: three pairs, locked stiff and splayed — the joints have set and '
         'no longer bend properly. One leg is fully rigid and drags.' + NL
         + 'HEAD: mandibles locked half open and they no longer close. The eyes are '
         'gone: both sockets are open and one has a small stalk growing from it.' + NL
@@ -2418,7 +2440,7 @@ BOSSES += [
         + 'THE ARMS: TWO enormous forelimbs raised and held apart, each ending in '
         'a hard splitting blade, both bending the wrong way at the elbow. They '
         'are the only symmetrical thing on it, and they are held wide.' + NL
-        + 'HEAD: a hard capsule with a bank of TEN eyes in three rows, and four '
+        + 'THE INFESTATION — this one has finished. The growth is not pushing through the shell any more; it IS the shell in places. Down the whole front of the thorax, four of the nine plates are faceted slabs rather than chitin, flat-sided and squared, and the seams between them and the living plates are black gaps you can see into. The absorbed parts of the earlier creatures are set INTO those faceted plates, not into the living ones — the thing in it is what collected them.' + NL        + 'THE REPLACED PART: the LEFT forelimb blade. Where the right one is a hard organic splitting blade, the left is one straight faceted shaft with a flat squared edge, longer than its twin and completely unmatched. The one thing on this creature that is symmetrical is not.' + NL        + 'HEAD: a hard capsule with a bank of TEN eyes in three rows, and four '
         'mouth plates that open sideways in two pairs. It is a fraction of the '
         'body and it is the darkest, most closed part.' + NL
         + 'THE MOULT: a full split, dry, hollow SHELL of a previous body stands '

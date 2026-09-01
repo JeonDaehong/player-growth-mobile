@@ -61,6 +61,8 @@ THE CREATURE (the same one in all 3 cells):
 A dragonfly that stopped needing to land.
 BODY: a LONG straight rod of an abdomen, held dead horizontal, eight segments, tapering evenly from a compact thorax to a blunt tip. It does not curve and it does not hang — it is the straightest shape in the region.
 THE WINGS — this one only, and it is the silhouette: FOUR long narrow blades held out FLAT and STRAIGHT, two forward and two back, spread into a wide X across the body. Each is more than the length of the abdomen, each a hard flat plane with a coarse grid of veins showing through, each ending in a blunt square tip. They are held rigid and level — this animal glides, it does not beat.
+THE BREACH — this one: the growth has come through the underside of the abdomen at the fourth segment, a cluster hanging below the otherwise dead-straight rod, and it is the only thing that breaks that straight line anywhere on the animal.
+THE REPLACED PART: the wing that is cut square off at two-thirds does not end in a tear — it ends in a flat faceted edge, as if the missing third had been replaced by a straight cut of the same material.
 THAT IS THE READ: a long horizontal rod with a wide X across it. Nothing else in the game is a cross.
 THE WINGS ARE DAMAGED, UNEVENLY: one is whole; one has a long tear from the tip inward; one is cut square off at two-thirds; one has three round holes punched through it. Matched wings read as an ornament.
 HEAD: almost entirely TWO enormous compound domes that meet in the middle, together wider than the thorax and pitted with a coarse grid. They are the largest eyes in the game relative to the body. Below them, two short mouth plates.
@@ -192,6 +194,46 @@ knights with antennae. Segmented, chitinous animals built out of hard plates.
 
 THEY ARE NOT WET. The slime chapter owns drips; do not borrow them. These are dry,
 hard and dusty.
+
+THE INFESTATION — EVERY CREATURE IN THIS REGION HAS IT, AND IT IS WHAT MAKES THEM
+DIFFERENT FROM INSECTS.
+
+These are not bugs. They are bugs that something got into. The earlier chapters
+each carry a mark like this — the slimes hold what they swallowed, the plants grow
+new wood out of their own dead — and this chapter was drawn without one, which is
+exactly why the first attempts came back looking like ordinary entomology. Draw
+BOTH of the following on every creature, in every cell.
+
+1. THE BREACH. Somewhere on the body the chitin has SPLIT OPEN — a hard-edged
+   crack with the plate lifted and curled back around it, and the gap behind it
+   BLACK. Pushing out through that gap is GROWTH that does not belong to the
+   animal: three to five hard FACETED lumps, flat-sided and angular like broken
+   mineral, of clearly different sizes, packed together and standing proud of the
+   shell.
+   - It is HARD AND FLAT-SIDED. Not fungus, not slime, not fur, not smoke, not
+     flame, and not a star of crystal spikes. Think broken stone forced up through
+     a crack from underneath.
+   - It has NO glow, NO aura, NO particles, NO haze. Two colours cannot draw any
+     of those and every attempt becomes a white smear that never goes away.
+   - It is the SAME material on every creature in the region. Only the PLACE
+     changes, and the place is named in the description above.
+   - The black of the gap is part of the shape. Do not fill it in.
+
+2. THE PART THAT IS NO LONGER ITS OWN. One piece of the animal has been REPLACED
+   by that same growth — an eye socket filled with a blind faceted lump, a leg
+   whose lower half is a straight angular shaft instead of a joint, one jaw plate
+   grown over solid. It is grown roughly into the shape of the missing part but it
+   is WRONG: too straight, too angular, and it does not match its pair on the
+   other side.
+   - This is NOT a healed injury. A stump that closed over says the animal
+     survived something. This says the animal LOST that part and something else
+     is using the space.
+   - Exactly ONE part per creature. Two makes it a pile of rocks.
+
+THE ASYMMETRY IS THE READ. At game size nobody will see facets. What they will see
+is that ONE SIDE OF THE CREATURE IS WRONG — a dark hole with something jagged in
+it, and a limb that does not match its twin. Make that difference big enough to
+survive the size.
 
 IT IS ALIVE AND IT IS COMING FOR YOU.
 

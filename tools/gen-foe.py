@@ -1935,6 +1935,8 @@ FOES += [
         'outline is a row of bumps along the top and the bottom. That bumpy edge is '
         'the whole read — nothing else in the chapter has a repeating scalloped '
         'outline.' + NL
+        + 'THE BREACH — this one: between the FOURTH and FIFTH segment rings on the upper side, the two plates have been forced apart and the growth has come up between them, lifting the fifth ring visibly higher than the fourth so the row of bumps along the back has a WRONG STEP in it.' + NL
+        + 'THE REPLACED PART: the rear pair of prolegs is gone. In its place, one straight angular shaft comes down from the body and ends flat on the ground — it does not grip and it does not bend.' + NL
         + 'LEGS: six tiny hooked pairs bunched under the front third, and four '
         'fleshy prolegs gripping at the back. All of them are short — it drags more '
         'than it walks.' + NL
@@ -1986,7 +1988,8 @@ FOES += [
         + 'FRONT LEGS: two small hooked pairs under the chest, almost incidental.' + NL
         + 'WINGS: a short hard pair folded flat along the back, reaching only '
         'halfway down the body, one torn at the tip. Too small to fly on.' + NL
-        + 'HEAD: angled down, with two mouth plates opening sideways and two very '
+        + 'THE BREACH — this one: the left hind thigh, the thickest part of the animal, has split down its outer face and the growth fills the crack along its whole length, so that leg reads as CRUSTED where the right one is smooth.' + NL
+        + 'THE REPLACED PART: one of the two long antennae is not a feeler any more — it is a straight rigid rod of the same faceted material, unbending, sticking out at the wrong angle while the real one trails back.' + NL        + 'HEAD: angled down, with two mouth plates opening sideways and two very '
         'long thin ANTENNAE swept back over the body, together longer than the '
         'creature is. One is snapped to half length.' + NL
         + 'EYES: two compound domes on the sides of the head, pitted with a coarse '
@@ -2030,7 +2033,8 @@ FOES += [
         + 'THE PLATE IS THE READ. Nothing else here is a single broad slab; the '
         'others are chains of segments. Keep the outline of that slab clean and '
         'unbroken — the legs stick out from under it, they never break its edge.' + NL
-        + 'LEGS: three pairs, short and splayed, poking out from beneath the plate '
+        + 'THE BREACH — this one: a wedge has been broken out of the rim of the shield plate on the right side, and the growth has come up through the hole and stands above the plate — the only thing that breaks that clean slab outline anywhere.' + NL
+        + 'THE REPLACED PART: one of the two eye domes at the front corners is a blind faceted lump. The other is a normal pitted dome. They do not match and that mismatch is on the side you see first.' + NL        + 'LEGS: three pairs, short and splayed, poking out from beneath the plate '
         'at the sides. One is a healed stump.' + NL
         + 'HEAD: small and mostly hidden under the front of the plate. From it, a '
         'short thick ROSTRUM — a hard downward-pointing beak, blunt, a third of the '
@@ -2074,7 +2078,8 @@ FOES += [
         + 'BODY: TINY compared to its legs — two small masses at a narrow waist, '
         'together no more than a third of the creature\'s span. The abdomen is a '
         'plain rounded sac; the front is a small hard plate.' + NL
-        + 'LEGS: FOUR pairs, LONG — each one two to three times the length of the '
+        + 'THE BREACH — this one: the abdomen sac has split across its underside and the growth hangs out of it in a heavy cluster, dragging the whole body lower between the legs than it should hang.' + NL
+        + 'THE REPLACED PART: one of the eight legs is a straight angular shaft from the knee down, with no second bend and no hook. It is the only straight line in a creature made of curves.' + NL        + 'LEGS: FOUR pairs, LONG — each one two to three times the length of the '
         'body, folding UP above the body before coming down, so the knees stand '
         'well HIGHER THAN THE BACK and the body hangs slung between them. The leg '
         'span is the silhouette; the body is almost an afterthought. Two legs are '
@@ -2129,7 +2134,8 @@ FOES += [
         'enormous MANDIBLES, each as long as the head itself, curved and toothed '
         'along the inner edge, opening SIDEWAYS to a spread wider than the body. '
         'The head and jaws together are half the creature.' + NL
-        + 'LEGS: three pairs, thick and short, braced wide, each bending up then '
+        + 'THE BREACH — this one: the FRONT WAIST, the narrowest point of the animal, has split all the way round and the growth fills that gap like a collar — the head and the thorax are no longer joined by the animal, they are joined by the thing in it.' + NL
+        + 'THE REPLACED PART: the broken left mandible has not healed. Its missing tip has been replaced by a straight faceted point, longer and thinner than the right mandible\'s curve, and it does not close against it.' + NL        + 'LEGS: three pairs, thick and short, braced wide, each bending up then '
         'down, each ending in a two-part hook. Built to hold ground.' + NL
         + 'EYES: two small dull domes far back on the head, almost vestigial — this '
         'one works by touch.' + NL
@@ -2175,7 +2181,8 @@ FOES += [
         + 'THE HALF-SHELL — this one only: a broken piece of hexagonal COMB CAP is '
         'still stuck to its back and one shoulder, a jagged fragment with two whole '
         'hex cells in it. It never got all the way out.' + NL
-        + 'LEGS: three pairs, folded up tight under the thorax, thin and hooked.' + NL
+        + 'THE BREACH — this one: the growth has come up through the ROOT of the one whole wing, wedged into the joint, so that wing is held at a fixed wrong angle and cannot fold with the others.' + NL
+        + 'THE REPLACED PART: the sting is not a barb any more — it is a straight faceted spike, thicker and blunter than a sting, and the abdomen tip has hardened around where it comes out.' + NL        + 'LEGS: three pairs, folded up tight under the thorax, thin and hooked.' + NL
         + 'HEAD: two large compound domes covering most of it, and two short mouth '
         'plates below. One dome is caved in.' + NL
         + 'STING: a short straight barb at the abdomen tip, half the length of the '
@@ -2218,7 +2225,8 @@ FOES += [
         + 'THE NEEDLE: a single rigid PROBOSCIS projecting forward from the head, as '
         'long as the abdomen, dead straight, tapering to a hair point. It is the '
         'longest straight line in the chapter.' + NL
-        + 'LEGS: three pairs, absurdly long and thin, each bending TWICE, splayed so '
+        + 'THE BREACH — this one: the thorax, the only thick part of this creature, has split on top and carries a cluster of growth that is nearly as big as the thorax itself — a heavy lump on an animal made of lines.' + NL
+        + 'THE REPLACED PART: one of the two compound domes is a blind faceted block with flat sides. On a head that is mostly eyes, half of the head is gone.' + NL        + 'LEGS: three pairs, absurdly long and thin, each bending TWICE, splayed so '
         'wide that the body hangs low in the middle of them. TWO are broken — one at '
         'the first joint, one at the second — and hang uselessly. Draw them as hard '
         'hairlines with visible joints, never as smooth curves.' + NL
@@ -2264,7 +2272,8 @@ FOES += [
         'edges peeled apart, and through the gap you can see the inside of the far '
         'wall: the shell is a shell. Two of the nine plates have collapsed inward '
         'and lost their round.' + NL
-        + 'THAT IS THE READ: a long low insect with a black canyon down its back. '
+        + 'THE BREACH — this one is different and it is the point: the split down the back is not a breach, it is where the animal LEFT. The growth is INSIDE the empty shell instead, filling the middle three rings from within and pressing outward against them so those rings bulge while the rest stay hollow. Through the back seam you can see it packed in there.' + NL
+        + 'THE REPLACED PART: the whole head-case is a solid faceted block in the shape of a head, with no eye rings and no mouth opening — the one part of this shell that is not hollow.' + NL        + 'THAT IS THE READ: a long low insect with a black canyon down its back. '
         'Nothing else in the region is open along its length.' + NL
         + 'LEGS: five pairs, thin and hard and hooked, but three of them are hollow '
         'tubes with the ends open, and one is missing below the knee. They are dry '
@@ -2323,7 +2332,8 @@ FOES += [
         'and it is the only hollow shape on it. That is the part that goes off.' + NL
         + 'THE SKIN IS SPLITTING: between every pair of segments the surface has '
         'cracked open into a short gash — three of them — and pale edges show.' + NL
-        + 'LEGS: four tiny hooked pairs bunched under the front, barely reaching the '
+        + 'THE BREACH — this one: the growth has come up through the torn front cross-section, packing the open ring where it separated from the parent so the wound is plugged with something that is not flesh.' + NL
+        + 'THE REPLACED PART: the light chamber is no longer the creature\'s own. Its hollow ring is filled with faceted lumps instead of the honeycomb grid, and they press against the walls from inside.' + NL        + 'LEGS: four tiny hooked pairs bunched under the front, barely reaching the '
         'ground. It waddles.' + NL
         + 'HEAD: very small, a hard capsule with two short mouth plates and two dull '
         'dots for eyes. It is a fraction of the body and it does not matter.' + NL
@@ -2393,7 +2403,8 @@ FOES += [
         '(a rib, a shard of comb, a broken plate). It touches the ground and it '
         'touches the beetle\'s front legs. It is the only PERFECT ROUND SHAPE in '
         'the region and the only thing any creature in this game is carrying.' + NL
-        + 'THAT IS THE READ: a big circle with a small wedge braced behind it. '
+        + 'THE BREACH — this one: the growth has come through the shovel-plate of the head, splitting its notched front edge in two so the rake is broken in the middle.' + NL
+        + 'THE REPLACED PART: the short horn is gone. What curves up off the head instead is a faceted shard, flat-sided and too straight, and it is longer than the horn ever was.' + NL        + 'THAT IS THE READ: a big circle with a small wedge braced behind it. '
         'Nothing else in the game is a circle plus a body.' + NL
         + 'LEGS: three pairs. The FRONT pair is up on the ball, flattened and '
         'spread against it. The middle and back pairs are planted wide and driving, '
@@ -2454,7 +2465,8 @@ FOES += [
         'a tight Z whose upper edge stands HIGHER THAN THE HEAD. Each blade is a '
         'flat hard hook lined with SIX inward spines along its inner edge, and the '
         'two are held slightly apart so you can see black between them.' + NL
-        + 'THAT IS THE READ: two hooks standing above a thin upright body. Nothing '
+        + 'THE BREACH — this one: the growth has come out through the joint of the LEFT scythe where it folds, so that arm cannot close all the way and is held a little more open than the right one. On a creature whose whole read is two matched hooks, one that will not shut is the first thing you see.' + NL
+        + 'THE REPLACED PART: three of the six inward spines on that same left blade are not spines — they are flat faceted teeth, squarer and duller than the others.' + NL        + 'THAT IS THE READ: two hooks standing above a thin upright body. Nothing '
         'else in this game holds a weapon above itself — everything else reaches '
         'forward or hangs down.' + NL
         + 'HEAD: a small hard triangle turned to face the viewer while the body '
@@ -2527,7 +2539,8 @@ FOES += [
         'each a hard flat plane with a coarse grid of veins showing through, each '
         'ending in a blunt square tip. They are held rigid and level — this animal '
         'glides, it does not beat.' + NL
-        + 'THAT IS THE READ: a long horizontal rod with a wide X across it. '
+        + 'THE BREACH — this one: the growth has come through the underside of the abdomen at the fourth segment, a cluster hanging below the otherwise dead-straight rod, and it is the only thing that breaks that straight line anywhere on the animal.' + NL
+        + 'THE REPLACED PART: the wing that is cut square off at two-thirds does not end in a tear — it ends in a flat faceted edge, as if the missing third had been replaced by a straight cut of the same material.' + NL        + 'THAT IS THE READ: a long horizontal rod with a wide X across it. '
         'Nothing else in the game is a cross.' + NL
         + 'THE WINGS ARE DAMAGED, UNEVENLY: one is whole; one has a long tear from '
         'the tip inward; one is cut square off at two-thirds; one has three round '
@@ -2986,7 +2999,47 @@ knights with antennae. Segmented, chitinous animals built out of hard plates.
   and dry, the same shape as the living plate beneath it.
 
 THEY ARE NOT WET. The slime chapter owns drips; do not borrow them. These are dry,
-hard and dusty."""
+hard and dusty.
+
+THE INFESTATION — EVERY CREATURE IN THIS REGION HAS IT, AND IT IS WHAT MAKES THEM
+DIFFERENT FROM INSECTS.
+
+These are not bugs. They are bugs that something got into. The earlier chapters
+each carry a mark like this — the slimes hold what they swallowed, the plants grow
+new wood out of their own dead — and this chapter was drawn without one, which is
+exactly why the first attempts came back looking like ordinary entomology. Draw
+BOTH of the following on every creature, in every cell.
+
+1. THE BREACH. Somewhere on the body the chitin has SPLIT OPEN — a hard-edged
+   crack with the plate lifted and curled back around it, and the gap behind it
+   BLACK. Pushing out through that gap is GROWTH that does not belong to the
+   animal: three to five hard FACETED lumps, flat-sided and angular like broken
+   mineral, of clearly different sizes, packed together and standing proud of the
+   shell.
+   - It is HARD AND FLAT-SIDED. Not fungus, not slime, not fur, not smoke, not
+     flame, and not a star of crystal spikes. Think broken stone forced up through
+     a crack from underneath.
+   - It has NO glow, NO aura, NO particles, NO haze. Two colours cannot draw any
+     of those and every attempt becomes a white smear that never goes away.
+   - It is the SAME material on every creature in the region. Only the PLACE
+     changes, and the place is named in the description above.
+   - The black of the gap is part of the shape. Do not fill it in.
+
+2. THE PART THAT IS NO LONGER ITS OWN. One piece of the animal has been REPLACED
+   by that same growth — an eye socket filled with a blind faceted lump, a leg
+   whose lower half is a straight angular shaft instead of a joint, one jaw plate
+   grown over solid. It is grown roughly into the shape of the missing part but it
+   is WRONG: too straight, too angular, and it does not match its pair on the
+   other side.
+   - This is NOT a healed injury. A stump that closed over says the animal
+     survived something. This says the animal LOST that part and something else
+     is using the space.
+   - Exactly ONE part per creature. Two makes it a pile of rocks.
+
+THE ASYMMETRY IS THE READ. At game size nobody will see facets. What they will see
+is that ONE SIDE OF THE CREATURE IS WRONG — a dark hole with something jagged in
+it, and a limb that does not match its twin. Make that difference big enough to
+survive the size."""
 
 
 FAMILY_RULE = {

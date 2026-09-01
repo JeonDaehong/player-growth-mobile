@@ -55,6 +55,8 @@ SUBJECT: a 3-frame animation sheet of ONE single creature, left to right. The cr
 THE CREATURE (the same one in all 3 cells):
 A moulted skin that never noticed the animal had left.
 BODY: LOW AND LONG, a chain of NINE segment plates — but they are HOLLOW. Along the back, the whole length has SPLIT OPEN in one straight seam, the edges peeled apart, and through the gap you can see the inside of the far wall: the shell is a shell. Two of the nine plates have collapsed inward and lost their round.
+THE BREACH — this one is different and it is the point: the split down the back is not a breach, it is where the animal LEFT. The growth is INSIDE the empty shell instead, filling the middle three rings from within and pressing outward against them so those rings bulge while the rest stay hollow. Through the back seam you can see it packed in there.
+THE REPLACED PART: the whole head-case is a solid faceted block in the shape of a head, with no eye rings and no mouth opening — the one part of this shell that is not hollow.
 THAT IS THE READ: a long low insect with a black canyon down its back. Nothing else in the region is open along its length.
 LEGS: five pairs, thin and hard and hooked, but three of them are hollow tubes with the ends open, and one is missing below the knee. They are dry and they are the same colour as everything else on it.
 HEAD: a hard capsule with the face-plate cracked off and gone, leaving an OPEN OVAL where the mouthparts were — a hole clean through into black. The antennae sockets are empty.
@@ -186,6 +188,46 @@ knights with antennae. Segmented, chitinous animals built out of hard plates.
 
 THEY ARE NOT WET. The slime chapter owns drips; do not borrow them. These are dry,
 hard and dusty.
+
+THE INFESTATION — EVERY CREATURE IN THIS REGION HAS IT, AND IT IS WHAT MAKES THEM
+DIFFERENT FROM INSECTS.
+
+These are not bugs. They are bugs that something got into. The earlier chapters
+each carry a mark like this — the slimes hold what they swallowed, the plants grow
+new wood out of their own dead — and this chapter was drawn without one, which is
+exactly why the first attempts came back looking like ordinary entomology. Draw
+BOTH of the following on every creature, in every cell.
+
+1. THE BREACH. Somewhere on the body the chitin has SPLIT OPEN — a hard-edged
+   crack with the plate lifted and curled back around it, and the gap behind it
+   BLACK. Pushing out through that gap is GROWTH that does not belong to the
+   animal: three to five hard FACETED lumps, flat-sided and angular like broken
+   mineral, of clearly different sizes, packed together and standing proud of the
+   shell.
+   - It is HARD AND FLAT-SIDED. Not fungus, not slime, not fur, not smoke, not
+     flame, and not a star of crystal spikes. Think broken stone forced up through
+     a crack from underneath.
+   - It has NO glow, NO aura, NO particles, NO haze. Two colours cannot draw any
+     of those and every attempt becomes a white smear that never goes away.
+   - It is the SAME material on every creature in the region. Only the PLACE
+     changes, and the place is named in the description above.
+   - The black of the gap is part of the shape. Do not fill it in.
+
+2. THE PART THAT IS NO LONGER ITS OWN. One piece of the animal has been REPLACED
+   by that same growth — an eye socket filled with a blind faceted lump, a leg
+   whose lower half is a straight angular shaft instead of a joint, one jaw plate
+   grown over solid. It is grown roughly into the shape of the missing part but it
+   is WRONG: too straight, too angular, and it does not match its pair on the
+   other side.
+   - This is NOT a healed injury. A stump that closed over says the animal
+     survived something. This says the animal LOST that part and something else
+     is using the space.
+   - Exactly ONE part per creature. Two makes it a pile of rocks.
+
+THE ASYMMETRY IS THE READ. At game size nobody will see facets. What they will see
+is that ONE SIDE OF THE CREATURE IS WRONG — a dark hole with something jagged in
+it, and a limb that does not match its twin. Make that difference big enough to
+survive the size.
 
 IT IS ALIVE AND IT IS COMING FOR YOU.
 

@@ -77,6 +77,8 @@ An ant that died a long time ago. The thing standing there is what grew out of i
 BODY: a hollowed ant — three masses (head, thorax, abdomen) joined at two narrow waists, held low and forward. The chitin is DRY and cracked; in three places it has caved in and you can see the shell is empty behind it. It is a husk being worn.
 THE STALKS — this one only: growing OUT THROUGH the shell are FIVE rigid FRUITING BODIES, each a straight stem ending in a swollen club head covered in a coarse grid of pores. They come out at wrong angles: two from the back of the thorax, one from the top of the head, one from the abdomen, one through the joint of a leg. They are TALLER THAN THE ANT — the tallest stalk doubles its height. Where each stalk emerges, the shell is cracked open in a star of splits around it.
 THAT IS THE SILHOUETTE: a low insect body with a crown of five clubs standing above it, all different heights. Nothing else in the game grows up out of itself like that.
+THE INFESTATION — this one is nearly complete, and it is the point of the creature: the ant is a husk and the growth has come through it in FOUR places at once — both waists and two of the caved-in shell panels — so the body is held together more by the mineral than by the chitin. Each breach is a black hole with faceted lumps standing out of it.
+THE REPLACED PART: the MANDIBLES. Both are gone; what is locked half open in their place are two straight faceted shafts, unmatched in length, that cannot close.
 LEGS: three pairs, locked stiff and splayed — the joints have set and no longer bend properly. One leg is fully rigid and drags.
 HEAD: mandibles locked half open and they no longer close. The eyes are gone: both sockets are open and one has a small stalk growing from it.
 SPORES: a scatter of separate small solid flecks drifts off the club heads and stops in empty black. Present in every cell — this is what the passive looks like.
@@ -212,6 +214,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

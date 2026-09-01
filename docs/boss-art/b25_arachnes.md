@@ -77,6 +77,8 @@ SUBJECT: a 6-frame animation sheet of ONE single creature, left to right. The cr
 THE CREATURE (the same one in all 6 cells):
 The one that lays the others. She has not finished growing and she is already the largest thing in the region.
 BODY: TWO masses joined at a narrow waist — a compact armoured cephalothorax in front, and behind it an ENORMOUS swollen abdomen, twice its size, hanging low and heavy. The abdomen is not armoured: it is soft, stretched, and banded with strain lines. That contrast is the animal.
+THE INFESTATION — this one: the growth has come out through the WAIST, the narrow join between her two masses, packing it like a collar so the front half and the abdomen are held together by the thing in her rather than by her. It is visible from every angle and it is the reason her moult never finished.
+THE REPLACED PART: three of the EIGHT EYES are gone. In their sockets sit blind faceted lumps, flat-sided, all three on the same side of the bank — half her face still watches and half of it cannot.
 LEGS: FOUR pairs, long, each folding up above the body before coming down — so the knees stand HIGHER THAN THE BACK and the body hangs slung between them. Two legs are shorter than the rest and one ends in a stump. The span of the legs is twice the span of the body.
 THE UNFINISHED MOULT — this one only: her whole front half is still half inside the old skin. A split, dry, hollow SHELL is peeled back off the cephalothorax and hangs down behind the head like a torn hood, still attached at the waist. Through the split you can see the new plates underneath, paler and unhardened. She has been interrupted mid-emergence and she stayed like that.
 HEAD: a bank of EIGHT eyes in two uneven rows, three of them clouded over. Two hard fangs fold down and inward, each with a groove.
@@ -216,6 +218,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

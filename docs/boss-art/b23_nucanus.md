@@ -73,6 +73,8 @@ THE CREATURE (the same one in all 5 cells):
 A beetle that answered every wound by growing another plate.
 BODY: a MASSIVE low wedge, WIDER THAN TALL, front end high and thick and tapering back — like a shield dragged along the ground. The whole upper surface is ONE enormous domed carapace made of five overlapping plates, each thicker than the last toward the front.
 THE HORN is the front third of the animal: a single solid IRON-COLOURED ram, flat on top, blunt at the tip, as wide as the head and reaching forward past everything else. It is not a spike — it is a wall on the front of the body. It has three deep dents in it that never healed.
+THE INFESTATION — this one: the MOULT RIDGE down the middle of the carapace has burst. Between the third and fourth crossbar stitches the shell has torn wide open and a heavy cluster of growth stands up out of it — the seam that is supposed to hold the armour shut is the place the armour failed.
+THE REPLACED PART: the horn is no longer solid bone across its whole width. Its right half is faceted, flat-sided and squared off, and the two halves do not meet cleanly — the ram is half its own and half something else.
 LEGS: three pairs, short and thick, spread wide and braced, each knee bending up then down, each foot a broad hook that grips. It is built low and it is built to push.
 HEAD: almost hidden under the horn. Two small compound domes visible from the side, and two short mouth plates below.
 THE MOULT SEAMS — this one only: running down the middle of the carapace, front to back, is a single raised RIDGE with SIX crossbars over it, evenly spaced, like stitches holding it shut. That ridge is where the shell opens when it moults. It is the only regular repeating pattern on the animal and it must be in every cell.
@@ -211,6 +213,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

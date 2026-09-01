@@ -85,6 +85,8 @@ The last one. It is not one insect — it is what happens when the whole brood f
 BODY: an upright TOWERING mass, TALLER THAN WIDE, built of segmented plates that do not all belong to the same animal. Read from the ground up: a broad braced base of SIX legs, none of them a matching pair — one is a beetle's thick hook, one a mantis blade, one a spider's long joint, one a centipede's row of small hooks fused into a single limb. Above them a barrel thorax of NINE overlapping plates. Above that, a head that is too small for it.
 IT IS MADE OF THE OTHERS — this one only, and it is the whole point: set into the plates of the thorax and the base, half absorbed and still recognisable, are parts of the creatures from earlier in the region: ONE hexagon of comb, ONE fruiting-body stalk with a club head, ONE moth wing with an eye-spot, ONE fang with a groove. Four, no more, spaced apart, each clearly a foreign shape sunk into the surface. Do not add a fifth and do not repeat one.
 THE ARMS: TWO enormous forelimbs raised and held apart, each ending in a hard splitting blade, both bending the wrong way at the elbow. They are the only symmetrical thing on it, and they are held wide.
+THE INFESTATION — this one has finished. The growth is not pushing through the shell any more; it IS the shell in places. Down the whole front of the thorax, four of the nine plates are faceted slabs rather than chitin, flat-sided and squared, and the seams between them and the living plates are black gaps you can see into. The absorbed parts of the earlier creatures are set INTO those faceted plates, not into the living ones — the thing in it is what collected them.
+THE REPLACED PART: the LEFT forelimb blade. Where the right one is a hard organic splitting blade, the left is one straight faceted shaft with a flat squared edge, longer than its twin and completely unmatched. The one thing on this creature that is symmetrical is not.
 HEAD: a hard capsule with a bank of TEN eyes in three rows, and four mouth plates that open sideways in two pairs. It is a fraction of the body and it is the darkest, most closed part.
 THE MOULT: a full split, dry, hollow SHELL of a previous body stands behind and below it, empty and upright, still holding the shape it was left in. It is attached at nothing. It is standing there because it never fell over.
 SCARS: three plates are punched through and healed from beneath.
@@ -221,6 +223,28 @@ cart.
 - NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
   with a coarse grid of pits, or clusters of small round ones. Whatever it is
   thinking, the drawing must not say.
+
+IT HAS BEEN TAKEN, AND IT IS FURTHER GONE THAN THE MOBS.
+
+Every creature in this region carries the same infestation — a breach in the shell
+with hard faceted growth pushing out of it, and one body part replaced by that
+growth. Draw both on this creature too, in every cell, at the place named above.
+
+ON A BOSS IT GOES FURTHER. Two things separate it from a mob:
+
+- THE BREACH IS BIG ENOUGH TO BE PART OF THE SILHOUETTE. On a mob it is a crack.
+  Here it is a wound you could put an arm into, and the black inside it breaks the
+  outline of the creature — you can see that the shell is not full.
+- IT HAS STOPPED PRETENDING. On a mob the growth is a passenger. Here it is doing
+  the work: the replaced part is one the creature FIGHTS with, so what reaches you
+  when it attacks is not the animal's own.
+
+THE GROWTH IS HARD, FLAT-SIDED AND ANGULAR — broken mineral forced up through a
+crack from underneath. Not fungus, not slime, not flame, not a star of spikes. It
+has NO glow, NO aura, NO particles and NO haze; the game draws its own effects and
+anything like that baked into the sprite becomes a permanent white smear.
+
+The black inside the breach is part of the shape. Do not fill it in.
 
 IT IS A BOSS. IT MUST READ AS ONE BEFORE THE HEALTH BAR DOES.
 

@@ -52,6 +52,8 @@ BODY: a compact trunk held at a forward slant, not much longer than it is tall �
 HIND LEGS: ONE enormous pair, folded into a tight Z that stands HIGHER THAN ITS OWN BACK, the thigh as thick as the whole trunk. This is the read and it must be unmistakable at 45 pixels: a small body with two big folded triangles standing above it.
 FRONT LEGS: two small hooked pairs under the chest, almost incidental.
 WINGS: a short hard pair folded flat along the back, reaching only halfway down the body, one torn at the tip. Too small to fly on.
+THE BREACH — this one: the left hind thigh, the thickest part of the animal, has split down its outer face and the growth fills the crack along its whole length, so that leg reads as CRUSTED where the right one is smooth.
+THE REPLACED PART: one of the two long antennae is not a feeler any more — it is a straight rigid rod of the same faceted material, unbending, sticking out at the wrong angle while the real one trails back.
 HEAD: angled down, with two mouth plates opening sideways and two very long thin ANTENNAE swept back over the body, together longer than the creature is. One is snapped to half length.
 EYES: two compound domes on the sides of the head, pitted with a coarse grid, the larger one clouded.
 SILHOUETTE (protect this): a small body with two folded Z-shaped legs towering over it and two long feelers trailing back.
@@ -181,6 +183,46 @@ knights with antennae. Segmented, chitinous animals built out of hard plates.
 
 THEY ARE NOT WET. The slime chapter owns drips; do not borrow them. These are dry,
 hard and dusty.
+
+THE INFESTATION — EVERY CREATURE IN THIS REGION HAS IT, AND IT IS WHAT MAKES THEM
+DIFFERENT FROM INSECTS.
+
+These are not bugs. They are bugs that something got into. The earlier chapters
+each carry a mark like this — the slimes hold what they swallowed, the plants grow
+new wood out of their own dead — and this chapter was drawn without one, which is
+exactly why the first attempts came back looking like ordinary entomology. Draw
+BOTH of the following on every creature, in every cell.
+
+1. THE BREACH. Somewhere on the body the chitin has SPLIT OPEN — a hard-edged
+   crack with the plate lifted and curled back around it, and the gap behind it
+   BLACK. Pushing out through that gap is GROWTH that does not belong to the
+   animal: three to five hard FACETED lumps, flat-sided and angular like broken
+   mineral, of clearly different sizes, packed together and standing proud of the
+   shell.
+   - It is HARD AND FLAT-SIDED. Not fungus, not slime, not fur, not smoke, not
+     flame, and not a star of crystal spikes. Think broken stone forced up through
+     a crack from underneath.
+   - It has NO glow, NO aura, NO particles, NO haze. Two colours cannot draw any
+     of those and every attempt becomes a white smear that never goes away.
+   - It is the SAME material on every creature in the region. Only the PLACE
+     changes, and the place is named in the description above.
+   - The black of the gap is part of the shape. Do not fill it in.
+
+2. THE PART THAT IS NO LONGER ITS OWN. One piece of the animal has been REPLACED
+   by that same growth — an eye socket filled with a blind faceted lump, a leg
+   whose lower half is a straight angular shaft instead of a joint, one jaw plate
+   grown over solid. It is grown roughly into the shape of the missing part but it
+   is WRONG: too straight, too angular, and it does not match its pair on the
+   other side.
+   - This is NOT a healed injury. A stump that closed over says the animal
+     survived something. This says the animal LOST that part and something else
+     is using the space.
+   - Exactly ONE part per creature. Two makes it a pile of rocks.
+
+THE ASYMMETRY IS THE READ. At game size nobody will see facets. What they will see
+is that ONE SIDE OF THE CREATURE IS WRONG — a dark hole with something jagged in
+it, and a limb that does not match its twin. Make that difference big enough to
+survive the size.
 
 IT IS ALIVE AND IT IS COMING FOR YOU.
 
