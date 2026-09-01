@@ -1016,45 +1016,46 @@ export function BattleView() {
   }, [patCall]);
 
   /*
-    ── 특수기가 나가면 무대가 통째로 움직인다 ──
+    ── 특수기가 나가면 **우두머리가** 움직인다 (무대가 아니라) ──
 
-    한동안 특수기와 평타가 화면에서 **거의 같아 보였다.** 말풍선이 하나 뜨고,
-    같은 크기로 팔을 한 번 휘두르는 것이 전부였다. 우두머리가 2배짜리 기술을
-    써도 잡몹이 때리는 것과 인상이 다르지 않았다.
+    특수기와 평타가 화면에서 거의 같아 보이던 것을 갈라야 했다. 그래서 한때
+    셋을 한꺼번에 걸었다 — 돌진 · 화면 흔들기(2.2, 평타의 네 배) · 무대 전체를
+    덮는 붉은 막. 그건 실패였고 두 가지 이유로 그렇다.
 
-    세 가지를 한꺼번에 건다:
+      **어디를 보라는 말이 아니었다.** 화면이 통째로 흔들리고 통째로 붉어지면
+      눈이 갈 곳이 없다. 정작 알아야 할 것 — 누가 맞았나 — 은 그 소란에
+      묻혔다. 연출이 세질수록 읽히는 것이 줄었다.
 
-      돌진   우두머리가 아군 쪽으로 크게 나왔다 돌아온다. 몸이 커지므로
-             (`scale`) 화면에서 차지하는 자리도 잠깐 늘어난다
-      암전   무대 전체가 한 번 어두워졌다 밝아진다 — 다음에 일어날 일에
-             눈이 가게 만드는, 제일 싼 방법이다
-      흔들   평타(0.55)보다 훨씬 세게 (2.2)
+      **화면을 덮는 것은 남는다.** 붉은 막은 `Animated.Value` 하나로 굴렸는데,
+      한창 도는 중에 `patCall` 이 바뀌면 정리 함수가 애니메이션을 멈추고
+      값은 켜진 채로 남았다. 판을 넘겨도 붉은 채였다.
 
-    셋 다 400ms 안에 끝난다. 길게 끌면 그 사이에 다음 평타가 겹쳐서 무슨
-    동작인지 알 수 없게 된다.
+    남기는 것은 **돌진 하나**다. 우두머리가 아군 쪽으로 크게 나왔다 돌아온다 —
+    움직이는 것이 화면이 아니라 **그것**이라 어디서 무슨 일이 나는지가 같이
+    읽힌다. 400ms 안에 끝난다: 길게 끌면 다음 평타가 겹친다.
+
+    "누가 맞았나" 는 이제 맞은 사람 쪽에서 말한다 — 표적(`StruckMark`)과
+    붉은 피해 숫자다.
   */
   const rush = useRef(new Animated.Value(0)).current;
-  const flash = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!patCall) return undefined;
-    shake.fire(2.2);
-    const a = Animated.parallel([
-      Animated.sequence([
-        Animated.timing(rush, {
-          toValue: 1, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(rush, {
-          toValue: 0, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true,
-        }),
-      ]),
-      Animated.sequence([
-        Animated.timing(flash, { toValue: 1, duration: 90, useNativeDriver: true }),
-        Animated.timing(flash, { toValue: 0, duration: 260, useNativeDriver: true }),
-      ]),
+    const a = Animated.sequence([
+      Animated.timing(rush, {
+        toValue: 1, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true,
+      }),
+      Animated.timing(rush, {
+        toValue: 0, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+      }),
     ]);
     a.start();
-    return () => a.stop();
-  }, [patCall, rush, flash, shake]);
+    /*
+      **멈추면 되돌린다.** 붉은 막이 다음 판까지 안 걷히던 것이 정확히 이
+      자리의 실수였다 — `stop()` 은 값을 그 자리에 두고 멈출 뿐이라, 한창
+      나가 있는 중에 정리되면 우두머리가 앞으로 나온 채 굳는다.
+    */
+    return () => { a.stop(); rush.setValue(0); };
+  }, [patCall, rush]);
 
   /* `interpolate` 는 한 번만 만든다 — 렌더마다 부르면 가지가 쌓인다 */
   const rushX = useMemo(() => rush.interpolate({
@@ -1063,9 +1064,6 @@ export function BattleView() {
   const rushScale = useMemo(() => rush.interpolate({
     inputRange: [0, 1], outputRange: [1, 1.18],
   }), [rush]);
-  const flashOn = useMemo(() => flash.interpolate({
-    inputRange: [0, 1], outputRange: [0, 0.55],
-  }), [flash]);
 
   useEffect(() => {
     /*
@@ -2019,28 +2017,17 @@ export function BattleView() {
         */}
 
         {/*
-          ── 특수기 암전 ──
+          ── 여기 있던 붉은 막은 없앴다 ──
 
-          우두머리 특수기가 나가는 순간 무대가 한 번 어두워졌다 밝아진다.
+          우두머리 특수기가 나갈 때 무대 전체를 `BAD_C` 로 한 번 덮었다.
+          주석에는 "암전" 이라고 적혀 있었지만 실제로 칠한 색은 빨강이었고,
+          화면이 통째로 시뻘게졌다. 그리고 정리 함수가 애니메이션을 멈출 때
+          값이 켜진 채 남아서 **다음 판까지 붉은 막이 안 걷혔다.**
 
-          평타와 특수기가 화면에서 거의 같아 보이던 것을 가르는 셋 중 하나다
-          (나머지는 돌진과 흔들림 — `rush` 주석). 어둡게 하는 쪽을 고른 이유는
-          이 게임이 흰 그림에 검은 배경이라, **밝히면 그림이 묻히고 어둡게
-          하면 그림이 남기** 때문이다.
-
-          `pointerEvents="none"` 이라 단추를 안 가린다. `StageVeil` 보다
-          아래층이라 판이 열리는 막과 다투지 않는다.
+          화면 전체를 덮는 연출은 이 게임에서 두 번 다시 안 쓴다. 알려야 할
+          것은 "뭔가 큰 게 왔다" 가 아니라 **"누가 맞았나"** 이고, 그건 맞은
+          사람 위에서만 말할 수 있다 (`StruckMark` · 붉은 피해 숫자).
         */}
-        <Animated.View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: BAD_C,
-            opacity: flashOn,
-            zIndex: 60,
-          }}
-        />
 
         {/*
           판이 열리고 닫히는 막 — 무대 안의 맨 위 층.

@@ -1043,7 +1043,12 @@ function FighterView({
           pointerEvents="none"
           style={{ position: 'absolute', top: -11 - k * 12, left: size * 0.2, zIndex: 40 }}
         >
-          <DamageNumber text={dm.text} dx={0} dy={0} onDone={NOOP} />
+          {/*
+            **붉게 뜬다** (`bad`). 적 위에 뜨는 숫자는 흰색이라, 색만 보고도
+            어느 쪽이 깎였는지 안다 — 한 화면에 숫자 여섯 개가 같이 뜨는 일이
+            흔하고, 전부 흰색이던 동안은 자리로만 짐작해야 했다.
+          */}
+          <DamageNumber text={dm.text} dx={0} dy={0} bad onDone={NOOP} />
         </View>
       ))}
 

@@ -779,7 +779,7 @@ export function FallingArrow({
  * 자리는 부르는 쪽(`BattleView`)이 잡는다. 여기서는 뜨는 동작만 한다.
  */
 export function DamageNumber({
-  text, dx, dy, big, good, onDone,
+  text, dx, dy, big, good, bad, onDone,
 }: {
   text: string;
   dx: number;
@@ -793,6 +793,17 @@ export function DamageNumber({
    * 15초마다 그런 순간이 있었고 아무도 그게 회복인 줄 몰랐다.
    */
   good?: boolean;
+  /**
+   * **아군이** 깎인 숫자인가 — 붉게 뜬다 (`ui/theme` 의 `BAD_C`).
+   *
+   * 아군과 적의 피해 숫자가 둘 다 흰색이었다. 한 화면에서 여섯 개가 동시에
+   * 뜨는 일이 흔한데 전부 같은 흰 숫자라, **어느 쪽이 맞은 건지**를 숫자가
+   * 뜬 자리로만 짐작해야 했다. 색으로 가르면 안 헷갈린다.
+   *
+   * `good` 과 같이 오면 회복이 이긴다 — 초록이 붉은 것보다 드물고, 드문
+   * 쪽을 살려야 정보가 남는다.
+   */
+  bad?: boolean;
   onDone: () => void;
 }) {
   const t = useRef(new Animated.Value(0)).current;
@@ -824,7 +835,7 @@ export function DamageNumber({
         position: 'absolute',
         left: dx,
         top: dy,
-        color: good ? GOOD_C : WHITE,
+        color: good ? GOOD_C : (bad ? BAD_C : WHITE),
         fontFamily: 'monospace',
         fontWeight: 'bold',
         fontSize: big ? 20 : 15,
@@ -869,10 +880,12 @@ export function DamageNumber({
  * 사각형 테두리로 감싸면 54px 짜리 인물이 상자에 갇힌 것으로 보인다. 귀퉁이
  * 넷만 그리면 **표적을 잡은 것**으로 읽히고, 인물이 안 가려진다.
  *
- * 두 번 깜빡인다. 한 번이면 못 보고 지나가고, 계속 켜져 있으면 다음 기술이
- * 올 때까지 안 꺼져서 표시가 아니라 배경이 된다.
+ * ## 얼마나 켜 두나
+ *
+ * 1.1초다. 짧으면 못 보고 지나가고, 다음 특수기까지 켜져 있으면 표시가
+ * 아니라 배경이 된다. 그 사이에서 **이름을 한 번 읽을 만큼**이 이 길이다.
  */
-const STRUCK_MS = 900;
+const STRUCK_MS = 1100;
 
 export function StruckMark({
   nonce, name, size,
@@ -892,10 +905,23 @@ export function StruckMark({
     return () => { alive = false; a.stop(); };
   }, [nonce, t]);
 
-  /* 두 번 깜빡이고 사라진다 — `interpolate` 는 한 번만 만든다 */
+  /*
+    ── 깜빡이지 않는다 ──
+
+    두 번 깜빡였었다 (1 → 0.15 → 1 → 0.15 → 0). 눈에 띄게 하려던 것인데,
+    깜빡이는 물건은 **켜져 있는 시간이 절반**이라 오히려 덜 보인다. 게다가
+    이 표시는 화면 흔들기와 붉은 막이 같이 돌던 때에 만든 것이라, 소란
+    속에서 두드러지려고 저 혼자 더 시끄러워진 꼴이었다.
+
+    그 둘을 걷어 냈으므로(`BattleView` 의 `rush` 주석) 이제 표적은 **한 번
+    조여들고, 켜진 채로 버티다, 끝에서만 스러진다.** 켜져 있는 동안 내내
+    보이는 것이 요란한 것보다 잘 읽힌다.
+
+    `interpolate` 는 한 번만 만든다 — 렌더마다 부르면 값에 가지가 쌓인다.
+  */
   const fade = useMemo(() => t.interpolate({
-    inputRange: [0, 0.1, 0.3, 0.45, 0.65, 1],
-    outputRange: [0, 1, 0.15, 1, 0.15, 0],
+    inputRange: [0, 0.08, 0.75, 1],
+    outputRange: [0, 1, 1, 0],
   }), [t]);
   /* 밖에서 조여든다 — 조준하는 동작이다 */
   const grow = useMemo(() => t.interpolate({
@@ -904,8 +930,14 @@ export function StruckMark({
 
   if (!on) return null;
 
-  /** 귀퉁이 한 조각 — ㄱ 자 두 획 */
-  const arm = Math.max(5, Math.round(size * 0.22));
+  /*
+    ── 귀퉁이 한 조각 — ㄱ 자 두 획 ──
+
+    획을 2px 에서 3px 로, 길이를 몸의 0.22 에서 0.3 으로 키웠다. 아군은 화면
+    안에서 54px 짜리 흰 그림이고 그 위에 숫자와 상태 아이콘이 이미 얹혀
+    있다. 그 사이에서 2px 짜리 붉은 선은 **테두리가 아니라 먼지로** 보였다.
+  */
+  const arm = Math.max(7, Math.round(size * 0.3));
   const corner = (top: boolean, left: boolean) => (
     <View
       style={{
@@ -914,8 +946,8 @@ export function StruckMark({
         [left ? 'left' : 'right']: 0,
         width: arm,
         height: arm,
-        [top ? 'borderTopWidth' : 'borderBottomWidth']: 2,
-        [left ? 'borderLeftWidth' : 'borderRightWidth']: 2,
+        [top ? 'borderTopWidth' : 'borderBottomWidth']: 3,
+        [left ? 'borderLeftWidth' : 'borderRightWidth']: 3,
         borderColor: BAD_C,
       }}
     />
@@ -935,6 +967,24 @@ export function StruckMark({
         zIndex: 44,
       }}
     >
+      {/*
+        ── 표적 안이 붉게 물든다 ──
+
+        네 귀퉁이만으로는 **누가** 인지가 한눈에 안 왔다. 넷이 나란히 서
+        있으면 귀퉁이 획은 옆 사람 것과 섞여 보인다. 칸 전체를 옅게 칠하면
+        그 사람 하나가 통째로 물들어서, 줄에서 바로 골라진다.
+
+        아주 옅게(0.16) 칠한다. 이 게임은 검은 배경에 흰 그림이라 붉은 것을
+        진하게 얹으면 그림이 그 밑으로 사라진다 — 물들이되 덮지 않는다.
+      */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: BAD_C,
+          opacity: 0.16,
+        }}
+      />
       {corner(true, true)}
       {corner(true, false)}
       {corner(false, true)}
@@ -946,9 +996,17 @@ export function StruckMark({
         정작 제일 중요한 숫자가 가려진다.
       */}
       {!!name && (
-        <View style={{ position: 'absolute', left: -20, right: -20, bottom: -13, alignItems: 'center' }}>
-          <View style={{ backgroundColor: BLACK, borderWidth: 1, borderColor: BAD_C, paddingHorizontal: 3 }}>
-            <T size={9} style={{ color: BAD_C }}>{name}</T>
+        <View style={{ position: 'absolute', left: -26, right: -26, bottom: -15, alignItems: 'center' }}>
+          <View
+            style={{
+              backgroundColor: BLACK,
+              borderWidth: 1,
+              borderColor: BAD_C,
+              paddingHorizontal: 4,
+              paddingVertical: 1,
+            }}
+          >
+            <T size={10} style={{ color: BAD_C }}>{name}</T>
           </View>
         </View>
       )}
@@ -978,8 +1036,8 @@ export function useShake() {
     anim.current.start();
   }, [v]);
 
-  /* 화면을 떠날 때 멈춘다 */
-  useEffect(() => () => anim.current?.stop(), []);
+  /* 화면을 떠날 때 멈춘다 — 값도 되돌린다. `stop()` 은 그 자리에 두고 멈춘다 */
+  useEffect(() => () => { anim.current?.stop(); v.setValue(0); }, [v]);
 
   const style = useMemo(() => shakeStyle(v), [v]);
   return { v, fire, style };
