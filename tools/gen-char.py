@@ -1263,6 +1263,197 @@ CHARS = [
 ]
 
 
+
+# ══ §F. 두 번째 기술 ══════════════════════════════════════════
+#
+# 넷이 기술을 하나씩 가지던 때는 `sk_1..3` 한 벌이면 됐다. 이제 둘씩 가지는데,
+# 같은 칸을 쓰면 **이졸데가 도발할 때 검기와 똑같은 몸짓을 한다** — 코스트가
+# 15 인 기술이 4 짜리와 화면에서 구분이 안 된다.
+#
+# 그래서 `sk2_1..3` 한 벌을 더 받는다. 아직 안 들어온 동안에는 첫 기술 칸으로
+# 떨어지므로 (`Fighter` 의 `skFramesOf`) 게임은 그대로 돌아간다.
+#
+# ## 첫 기술과 **다른 축으로** 움직여야 한다
+#
+#   이졸데   검기는 옆으로 벤다      → 도발은 위로 젖힌다
+#   비앙카   강타는 몸이 날아간다    → 화산은 제자리에서 내리찍는다
+#   리안느   화살비는 무릎 꿇는다    → 광란은 선 채로 몸을 낮춘다
+#   아녜스   기도는 무릎 꿇고 멈춘다 → 정화는 서서 팔을 든다
+#
+# 54px 에서 남는 것은 **몸의 방향**뿐이다. 무기를 어떻게 잡았는지는 안 보인다.
+
+SECOND = {
+    'knightgirl': {
+        'name': '도발',
+        'head': 'SUBJECT: a 3-frame animation of ONE single character ROARING — '
+                'filling her lungs, shouting, and settling. She never leaves the '
+                'spot and she never swings the sword.' + NL + NL + '@LOCK@',
+        'frames': [
+            ('sk2_1', '1 들이켬',
+             'gathering breath. She has planted BOTH feet wide and driven the '
+             'greatsword point-down into the ground in front of her, both hands '
+             'still on the grip, arms straight. Her head is DOWN and her shoulders '
+             'are drawn up and in — the smallest, most compressed pose she has. '
+             'The sword is dead vertical. No effect yet.'),
+            ('sk2_2', '2 포효',
+             'the shout. Her head is thrown back and UP, mouth open, chest out, '
+             'shoulders driven down and back — the most OPEN pose she has. Both '
+             'hands stay on the planted sword, arms now braced against it as if it '
+             'is holding her up. Hair and cape are blown BACKWARD and UP by the '
+             'force coming out of her.' + NL
+             + '  This is the TALLEST cell of the sheet. Nothing crosses the frame '
+             'sideways — the whole pose goes up.'),
+            ('sk2_3', '3 가라앉음',
+             'the settle. Her head has come back level and she is looking straight '
+             'ahead, chin slightly raised, still braced on the planted sword. Cape '
+             'and hair are falling back down. She has not moved her feet once in '
+             'the three cells.'),
+        ],
+        'rules': '- The greatsword is PLANTED POINT-DOWN and vertical in all three '
+                 'cells. It never leaves the ground and it is never swung. That is '
+                 'the whole difference from the §E sheet, where the blade sweeps '
+                 'level across her body.' + NL
+                 + '- Her body fills about 58% of the cell height, and cell 2 is '
+                 'the tallest — size the sheet from it.' + NL
+                 + '- She stays in the SAME spot in all three cells; her feet do '
+                 'not move.',
+        'intro': """**§E 와 정반대로 움직여야 합니다.** 검기는 칼이 몸 앞을 **옆으로**
+지나가고, 도발은 몸이 **위아래로** 접혔다 펴집니다. 그 하나로 54px 에서
+두 기술이 갈립니다.
+
+대검은 세 칸 내내 **땅에 꽂혀 있습니다.** 한 번도 안 휘두릅니다 — 휘두르면
+그 순간 검기가 되고, 코스트 15 짜리가 4 짜리처럼 보입니다.
+
+발은 세 칸 다 같은 자리입니다. 앞으로 나가지 않습니다.
+
+퍼지는 고리는 **안 그립니다** — 화면이 도형으로 그립니다
+(`screens/home/SkillFx` 의 `roar`).""",
+    },
+
+    'bunnyaxe': {
+        'name': '화산',
+        'head': 'SUBJECT: a 3-frame animation of ONE single character SLAMMING an '
+                'axe into the GROUND AT HER OWN FEET. She does not jump and she '
+                'does not move forward.' + NL + NL + '@LOCK@',
+        'frames': [
+            ('sk2_1', '1 치켜듦',
+             'raising the axe. Both hands have swung the axe head straight UP above '
+             'her, arms extended, body arched back, one heel lifted. She is standing '
+             'upright and stretched to her full height. This is the TALLEST cell.'),
+            ('sk2_2', '2 내리침',
+             'the strike landing. The axe head has come DOWN and buried itself in '
+             'the ground DIRECTLY IN FRONT OF HER FEET — not out at arm\'s reach. '
+             'She has dropped into a deep crouch behind it, knees bent hard, back '
+             'rounded over the haft, both hands still on it. Hair is thrown up by '
+             'the stop.' + NL
+             + '  This is the LOWEST and most COMPRESSED cell of the sheet. All of '
+             'her weight has gone into one spot on the ground.'),
+            ('sk2_3', '3 버팀',
+             'the hold. She is still crouched with the axe buried, but her head has '
+             'come UP and she is looking forward, away from the axe, at what is '
+             'about to happen out there. One hand has come off the haft. Nothing '
+             'about her body has moved forward.'),
+        ],
+        'rules': '- SHE NEVER LEAVES THE GROUND. The §E sheet has her flying across '
+                 'the screen; this one has her rooted to one spot. If her feet come '
+                 'off the floor in any cell, the sheet has failed.' + NL
+                 + '- The axe lands AT HER FEET, not out in front. What it does '
+                 'happens somewhere else entirely.' + NL
+                 + '- Her body fills about 55% of the cell height in cell 1 and '
+                 'about 40% in cell 2 (she is crouched). Size the sheet from cell 1.',
+        'intro': """**§E 와 정반대입니다.** 강타는 몸이 화면을 가로질러 날아가고, 화산은
+**한 발짝도 안 움직입니다.** 세 칸 다 발이 땅에 붙어 있어야 합니다.
+
+도끼는 **제 발 앞**에 꽂힙니다. 팔을 뻗어 저 앞을 찍으면 강타가 되고, 그러면
+"제자리에서 땅을 내리친다" 는 사양이 화면에서 사라집니다.
+
+솟는 불기둥은 **안 그립니다.** 그건 적 발밑에서 나고, 화면이 도형으로 그립니다
+(`screens/home/SkillFx` 의 `erupt`).""",
+    },
+
+    'elfarcher': {
+        'name': '광란',
+        'head': 'SUBJECT: a 3-frame animation of ONE single character WINDING '
+                'HERSELF UP — she is not shooting anything. She stands throughout.'
+                + NL + NL + '@LOCK@',
+        'frames': [
+            ('sk2_1', '1 조임',
+             'coiling. She has dropped her stance — knees bent, weight low and '
+             'centred, bow held horizontally across her body in BOTH hands and '
+             'pulled in tight against her chest. Shoulders hunched forward, head '
+             'down. Everything is pulled IN. This is the NARROWEST cell.'),
+            ('sk2_2', '2 터짐',
+             'the release. Her head has snapped UP and both arms have thrown WIDE '
+             'and back — bow out in the left hand, right hand open and empty, chest '
+             'forward, one foot driven back. The ponytail is thrown straight out '
+             'behind her. Everything is pushed OUT. This is the WIDEST cell.'),
+            ('sk2_3', '3 다시 겨눔',
+             'ready again. She has come back to a shooting stance — side-on, bow '
+             'held upright in the left hand, right hand at the string but not '
+             'drawing, weight forward on the front foot. She is lower and tighter '
+             'than her §A idle: she is going to move fast now.'),
+        ],
+        'rules': '- SHE STANDS IN ALL THREE CELLS. The §E sheet has her kneeling; '
+                 'if she kneels here the two skills read the same at 54 pixels.' + NL
+                 + '- No arrow is nocked and none is fired in any cell.' + NL
+                 + '- Her body fills about 55% of the cell height. Cell 2 is the '
+                 'widest — size the sheet from it.',
+        'intro': """**§E 는 무릎을 꿇고 이건 서 있습니다.** 화살비는 자리를 잡고 하늘로
+쏘는 기술이고, 광란은 제 몸을 조였다 푸는 기술입니다.
+
+**화살을 안 겁니다.** 세 칸 어디에도 시위에 걸린 화살이 없어야 합니다 —
+걸리는 순간 화살비와 같은 기술이 됩니다.
+
+1번은 제일 좁고 2번은 제일 넓습니다. 그 대비가 "터졌다" 를 만듭니다.
+
+속도선과 잔상은 **안 그립니다** — 화면이 도형으로 그립니다
+(`screens/home/SkillFx` 의 `haste`).""",
+    },
+
+    'nun': {
+        'name': '정화',
+        'head': 'SUBJECT: a 3-frame animation of ONE single character RAISING the '
+                'censer and holding it up. She stands throughout and she does not '
+                'kneel.' + NL + NL + '@LOCK@',
+        'frames': [
+            ('sk2_1', '1 거둠',
+             'drawing in. She stands upright and has pulled the censer in against '
+             'her chest with both hands cupped around it, head bowed over it, '
+             'elbows tucked. The chain hangs straight down and is still. Compact '
+             'and closed.'),
+            ('sk2_2', '2 들어올림',
+             'raising it. Standing, she has lifted the censer straight UP above her '
+             'head at the full stretch of one arm, the other arm held out and open '
+             'to the side, head tilted back to look up at it. The chain hangs '
+             'vertically below the censer. Her robe and veil are lifted by the rise.'
+             + NL
+             + '  This is the TALLEST cell of the sheet, and her arm is the only '
+             'thing above her head.'),
+            ('sk2_3', '3 내림',
+             'lowering. The censer has come back down to shoulder height, still in '
+             'one hand, the chain swinging slightly. Her head is level and she is '
+             'looking ahead, not at the censer. Her other hand is lowered and open, '
+             'palm forward.'),
+        ],
+        'rules': '- SHE STANDS IN ALL THREE CELLS. The §E sheet has her kneeling '
+                 'with her head bowed; if she kneels here the two read the same.'
+                 + NL
+                 + '- The censer goes UP, above her head. In §E it stays low in '
+                 'front of her.' + NL
+                 + '- Her body fills about 56% of the cell height. Cell 2 is the '
+                 'tallest — size the sheet from it, and leave room above her '
+                 'raised hand.',
+        'intro': """**§E 는 무릎을 꿇고 이건 서 있습니다.** 기도는 주저앉아 멈추는 기술이고,
+정화는 서서 향로를 **머리 위로** 드는 기술입니다. 그 둘이 54px 에서 갈리는
+것은 "앉았나 섰나" 하나뿐입니다.
+
+향로가 머리 위로 올라가야 합니다. §E 에서는 몸 앞 낮은 데 있습니다.
+
+걷혀 올라가는 조각은 **안 그립니다.** 그건 걷힌 **아군 몸**에서 나고, 화면이
+도형으로 그립니다 (`screens/home/SkillFx` 의 `cleanse`).""",
+    },
+}
+
 def no_clip(m):
     """무기 길이에 따라 "안 잘리게" 규칙이 달라진다 — 그 부분만 갈아 끼운다.
 
@@ -1437,7 +1628,33 @@ def page(c):
         'No grid, no panels, no text anywhere in the image.',
     )
 
+    two = SECOND.get(c['id'])
+    f_block = block(
+        NOTEXT,
+        two['head'].replace('@LOCK@', lock),
+        rows_of(two['frames'], 'The 3 cells, in this exact order:'),
+        PIXEL_STYLE,
+        QUARTER,
+        NO_GROUND,
+        MOE,
+        SAME_PERSON,
+        READABLE,
+        'NOTHING MAY BE CUT OFF.' + NL + two['rules'] + NL
+        + '- Her feet sit at the same HEIGHT in all three cells — an alignment, '
+        'not a drawn line.' + NL
+        + '- Leave at least 8px of empty black between the outermost pixel and '
+        'every magenta line.',
+        grid(3, 1),
+    ) if two else ''
+
     return TEMPLATE % {
+        'f': (TPL_F % {
+            'name': two['name'], 'id': c['id'], 'intro': two['intro'],
+            'table': table_of(two['frames']), 'block': f_block,
+            'labels': labels_of(two['frames']),
+        }) if two else '',
+        'fRow': ('\n| §F | 두 번째 기술 — %s 3프레임 | Gemini | 코스트가 비싼 '
+                 '기술. 첫 기술과 몸짓이 달라야 한다 |' % two['name']) if two else '',
         'name': c['name'], 'title': c['title'], 'id': c['id'],
         'role': c['role'], 'gear': c['gear'], 'job': c['job'], 'quote': c['quote'],
         'lock': c['lock'],
@@ -1467,6 +1684,33 @@ def page(c):
             5 + (1 if d2_block else 0) + (1 if e_wave else 0)
         ],
     }
+
+
+TPL_F = """
+---
+
+## §F. 두 번째 기술 — %(name)s 3프레임 (Gemini)
+
+%(intro)s
+
+### 왜 칸을 따로 받나
+
+넷이 기술을 하나씩 가지던 때는 `sk_1..3` 한 벌이면 됐습니다. 이제 **둘씩**
+가지는데, 같은 칸을 쓰면 코스트 15~20 짜리 기술이 4~5 짜리와 화면에서
+똑같아 보입니다.
+
+아직 안 들어온 동안에는 §E 칸으로 떨어지므로 게임은 그대로 돌아갑니다
+(`screens/home/Fighter` 의 `skFramesOf`) — 도착하는 순간 저절로 바뀝니다.
+
+%(table)s
+%(block)s
+```json
+{ "file": "<§F 파일명>", "name": "%(id)s", "expect": [3, 1], "append": true,
+  "labels": [%(labels)s] }
+```
+
+`append` 입니다 — 같은 폴더에 **덧붙입니다.** 빼면 §A 여덟 칸이 지워집니다.
+"""
 
 
 TPL_E2 = """
@@ -1527,7 +1771,7 @@ TEMPLATE = """# %(name)s — %(title)s""" + """
 | §B | 흉상 | Gemini | 파티 칸 · 모집 결과 · 도감 |
 | §C | 2D 일러스트 | GPT | 감상용 한 장 |
 | §D | %(dName)s 3프레임 | Gemini | 평타. 칠 때 이 셋이 돈다 |%(d2Row)s
-| §E | 스킬 — %(eName)s 3%(wRow)s | Gemini | 네 번에 한 번 나가는 큰 기술 |
+| §E | 스킬 — %(eName)s 3%(wRow)s | Gemini | 자주 나가는 첫 기술 |%(fRow)s
 
 ---
 

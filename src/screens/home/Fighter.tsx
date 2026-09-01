@@ -37,12 +37,13 @@ import {
 } from '@/core/chars';
 
 import { Sprite } from '@/ui/Sprite';
-import { spriteGap } from '@/ui/spriteAssets';
+import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
 import { WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import { DamageNumber, HealMarks, HitBurst, SkillShout, StruckMark } from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
+import { SkillFx } from './SkillFx';
 
 /**
  * 베는 동작 세 칸의 길이 (ms).
@@ -105,6 +106,32 @@ const LEAP_UP = Math.round(52 * ZOOM);
 const SK_FRAMES = ['sk_1', 'sk_2', 'sk_3'] as const;
 
 /**
+ * **두 번째 기술**의 동작 칸 (`docs/character-art/` §F).
+ *
+ * ## 왜 칸을 따로 두나
+ *
+ * 넷이 기술을 하나씩 가지던 때는 `sk_1..3` 하나면 됐다. 이제 둘씩 가지는데,
+ * 같은 칸을 쓰면 **이졸데가 도발할 때 검기와 똑같은 몸짓을 한다** — 코스트가
+ * 15 인 기술이 4 짜리와 화면에서 구분이 안 된다.
+ *
+ * ## 아직 안 받았으면 첫 기술 칸으로 떨어진다
+ *
+ * 그림은 나눠서 들어온다. `sk2_*` 가 없는 동안에도 게임은 돌아야 하므로
+ * `skFramesOf` 가 있는지 보고 고른다 — 도착하는 순간 저절로 바뀐다.
+ *
+ * `Sprite` 의 `fallbackSet` 으로는 안 된다. 저건 한 단계뿐인데 여기는
+ * `sk2_N` → `sk_N` → `duel/cut_N` 로 두 단계가 필요하고, 두 번째 단계는
+ * 이미 쓰고 있다.
+ */
+const SK2_FRAMES = ['sk2_1', 'sk2_2', 'sk2_3'] as const;
+
+/** 이 사람의 이 기술이 쓸 동작 칸 셋 */
+function skFramesOf(id: string, slot: number): readonly string[] {
+  if (slot <= 0) return SK_FRAMES;
+  return SK2_FRAMES.every((f) => spriteLoose(id, f)) ? SK2_FRAMES : SK_FRAMES;
+}
+
+/**
  * 스킬의 `landOn` 번째 칸이 **시작하는** 시각 (ms).
  *
  * 기술마다 닿는 칸이 다르다 — 검기는 베는 2번 칸에서 떠나고, 도약은 착지하는
@@ -128,6 +155,8 @@ const WAVE_AT = SK_MS[0];
 /** 스킬을 못 받은 캐릭터는 평타 프레임으로 떨어진다 */
 const SK_FALLBACK: Record<string, string> = {
   sk_1: 'cut_1', sk_2: 'cut_2', sk_3: 'cut_3',
+  /* §F 를 아직 안 받았으면 여기까지 안 온다 (`skFramesOf`) — 그래도 적어 둔다 */
+  sk2_1: 'cut_1', sk2_2: 'cut_2', sk2_3: 'cut_3',
 };
 
 export interface Swing {
@@ -143,11 +172,13 @@ export interface Swing {
 const NOOP = () => {};
 
 type Frame = 'guard' | 'lose'
-  | (typeof CUT_FRAMES)[number] | (typeof SK_FRAMES)[number];
+  | (typeof CUT_FRAMES)[number]
+  | (typeof SK_FRAMES)[number]
+  | (typeof SK2_FRAMES)[number];
 
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
-  struck, struckName, cut, onCharge, damage, bless, advance, leapTo,
+  struck, struckName, purify, cut, onCharge, damage, bless, advance, leapTo,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -224,6 +255,14 @@ function FighterView({
   struck: number;
   /** 그때 맞은 기술의 이름 — 표적 위에 같이 뜬다 */
   struckName: string;
+  /**
+   * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
+   *
+   * 오를 때마다 몸에서 조각이 위로 떠오른다 (`SkillFx` 의 `cleanse`).
+   * 쓰는 사람이 아니라 **걷힌 사람** 자리에서 나야 누가 풀렸는지가 보인다 —
+   * 아녜스 쪽에서 나면 아녜스가 뭔가 한 것까지만 읽힌다.
+   */
+  purify: number;
   /**
    * 스킬 코스트를 강제로 깎인 횟수 (`BattleState.cut`).
    *
@@ -608,7 +647,8 @@ function FighterView({
       /* 몸이 통째로 날아가는 기술은 박자가 따로다 — 떠 있는 시간이 곧 높이다 */
       const leaping = skill && sk.leaps;
 
-      const frames: readonly string[] = skill ? SK_FRAMES : CUT_FRAMES;
+      /* 기술마다 제 동작 칸을 쓴다 — 없으면 첫 기술 것으로 떨어진다 */
+      const frames: readonly string[] = skill ? skFramesOf(ch.id, slot) : CUT_FRAMES;
       const spans = skill ? (sk.beat ?? SK_MS) : CUT_MS;
       const span = spans.reduce((a, b) => a + b, 0);
       /* 평타는 검이 몸 앞을 지날 때, 스킬은 그 기술이 닿는 칸에서 */
@@ -939,6 +979,24 @@ function FighterView({
       <HealMarks nonce={bless} size={size} />
 
       {/*
+        ── 기술이 나갈 때의 큰 연출 ──
+
+        두 번째 기술 넷 중 셋이 **아무도 안 때린다** (도발 · 광란 · 정화).
+        때리는 기술은 맞은 자리에서 불꽃이 터지고 숫자가 뜨는데, 이쪽은 몸짓
+        말고 아무 일도 안 일어난다 — 그림 없이 도형으로만 그린다 (`SkillFx`).
+
+        쓰는 사람 자리에서 나는 것은 둘뿐이다 (포효 · 광란). 정화는 **걷힌
+        사람** 자리에서, 화산은 **맞은 적** 자리에서 난다.
+      */}
+      <SkillFx
+        kind={castSk?.cast === 'roar' || castSk?.cast === 'haste' ? castSk.cast : null}
+        nonce={shout.no}
+        size={size}
+      />
+      {/* 정화를 맞은 쪽 — 쓴 사람과 상관없이 걷힌 사람에게서 난다 */}
+      <SkillFx kind="cleanse" nonce={purify} size={size} />
+
+      {/*
         ── 우두머리 특수기에 맞았다 ──
 
         붉은 표적이 씌워지고 기술 이름이 같이 뜬다. 예전에는 피해 숫자만
@@ -1006,7 +1064,13 @@ function FighterView({
           기술 칸인지를 가려 주므로, 평타 중에는 `casting` 이 -1 이 아니어도
           안 켜진다.
         */
-        on={castSk !== null && castSk.aura !== 'none' && (frame === 'sk_1' || frame === 'sk_2')}
+        /*
+          기술 동작의 앞 두 칸에서만 켠다. 두 번째 기술은 칸 이름이 다르므로
+          (`sk2_*`) 이름을 못 박지 않고 **기술 칸인가 + 마지막이 아닌가**로 본다 —
+          못 박아 두면 두 번째 기술에서 발밑이 통째로 안 켜진다.
+        */
+        on={castSk !== null && castSk.aura !== 'none'
+          && /^sk2?_[12]$/.test(frame)}
         kind={castSk?.aura === 'rune' ? 'rune' : 'ring'}
         size={size}
       />
@@ -1087,6 +1151,7 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.costSeq === b.costSeq
   && a.struck === b.struck
   && a.struckName === b.struckName
+  && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge
   && a.bless === b.bless

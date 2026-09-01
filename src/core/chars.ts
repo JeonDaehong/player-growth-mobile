@@ -370,6 +370,20 @@ export type Range = 'melee' | 'ranged';
  * 향로든 결국 같은 것이 앞으로 날아가고, 캐릭터를 모을 이유가 숫자 차이밖에
  * 안 남는다. **무기가 하는 짓이 달라야 모을 이유가 생긴다.**
  */
+/**
+ * 기술이 나갈 때의 큰 연출 (`screens/home/SkillFx`).
+ *
+ *   roar     쓰는 사람에게서 고리가 퍼진다 (도발)
+ *   haste    쓰는 사람에게 잔상과 속도선이 붙는다 (광란)
+ *   cleanse  걷힌 사람마다 조각이 위로 떠오른다 (정화)
+ *   erupt    맞은 적 발밑에서 불기둥이 솟는다 (화산)
+ *
+ * 앞의 둘은 **쓰는 사람** 자리에서, 뒤의 둘은 **대상** 자리에서 그린다.
+ * 그 차이가 곧 "누구에게 일어나는 일인가" 라서, 한 곳에 몰아 그리면
+ * 정화가 아녜스에게 걸린 것처럼 보인다.
+ */
+export type CastFx = 'roar' | 'haste' | 'cleanse' | 'erupt';
+
 export type SkillKind =
   /* ── 첫 번째 기술 — 넷이 처음부터 갖고 있던 것 ── */
   | 'wave'     // 검기 (이졸데)
@@ -539,6 +553,24 @@ export interface SkillDef {
    * 달아 두면 창만 복잡해진다.
    */
   opt?: boolean;
+  /**
+   * 나갈 때 화면에서 터지는 **큰 연출** (`screens/home/SkillFx`).
+   *
+   * 발밑 표시(`aura`)와 다른 것이다. 저건 "지금 기술을 쓰는 중" 을 말하는
+   * 작은 고리이고, 이건 **그 기술이 무슨 일을 하는가**를 그린다.
+   *
+   * ## 왜 새로 필요했나
+   *
+   * 두 번째 기술 넷 중 셋이 **아무도 안 때린다** (도발·광란·정화). 때리는
+   * 기술은 맞은 자리에서 불꽃이 터지고 숫자가 뜨므로 화면이 알아서 설명되는데,
+   * 이쪽은 몸짓 말고는 아무 일도 안 일어난다 — 코스트 20 을 모아 쓴 정화가
+   * 화면에서는 "잠깐 무릎 꿇었다" 로 끝난다.
+   *
+   * **그림을 안 받는다.** 넷 다 도형과 움직임으로만 그린다 (`SkillFx`) —
+   * 퍼지는 고리, 잔상, 위로 걷혀 올라가는 조각, 솟는 불기둥. 1-bit 흑백에서
+   * 이런 것은 시트로 받으면 오히려 흰 얼룩이 된다.
+   */
+  cast?: CastFx;
   /**
    * 맞은 자리에서 터지는 그림.
    *
@@ -726,6 +758,8 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 2, cost: 15, aura: 'rune', leaps: false,
     taunt: 10,
+    /* 포효라 소리가 퍼지는 그림이다 — 몸에서 고리가 나간다 */
+    cast: 'roar',
     /* 숨을 들이켜고 → 외치고 → 자세를 되돌린다. 가운데가 길어야 포효로 보인다 */
     beat: [220, 400, 220],
     desc: '10초간 적 전부가 자신만 노리게 한다',
@@ -749,6 +783,8 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     flies: false, landOn: 3, cost: 8, aura: 'ring', leaps: false,
     /* 회복을 반으로 — 걸리는 쪽이 **적**이다 (`applySkill`) */
     foeHex: { id: 'st_wither', sec: 5, mul: 0.5 },
+    /* 맞은 놈 발밑에서 아래서 위로 솟는다 — 비앙카 쪽에서는 아무것도 안 난다 */
+    cast: 'erupt',
     /* 평타도 `smash` 지만 이건 불이라 마법진 폭발로 터진다 */
     fx: 'arcane',
     /* 내리치고 → 땅이 갈라지고 → 솟는다. 마지막 칸에서 맞는다 */
@@ -770,6 +806,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 2, cost: 10, aura: 'ash', leaps: false,
     self: { id: 'st_haste', sec: 5, mul: 2, noCharge: true },
+    cast: 'haste',
     beat: [180, 260, 180],
     desc: '5초간 자신의 공격속도가 두 배가 된다 (그동안 코스트가 안 찬다)',
   },
@@ -793,6 +830,8 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 2, cost: 20, aura: 'ash', leaps: false,
     cleanse: true, opt: true,
+    /* 걷힌 **사람마다** 난다 — 아녜스 자리에서 나면 누가 풀렸는지 안 보인다 */
+    cast: 'cleanse',
     /* 기도와 같은 자세라 박자도 비슷하게. 가운데에서 걷힌다 */
     beat: [280, 420, 260],
     desc: '아군에게 걸린 나쁜 것을 걷어낸다',

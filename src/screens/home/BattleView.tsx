@@ -45,6 +45,7 @@ import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
 import { BAD_C, BORDER, SP, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
+import { SkillFx } from './SkillFx';
 import {
   BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, SkillShout,
   useShake,
@@ -407,6 +408,14 @@ export function BattleView() {
        */
       blast: boolean;
       /**
+       * 이 자리에서 **아래에서 위로 솟는** 것이 있나 (비앙카의 화산).
+       *
+       * 맞은 적 자리에서 그린다. 비앙카는 제자리에서 땅을 내리치기만 하므로
+       * 그녀 쪽에서 뭔가 나가면 "던졌다" 가 되어 사양과 어긋난다
+       * (`core/chars` 의 `SKILLS.volcano`).
+       */
+      erupt: boolean;
+      /**
        * 숫자를 몇 번째 줄에 띄울까.
        *
        * 같은 놈을 연달아 때리면 숫자가 한자리에 겹쳐 한 덩어리로 보인다.
@@ -680,6 +689,14 @@ export function BattleView() {
 
   /** 회복을 받은 횟수 — 늘 때마다 아군 몸에서 빛이 퍼진다 */
   const [bless, setBless] = useState(0);
+  /*
+    ── 정화로 나쁜 것이 걷힌 사람들 ──
+
+    사람마다 번호를 따로 센다. `bless`(회복)처럼 하나로 두면 넷이 다 반짝여서
+    **누가 풀렸는지**가 사라진다 — 정화는 걸린 사람에게만 걸리는 기술이라
+    그게 곧 이 연출의 내용이다.
+  */
+  const [purified, setPurified] = useState<Record<string, number>>({});
   /** 회복 숫자를 치우는 타이머들 */
   const blessT = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -797,7 +814,7 @@ export function BattleView() {
     setHits((old) => {
       const live = old.slice(-7);
       return [...live, {
-        ...sw, key, ...spot, blast: false, arrow: '',
+        ...sw, key, ...spot, blast: false, arrow: '', erupt: false,
         row: rowFor(live, spot.x), born: Date.now(),
         dx: -14 + Math.random() * 24, dy: -6 + Math.random() * 20,
       }];
@@ -825,7 +842,7 @@ export function BattleView() {
   */
   const onSkill = React.useCallback((id: string, slot: number) => {
     if (fightHeld(now.current.battle)) return;
-    const { battle: b, party: pt, chars: ch } = now.current;
+    const { battle: b, party: pt, chars: ch, skillOpts: op } = now.current;
     const me = ch[id];
     if (!me) { skillFoe(id, undefined, slot); return; }
 
@@ -846,9 +863,36 @@ export function BattleView() {
       회복을 넣은 **뒤에** 재면 이미 차 있어서 0 이 나온다.
     */
     if (sk.pick === 'none') {
+      /*
+        ── 적을 안 건드리는 기술들 ──
+
+        기도 · 도발 · 광란 · 정화가 여기로 온다. 넷이 하는 일이 다 달라서
+        연출도 다르다.
+
+        **계산보다 먼저 재 둔다.** 정화가 걷을 사람도, 기도가 채울 양도
+        `skillFoe` 가 돌고 나면 이미 사라진 뒤라 0 이 나온다 — 회복에서
+        이미 겪은 일이라 같은 자리에서 같이 처리한다.
+      */
       const plan = healPlan(sk, pt, ch, b.hp);
+      /* 정화는 **걷힐 사람**을 미리 뽑아 둔다 — 걷고 나면 못 찾는다 */
+      const washed = sk.cleanse
+        ? cleanseTargets(cleanseOptOf(op, id, slot), pt, ch, b.hp, b.hex)
+        : [];
+
       skillFoe(id, undefined, slot);
-      shake.fire(0.4);
+      /*
+        포효는 크게 흔든다. 다른 셋은 조용한 기술이라 그대로 둔다 — 셋이
+        같은 세기로 흔들리면 무엇이 큰 기술인지가 화면에서 안 갈린다.
+      */
+      shake.fire(sk.taunt ? 1.4 : 0.4);
+
+      if (washed.length) {
+        setPurified((old) => {
+          const next = { ...old };
+          for (const who of washed) next[who] = (next[who] ?? 0) + 1;
+          return next;
+        });
+      }
       const made = Object.entries(plan)
         .filter(([, v]) => v > 0)
         .map(([who, v]) => ({ key: seq.current++, who, text: `+${v}` }));
@@ -895,6 +939,8 @@ export function BattleView() {
       const add: typeof live = [];
       const put = (spot: typeof spots[number], amount: number, big: boolean) => {
         add.push({
+          /* 발밑에서 솟는 기술인가 — 지금은 화산 하나다 */
+          erupt: sk.cast === 'erupt' && !big,
           /* 기술이 제 그림을 가지고 있으면 그걸 쓴다 — 없으면 평타 것 */
           id, fx: sk.fx ?? CHARS[me.id].fx,
           dmg: amount, key: hitSeq.current++, ...spot,
@@ -1487,6 +1533,8 @@ export function BattleView() {
                     costSeq={battle.costSeq ?? 0}
                     struck={struck[c.id] ?? 0}
                     struckName={battle.pat ?? ''}
+                    /* 정화로 걷힌 사람에게서만 조각이 떠오른다 */
+                    purify={purified[c.id] ?? 0}
                     onCharge={onCharge}
                     damage={pops.filter((pp) => pp.who === c.id)}
                     bless={bless}
@@ -1862,6 +1910,21 @@ export function BattleView() {
         */}
         {!down && hits.map((h) => (
           <React.Fragment key={h.key}>
+            {/*
+              ── 발밑에서 솟는 것 ── 비앙카의 화산 하나다.
+
+              맞은 적의 **발 자리**에 붙인다 (`h.y + h.size`가 발밑). 불꽃과
+              달리 흩어지지 않으므로 `dx`/`dy` 를 안 얹는다 — 땅에서 나는
+              것이 옆으로 밀리면 어디서 났는지가 사라진다.
+            */}
+            {h.erupt && (
+              <View
+                pointerEvents="none"
+                style={{ position: 'absolute', left: h.x, top: h.y, zIndex: 58 }}
+              >
+                <SkillFx kind="erupt" nonce={h.key} size={h.size} />
+              </View>
+            )}
             <View
               pointerEvents="none"
               style={{
