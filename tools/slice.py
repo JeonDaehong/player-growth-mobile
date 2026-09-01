@@ -501,13 +501,29 @@ def run(only=None):
         cnt = (len(cell_folders) if cell_folders
                else sum(len(os.listdir(os.path.join(OUT, t))) for t in row_folders)
                if row_folders else len(os.listdir(d)))
-        # 잘라낸 그림이 거의 꽉 차 있으면 배경을 그림으로 읽은 것 —
-        # 흰 배경 시트에 invert 를 안 붙였을 때 나오는 증상이다
+        """
+        잘라낸 그림이 거의 꽉 차 있으면 **배경을 그림으로 읽은 것**이다.
+
+        원인이 둘이고 방향이 반대다 —
+
+          흰 배경 시트인데 `invert` 를 **안 붙였다**
+          검은 배경 시트인데 `invert` 가 **남아 있다**
+
+        뒤엣것이 더 고약하다. 반전으로 왔던 시트를 다시 뽑아서 파일 이름만
+        갈아 끼우면, 설정에 걸어 뒀던 `invert` 가 그대로 남아 이번엔 반대로
+        뒤집힌다 — 고친 것이 다시 망가지는데 설정은 안 건드렸으므로 왜인지
+        찾기가 어렵다. 실제로 세 시트에서 한 번에 났다.
+
+        그래서 지금 걸려 있는 `invert` 값을 같이 적는다. 그것만으로 어느
+        쪽인지 바로 갈린다.
+        """
         if fills and not s.get('allowFilled'):
             fills.sort()
             mid = fills[len(fills) // 2]
             if mid > 0.62:
-                status += f' ⚠ 채움률 {mid*100:.0f}% — invert 누락?'
+                now = '켜져 있음' if s.get('invert') else '꺼져 있음'
+                status += (f' ⚠ 채움률 {mid*100:.0f}% — 배경을 그림으로 읽었다'
+                           f' (지금 invert 는 {now})')
         report.append((name, status, cnt))
 
     w = max(len(r[0]) for r in report) if report else 10

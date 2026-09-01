@@ -2571,20 +2571,19 @@
       ]
     },
     {
-      "file": "sg_acid.jpg",
+      "file": "sg_acid-re.jpg",
       "name": "sg_acid",
       "expect": [
         3,
         1
       ],
       "floor": true,
-      "note": "초원 슬라임 — 산성 슬라임 (docs/foe-art/sg_acid.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "note": "산성 슬라임 (docs/foe-art/sg_acid.md). 처음 것은 값이 뒤집혀 왔다 — 검은 몸에 흰 윤곽이라 화면에서 어두운 얼룩이었다. 다시 뽑았다 처음 시트가 흰 바탕이라 invert 를 걸어 뒀었는데, 다시 뽑은 것은 검은 바탕에 흰 그림으로 제대로 와서 뗐다 — 안 떼면 반대로 뒤집힌다",
       "labels": [
         "idle",
         "attack",
         "down"
-      ],
-      "invert": true
+      ]
     },
     {
       "file": "sb_grass.jpg",
@@ -2812,15 +2811,14 @@
       ]
     },
     {
-      "file": "pw_stump.jpg",
+      "file": "pw-stump-re.jpg",
       "name": "pw_stump",
       "grid": [
         3,
         1
       ],
       "floor": true,
-      "invert": true,
-      "note": "11~20 잡몹 — 걷는 그루터기 (docs/foe-art2/pw_stump.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다. 흰 바탕이라 뒤집었고, 그때 남는 흰 액자를 inset 으로 깎는다",
+      "note": "걷는 그루터기 (docs/foe-art2/pw_stump.md). 반전으로 왔던 것을 다시 뽑았다 처음 시트가 흰 바탕이라 invert 를 걸어 뒀었는데, 다시 뽑은 것은 검은 바탕에 흰 그림으로 제대로 와서 뗐다 — 안 떼면 반대로 뒤집힌다",
       "labels": [
         "idle",
         "attack",
@@ -3504,14 +3502,14 @@
       "inset": 0.02
     },
     {
-      "file": "boss-20.jpg",
+      "file": "20-boss.jpg",
       "name": "b20_silvanus",
       "expect": [
         5,
         1
       ],
       "floor": true,
-      "note": "20스테이지 우두머리 (docs/boss-art/b20_silvanus.md). 평타와 기술의 동작이 각각 다른 칸이다 — 기술이 둘이라 다섯 칸. 흰 바탕에 검은 선으로 와서 뒤집는다",
+      "note": "안에서부터 썩은 세계수 (docs/boss-art/b20_silvanus.md). 처음 것은 가는 선 뭉치라 110px 에서 안 읽혔다 — 타락한 세계수로 다시 짜고 통짜 기둥을 강제해 다시 뽑았다 처음 시트가 흰 바탕이라 invert 를 걸어 뒀었는데, 다시 뽑은 것은 검은 바탕에 흰 그림으로 제대로 와서 뗐다 — 안 떼면 반대로 뒤집힌다",
       "labels": [
         "idle",
         "attack",
@@ -3519,7 +3517,6 @@
         "skill2",
         "down"
       ],
-      "invert": true,
       "inset": 0.06
     },
     {

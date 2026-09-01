@@ -2366,6 +2366,223 @@ FOES += [
     ),
 ]
 
+FOES += [
+    #
+    # ── 나중에 더한 셋 ────────────────────────────────────────
+    #
+    # 21~25 와 26~30 이 넷씩이었다. 슬라임 장은 여덟, 식물·나무 장은 여섯인데
+    # 여기만 넷이라, 한 판에 세 종이 서면 **거의 매 판 같은 셋**이 섰다.
+    #
+    # 셋 다 이미 있는 축과 안 겹치는 실루엣을 골랐다 —
+    #
+    #   공 + 낮은 몸          쇠똥구리  (게임에서 유일하게 딸린 물건이 있다)
+    #   위로 세운 낫 둘        사마귀    (유일하게 몸 위로 무기가 선다)
+    #   가로로 뻗은 X 자 날개  잠자리    (유일하게 날개가 좌우로 곧다)
+
+    mob3(
+        'sw_roller', '구르는 쇠똥구리', '근접 · 침식지 21~25',
+        '제 몸만 한 공을 밀고 온다. 공이 먼저 닿는다.',
+        'A dung beetle that has been rolling the same ball since before this place '
+        'was eaten.' + NL
+        + 'BODY: a low armoured wedge, WIDER THAN TALL, head down and rear high — '
+        'the whole animal is angled forward and down as if permanently pushing. It '
+        'is the second smallest thing on the field; THE BALL IS THE BIG SHAPE.' + NL
+        + 'THE BALL — this one only, and it is the silhouette: a solid ROUND mass '
+        'in front of the beetle, AS TALL AS THE BEETLE IS LONG, packed and crusted, '
+        'with three or four hard things half sunk into its surface at wrong angles '
+        '(a rib, a shard of comb, a broken plate). It touches the ground and it '
+        'touches the beetle\'s front legs. It is the only PERFECT ROUND SHAPE in '
+        'the region and the only thing any creature in this game is carrying.' + NL
+        + 'THAT IS THE READ: a big circle with a small wedge braced behind it. '
+        'Nothing else in the game is a circle plus a body.' + NL
+        + 'LEGS: three pairs. The FRONT pair is up on the ball, flattened and '
+        'spread against it. The middle and back pairs are planted wide and driving, '
+        'each bending up then down, each ending in a broad rake of four short '
+        'spines. One back leg is a healed stump and it still pushes.' + NL
+        + 'HEAD: a broad flat shovel-shaped plate, notched along its front edge '
+        'like a rake, tucked down under the front of the body. Two small compound '
+        'domes sit far apart on its corners.' + NL
+        + 'HORN: one short blunt horn curving up off the head, chipped at the tip.'
+        + NL
+        + 'THE OLD SKIN: one split hollow plate hangs off the rear, dry and empty.',
+        'braced against the ball, head down, front legs flat on it, back legs '
+        'planted. Neither the beetle nor the ball is moving and the whole pose is '
+        'load. The ball is the tallest thing in the cell.',
+        'the shove. The back legs have driven straight and the body has dropped '
+        'lower and longer, and THE BALL HAS ROLLED FORWARD a quarter turn — the '
+        'hard things sunk in it have moved round with it, so you can tell it '
+        'turned rather than slid. The gap between ball and beetle has closed to '
+        'nothing. It attacks by putting the ball into you.',
+        'struck. The ball has been knocked off its line and is rolling away, and '
+        'for the first time the beetle is separated from it — front legs still '
+        'reaching after it, body sprawled on its side, two legs folded wrong. '
+        'Without the ball it looks small, which is the point.',
+        '- The BALL fills about 42% of the cell height; the beetle itself about '
+        '30%. Together they are the widest mob of this chapter.' + NL
+        + '- Cell 2 is the longest. Size the sheet from it.' + NL
+        + '- The ball must stay a ROUND SOLID MASS with a hard outline — not a '
+        'scribble of debris. What is stuck in it breaks the edge in three or four '
+        'places and no more.',
+        """이 지역에서 **유일하게 물건을 들고 다니는** 놈입니다. 게임 전체를 봐도
+없습니다.
+
+## 공이 실루엣입니다
+
+벌레는 작고 공이 큽니다. 45px 에서 남는 것은 **큰 원 + 뒤에 붙은 작은 쐐기**
+이고, 그 조합은 이 게임에 하나뿐이라 그것만으로 알아봅니다.
+
+공을 잡동사니 뭉치로 그리면 안 됩니다 — **단단한 윤곽의 둥근 덩어리**여야
+하고, 박힌 것이 그 윤곽을 서너 군데만 깹니다.
+
+## 3번 칸에서 공이 떨어져 나갑니다
+
+맞으면 공이 굴러가 버리고, 그제야 이 놈이 얼마나 작은지가 보입니다. 세 칸
+중 유일하게 벌레와 공이 떨어져 있는 칸입니다.""",
+    ),
+
+    mob3(
+        'sw_mantis', '기다리는 사마귀', '근접 · 둥지 26~30',
+        '가만히 서 있다가 낫을 접었다 편다.',
+        'A mantis that has not moved from this spot in a very long time and is '
+        'still not finished waiting.' + NL
+        + 'BODY: an UPRIGHT narrow trunk, TALLER THAN WIDE, standing almost '
+        'vertical on the back four legs with the front third of the body raised '
+        'clear off the ground. It is the only mob in the region that stands up.'
+        + NL
+        + 'THE SCYTHES — this one only, and it is the silhouette: TWO enormous '
+        'forelimbs held FOLDED and RAISED in front of the chest, each folded into '
+        'a tight Z whose upper edge stands HIGHER THAN THE HEAD. Each blade is a '
+        'flat hard hook lined with SIX inward spines along its inner edge, and the '
+        'two are held slightly apart so you can see black between them.' + NL
+        + 'THAT IS THE READ: two hooks standing above a thin upright body. Nothing '
+        'else in this game holds a weapon above itself — everything else reaches '
+        'forward or hangs down.' + NL
+        + 'HEAD: a small hard triangle turned to face the viewer while the body '
+        'faces sideways — the only creature in the game whose head is turned '
+        'against its own body. Two large compound domes fill the upper corners; '
+        'between them two short mouth plates opening sideways.' + NL
+        + 'ANTENNAE: two long thin feelers swept back, one broken to half.' + NL
+        + 'ABDOMEN: long, segmented in SEVEN plates, curving up and back behind '
+        'the trunk to counterbalance the raised front. It is dry and one plate has '
+        'a hole punched through it, healed.' + NL
+        + 'WINGS: a short hard pair folded flat down the back, too small to lift '
+        'it, both frayed along the trailing edge.' + NL
+        + 'THE OLD SKIN: one split hollow forelimb — an empty scythe, the same '
+        'shape as the living ones — hangs off the back of the trunk. It has done '
+        'this before.',
+        'standing motionless, upright, both scythes folded and raised in front of '
+        'the chest, head turned to the viewer, abdomen curved up behind. NOTHING '
+        'in this cell suggests movement — it is the stillest idle in the game, and '
+        'that stillness is what it does.',
+        'the snap. BOTH scythes have shot straight out and FORWARD in one line, '
+        'fully unfolded, spines forward, reaching further than the body is long — '
+        'and the body itself has not moved a hair. Head, trunk, abdomen and all '
+        'four standing legs are exactly where they were in cell 1. Only the arms '
+        'changed, and they changed completely. It is the WIDEST cell of the sheet.',
+        'struck. The trunk has been knocked off vertical and is toppling '
+        'sideways; one scythe is snapped at the elbow and hanging by the joint, '
+        'the other still half raised. Two standing legs have folded. The abdomen '
+        'has dropped and uncurled. The empty moult skin has been torn loose and '
+        'is falling with it.',
+        '- It fills about 50% of the cell height in the idle cell, measured to the '
+        'TOP OF THE RAISED SCYTHES — which stand above the head.' + NL
+        + '- Cell 2 is much wider than it is tall. Size the sheet from it.' + NL
+        + '- The two scythes must be THICK — each blade at least a fifth of the '
+        'trunk height. Thin scythes vanish at 45 pixels and this creature becomes '
+        'a stick.',
+        """이 지역에서 **유일하게 서 있는** 잡몹입니다. 나머지는 전부 기거나 낮게
+깔립니다.
+
+## 낫이 머리보다 높아야 합니다
+
+이 게임에서 무기를 **몸 위로 세우는** 것은 이놈뿐입니다. 나머지는 앞으로
+뻗거나 아래로 늘어집니다. 그 하나로 45px 에서 병정개미(허리 둘)·각다귀(가늘다)
+와 갈립니다.
+
+낫은 **두꺼워야** 합니다. 가늘게 그리면 사라지고 막대기 하나가 남습니다.
+
+## 1번과 2번의 차이가 팔뿐이어야 합니다
+
+몸통·머리·다리·배가 두 칸에서 **한 픽셀도 안 움직입니다.** 팔만 접혔다
+펴집니다. 그 대비가 "기다리다 낚아챈다" 를 만들고, 몸까지 같이 움직이면
+그냥 달려드는 벌레가 됩니다.
+
+## 머리가 몸과 다른 쪽을 봅니다
+
+몸은 옆을 보는데 머리만 정면을 봅니다. 게임에서 이러는 것은 이놈뿐이고,
+그것만으로 "보고 있다" 가 읽힙니다.""",
+    ),
+
+    mob3(
+        'sw_glider', '활공하는 잠자리', '원거리 · 둥지 26~30',
+        '뒷줄에서 미끄러지듯 떠 있다가 쏜다.',
+        'A dragonfly that stopped needing to land.' + NL
+        + 'BODY: a LONG straight rod of an abdomen, held dead horizontal, eight '
+        'segments, tapering evenly from a compact thorax to a blunt tip. It does '
+        'not curve and it does not hang — it is the straightest shape in the '
+        'region.' + NL
+        + 'THE WINGS — this one only, and it is the silhouette: FOUR long narrow '
+        'blades held out FLAT and STRAIGHT, two forward and two back, spread into '
+        'a wide X across the body. Each is more than the length of the abdomen, '
+        'each a hard flat plane with a coarse grid of veins showing through, each '
+        'ending in a blunt square tip. They are held rigid and level — this animal '
+        'glides, it does not beat.' + NL
+        + 'THAT IS THE READ: a long horizontal rod with a wide X across it. '
+        'Nothing else in the game is a cross.' + NL
+        + 'THE WINGS ARE DAMAGED, UNEVENLY: one is whole; one has a long tear from '
+        'the tip inward; one is cut square off at two-thirds; one has three round '
+        'holes punched through it. Matched wings read as an ornament.' + NL
+        + 'HEAD: almost entirely TWO enormous compound domes that meet in the '
+        'middle, together wider than the thorax and pitted with a coarse grid. '
+        'They are the largest eyes in the game relative to the body. Below them, '
+        'two short mouth plates.' + NL
+        + 'LEGS: six, thin and hooked, folded up tight against the thorax in a '
+        'basket and never used for standing.' + NL
+        + 'THE OLD SKIN: a split hollow head-case, the same shape as the living '
+        'head, hangs under the thorax on a strand.',
+        'hanging level in the air, abdomen horizontal, all four wings held out '
+        'flat and still — draw them still, not blurred. The huge eyes face '
+        'forward. It is the WIDEST silhouette of the chapter and the most '
+        'symmetrical shape in it.',
+        'the shot. The abdomen has CURLED down and forward under the body, tip '
+        'aimed ahead, and the four wings have swept BACK and angled so the X has '
+        'narrowed to a shallow V — the whole animal has gone from a cross to an '
+        'arrowhead. Off the abdomen tip, THREE separate small solid flecks travel '
+        'ahead of it and stop well inside the cell.',
+        'struck. Two wings have torn free at the root and are tumbling away '
+        'separately; the abdomen has snapped at the fourth segment and hangs at an '
+        'angle. The body has rolled and is falling eyes-down. The folded legs have '
+        'come loose and splayed.',
+        '- It fills about 40% of the cell height but is the WIDEST mob of the '
+        'chapter — the wing span is about twice its height.' + NL
+        + '- Cell 1 is the widest, cell 2 the narrowest. Size the sheet from cell 1.'
+        + NL
+        + '- WINGS ARE DRAWN STILL AND HARD. There is no way to draw a blur in two '
+        'colours; every attempt becomes a white smear. Movement is said with the '
+        'ANGLE of the wing, never with motion lines.',
+        """26~30 의 두 번째 원거리입니다. 쏘는 각다귀와 같은 줄에 서지만 실루엣이
+정반대입니다 — 각다귀는 **선**이고 이놈은 **면**입니다.
+
+## X 자가 실루엣입니다
+
+곧은 몸통 하나에 날개 넷이 가로로 넓게 벌어져 십자를 만듭니다. 이 게임에
+십자 모양은 이놈뿐이라, 뒷줄에 서 있어도 누군지 압니다.
+
+## 날개 넷이 저마다 다르게 상했습니다
+
+하나는 멀쩡하고, 하나는 끝에서 찢어졌고, 하나는 3분의 2에서 잘렸고, 하나는
+구멍 셋이 뚫렸습니다. 넷이 똑같으면 장식으로 보입니다.
+
+## 1번과 2번이 십자와 화살촉입니다
+
+떠 있을 때는 넓은 십자, 쏠 때는 날개가 뒤로 젖혀지며 좁은 화살촉이 됩니다.
+그 폭 차이가 "쐈다" 를 만듭니다.
+
+날개는 멈춘 딱딱한 판으로 그립니다. 흑백 2색에서 잔상은 흰 얼룩이 됩니다.""",
+    ),
+]
+
+
 BACKGROUNDS = [
     {
         'id': '01', 'name': '슬라임초원', 'stages': '1~5',
@@ -2943,7 +3160,7 @@ INDEX = """# 적 이미지 프롬프트
 | 슬라임 | 덩어리의 **모양** | 낮다 / 각진 것이 박혔다 / 뾰족한 것이 뻗었다 / 둘이다 |
 | 식물 | **무엇이 어느 쪽으로 뻗었나** | 옆으로 길다 / 위가 무겁다 / 사방이 뾰족하다 / 윤곽이 부드럽다 |
 | 나무 | **어디가 부러졌나** | 낮고 두껍다 / 안이 뚫렸다 / 밑이 넓다 / 각진 판이 덮였다 |
-| 벌레 | **몸이 어느 쪽으로 길고 다리가 어디에 있나** | 낮고 길다 / 뒷다리가 등보다 높다 / 넓적한 판이 덮였다 / 다리가 몸보다 길다 |
+| 벌레 | **몸이 어느 쪽으로 길고 다리가 어디에 있나** | 낮고 길다 / 뒷다리가 등보다 높다 / 넓적한 판이 덮였다 / 다리가 몸보다 길다 / 공을 밀고 있다 / 낫이 머리보다 높다 / 날개가 가로로 십자다 |
 
 챕터끼리도 겹치면 안 됩니다. 식물은 전부 사람 허리 아래, 나무는 전부 사람보다
 큽니다 — 종을 하나하나 알아보기 전에 **줄의 높이**가 먼저 눈에 들어오고, 그게
@@ -3015,15 +3232,15 @@ STAGE_TABLE = [
     ('타락한 잔재들의 숲', ['뿌리덩이', '껍질갑옷', '가지창', '꼬투리나무'], '썩은 거목'),
     ('타락한 잔재들의 숲', ['속 빈 나무', '뿌리덩이', '껍질갑옷', '꼬투리나무'], '숲의 어른'),
     ('우화하는 군체들의 침식지', ['갉는 유충', '뛰는 여치'], '센티페다'),
-    ('우화하는 군체들의 침식지', ['갉는 유충', '뛰는 여치', '뱉는 노린재'], '아피스'),
+    ('우화하는 군체들의 침식지', ['갉는 유충', '구르는 쇠똥구리', '뱉는 노린재'], '아피스'),
     ('우화하는 군체들의 침식지', ['뛰는 여치', '뱉는 노린재', '실 잣는 새끼'], '누카누스'),
-    ('우화하는 군체들의 침식지', ['갉는 유충', '뱉는 노린재', '실 잣는 새끼'], '비블리스'),
-    ('우화하는 군체들의 침식지', ['뛰는 여치', '뱉는 노린재', '실 잣는 새끼', '갉는 유충'], '아라크네스'),
-    ('침식이 끝난 군체의 둥지', ['병정개미', '못 깬 일벌'], '피로스'),
-    ('침식이 끝난 군체의 둥지', ['병정개미', '못 깬 일벌', '쏘는 각다귀'], '로쿠스타'),
-    ('침식이 끝난 군체의 둥지', ['못 깬 일벌', '쏘는 각다귀', '걷는 허물'], '모스키토'),
-    ('침식이 끝난 군체의 둥지', ['병정개미', '쏘는 각다귀', '걷는 허물'], '포르미카'),
-    ('침식이 끝난 군체의 둥지', ['병정개미', '못 깬 일벌', '쏘는 각다귀', '걷는 허물'], '바알'),
+    ('우화하는 군체들의 침식지', ['갉는 유충', '구르는 쇠똥구리', '실 잣는 새끼'], '비블리스'),
+    ('우화하는 군체들의 침식지', ['뛰는 여치', '구르는 쇠똥구리', '뱉는 노린재', '실 잣는 새끼'], '아라크네스'),
+    ('침식이 끝난 군체의 둥지', ['병정개미', '기다리는 사마귀'], '피로스'),
+    ('침식이 끝난 군체의 둥지', ['병정개미', '못 깬 일벌', '활공하는 잠자리'], '로쿠스타'),
+    ('침식이 끝난 군체의 둥지', ['기다리는 사마귀', '쏘는 각다귀', '걷는 허물'], '모스키토'),
+    ('침식이 끝난 군체의 둥지', ['병정개미', '기다리는 사마귀', '활공하는 잠자리'], '포르미카'),
+    ('침식이 끝난 군체의 둥지', ['병정개미', '걷는 허물', '쏘는 각다귀', '활공하는 잠자리'], '바알'),
 ]
 
 def tag_families():

@@ -574,7 +574,7 @@ export const BOSS_PASSIVES: Record<number, BossPassive> = {
     },
   },
   20: {
-    name: '수호수의 가호',
+    name: '세계수의 껍질',
     text: '받는 피해 20% 감소 · 15초마다 최대 체력의 5% 회복 · 체력 30% 이하에서 방어력 50% 증가',
     tough: 0.80,
     regen: { sec: 15, pct: 0.05 },
@@ -1042,7 +1042,7 @@ export const STAGES: StageDef[] = [
       w('pod', 75, 420, 1.0, 6, 12),
     ],
     boss: {
-      art: 'b20_silvanus', name: '실바누스', title: '숲의 의지를 품은 고대 수호수', bg: '04', melee: true, dmg: 'phys',
+      art: 'b20_silvanus', name: '실바누스', title: '안에서부터 썩은 세계수', bg: '04', melee: true, dmg: 'phys',
       atk: 170, hp: 10000, spd: 0.55, def: 33, res: 21,
     },
   },

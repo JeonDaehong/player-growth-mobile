@@ -1745,7 +1745,17 @@ export function BattleView() {
                     <FoeMarks
                       status={foeMarksOf(
                         foeHexOf(battle.foeHex, f.id),
-                        !!battle.taunt && battle.taunt.ms > 0,
+                        /*
+                          **이 마리가** 도발에 걸렸을 때만 뜬다.
+
+                          한동안 "도발이 걸려 있나" 만 보고 서 있는 놈 전부에게
+                          띄웠다. 그래서 계산은 그때 있던 놈만 끌려오는데
+                          (`aimOf`) 화면에는 나중에 걸어 들어온 놈에게도 로고가
+                          떴다 — 화면이 계산과 다른 말을 하고 있었다.
+                        */
+                        !!battle.taunt
+                          && battle.taunt.ms > 0
+                          && (battle.taunt.foes ?? []).includes(f.id),
                         battle.taunt?.ms ?? 0,
                       )}
                     />

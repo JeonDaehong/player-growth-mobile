@@ -19,7 +19,7 @@
 | `bp_thorn` | b05 스피나투스 · 가시 갑옷 | A SPIKED BALL |
 | `bp_viscous` | b10 슬러지누스 · 오염된 점성 | A HEAVY FALLING DROP |
 | `bp_rot` | b15 카다베라 · 부패의 오라 | A RISING PLUME |
-| `bp_ward` | b20 실바누스 · 수호수의 가호 | A SHIELD-LEAF |
+| `bp_ward` | b20 실바누스 · 세계수의 껍질 | A SHIELD-LEAF |
 | `bp_split` | b21 센티페다 · 절단 분열 | A BAR CUT IN TWO |
 | `bp_shell` | b23 누카누스 · 경화 갑각 | A CLOSED DOME |
 | `bp_sting` | b24 비블리스 · 독침 | A DROP ON A POINT |
@@ -44,7 +44,7 @@
 
 | 셀 | 1 | 2 | 3 | 4 |
 |---|---|---|---|---|
-| | 가시 갑옷 | 오염된 점성 | 부패의 오라 | 수호수의 가호 |
+| | 가시 갑옷 | 오염된 점성 | 부패의 오라 | 세계수의 껍질 |
 | id | `bp_thorn` | `bp_viscous` | `bp_rot` | `bp_ward` |
 
 ### 프롬프트
