@@ -2,10 +2,11 @@
 
 **이 파일은 자동 생성됩니다** — `python tools/gen-status.py`.
 
-걸린 사람의 이름표 옆에 붙는 작은 로고 **열둘**입니다. 출혈처럼 한동안
-걸려 있다가 풀리는 것들입니다.
+걸린 사람의 파티 칸에 붙는 작은 로고 **17개**입니다. 출혈처럼 한동안
+걸려 있다가 풀리는 것들입니다. 몇은 **적에게** 걸립니다 (도발 · 보호막 ·
+시듦) — 그때는 적 머리 위에 뜹니다.
 
-보스 패시브 로고 넷은 따로 있습니다
+보스 패시브 로고는 따로 있습니다
 ([`BOSS_PASSIVE_PROMPTS.md`](BOSS_PASSIVE_PROMPTS.md)) — 저건 보스 하나에게
 싸우는 내내 붙어 있고, 이건 누구에게든 몇 초씩 붙었다 사라집니다.
 
@@ -24,18 +25,22 @@
 | 로고 | 이름 | 좋고 나쁨 | 뜻 | 거는 곳 |
 |---|---|---|---|---|
 | `st_bleed` | 출혈 | 나쁜 | 물리 지속 피해 | 5·7·11판 우두머리 |
-| `st_poison` | 중독 | 나쁜 | 마법 지속 피해 (맹독·산성·포자·부패 전부) | 3·8·10·12·14·15판 우두머리 |
-| `st_stun` | 기절 | 나쁜 | 행동 불가 | 6·13·17판 우두머리 |
+| `st_poison` | 중독 | 나쁜 | 마법 지속 피해 (맹독·산성·포자·부패 전부) | 3·8·10·12·14·15·21·24·29판 우두머리 |
+| `st_stun` | 기절 | 나쁜 | 행동 불가 | 6·13·17·22·23·30판 우두머리 |
 | `st_silence` | 침묵 | 나쁜 | 스킬 사용 불가 | 15판 우두머리 |
 | `st_slow` | 둔화 | 나쁜 | 공격속도 감소 | 4·10·12판 우두머리 |
 | `st_weak` | 약화 | 나쁜 | 공격력 감소 | 17판 우두머리 |
-| `st_break` | 파쇄 | 나쁜 | 방어력 감소 (0으로 만드는 것 포함) | 15·16판 우두머리 |
-| `st_wither` | 시듦 | 나쁜 | 받는 치유량 감소 | 14판 우두머리 |
-| `st_taunt` | 도발 | 나쁜 | 건 사람만 노리게 된다 (적에게 걸린다) | — |
-| `st_rage` | 격노 | 좋은 | 공격력 증가 | 보조가 곁에 섰을 때 (`core/party` 의 `supportMul`) |
+| `st_break` | 파쇄 | 나쁜 | 방어력 감소 (0으로 만드는 것 포함) | 15·16·30판 우두머리 |
+| `st_wither` | 시듦 | 나쁜 | 받는 치유량 감소 | 14·28판 우두머리 · 비앙카의 화산 (적에게 걸린다) |
+| `st_taunt` | 도발 | 나쁜 | 건 사람만 노리게 된다 (적에게 걸린다) | 이졸데의 도발 (`SKILLS.taunt`) — 적에게 걸린다 |
+| `st_shield` | 보호막 | 나쁜 | 깨야 하는 껍질 — 시간 안에 못 깨면 큰일이 난다 (적에게 걸린다) | 22·23·29판 우두머리 |
+| `st_confuse` | 혼란 | 나쁜 | 스킬을 못 쓰고 아군을 친다 | 24·29판 우두머리 |
+| `st_burn` | 화상 | 나쁜 | 받는 피해 증가 | 26판 우두머리 |
+| `st_numb` | 신경 마비 | 나쁜 | 평타를 쳐도 스킬 코스트가 안 찬다 | 25·29판 우두머리 |
+| `st_rage` | 격노 | 좋은 | 공격력 증가 | 아직 없음 — 약화의 짝으로 자리만 열어 둡니다 |
 | `st_guard` | 견고 | 좋은 | 방어력 증가 | 20판 우두머리 |
 | `st_regen` | 재생 | 좋은 | 지속 회복 | 20판 우두머리 |
-| `st_haste` | 신속 | 좋은 | 공격속도 증가 | 아직 없음 — 둔화의 짝으로 자리만 열어 둡니다 |
+| `st_haste` | 신속 | 좋은 | 공격속도 증가 | 리안느의 광란 (`core/chars` 의 `SKILLS.frenzy`) |
 
 ## 안 만든 것
 
@@ -48,18 +53,19 @@
 - **보스가 받는 피해 20% 감소** (20판) — 패시브라 상태가 아니라 보스 로고
   쪽입니다 ([`BOSS_PASSIVE_PROMPTS.md`](BOSS_PASSIVE_PROMPTS.md) 의 `bp_ward`).
 
-## 좋고 나쁨은 그림이 아니라 화면이 말합니다
+## 좋고 나쁨은 그림이 아니라 **테두리**가 말합니다
 
-흑백 2색이라 초록 테두리·빨간 테두리를 쓸 수가 없습니다. 그래서 로고는
-**무엇인지만** 말하고, 좋은 것인지 나쁜 것인지는 화면이 자리로 말합니다 —
-좋은 것은 이름표 왼쪽, 나쁜 것은 오른쪽 같은 식입니다.
+로고 자체는 **무엇인지만** 말합니다. 좋은 것인지 나쁜 것인지는 화면이 칸의
+테두리 색으로 말합니다 — 초록이면 도움이 되는 것, 빨강이면 나쁜 것
+(`ui/theme` 의 `GOOD_C`·`BAD_C`). 안쪽 그림은 그대로 흰색입니다.
 
 그래서 로고를 그릴 때 "나쁜 것이니까 어둡게" 같은 것을 하면 안 됩니다.
-열둘이 **같은 무게, 같은 채움**이어야 합니다.
+**같은 무게, 같은 채움**이어야 합니다 — 어느 쪽인지는 그림이 말할 일이
+아닙니다.
 
-## 열여섯이 다 갈려야 합니다
+## 전부가 다 갈려야 합니다
 
-상태 로고 열둘과 보스 패시브 로고 넷이 **한 화면에 같이 뜹니다.**
+상태 로고와 보스 패시브 로고가 **한 화면에 같이 뜹니다.**
 
 | 로고 | 윤곽 |
 |---|---|
@@ -72,6 +78,10 @@
 | `st_rage` | 길쭉한 칼 |
 | `st_weak` | 부러진 짧은 칼 |
 | `st_taunt` | 가로 쐐기 (왼쪽이 얇다) |
+| `st_shield` | 두꺼운 육각 고리 |
+| `st_confuse` | 나선 |
+| `st_burn` | 불꽃 (아래가 무겁고 위가 셋) |
+| `st_numb` | 끊어진 세로 막대 |
 | `st_guard` | 꽉 찬 사각 |
 | `st_break` | 귀퉁이 떨어진 사각 |
 | `st_regen` | 십자 |
@@ -474,6 +484,99 @@ SHEET LAYOUT:
   clipped.
 ```
 
+## E장 — 군체가 거는 것들 (21~30)
+
+**21~30판에서 새로 생긴 넷입니다.** 앞의 열셋과도 윤곽이 안 겹쳐야 합니다 — 같은 화면에 같이 뜹니다. 넷은 각각 육각 고리 · 나선 · 불꽃 · 끊어진 세로 막대이고, 이 중 나선과 육각은 이 게임에 아직 없던 모양입니다.
+
+### 셀 순서
+
+| 셀 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| | 보호막 | 혼란 | 화상 | 신경 마비 |
+| id | `st_shield` | `st_confuse` | `st_burn` | `st_numb` |
+
+### 프롬프트
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+
+The 4 cells, in this exact order:
+
+Cell 1 — A HEXAGON. One solid six-sided shape filling the cell, flat on top and bottom, points at left and right, its walls a quarter of the cell thick and its centre EMPTY BLACK — a thick-walled ring with six straight sides. It is the only icon in the set with straight sides meeting at angles, and the only six-sided one. Squint test: a thick hexagonal ring.
+Cell 2 — A SPIRAL. One thick continuous band winding from the centre of the cell outward through one and a half turns, ending with a flat cut edge at the upper right. The band and the black gap between its turns are the same width. It is the ONLY curved-and-winding shape in the set — everything else is bars, blocks or single arcs. Squint test: a spiral.
+Cell 3 — A FLAME. A wide solid base sitting on the bottom edge of the cell, rising and narrowing into a single body that SPLITS near the top into THREE tongues of different heights, the middle one tallest and reaching the top edge, all leaning the same way. It is heavy at the bottom and torn at the top. It is the only icon that ends in several points at one end and a solid mass at the other. Squint test: a flame.
+Cell 4 — A BROKEN UPRIGHT BAR. One solid vertical bar running the full height of the cell, a third of its width — CUT THROUGH at the middle by a horizontal gap as tall as the bar is wide, leaving two blocks, one above and one below, with flat square ends facing each other. It is the silence bar stood on end and snapped, and the two things it says are related: one stops the skill, the other stops the skill from charging. Squint test: a standing bar with a gap in it.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 12 TO 16 PIXELS. That is smaller than the text next to it.
+Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon must read as a single silhouette at a glance. Not a
+  scene, not an object sitting on a background, not two things next to each other.
+- FILL THE CELL. The shape touches or nearly touches all four sides of its cell.
+  An icon drawn small inside its cell disappears entirely when scaled down.
+- SOLID, NOT OUTLINED. Draw it as a filled white mass. A hollow outline at 14px
+  becomes a grey smudge, because the outline and the hole merge.
+- NO INTERIOR DETAIL. No rivets, no wood grain, no gem facets, no shading, no
+  highlights. If you can only see it at full size, it is noise.
+- ONE NOTCH OR CUT-OUT AT MOST, and it must be at least a fifth of the width.
+  Anything finer closes up.
+- STRAIGHT AND CHUNKY. Thick strokes, hard angles, flat ends. Thin tapering lines
+  vanish; a 1px point at full size is nothing at icon size.
+- NO PERSPECTIVE. Flat and front-on, like a road sign. These are the only images
+  in this game that are NOT drawn in three-quarter view.
+- CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
+  text and a tilted icon looks like a mistake.
+
+TEST: squint until the image is a blur. If you can still name it, it is right.
+If it becomes a grey blob, the shape is too busy.
+
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING.
+- Every edge is a HARD STEP between solid white and solid black. Do not soften, feather or anti-alias anything, and do not fake a grey by alternating black and white pixels along an edge.
+- A checkerboard border turns into grey fuzz at 14 pixels and the shape loses its outline, which is the only thing that identifies it. An earlier attempt came back with dithered edges and half the icons were unreadable.
+- Two colours exist in this image: pure white and pure black. Nothing in between, anywhere.
+
+THEY ALL WEIGH THE SAME.
+- Some of these are bad things and some are good, but NOTHING in the drawing may say which is which. No icon is darker, thinner, spikier or gloomier than another. The game says good or bad by where it puts them on screen; the icon only says WHAT.
+- Every icon uses the same stroke weight and the same solid fill.
+
+THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and squint until they blur. If any two have a similar outline, redraw the weaker one — the outline is the only thing that survives at 14 pixels.
+
+SHEET LAYOUT:
+- Arrange the cells in an exact uniform grid: 4 columns x 1 row.
+- Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a magenta
+  border around the outer edge of the whole sheet.
+- Magenta appears ONLY on these separator lines, never inside a cell.
+- Every cell is exactly the same size. Reading order is left to right, then top to
+  bottom.
+- Do not add extra rows of variants. Exactly 1 row, exactly 4 cells.
+- EVERY CELL MUST BE SQUARE. With a 4x1 grid that means the whole sheet is
+  4:1 — output it at 2048x512.
+  A square cell is required. A tall narrow cell cannot hold a weapon swung forward,
+  and a short wide cell cannot hold one raised. Both have been tried and both
+  clipped.
+```
+
 ## 슬라이서 설정
 
 세 장을 **한 세트로 이어 붙입니다** (`append`). 그래야
@@ -487,7 +590,9 @@ SHEET LAYOUT:
 { "file": "status-3.jpg", "name": "status_icon", "expect": [4, 1], "append": true,
   "labels": ["st_wither", "st_regen", "st_slow", "st_haste"] },
 { "file": "status-4.jpg", "name": "status_icon", "expect": [1, 1], "append": true,
-  "labels": ["st_taunt"] }
+  "labels": ["st_taunt"] },
+{ "file": "status-5.jpg", "name": "status_icon", "expect": [4, 1], "append": true,
+  "labels": ["st_shield", "st_confuse", "st_burn", "st_numb"] }
 ```
 
 ## 다시 뽑을 때

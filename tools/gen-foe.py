@@ -37,6 +37,7 @@ from artstyle import (  # noqa: E402
 # 챕터마다 폴더를 나눈다 — 한 폴더에 마흔둘이 쌓이면 이름으로만 구분해야 한다
 OUT_DIR = 'docs/foe-art'          # 1~10 · 슬라임
 OUT_DIR2 = 'docs/foe-art2'        # 11~20 · 식물 · 나무
+OUT_DIR3 = 'docs/foe-art3'        # 21~30 · 벌레 · 군체
 
 
 def out_dir_of(f):
@@ -45,6 +46,8 @@ def out_dir_of(f):
     id 앞자리로 정한다 — `family` 와 같은 이유다 (`tag_families`). 항목마다
     폴더를 손으로 적게 하면 언젠가 하나가 엉뚱한 데로 간다.
     """
+    if f['id'][:3] == 'sw_':
+        return OUT_DIR3
     return OUT_DIR2 if f['id'][:3] in ('pf_', 'pw_', 'pb_') else OUT_DIR
 
 
@@ -1906,6 +1909,463 @@ FOES += [
 ]
 
 
+# ══ 21~30 · 벌레 · 군체 ═══════════════════════════════════════
+#
+# 앞의 두 챕터와 **가르는 축이 다르다.** 슬라임은 덩어리의 모양으로, 식물·나무는
+# 어디가 뻗었나로 갈랐다. 여기는 **몸이 어느 쪽으로 길고 다리가 어디에 있나**다.
+#
+#   낮고 길다              갉는 유충 · 걷는 허물
+#   뒷다리가 등보다 높다    뛰는 여치
+#   넓적한 판이 덮였다      뱉는 노린재 · 병정개미
+#   다리가 몸보다 길다      실 잣는 새끼 · 쏘는 각다귀
+#   날개가 몸보다 넓다      못 깬 일벌
+#
+# 다섯 축에 아홉이라 둘씩 겹치는 자리가 있는데, 겹치는 둘은 **다른 챕터**에
+# 둔다 (유충은 21~25, 허물은 26~30). 한 화면에 같이 서지 않으면 안 헷갈린다.
+
+FOES += [
+    mob3(
+        'sw_grub', '갉는 유충', '근접 · 침식지 21~25',
+        '기어와서 입판으로 갉는다. 이 지역의 기본형이다.',
+        'A grub that has been eating since before anything else here hatched.' + NL
+        + 'BODY: LOW AND LONG — it lies along the ground and reaches forward, about '
+        'two and a half times as long as it is tall. It is the FLATTEST silhouette '
+        'of this chapter and every other insect here is measured against it.' + NL
+        + 'SEGMENTS: EIGHT fat rings, each pinched deeply from the next so the '
+        'outline is a row of bumps along the top and the bottom. That bumpy edge is '
+        'the whole read — nothing else in the chapter has a repeating scalloped '
+        'outline.' + NL
+        + 'LEGS: six tiny hooked pairs bunched under the front third, and four '
+        'fleshy prolegs gripping at the back. All of them are short — it drags more '
+        'than it walks.' + NL
+        + 'HEAD: a small hard capsule at the front, with TWO mouth plates opening '
+        'SIDEWAYS, each ridged with four grinding teeth. The head is the only hard '
+        'part and it is a fifth of the body.' + NL
+        + 'EYES: four dull dots in a row on each side, tiny and almost lost in the '
+        'plate.' + NL
+        + 'THE OLD SKIN: one split hollow ring hangs off the third segment, dry and '
+        'empty, dragging behind.' + NL
+        + 'SILHOUETTE (protect this): a long low row of bumps with a small hard '
+        'head at one end. Flat, segmented, and going one way.',
+        'at rest, stretched along the ground, head lowered and mouth plates apart. '
+        'The rear segments are bunched up slightly, as if it stopped mid-crawl. The '
+        'old skin ring trails. Nothing is raised.',
+        'the gnaw. The front third has HUMPED UP off the ground and driven forward, '
+        'mouth plates swung to their widest, while the back half stays flat and '
+        'anchored. It is a caterpillar\'s push — the body shortens and the head goes '
+        'out. Two prolegs have come off the ground.',
+        'struck. The body has been knocked into a broken curve, three segments '
+        'crushed narrower than their neighbours, two prolegs torn away. The head is '
+        'twisted onto its side and one mouth plate hangs loose. The old skin ring '
+        'has been ripped off and is falling clear.',
+        '- It fills about 45% of the cell height. It is the LOWEST and LONGEST of '
+        'this chapter.' + NL
+        + '- Cell 2 is the tallest (the humped push). Size the sheet from it.',
+        """이 지역의 첫 잡몹이자 기본형입니다. 나머지 넷이 전부 이놈과의 차이로
+설명됩니다 — 여치는 뒷다리가 높고, 노린재는 넓적하고, 새끼거미는 다리가
+깁니다.
+
+**마디 여덟의 오돌토돌한 윤곽이 전부입니다.** 45px 에서 남는 것이 그것뿐이고,
+그 반복이 "벌레" 를 말합니다. 매끈하게 그리면 슬라임(1~10)과 겹칩니다.
+
+물기가 있으면 안 됩니다. 방울도 흘러내림도 그리지 마세요 — 그건 슬라임 장의
+것입니다. 이쪽은 마르고 딱딱하고 먼지가 납니다.""",
+    ),
+
+    mob3(
+        'sw_hopper', '뛰는 여치', '근접 · 침식지 21~25',
+        '접힌 뒷다리로 튀어 들어와 부딪힌다.',
+        'A bush cricket that stopped being able to land quietly.' + NL
+        + 'BODY: a compact trunk held at a forward slant, not much longer than it is '
+        'tall — the SMALLEST body of the chapter. Everything about this creature is '
+        'in its legs.' + NL
+        + 'HIND LEGS: ONE enormous pair, folded into a tight Z that stands HIGHER '
+        'THAN ITS OWN BACK, the thigh as thick as the whole trunk. This is the read '
+        'and it must be unmistakable at 45 pixels: a small body with two big folded '
+        'triangles standing above it.' + NL
+        + 'FRONT LEGS: two small hooked pairs under the chest, almost incidental.' + NL
+        + 'WINGS: a short hard pair folded flat along the back, reaching only '
+        'halfway down the body, one torn at the tip. Too small to fly on.' + NL
+        + 'HEAD: angled down, with two mouth plates opening sideways and two very '
+        'long thin ANTENNAE swept back over the body, together longer than the '
+        'creature is. One is snapped to half length.' + NL
+        + 'EYES: two compound domes on the sides of the head, pitted with a coarse '
+        'grid, the larger one clouded.' + NL
+        + 'SILHOUETTE (protect this): a small body with two folded Z-shaped legs '
+        'towering over it and two long feelers trailing back.',
+        'crouched and loaded. The hind legs are folded to their tightest, knees at '
+        'their highest point, body low between them and tilted forward. The antennae '
+        'are laid back flat. It has not moved and it is entirely about to.',
+        'the leap, at its start. The hind legs have SNAPPED STRAIGHT — both fully '
+        'extended down and back, longer than the body twice over — and the trunk has '
+        'been thrown UP AND FORWARD off the ground, head first, front legs reaching. '
+        'The antennae have whipped forward past the head. It is the TALLEST cell of '
+        'the sheet and the creature is clear of the ground.',
+        'struck in mid-air. The trunk has been knocked sideways and is tumbling, one '
+        'hind leg snapped backwards at the knee and hanging by the joint, the other '
+        'still half extended. Both wings are folded the wrong way. One antenna is '
+        'gone entirely.',
+        '- It fills about 48% of the cell height in the idle cell — measured to the '
+        'top of the FOLDED KNEES, which are the highest point.' + NL
+        + '- Cell 2 is much taller. Size the sheet from it.',
+        """이 지역에서 **유일하게 땅을 떠나는 잡몹**입니다.
+
+접힌 뒷다리의 Z 자가 등보다 높이 서 있어야 합니다. 그 하나로 유충(낮고 길다)
+· 노린재(넓적하다)와 갈립니다.
+
+2번 칸에서는 다리가 완전히 펴져 몸이 공중에 떠 있어야 합니다. 접힌 것과 펴진
+것의 차이가 이 놈이 하는 일 전부입니다 — 애매하게 반쯤 펴면 두 칸이 같아
+보입니다.""",
+    ),
+
+    mob3(
+        'sw_spitter', '뱉는 노린재', '원거리 · 침식지 21~25',
+        '뒷줄에 서서 산을 뱉는다. 앞으로 안 나온다.',
+        'A shield bug that solved every problem by spraying it.' + NL
+        + 'BODY: a broad flat SHIELD — a wide rounded triangle seen from above and '
+        'behind, WIDER THAN TALL, coming to a blunt point at the tail. The whole '
+        'upper surface is ONE hard plate with a raised ridge down the middle and '
+        'two shallow ridges either side of it. It is the WIDEST and FLATTEST '
+        'silhouette of the chapter.' + NL
+        + 'THE PLATE IS THE READ. Nothing else here is a single broad slab; the '
+        'others are chains of segments. Keep the outline of that slab clean and '
+        'unbroken — the legs stick out from under it, they never break its edge.' + NL
+        + 'LEGS: three pairs, short and splayed, poking out from beneath the plate '
+        'at the sides. One is a healed stump.' + NL
+        + 'HEAD: small and mostly hidden under the front of the plate. From it, a '
+        'short thick ROSTRUM — a hard downward-pointing beak, blunt, a third of the '
+        'body length, hinged where it meets the head so it can swing forward.' + NL
+        + 'EYES: two small domes at the front corners of the plate, wide apart.' + NL
+        + 'ANTENNAE: two short segmented feelers held forward and down.' + NL
+        + 'SCARS: the plate has two chips out of its rim and one puncture near the '
+        'tail, healed from beneath.',
+        'settled flat, plate level, legs splayed and gripping, rostrum folded back '
+        'under the head. It looks like a stone with legs. Nothing about it says it '
+        'can reach you.',
+        'the spray. The front of the plate has TIPPED UP so the body stands at a '
+        'steep angle, and the rostrum has swung FORWARD and levelled — pointing out '
+        'of the cell, not down. From its tip, a fan of six or seven separate small '
+        'solid flecks is thrown forward and up, biggest near the tip, thinning '
+        'outward, stopping well inside the cell. The back legs are braced.',
+        'struck. The plate has been split from the rim inward along one of its side '
+        'ridges and the halves have lifted apart, showing a hand-width of soft dark '
+        'seam. The body has flipped onto its edge; three legs claw at nothing. The '
+        'rostrum is bent off to one side.',
+        '- It fills about 42% of the cell height and is the WIDEST of the chapter — '
+        'about half again as wide as it is tall.' + NL
+        + '- Cell 2 is the tallest (the tipped-up spray). Size the sheet from it.'
+        + NL
+        + '- The thrown flecks are separate solid shapes with black between them. '
+        'Never a cloud, never a gradient, never a connected stream.',
+        """이 지역의 **첫 원거리**입니다. 뒷줄에 서서 앞으로 안 나옵니다.
+
+**넓적한 판 하나가 이 놈의 전부입니다.** 다른 벌레들은 마디가 이어진 사슬인데
+이놈만 한 장짜리 슬래브입니다. 다리는 판 아래에서 삐져나오고 판의 윤곽을 절대
+안 건드립니다 — 건드리면 그 대비가 사라집니다.
+
+뱉는 것은 낱개 조각으로 그립니다. 이어진 물줄기로 그리면 흑백에서 흰 막대가
+되고, 뱉는 것인지 찌르는 것인지 알 수 없습니다.""",
+    ),
+
+    mob3(
+        'sw_weaver', '실 잣는 새끼', '원거리 · 침식지 21~25',
+        '뒷줄에서 실을 던진다. 아라크네스가 낳은 것들이다.',
+        'One of the queen\'s brood, hatched early and already too big.' + NL
+        + 'BODY: TINY compared to its legs — two small masses at a narrow waist, '
+        'together no more than a third of the creature\'s span. The abdomen is a '
+        'plain rounded sac; the front is a small hard plate.' + NL
+        + 'LEGS: FOUR pairs, LONG — each one two to three times the length of the '
+        'body, folding UP above the body before coming down, so the knees stand '
+        'well HIGHER THAN THE BACK and the body hangs slung between them. The leg '
+        'span is the silhouette; the body is almost an afterthought. Two legs are '
+        'shorter than the others and one ends in a stump.' + NL
+        + 'THAT IS THE READ: a wide cage of thin bent lines with a small heavy blob '
+        'hanging in the middle of it. Nothing else in the chapter is mostly empty '
+        'space.' + NL
+        + 'HEAD: a bank of SIX eyes in two uneven rows, all the same dull dome, '
+        'taking up most of the front plate. Two short fangs fold down and inward.' + NL
+        + 'SPINNERETS: three short nozzles at the abdomen tip, with TWO thick '
+        'strands already hanging from them into empty black and ending there.' + NL
+        + 'IT IS A JUVENILE: the plates are thin and the joints are pale where they '
+        'have not hardened. One old skin, split down the back, hangs off the '
+        'abdomen.',
+        'standing high on its folded legs, body slung low between them, fangs '
+        'folded, the two strands hanging straight down. It is the widest EMPTY '
+        'silhouette of the chapter — mostly black between the legs.',
+        'the throw. The abdomen has swung UP and FORWARD over the front plate, the '
+        'spinnerets aimed out of the cell, and from them a BUNDLE of four heavy '
+        'strands has been fired forward as a narrow fan converging to a point '
+        'beyond the body — stopping well short of the cell edge. Two front legs are '
+        'raised and reaching; the back four are braced wide.',
+        'struck. Three legs have folded the wrong way at the knee and the body has '
+        'dropped between them onto the ground, abdomen split along one side. The '
+        'strands have gone slack and are falling in loose curls. Two eyes are '
+        'dulled over.',
+        '- It fills about 50% of the cell height measured to the top of the KNEES, '
+        'which stand above the body.' + NL
+        + '- Its span is wide but MOSTLY EMPTY — the black between the legs is part '
+        'of the shape and must be preserved, not filled in.' + NL
+        + '- Cell 2 is the tallest. Size the sheet from it.',
+        """25판 우두머리(아라크네스)가 낳은 것들입니다. 그 놈의 등에 붙어 있는
+새끼 여섯과 **같은 생김새**여야 합니다 — 여기서 미리 만나 두면 우두머리 등에
+붙은 것이 무엇인지 바로 압니다.
+
+**다리 사이의 검은 부분이 그림의 일부입니다.** 이 놈은 이 지역에서 유일하게
+속이 비어 있습니다. 채우면 그냥 덩어리가 되고, 45px 에서 노린재와 안 갈립니다.
+
+새끼라는 것이 보여야 합니다 — 판이 얇고 관절이 아직 안 굳었습니다.""",
+    ),
+
+    mob3(
+        'sw_soldier', '병정개미', '근접 · 둥지 26~30',
+        '턱으로 물어 끊는다. 둥지의 기본형이다.',
+        'A soldier caste bred for one job, kept long after the job ended.' + NL
+        + 'BODY: THREE hard masses joined at two narrow waists — head, thorax, '
+        'abdomen — held low and forward. The waists are the read: two places where '
+        'the outline pinches almost to nothing. Nothing else in the region has that.'
+        + NL
+        + 'THE HEAD IS TOO BIG. It is nearly the size of the abdomen and it is '
+        'armoured heavier than the rest — a broad squared capsule that carries TWO '
+        'enormous MANDIBLES, each as long as the head itself, curved and toothed '
+        'along the inner edge, opening SIDEWAYS to a spread wider than the body. '
+        'The head and jaws together are half the creature.' + NL
+        + 'LEGS: three pairs, thick and short, braced wide, each bending up then '
+        'down, each ending in a two-part hook. Built to hold ground.' + NL
+        + 'EYES: two small dull domes far back on the head, almost vestigial — this '
+        'one works by touch.' + NL
+        + 'ANTENNAE: two elbowed feelers, bent sharply at their midpoint, held '
+        'forward. One is snapped past the elbow.' + NL
+        + 'SCARS: the left mandible has its tip broken square off. The thorax has '
+        'three punctures healed over.',
+        'braced low, all six legs planted, mandibles held half open and level, head '
+        'lowered. The two waists show clearly. It is not moving and it is not '
+        'relaxed.',
+        'the bite. The head has driven FORWARD on a stretched front waist and the '
+        'mandibles have swung to their FULL spread, wider than the body — the widest '
+        'opening in the chapter. The thorax and abdomen have barely moved; only the '
+        'front third is committed. Two front legs are off the ground.',
+        'struck. The front waist has been crushed and the head has dropped and '
+        'turned aside, one mandible torn off at the base and falling. Two legs have '
+        'buckled. The abdomen is split along one band and the plates gape.',
+        '- It fills about 46% of the cell height.' + NL
+        + '- Cell 2 is the widest (the full mandible spread). Size the sheet from it.',
+        """26~30 의 기본형입니다.
+
+**허리 두 군데가 잘록한 것**이 이 지역에서 이놈만의 것입니다 — 몸이 셋으로
+끊어져 보여야 합니다. 그 하나로 일벌(날개가 넓다) · 각다귀(가늘고 길다) ·
+허물(속이 비었다)과 갈립니다.
+
+머리가 배만큼 커야 합니다. 병정개미를 병정으로 만드는 것은 몸집이 아니라
+**턱이 몸의 절반**이라는 비율입니다.
+
+눈은 거의 퇴화했습니다 — 크게 그리면 24판 나방의 눈알 무늬와 인상이 겹칩니다.""",
+    ),
+
+    mob3(
+        'sw_drone', '못 깬 일벌', '근접 · 둥지 26~30',
+        '반쯤 부화한 채로 날아와 부딪힌다.',
+        'A worker that was pulled out of the comb before it finished.' + NL
+        + 'BODY: a compact thorax with a short banded abdomen hanging below it, held '
+        'nose-down in the air. The body is small; the WINGS are what you see.' + NL
+        + 'WINGS: TWO pairs, held out flat and wide, together more than TWICE the '
+        'width of the body — the widest wing span in the region. They are thin hard '
+        'blades with a coarse grid of veins. THREE of the four are still CRUMPLED — '
+        'folded and creased along their length as if they never inflated — and only '
+        'one has opened properly. That mismatch is the read.' + NL
+        + 'THE HALF-SHELL — this one only: a broken piece of hexagonal COMB CAP is '
+        'still stuck to its back and one shoulder, a jagged fragment with two whole '
+        'hex cells in it. It never got all the way out.' + NL
+        + 'LEGS: three pairs, folded up tight under the thorax, thin and hooked.' + NL
+        + 'HEAD: two large compound domes covering most of it, and two short mouth '
+        'plates below. One dome is caved in.' + NL
+        + 'STING: a short straight barb at the abdomen tip, half the length of the '
+        'abdomen — much shorter than a soldier bee\'s.',
+        'hovering nose-down at a slight angle, legs folded, sting pointing down. The '
+        'wings are held out and STILL — draw them still, not blurred. Three are '
+        'visibly crumpled. The comb fragment sits on its back.',
+        'the ram. The whole body has TIPPED nose-down to near vertical and driven '
+        'forward, wings swept back flat against the body so the span has collapsed '
+        'to almost nothing, legs out and grasping. It attacks by falling at you. '
+        'This is the NARROWEST cell of the sheet.',
+        'struck. The one whole wing has torn free and is tumbling clear; the body '
+        'has flipped and is falling abdomen-first. The comb fragment has cracked '
+        'across and half of it is gone. The sting is bent flat against the abdomen.',
+        '- It fills about 44% of the cell height. Its WIDTH in the idle cell (wing '
+        'span) is about half again its height.' + NL
+        + '- Cell 1 is the widest, cell 2 the narrowest. Size the sheet from cell 1.'
+        + NL
+        + '- WINGS ARE DRAWN STILL AND HARD. There is no way to draw a blur in two '
+        'colours; every attempt becomes a white smear. Movement is said with the '
+        'ANGLE of the wing, never with motion lines.',
+        """22판 우두머리(아피스)와 **같은 종족**입니다 — 저쪽은 다 자란 호위벌이고
+이쪽은 못 깬 일벌입니다. 그래서 육각형 벌집 조각을 둘 다 답니다. 다만 아피스는
+어깨에 갑옷처럼 붙어 있고, 이놈은 **아직 못 벗은 뚜껑**이 등에 붙어 있습니다.
+
+**날개 넷 중 셋이 쭈글쭈글해야 합니다.** 그게 "못 깼다" 를 말하는 유일한
+방법이고, 다 편 날개 하나와의 대비가 45px 에서도 보입니다.
+
+날개는 멈춘 딱딱한 판으로 그립니다. 흑백 2색에서 잔상은 흰 얼룩이 됩니다.""",
+    ),
+
+    mob3(
+        'sw_lancer', '쏘는 각다귀', '원거리 · 둥지 26~30',
+        '뒷줄에서 긴 침을 쏜다.',
+        'A crane fly grown into a delivery system for one needle.' + NL
+        + 'BODY: THIN. A narrow straight abdomen held at a steep angle off a small '
+        'hunched thorax, the whole body no thicker than one of its own legs at the '
+        'knee. It is the THINNEST silhouette in the region — almost all of this '
+        'creature is line.' + NL
+        + 'THE NEEDLE: a single rigid PROBOSCIS projecting forward from the head, as '
+        'long as the abdomen, dead straight, tapering to a hair point. It is the '
+        'longest straight line in the chapter.' + NL
+        + 'LEGS: three pairs, absurdly long and thin, each bending TWICE, splayed so '
+        'wide that the body hangs low in the middle of them. TWO are broken — one at '
+        'the first joint, one at the second — and hang uselessly. Draw them as hard '
+        'hairlines with visible joints, never as smooth curves.' + NL
+        + 'WINGS: one narrow pair held back and slightly apart, each with a long '
+        'tear.' + NL
+        + 'HEAD: two small compound domes and, between them, the thickened collar '
+        'where the needle joins.' + NL
+        + 'IT IS EMPTY: unlike the mosquito boss it carries nothing. No drops '
+        'anywhere on it. That is the difference between a mob and 28판 — this one '
+        'has not fed.',
+        'standing high on its splayed broken legs, body hanging low between them, '
+        'needle held level and forward. It is mostly empty space and thin lines. '
+        'Nothing about it looks solid.',
+        'the shot. The body has PIVOTED so the needle points forward and slightly '
+        'down out of the cell, and the two whole legs have straightened to drive the '
+        'head out — the body is at its LONGEST here, stretched from needle tip to '
+        'back foot. Off the needle tip, THREE separate small solid flecks travel '
+        'ahead of it and stop well inside the cell.',
+        'struck. The needle has snapped at two thirds and the broken end hangs by a '
+        'shred. Four legs have collapsed and the body is on the ground between them. '
+        'One wing is torn off entirely.',
+        '- It fills about 50% of the cell height measured to the top of the KNEES.'
+        + NL
+        + '- It is MOSTLY EMPTY BLACK. The gaps between the legs are part of the '
+        'shape and must not be filled in.' + NL
+        + '- Cell 2 is the longest. Size the sheet from it.',
+        """28판 우두머리(모스키토)와 같은 갈래지만 **다른 놈**입니다. 저쪽은 배가
+부풀어 있고 물방울을 달고 있습니다. 이놈은 **아직 안 먹었습니다** — 물방울이
+하나도 없고 배가 비어 있습니다.
+
+그 차이 하나로 우두머리가 나왔을 때 "저건 배가 불렀다" 가 읽힙니다.
+
+**이 놈은 얇아야 합니다.** 둥지 넷 중 셋이 두꺼운 마디 덩어리라, 이 놈만
+선으로 그리면 뒷줄에 서 있어도 누군지 압니다.""",
+    ),
+
+    mob3(
+        'sw_husk', '걷는 허물', '근접 · 둥지 26~30',
+        '속이 빈 껍데기가 걸어온다.',
+        'A moulted skin that never noticed the animal had left.' + NL
+        + 'BODY: LOW AND LONG, a chain of NINE segment plates — but they are HOLLOW. '
+        'Along the back, the whole length has SPLIT OPEN in one straight seam, the '
+        'edges peeled apart, and through the gap you can see the inside of the far '
+        'wall: the shell is a shell. Two of the nine plates have collapsed inward '
+        'and lost their round.' + NL
+        + 'THAT IS THE READ: a long low insect with a black canyon down its back. '
+        'Nothing else in the region is open along its length.' + NL
+        + 'LEGS: five pairs, thin and hard and hooked, but three of them are hollow '
+        'tubes with the ends open, and one is missing below the knee. They are dry '
+        'and they are the same colour as everything else on it.' + NL
+        + 'HEAD: a hard capsule with the face-plate cracked off and gone, leaving an '
+        'OPEN OVAL where the mouthparts were — a hole clean through into black. The '
+        'antennae sockets are empty.' + NL
+        + 'EYES: NONE. Both eye domes are empty rings with black inside. This is the '
+        'only creature in the game with no eyes at all, and that is what makes it '
+        'read as not alive.' + NL
+        + 'IT IS DRY: the surface is crazed with fine cracks, and three flakes have '
+        'lifted off the plates and are hanging by one edge.',
+        'standing low on its five pairs, back seam gaping, empty head lowered. It '
+        'holds a walking pose exactly — nothing about the posture sags. That is what '
+        'is wrong with it.',
+        'the fall. The whole shell has PITCHED FORWARD onto the target head first, '
+        'the front three plates driven ahead, the back half lifting off the ground '
+        'behind. The back seam has gaped wider with the bend and one loose flake has '
+        'come off. It does not strike — it topples onto you.',
+        'struck. Four plates have shattered into separate curved pieces that are '
+        'still falling; the back seam has torn all the way through so the front and '
+        'back halves are joined by almost nothing. Two hollow legs are snapped off '
+        'and lying under it. The empty head has come away and is tipping.',
+        '- It fills about 44% of the cell height. It is LOW AND LONG.' + NL
+        + '- THE BLACK INSIDE IT IS THE POINT. The split along the back and the hole '
+        'in the face must stay open black, never shaded, never filled. If the '
+        'silhouette closes up, this creature becomes the grub from the chapter '
+        'before.' + NL
+        + '- Cell 2 is the tallest. Size the sheet from it.',
+        """**이 지역에서 유일하게 눈이 없습니다.** 그 하나로 "살아 있지 않다" 가
+읽힙니다.
+
+## 등이 갈라져 속이 보여야 합니다
+
+21~25 의 갉는 유충과 실루엣이 비슷합니다 (낮고 길다). 그래서 두 챕터를 갈라
+놓았고, **등의 검은 골짜기**로 다시 한 번 가릅니다. 그 검은 부분이 메워지면
+그냥 유충이 됩니다.
+
+## 자세가 안 처져야 합니다
+
+껍데기인데 걷는 자세를 정확히 잡고 있습니다. 축 늘어지게 그리면 "죽은 것" 이
+되고, 그러면 걸어온다는 것이 이상해집니다. 멀쩡한 자세로 서 있는 빈 껍질이라
+무서운 것입니다.""",
+    ),
+
+    mob3(
+        'sw_bomb', '폭탄 애벌레', '특수 · 26판 우두머리가 죽으면 넷이 나온다',
+        '5초 뒤 스스로 터진다. 그 전에 잡아야 한다.',
+        'A piece of the firefly that is still counting.' + NL
+        + 'BODY: a SHORT fat grub, almost as tall as it is long — the ROUNDEST '
+        'silhouette in the region. FOUR segments only, each one swollen past the '
+        'next, the last one biggest. It is over-full and it looks it.' + NL
+        + 'THE LIGHT CHAMBER — this one only: the whole rear segment is a hard '
+        'HOLLOW chamber, drawn as a thick ring with a black centre packed with a '
+        'coarse grid of small cells. It is more than a third of the whole creature '
+        'and it is the only hollow shape on it. That is the part that goes off.' + NL
+        + 'THE SKIN IS SPLITTING: between every pair of segments the surface has '
+        'cracked open into a short gash — three of them — and pale edges show.' + NL
+        + 'LEGS: four tiny hooked pairs bunched under the front, barely reaching the '
+        'ground. It waddles.' + NL
+        + 'HEAD: very small, a hard capsule with two short mouth plates and two dull '
+        'dots for eyes. It is a fraction of the body and it does not matter.' + NL
+        + 'IT IS A PIECE OF SOMETHING BIGGER: the front end is not a proper head '
+        'end — it is a torn CROSS-SECTION, a ragged open ring where it separated '
+        'from the parent, with the plate edges standing out around it.',
+        'squat and swollen, barely off the ground, the light chamber plainly '
+        'visible at the back, the three gashes closed to slits. The torn front '
+        'section faces forward. It is the SMALLEST and ROUNDEST thing on the field.',
+        'about to go. The body has REARED up onto the back segment, front end lifted '
+        'clear of the ground, and all three gashes have GAPED into wide openings '
+        'along the whole length. The light chamber has swelled to half again its '
+        'size and its inner grid is broken apart. Nothing has left the body yet — '
+        'that is the point. It is the moment before.',
+        'struck. The light chamber is cracked across and its grid is scattered; two '
+        'segments have burst along their gashes and the body has flattened sideways. '
+        'The torn front ring is crushed out of round. It is coming apart harmlessly, '
+        'which is exactly what the player wanted.',
+        '- It fills about 34% of the cell height — the SMALLEST creature in the '
+        'game. Four of them stand where one boss stood.' + NL
+        + '- Cell 2 is the tallest. Size the sheet from it.',
+        """26판 우두머리(피로스)가 죽으면 넷이 나옵니다. 5초 안에 못 잡으면 각자
+터져서 파티가 최대 체력의 25% 씩 맞습니다.
+
+## 피로스의 조각으로 보여야 합니다
+
+마디 넷, 갈라진 살갗, 속 빈 발광 기관 — 셋 다 피로스에게 있던 것입니다.
+앞쪽 끝이 **찢어진 단면**인 것이 결정적입니다: 머리가 아니라 잘려 나온
+자리입니다.
+
+## 제일 작아야 합니다
+
+게임에서 제일 작은 생물입니다 (34%). 우두머리 하나가 서 있던 자리에 넷이
+서므로, 작지 않으면 자리가 안 납니다.
+
+## 2번 칸은 터지기 **직전**입니다
+
+터지는 그림이 아닙니다. 아무것도 몸을 안 떠났고, 갈라진 자리만 활짝 벌어져
+있습니다. 터진 것을 그리면 화면에서는 이미 늦은 것으로 보입니다.""",
+    ),
+]
+
 BACKGROUNDS = [
     {
         'id': '01', 'name': '슬라임초원', 'stages': '1~5',
@@ -2000,6 +2460,53 @@ BACKGROUNDS = [
     },
 ]
 
+BACKGROUNDS += [
+    {
+        'id': '05', 'name': '우화하는 군체들의 침식지', 'stages': '21~25',
+        'scene':
+            'A land where something laid eggs in everything and then left. What you '
+            'see looking ACROSS it to the far edge, from a long way off.' + NL
+            + 'UPPER HALF — a low, close sky. Two or three heavy cloud banks pressed '
+            'flat and wide across the whole width, and BELOW them, hanging between '
+            'the clouds and the horizon, a scatter of small separate dark specks — '
+            'far-off flying things, dozens of them, biggest near the middle and '
+            'thinning to nothing at the edges. Draw them as loose dots, never as a '
+            'cloud or a smear. That drift is what names this chapter.' + NL
+            + 'LOWER HALF — the horizon is BROKEN by hanging shapes. Along the bottom '
+            'edge, spread across the whole width and no taller than a third of the '
+            'strip: five or six bare dead trees with SACS slung between their '
+            'branches — heavy teardrop bundles, two or three per tree, at different '
+            'heights, some split open and empty. Between the trees, two low mounds '
+            'crusted with a coarse honeycomb texture.' + NL
+            + 'This must not read as a forest. The trees are bare, far apart, and '
+            'stripped — what fills the space between them is what is hanging.' + NL
+            + 'Draw no ground and no path. The image ends at the bottom edge.',
+    },
+    {
+        'id': '06', 'name': '침식이 끝난 군체의 둥지', 'stages': '26~30',
+        'scene':
+            'The same land at its centre, where the nest finished eating it. Seen '
+            'from OUTSIDE and far off.' + NL
+            + 'UPPER HALF — the sky is nearly gone. It has been ROOFED OVER: a coarse '
+            'honeycomb lattice spans the top of the strip corner to corner, made of '
+            'irregular six-sided cells of very different sizes, thick-walled, some '
+            'capped solid and some open to black. It is heaviest at the top edge and '
+            'breaks up as it comes down, ending in ragged torn cells about a third of '
+            'the way down. Through the gaps, two thin strips of pale sky.' + NL
+            + 'LOWER HALF — a horizon of MOUNDS instead of trees. Along the bottom '
+            'edge and across the whole width: four or five rounded heaps of packed '
+            'comb, no taller than a third of the strip, each pierced with two or '
+            'three round tunnel mouths that read as solid black holes. Between them, '
+            'the stumps of the dead trees from the chapter before, snapped short and '
+            'grown over.' + NL
+            + 'THE READ IS ENCLOSURE. The first chapter of this region is open sky '
+            'with things drifting in it; this one has a ceiling. That contrast is how '
+            'the player knows they went deeper.' + NL
+            + 'Draw no ground and no path. The image ends at the bottom edge.',
+    },
+]
+
+
 BG_STYLE = """BACKGROUND RULES — this is scenery, not a subject.
 
 DRAW NO GROUND. THIS IS THE WHOLE POINT.
@@ -2080,6 +2587,21 @@ TEMPLATE = """# %(name)s
 ---
 
 ## 다시 뽑을 때
+
+**흰 덩어리로 나왔을 때** (실루엣 안이 통째로 메워짐)
+
+```
+The creature has come out as a solid white silhouette with no interior detail. At
+game size it reads as a white blob and nothing else.
+
+The palette is two colours: white and transparent. Depth and detail are drawn as
+BLACK GAPS INSIDE the white mass, not as shading. Redraw with real holes: the gap
+between the legs, the dark seam between every pair of plates, the hollow of the
+open mouth, the black centre of each eye socket, the space under an overhanging
+part. At least a fifth of the area inside the outline must be black.
+
+Keep the outline and the poses exactly as they are. Only open up the inside.
+```
 
 **바닥이 그려져 나왔을 때**
 
@@ -2190,10 +2712,34 @@ MARKS = {
 # 항목마다 손으로 적게 두면 꼭 빠진다 — 실제로 초원의 열일곱이 전부 빠져서
 # 슬라임에게 "굶주린 짐승의 갈비뼈" 가 나갔다. 그래서 id 앞자리로 건다
 # (`BACKGROUNDS` 앞의 반복문).
+SWARM = """WHAT THESE ARE.
+
+Insects that grew past the size an insect can be. Not bug mascots, not armoured
+knights with antennae. Segmented, chitinous animals built out of hard plates.
+
+- THE BODY IS A CHAIN OF PLATES. They overlap like roof tiles, each a little
+  different from the last, with a soft dark gap between every pair. That repeating
+  rhythm is what says "insect" at 45 pixels. Protect it above any single detail.
+- LEGS COME OUT OF THE SIDES, NOT THE BOTTOM, and they bend the WRONG WAY at the
+  knee — up first, then down. They are thin, hard, and end in a single hook.
+- THEY ARE NEVER SYMMETRICAL. One leg is shorter, one antenna is snapped, one
+  plate is chipped. A mirrored insect reads as an ornament.
+- MOUTHPARTS OPEN SIDEWAYS. Two or four hard plates hinging left and right. A jaw
+  that hinges up and down is a mammal's jaw and it is wrong here.
+- NO FACE AND NO EXPRESSION. Eyes are compound: solid domes pitted with a coarse
+  grid, or clusters of small round ones. Never a pupil, never a brow.
+- THE OLD SKIN IS STILL ON IT. One split hollow plate hangs off the back, empty
+  and dry, the same shape as the living plate beneath it.
+
+THEY ARE NOT WET. The slime chapter owns drips; do not borrow them. These are dry,
+hard and dusty."""
+
+
 FAMILY_RULE = {
     'slime': lambda: SLIME,
     'plant': lambda: PLANT,
     'wood': lambda: WOOD,
+    'swarm': lambda: SWARM,
 }
 
 
@@ -2316,6 +2862,7 @@ INDEX = """# 적 이미지 프롬프트
 |---|---|
 | `docs/foe-art/` | 1~10 · 슬라임 |
 | `docs/foe-art2/` | 11~20 · 식물 · 나무 |
+| `docs/foe-art3/` | 21~30 · 벌레 · 군체 |
 
 ## 스테이지 구성
 
@@ -2337,6 +2884,17 @@ INDEX = """# 적 이미지 프롬프트
 
 %(rows2)s
 
+## 목록 — 21~30 · 벌레 · 군체 (`docs/foe-art3/`)
+
+앞의 두 챕터와 **갈래가 다릅니다.** 1~10 은 뼈 없는 덩어리, 11~20 은 자라서
+그 모양이 된 것이었습니다. 여기는 **마디**입니다 — 겹친 판, 옆으로 열리는 입,
+잘못된 방향으로 꺾이는 다리.
+
+우두머리는 여기 없습니다. 스물한 판부터의 우두머리는 칸이 넷~여섯이라 따로
+있습니다 → [`BOSS_ART_PROMPTS.md`](BOSS_ART_PROMPTS.md).
+
+%(rows3)s
+
 ## 실루엣이 겹치면 안 된다
 
 한 화면에 넷이 40~52px 로 겹쳐 섭니다. 그 크기에서 남는 것은 **윤곽뿐**이라,
@@ -2348,6 +2906,7 @@ INDEX = """# 적 이미지 프롬프트
 | 슬라임 | 덩어리의 **모양** | 낮다 / 각진 것이 박혔다 / 뾰족한 것이 뻗었다 / 둘이다 |
 | 식물 | **무엇이 어느 쪽으로 뻗었나** | 옆으로 길다 / 위가 무겁다 / 사방이 뾰족하다 / 윤곽이 부드럽다 |
 | 나무 | **어디가 부러졌나** | 낮고 두껍다 / 안이 뚫렸다 / 밑이 넓다 / 각진 판이 덮였다 |
+| 벌레 | **몸이 어느 쪽으로 길고 다리가 어디에 있나** | 낮고 길다 / 뒷다리가 등보다 높다 / 넓적한 판이 덮였다 / 다리가 몸보다 길다 |
 
 챕터끼리도 겹치면 안 됩니다. 식물은 전부 사람 허리 아래, 나무는 전부 사람보다
 큽니다 — 종을 하나하나 알아보기 전에 **줄의 높이**가 먼저 눈에 들어오고, 그게
@@ -2418,6 +2977,16 @@ STAGE_TABLE = [
     ('타락한 잔재들의 숲', ['속 빈 나무', '뿌리덩이', '꼬투리나무'], '가시나무'),
     ('타락한 잔재들의 숲', ['뿌리덩이', '껍질갑옷', '가지창', '꼬투리나무'], '썩은 거목'),
     ('타락한 잔재들의 숲', ['속 빈 나무', '뿌리덩이', '껍질갑옷', '꼬투리나무'], '숲의 어른'),
+    ('우화하는 군체들의 침식지', ['갉는 유충', '뛰는 여치'], '센티페다'),
+    ('우화하는 군체들의 침식지', ['갉는 유충', '뛰는 여치', '뱉는 노린재'], '아피스'),
+    ('우화하는 군체들의 침식지', ['뛰는 여치', '뱉는 노린재', '실 잣는 새끼'], '누카누스'),
+    ('우화하는 군체들의 침식지', ['갉는 유충', '뱉는 노린재', '실 잣는 새끼'], '비블리스'),
+    ('우화하는 군체들의 침식지', ['뛰는 여치', '뱉는 노린재', '실 잣는 새끼', '갉는 유충'], '아라크네스'),
+    ('침식이 끝난 군체의 둥지', ['병정개미', '못 깬 일벌'], '피로스'),
+    ('침식이 끝난 군체의 둥지', ['병정개미', '못 깬 일벌', '쏘는 각다귀'], '로쿠스타'),
+    ('침식이 끝난 군체의 둥지', ['못 깬 일벌', '쏘는 각다귀', '걷는 허물'], '모스키토'),
+    ('침식이 끝난 군체의 둥지', ['병정개미', '쏘는 각다귀', '걷는 허물'], '포르미카'),
+    ('침식이 끝난 군체의 둥지', ['병정개미', '못 깬 일벌', '쏘는 각다귀', '걷는 허물'], '바알'),
 ]
 
 def tag_families():
@@ -2451,16 +3020,19 @@ def tag_families():
         elif head == 'pb_':
             # 식물 우두머리(11~15)는 식물 규칙, 나무 우두머리(16~20)는 나무 규칙
             f['family'] = f.get('chapter', 'wood')
+        elif head == 'sw_':
+            f['family'] = 'swarm'
         if head in ('sb_', 'pb_') or f['id'] == 'sl_boss':
             f['boss'] = True
 
 
 os.makedirs(OUT_DIR, exist_ok=True)
 os.makedirs(OUT_DIR2, exist_ok=True)
+os.makedirs(OUT_DIR3, exist_ok=True)
 tag_families()
 
 # 챕터별로 나눠 적는다 — 색인의 표도 그 순서 그대로다
-rows = {OUT_DIR: [], OUT_DIR2: []}
+rows = {OUT_DIR: [], OUT_DIR2: [], OUT_DIR3: []}
 for _f in FOES:
     _dir = out_dir_of(_f)
     _p = os.path.join(_dir, _f['id'] + '.md')
@@ -2483,9 +3055,12 @@ open('docs/FOE_ART_PROMPTS.md', 'w', encoding='utf-8').write(
     INDEX % {
         'rows1': HEAD + NL + NL.join(rows[OUT_DIR]),
         'rows2': HEAD + NL + NL.join(rows[OUT_DIR2]),
+        'rows3': HEAD + NL + NL.join(rows[OUT_DIR3]),
         'stages': stage_table(),
     })
 open('docs/FOE_BG_PROMPTS.md', 'w', encoding='utf-8').write(bg_page())
 print('배경 %d장 · docs/FOE_BG_PROMPTS.md' % len(BACKGROUNDS))
-print('%d종 (%s %d · %s %d) · docs/FOE_ART_PROMPTS.md'
-      % (len(FOES), OUT_DIR, len(rows[OUT_DIR]), OUT_DIR2, len(rows[OUT_DIR2])))
+print('%d종 (%s)· docs/FOE_ART_PROMPTS.md'
+      % (len(FOES),
+         ' · '.join('%s %d' % (d, len(rows[d]))
+                    for d in (OUT_DIR, OUT_DIR2, OUT_DIR3))))

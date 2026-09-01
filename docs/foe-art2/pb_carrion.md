@@ -307,6 +307,21 @@ SHEET LAYOUT:
 
 ## 다시 뽑을 때
 
+**흰 덩어리로 나왔을 때** (실루엣 안이 통째로 메워짐)
+
+```
+The creature has come out as a solid white silhouette with no interior detail. At
+game size it reads as a white blob and nothing else.
+
+The palette is two colours: white and transparent. Depth and detail are drawn as
+BLACK GAPS INSIDE the white mass, not as shading. Redraw with real holes: the gap
+between the legs, the dark seam between every pair of plates, the hollow of the
+open mouth, the black centre of each eye socket, the space under an overhanging
+part. At least a fifth of the area inside the outline must be black.
+
+Keep the outline and the poses exactly as they are. Only open up the inside.
+```
+
 **바닥이 그려져 나왔을 때**
 
 ```

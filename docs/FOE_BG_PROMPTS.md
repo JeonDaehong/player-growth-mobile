@@ -38,6 +38,8 @@
 | 6~10 | 슬라임 초원 깊숙한 곳 | `bg_chapter/02` |
 | 11~15 | 오염된 잔재들의 숲 | `bg_chapter/03` |
 | 16~20 | 타락한 잔재들의 숲 | `bg_chapter/04` |
+| 21~25 | 우화하는 군체들의 침식지 | `bg_chapter/05` |
+| 26~30 | 침식이 끝난 군체의 둥지 | `bg_chapter/06` |
 
 두 장으로 열 판을 돌립니다. 판마다 그리면 그릴 것이 너무 많고, 한 장으로 열 판을
 돌리면 어디까지 왔는지 알 수 없습니다.
@@ -345,4 +347,156 @@ OUTPUT: a single image, a WIDE SHORT STRIP, 1024x256 (4:1). This shape is not a 
 ```
 
 받으면 `assets/sprites/bg_chapter/04.png` 로 넣으세요. **슬라이서를 안
+태웁니다** — 한 장짜리 그림이라 자를 것이 없습니다.
+
+
+---
+
+## 05. 우화하는 군체들의 침식지 — 21~25 스테이지
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single background image of 우화하는 군체들의 침식지.
+
+A land where something laid eggs in everything and then left. What you see looking ACROSS it to the far edge, from a long way off.
+UPPER HALF — a low, close sky. Two or three heavy cloud banks pressed flat and wide across the whole width, and BELOW them, hanging between the clouds and the horizon, a scatter of small separate dark specks — far-off flying things, dozens of them, biggest near the middle and thinning to nothing at the edges. Draw them as loose dots, never as a cloud or a smear. That drift is what names this chapter.
+LOWER HALF — the horizon is BROKEN by hanging shapes. Along the bottom edge, spread across the whole width and no taller than a third of the strip: five or six bare dead trees with SACS slung between their branches — heavy teardrop bundles, two or three per tree, at different heights, some split open and empty. Between the trees, two low mounds crusted with a coarse honeycomb texture.
+This must not read as a forest. The trees are bare, far apart, and stripped — what fills the space between them is what is hanging.
+Draw no ground and no path. The image ends at the bottom edge.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+BACKGROUND RULES — this is scenery, not a subject.
+
+DRAW NO GROUND. THIS IS THE WHOLE POINT.
+
+The game is NOT a 2D side-scroller. It draws its own floor as a receding
+quarter-view plane, and the fighters stand ON that plane. Your image supplies ONLY
+WHAT LIES BEYOND IT — the far side of the horizon and the sky above it.
+
+So: put the HORIZON LINE ON THE VERY BOTTOM EDGE of the image — the last few rows
+of pixels, not higher. Everything you draw sits ABOVE that line and is FAR AWAY.
+Do not leave empty space below it; the game's floor starts exactly where your image
+ends, and any gap you leave shows up as a black band between the sky and the ground.
+
+FILL THE WHOLE FRAME, TOP TO BOTTOM. The game stretches this image to a short wide
+band and shows ALL of it — nothing is cropped, so nothing may be wasted either. If
+the top third is empty black, the player sees an empty third. Put CLOUDS across the
+upper half so that band is doing something.
+
+- NO ground plane, NO field in front, NO path, NO foreground grass, NO rocks or
+  rubble at the bottom, NO shadow cast toward the viewer. If a shape in your image
+  reads as "the ground the characters are standing on", the image is wrong.
+- The bottom edge is where the far land meets the sky. Keep the lowest tenth to a
+  quiet band — the bases of distant things. Nothing tall starts down there.
+- The UPPER HALF is sky and it must not be empty. Two to four long flat cloud banks,
+  spread across the full width, drawn in coarse dither. They are the only thing in
+  the top half, so if they are missing the top half is missing.
+- EVERYTHING IS DISTANT. Think of it as seen across two kilometres of open country.
+  Distant things are small, low in the frame, and drawn in fine dither; there is no
+  near layer at all.
+- NO CREATURES, NO PEOPLE, NO ITEMS. Only far land and sky.
+- It is drawn BEHIND the fighters and the game fades it to 20% opacity. So it must
+  read at a glance from big shapes alone; anything fine disappears twice over.
+- Depth comes from DITHER DENSITY, not from line weight: the far land is fine
+  dither, the sky is mostly empty black.
+- Nothing may draw the eye. If a shape in the background is more interesting than a
+  monster standing in front of it, it is wrong.
+
+OUTPUT: a single image, a WIDE SHORT STRIP, 1024x256 (4:1). This shape is not a suggestion — the game shows a band four times as wide as it is tall, and it stretches your image to fit it exactly. A 4:3 or square image will be squashed to a quarter of its height and everything in it will look flattened. COMPOSE INSIDE A 4:1 STRIP: clouds across the top half, the horizon on the bottom edge, and the distant shapes spread along the full width rather than clustered in the middle. No grid, no separator lines, no magenta.
+```
+
+받으면 `assets/sprites/bg_chapter/05.png` 로 넣으세요. **슬라이서를 안
+태웁니다** — 한 장짜리 그림이라 자를 것이 없습니다.
+
+
+---
+
+## 06. 침식이 끝난 군체의 둥지 — 26~30 스테이지
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single background image of 침식이 끝난 군체의 둥지.
+
+The same land at its centre, where the nest finished eating it. Seen from OUTSIDE and far off.
+UPPER HALF — the sky is nearly gone. It has been ROOFED OVER: a coarse honeycomb lattice spans the top of the strip corner to corner, made of irregular six-sided cells of very different sizes, thick-walled, some capped solid and some open to black. It is heaviest at the top edge and breaks up as it comes down, ending in ragged torn cells about a third of the way down. Through the gaps, two thin strips of pale sky.
+LOWER HALF — a horizon of MOUNDS instead of trees. Along the bottom edge and across the whole width: four or five rounded heaps of packed comb, no taller than a third of the strip, each pierced with two or three round tunnel mouths that read as solid black holes. Between them, the stumps of the dead trees from the chapter before, snapped short and grown over.
+THE READ IS ENCLOSURE. The first chapter of this region is open sky with things drifting in it; this one has a ceiling. That contrast is how the player knows they went deeper.
+Draw no ground and no path. The image ends at the bottom edge.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+BACKGROUND RULES — this is scenery, not a subject.
+
+DRAW NO GROUND. THIS IS THE WHOLE POINT.
+
+The game is NOT a 2D side-scroller. It draws its own floor as a receding
+quarter-view plane, and the fighters stand ON that plane. Your image supplies ONLY
+WHAT LIES BEYOND IT — the far side of the horizon and the sky above it.
+
+So: put the HORIZON LINE ON THE VERY BOTTOM EDGE of the image — the last few rows
+of pixels, not higher. Everything you draw sits ABOVE that line and is FAR AWAY.
+Do not leave empty space below it; the game's floor starts exactly where your image
+ends, and any gap you leave shows up as a black band between the sky and the ground.
+
+FILL THE WHOLE FRAME, TOP TO BOTTOM. The game stretches this image to a short wide
+band and shows ALL of it — nothing is cropped, so nothing may be wasted either. If
+the top third is empty black, the player sees an empty third. Put CLOUDS across the
+upper half so that band is doing something.
+
+- NO ground plane, NO field in front, NO path, NO foreground grass, NO rocks or
+  rubble at the bottom, NO shadow cast toward the viewer. If a shape in your image
+  reads as "the ground the characters are standing on", the image is wrong.
+- The bottom edge is where the far land meets the sky. Keep the lowest tenth to a
+  quiet band — the bases of distant things. Nothing tall starts down there.
+- The UPPER HALF is sky and it must not be empty. Two to four long flat cloud banks,
+  spread across the full width, drawn in coarse dither. They are the only thing in
+  the top half, so if they are missing the top half is missing.
+- EVERYTHING IS DISTANT. Think of it as seen across two kilometres of open country.
+  Distant things are small, low in the frame, and drawn in fine dither; there is no
+  near layer at all.
+- NO CREATURES, NO PEOPLE, NO ITEMS. Only far land and sky.
+- It is drawn BEHIND the fighters and the game fades it to 20% opacity. So it must
+  read at a glance from big shapes alone; anything fine disappears twice over.
+- Depth comes from DITHER DENSITY, not from line weight: the far land is fine
+  dither, the sky is mostly empty black.
+- Nothing may draw the eye. If a shape in the background is more interesting than a
+  monster standing in front of it, it is wrong.
+
+OUTPUT: a single image, a WIDE SHORT STRIP, 1024x256 (4:1). This shape is not a suggestion — the game shows a band four times as wide as it is tall, and it stretches your image to fit it exactly. A 4:3 or square image will be squashed to a quarter of its height and everything in it will look flattened. COMPOSE INSIDE A 4:1 STRIP: clouds across the top half, the horizon on the bottom edge, and the distant shapes spread along the full width rather than clustered in the middle. No grid, no separator lines, no magenta.
+```
+
+받으면 `assets/sprites/bg_chapter/06.png` 로 넣으세요. **슬라이서를 안
 태웁니다** — 한 장짜리 그림이라 자를 것이 없습니다.

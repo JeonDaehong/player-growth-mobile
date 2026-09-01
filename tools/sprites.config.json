@@ -3676,6 +3676,53 @@
       ]
     },
     {
+      "file": "status-5.jpg",
+      "name": "status_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "append": true,
+      "note": "상태 효과 로고 E장 — 21~30 군체가 거는 넷 (보호막·혼란·화상·신경 마비) (docs/STATUS_ICON_PROMPTS.md)",
+      "labels": [
+        "st_shield",
+        "st_confuse",
+        "st_burn",
+        "st_numb"
+      ]
+    },
+    {
+      "file": "bp-2.jpg",
+      "name": "boss_passive",
+      "expect": [
+        4,
+        1
+      ],
+      "append": true,
+      "note": "보스 패시브 로고 B장 — 21·23·24·25판 (docs/BOSS_PASSIVE_PROMPTS.md)",
+      "labels": [
+        "bp_split",
+        "bp_shell",
+        "bp_sting",
+        "bp_hive"
+      ]
+    },
+    {
+      "file": "bp-3.jpg",
+      "name": "boss_passive",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "note": "보스 패시브 로고 C장 — 26·29·30판 (docs/BOSS_PASSIVE_PROMPTS.md)",
+      "labels": [
+        "bp_burst",
+        "bp_spore",
+        "bp_corrode"
+      ]
+    },
+    {
       "file": "icon-3.jpg",
       "name": "skill_icon",
       "expect": [

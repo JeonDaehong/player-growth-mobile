@@ -75,7 +75,7 @@ STATUS = [
      'else in the cell. Squint test: two slashes.'),
 
     ('st_poison', '중독', '나쁜', '마법 지속 피해 (맹독·산성·포자·부패 전부)',
-     r'지속 마법 피해',
+     r'중독|지속 마법 피해',
      'AN EATEN DISC. One solid circle filling the whole cell, with a single '
      'enormous BITE taken out of its upper right — the bite is a third of the '
      'diameter deep and reaches nearly to the centre, with a coarse edge of three '
@@ -112,7 +112,7 @@ STATUS = [
      'whole read. Squint test: a broken stump.'),
 
     ('st_break', '파쇄', '나쁜', '방어력 감소 (0으로 만드는 것 포함)',
-     r'방어력[^,)]*(?:감소|0으로)',
+     r'방어력[^,)]*(?:감소|감쇄|깎|0으로)',
      'A BROKEN BLOCK. A solid rectangle filling the whole cell, with ONE '
      'horizontal groove across the middle a tenth of the cell tall — and the '
      'entire TOP RIGHT QUARTER of the rectangle is missing, bitten away in a '
@@ -137,6 +137,42 @@ STATUS = [
      'LEFT TO RIGHT — thin on one side, thick on the other — and that wedge is the '
      'entire read. No mouth, no face, no sound lines, no rim. '
      'Squint test: a sideways wedge, thin left, thick right.'),
+
+    ('st_shield', '보호막', '나쁜',
+     '깨야 하는 껍질 — 시간 안에 못 깨면 큰일이 난다 (적에게 걸린다)',
+     r'보호막|고치 상태|쉴드',
+     'A HEXAGON. One solid six-sided shape filling the cell, flat on top and '
+     'bottom, points at left and right, its walls a quarter of the cell thick and '
+     'its centre EMPTY BLACK — a thick-walled ring with six straight sides. It is '
+     'the only icon in the set with straight sides meeting at angles, and the only '
+     'six-sided one. Squint test: a thick hexagonal ring.'),
+
+    ('st_confuse', '혼란', '나쁜', '스킬을 못 쓰고 아군을 친다',
+     r'혼란|서로.{0,2}공격|아군끼리',
+     'A SPIRAL. One thick continuous band winding from the centre of the cell '
+     'outward through one and a half turns, ending with a flat cut edge at the '
+     'upper right. The band and the black gap between its turns are the same '
+     'width. It is the ONLY curved-and-winding shape in the set — everything else '
+     'is bars, blocks or single arcs. Squint test: a spiral.'),
+
+    ('st_burn', '화상', '나쁜', '받는 피해 증가',
+     r'화상|받는 데미지[^,)]*증가|받는 피해[^,)]*증가',
+     'A FLAME. A wide solid base sitting on the bottom edge of the cell, rising '
+     'and narrowing into a single body that SPLITS near the top into THREE tongues '
+     'of different heights, the middle one tallest and reaching the top edge, all '
+     'leaning the same way. It is heavy at the bottom and torn at the top. It is '
+     'the only icon that ends in several points at one end and a solid mass at the '
+     'other. Squint test: a flame.'),
+
+    ('st_numb', '신경 마비', '나쁜', '평타를 쳐도 스킬 코스트가 안 찬다',
+     r'코스트가 (?:안|올라가지 않)|코스트를 한 칸씩|코스트[^,)]*감쇄',
+     'A BROKEN UPRIGHT BAR. One solid vertical bar running the full height of the '
+     'cell, a third of its width — CUT THROUGH at the middle by a horizontal gap '
+     'as tall as the bar is wide, leaving two blocks, one above and one below, '
+     'with flat square ends facing each other. It is the silence bar stood on end '
+     'and snapped, and the two things it says are related: one stops the skill, '
+     'the other stops the skill from charging. Squint test: a standing bar with a '
+     'gap in it.'),
 
     # ── 버프 ────────────────────────────────────────────────
     ('st_rage', '격노', '좋은', '공격력 증가', None,
@@ -200,6 +236,11 @@ SHEETS = [
      '열둘을 다시 뽑을 이유가 없으므로 이 한 장만 그려서 덧붙입니다. '
      '이건 **적 머리 위에** 뜨는 유일한 로고이고, 열셋 중 유일하게 좌우가 '
      '다릅니다.'),
+    ('E', '군체가 거는 것들 (21~30)',
+     ['st_shield', 'st_confuse', 'st_burn', 'st_numb'],
+     '**21~30판에서 새로 생긴 넷입니다.** 앞의 열셋과도 윤곽이 안 겹쳐야 '
+     '합니다 — 같은 화면에 같이 뜹니다. 넷은 각각 육각 고리 · 나선 · 불꽃 · '
+     '끊어진 세로 막대이고, 이 중 나선과 육각은 이 게임에 아직 없던 모양입니다.'),
 ]
 
 
@@ -216,6 +257,9 @@ SHAPES = [
     ('st_slow', '아래 갈매기 하나'), ('st_haste', '위 갈매기 둘'),
     ('st_rage', '길쭉한 칼'), ('st_weak', '부러진 짧은 칼'),
     ('st_taunt', '가로 쐐기 (왼쪽이 얇다)'),
+    ('st_shield', '두꺼운 육각 고리'), ('st_confuse', '나선'),
+    ('st_burn', '불꽃 (아래가 무겁고 위가 셋)'),
+    ('st_numb', '끊어진 세로 막대'),
     ('st_guard', '꽉 찬 사각'), ('st_break', '귀퉁이 떨어진 사각'),
     ('st_regen', '십자'), ('st_wither', 'ㅜ 자'),
     ('bp_thorn', '여섯 갈래 별 (보스 패시브)'),
@@ -248,13 +292,18 @@ CLASH = [
 # (정답 둘)으로 나왔고 표는 멀쩡해 보였다. 답을 따로 적어 두고 맞춰 본다.
 EXPECT = {
     'st_bleed': [5, 7, 11],
-    'st_poison': [3, 8, 10, 12, 14, 15],
-    'st_stun': [6, 13, 17],
+    'st_poison': [3, 8, 10, 12, 14, 15, 21, 24, 29],
+    'st_stun': [6, 13, 17, 22, 23, 30],
     'st_silence': [15],
     'st_slow': [4, 10, 12],
     'st_weak': [17],
-    'st_break': [15, 16],
-    'st_wither': [14],
+    'st_break': [15, 16, 30],
+    'st_wither': [14, 28],
+    'st_taunt': [],
+    'st_shield': [22, 23, 29],
+    'st_confuse': [24, 29],
+    'st_burn': [26],
+    'st_numb': [25, 29],
     'st_guard': [20],
     'st_regen': [20],
 }
@@ -294,10 +343,11 @@ PAGE = """# 상태 효과 로고
 
 **이 파일은 자동 생성됩니다** — `python tools/gen-status.py`.
 
-걸린 사람의 이름표 옆에 붙는 작은 로고 **열둘**입니다. 출혈처럼 한동안
-걸려 있다가 풀리는 것들입니다.
+걸린 사람의 파티 칸에 붙는 작은 로고 **%(n)d개**입니다. 출혈처럼 한동안
+걸려 있다가 풀리는 것들입니다. 몇은 **적에게** 걸립니다 (도발 · 보호막 ·
+시듦) — 그때는 적 머리 위에 뜹니다.
 
-보스 패시브 로고 넷은 따로 있습니다
+보스 패시브 로고는 따로 있습니다
 ([`BOSS_PASSIVE_PROMPTS.md`](BOSS_PASSIVE_PROMPTS.md)) — 저건 보스 하나에게
 싸우는 내내 붙어 있고, 이건 누구에게든 몇 초씩 붙었다 사라집니다.
 
@@ -328,18 +378,19 @@ PAGE = """# 상태 효과 로고
 - **보스가 받는 피해 20%% 감소** (20판) — 패시브라 상태가 아니라 보스 로고
   쪽입니다 ([`BOSS_PASSIVE_PROMPTS.md`](BOSS_PASSIVE_PROMPTS.md) 의 `bp_ward`).
 
-## 좋고 나쁨은 그림이 아니라 화면이 말합니다
+## 좋고 나쁨은 그림이 아니라 **테두리**가 말합니다
 
-흑백 2색이라 초록 테두리·빨간 테두리를 쓸 수가 없습니다. 그래서 로고는
-**무엇인지만** 말하고, 좋은 것인지 나쁜 것인지는 화면이 자리로 말합니다 —
-좋은 것은 이름표 왼쪽, 나쁜 것은 오른쪽 같은 식입니다.
+로고 자체는 **무엇인지만** 말합니다. 좋은 것인지 나쁜 것인지는 화면이 칸의
+테두리 색으로 말합니다 — 초록이면 도움이 되는 것, 빨강이면 나쁜 것
+(`ui/theme` 의 `GOOD_C`·`BAD_C`). 안쪽 그림은 그대로 흰색입니다.
 
 그래서 로고를 그릴 때 "나쁜 것이니까 어둡게" 같은 것을 하면 안 됩니다.
-열둘이 **같은 무게, 같은 채움**이어야 합니다.
+**같은 무게, 같은 채움**이어야 합니다 — 어느 쪽인지는 그림이 말할 일이
+아닙니다.
 
-## 열여섯이 다 갈려야 합니다
+## 전부가 다 갈려야 합니다
 
-상태 로고 열둘과 보스 패시브 로고 넷이 **한 화면에 같이 뜹니다.**
+상태 로고와 보스 패시브 로고가 **한 화면에 같이 뜹니다.**
 
 | 로고 | 윤곽 |
 |---|---|
@@ -424,15 +475,19 @@ def build():
         who = src.get(sid) or []
         where = ('%s판 우두머리' % '·'.join(str(n) for n in who)) if who else '—'
         if sid == 'st_rage':
-            where = '보조가 곁에 섰을 때 (`core/party` 의 `supportMul`)'
+            where = '아직 없음 — 약화의 짝으로 자리만 열어 둡니다'
         if sid == 'st_haste':
-            where = '아직 없음 — 둔화의 짝으로 자리만 열어 둡니다'
+            where = '리안느의 광란 (`core/chars` 의 `SKILLS.frenzy`)'
+        if sid == 'st_taunt':
+            where = '이졸데의 도발 (`SKILLS.taunt`) — 적에게 걸린다'
+        if sid == 'st_wither' and who:
+            where += ' · 비앙카의 화산 (적에게 걸린다)'
         rows.append('| `%s` | %s | %s | %s | %s |' % (sid, ko, side, mean, where))
 
     clash = NL.join(
         '- **%s ↔ %s** — %s' % (a, b, why) for a, b, why in CLASH) + NL
 
-    # 열둘이 세 장에 정확히 한 번씩 들어가야 한다 — 빠뜨리면 조용히 없어진다
+    # 전부가 장마다 정확히 한 번씩 들어가야 한다 — 빠뜨리면 조용히 없어진다
     seen = [i for _t, _ti, ids, _n in SHEETS for i in ids]
     assert sorted(seen) == sorted(i[0] for i in STATUS), \
         '시트에 빠지거나 겹친 로고가 있다: %r' % seen
@@ -484,6 +539,7 @@ def build():
             + NL + '  "labels": [%s] }' % labels_of(cells))
 
     return PAGE % {
+        'n': len(STATUS),
         'rows': NL.join(rows),
         'shapes': NL.join('| `%s` | %s |' % (i, sh) for i, sh in SHAPES),
         'clash': clash,

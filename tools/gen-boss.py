@@ -182,6 +182,34 @@ wood. There is no face carved into a trunk and no arms in the shape of arms.
   comes out of the dead part. That contrast is what says it is old."""
 
 
+SWARM_BOSS = """WHAT THIS IS: AN INSECT THAT GREW PAST THE SIZE AN INSECT CAN BE.
+
+Not a bug mascot, not a beetle knight, not armour with legs. A segmented,
+chitinous animal that kept moulting and never stopped, and is now the size of a
+cart.
+
+- IT IS BUILT IN SEGMENTS. The body is a chain of hard plates that overlap like
+  roof tiles, each a little different from the last, with a soft dark gap showing
+  between every pair. That repeating rhythm is what says "insect" at 40 pixels —
+  protect it above any single detail.
+- LEGS COME OUT OF THE SIDES, NOT THE BOTTOM. Three or more pairs, each bending
+  the WRONG WAY at the knee (up first, then down), thin and hard, ending in a
+  single hook. They are never symmetrical: one or two are shorter, bent, or
+  missing entirely, and the stump is healed over.
+- THE HEAD IS THE SMALLEST PART AND THE WORST. It is a fraction of the body but
+  it holds everything that matters: the mouthparts. Draw them as two or four
+  hard PLATES that open SIDEWAYS, not up and down — a jaw that hinges like a
+  mouth is a mammal's jaw and it is wrong here.
+- IT HAS MOULTED AND THE OLD SKIN IS STILL ON IT. One or two split, hollow
+  plates hang off the back or trail behind, empty and dry, the same shape as the
+  living plate underneath. That is what says it has done this many times.
+- ANTENNAE OR PALPS: two long thin feelers off the head, unequal length, one
+  broken short. They are the only soft-looking thing on it.
+- NO FACE. No brow, no cheeks, no expression. Eyes are compound: solid domes
+  with a coarse grid of pits, or clusters of small round ones. Whatever it is
+  thinking, the drawing must not say."""
+
+
 PASSIVE_MARK = """IT IS ALWAYS DOING SOMETHING, EVEN STANDING STILL.
 
 This creature has a passive ability that never turns off, and the game shows a
@@ -197,20 +225,29 @@ never goes away."""
 # ══ 우두머리 ══════════════════════════════════════════════════
 
 def boss(id_, name, latin, stage, family, fill, lock, idle, attack, skills, down,
-         intro, passive=None):
+         intro, passive=None, forms=()):
     """우두머리 하나.
 
     `skills` 는 `(칸이름, 한글이름, 게임에서 하는 일, 그림 설명)` 목록이다.
     하나면 넷 칸, 둘이면 다섯 칸짜리 시트가 된다 — 칸 수를 따로 안 적는 이유는
     **적을 수 있으면 어긋날 수 있기 때문**이다. 기술이 몇 개인지가 곧 칸 수다.
+
+    `forms` 는 **기술이 아닌 다른 모습**이다 — 고치를 쓴 상태, 우화한 뒤의 몸,
+    반으로 갈린 뒤의 두 토막. 21판부터 이런 것들이 생겼다.
+
+    기술과 갈라 둔 이유: 기술 칸은 "한 번 하고 원래대로 돌아오는 것" 이고,
+    형태 칸은 **그 뒤로 계속 그 모습**이다. 문서에서 둘을 같은 목록에 넣으면
+    그리는 사람이 형태 칸도 한순간의 동작으로 그린다.
     """
     frames = [('idle', '대기', idle), ('attack', '평타', attack)]
     frames += [(sid, ko, art) for sid, ko, _does, art in skills]
+    frames += list(forms)
     frames += [('down', '피격', down)]
     return {
         'id': id_, 'name': name, 'latin': latin, 'stage': stage,
         'family': family, 'fill': fill, 'lock': lock, 'frames': frames,
-        'skills': skills, 'passive': passive, 'intro': intro,
+        'skills': skills, 'forms': list(forms), 'passive': passive,
+        'intro': intro,
     }
 
 
@@ -1585,6 +1622,831 @@ BOSSES = [
 #
 # 넷의 **윤곽**이 서로 안 겹치는 것이 전부다: 별 / 물방울 / 세 갈래 / 잎.
 
+# ══ 21~30 · 우화하는 군체들의 침식지 ═════════════════════════════
+#
+# 앞 스무 마리와 **갈래가 다르다.** 1~10 은 슬라임(뼈가 없는 덩어리), 11~20 은
+# 식물(자라서 그 모양이 된 것)이었다. 여기는 **곤충**이다 — 마디로 이어진
+# 단단한 판, 옆으로 열리는 입, 잘못된 방향으로 꺾이는 다리.
+#
+# 그래서 실루엣이 앞 스무 마리와 안 겹친다. 덩어리도 아니고 가지도 아니라
+# **반복되는 마디**다. 40px 에서 남는 것이 그 리듬이다.
+#
+# ## 이 장의 주제는 "한 번 더 벗는다" 다
+#
+# 열 마리 중 여섯이 싸우는 도중에 모습이 바뀐다 — 반으로 갈리고(21), 고치를
+# 쓰고(23), 우화하고(25), 죽으면서 흩어지고(26), 허물을 벗어 분신을 만든다(30).
+# 그래서 `forms` 칸이 여기서 처음 나온다.
+#
+# 그리는 쪽에서 지켜야 할 것: **바뀐 뒤에도 같은 놈으로 보여야 한다.** 몸의
+# 마디 수, 다리 수, 부러진 자리는 그대로 가고 자세와 껍질만 달라진다.
+
+BOSSES += [
+    boss(
+        'b21_centipeda', '절단하는 두 갈래 지네', '센티페다', 21, 'swarm', 70,
+        'A centipede so long it was cut in half once and both halves kept walking.'
+        + NL
+        + 'BODY: a LONG segmented tube, held in a wide flat S so the whole length '
+        'fits — head low and forward on the left, the middle rising, the tail '
+        'doubling back above. TWELVE plates, each overlapping the next, each a '
+        'little narrower toward the tail. The plate rhythm is the creature.' + NL
+        + 'THE MIDDLE SEAM — this one only: exactly halfway along the body, ONE '
+        'plate is not like the others. It is a double plate, thicker than its '
+        'neighbours, with a clean straight SPLIT LINE running all the way across '
+        'it and a row of five short interlocking hooks along that line, like a '
+        'clasp. It is the only straight line on the whole animal and it says the '
+        'body comes apart there. It must be visible in EVERY cell.' + NL
+        + 'LEGS: eight pairs down the front half, six down the back, all bending '
+        'up then down, all ending in a hook. Three are broken to stumps.' + NL
+        + 'HEAD: small, a fifth of the body height. Two hard FANGS curve inward '
+        'from the sides, each as long as the head is wide, with a visible groove '
+        'running their length — they are hollow and they inject.' + NL
+        + 'EYES: a cluster of six small domes on each side of the head, uneven.'
+        + NL
+        + 'THE TAIL END is not a point: it is a second, blunter head — two shorter '
+        'hooks and four tiny eye domes, facing BACKWARD. It has always had two '
+        'ends and only one of them bites.' + NL
+        + 'SCARS: the old moult skin of three plates hangs off the upper back, '
+        'split down the middle and empty.',
+        'coiled in its flat S, head low and forward, fangs folded in against the '
+        'jaw, the clasp seam plainly visible at the middle of the body. The tail '
+        'head is raised slightly and looking the other way. It is the widest thing '
+        'on the field and none of it is moving.',
+        'the strike. The front third has driven forward and DOWN off the coil, '
+        'head first, fangs swung wide apart to their full spread. The back half '
+        'has not moved at all — it is still coiled, anchoring. That is what makes '
+        'the front look fast.',
+        [('skill1', '맹독 침',
+          '아군 1명에게 공격력의 150% 마법 관통 피해 + 5초간 중독 (0.5초마다 8%) '
+          '— 코스트 5',
+          'VENOM STRIKE — one target, and the poison is the point. The head has '
+          'REARED nearly vertical, higher than any other cell, and the two fangs '
+          'are held straight DOWN and parallel like a pair of nails, at their '
+          'fullest length. Three heavy drops hang off the fang tips and stop in '
+          'empty black. The body below is gathered into a tight vertical stack of '
+          'plates — compressed, not spread. It is the TALLEST and NARROWEST cell '
+          'of the sheet.')],
+        'struck. The coil has been knocked out of its S into a broken zigzag, four '
+        'legs snapped off and hanging by the hook, two plates lifted off their '
+        'neighbours so the soft dark gaps show wide. The head is turned away and '
+        'one fang is broken off halfway.',
+        """21스테이지 우두머리. **다섯째 지역의 첫 우두머리**입니다.
+
+지역이 바뀌었다는 것을 이 한 마리가 말해야 합니다. 앞의 스무 마리는 덩어리
+아니면 가지였고, 이놈은 **마디**입니다 — 화면에 뜨는 순간 "다른 것이 나왔다"
+가 읽혀야 합니다.
+
+## 가운데 이음매가 이 놈의 전부입니다
+
+체력이 절반이 되면 몸이 그 자리에서 **둘로 갈라집니다** (`split_head` ·
+`split_tail`). 그러니까 갈라질 자리가 처음부터 보여야 합니다 — 안 보이면
+갈라지는 순간이 "왜 두 마리가 됐지" 가 됩니다.
+
+이음매는 온몸에서 **유일한 직선**입니다. 나머지는 전부 굽었습니다.
+
+## 갈라진 두 토막은 따로 그립니다
+
+`split_head` 와 `split_tail` 은 갈라진 **직후의 모습**이고, 그 뒤로 계속
+그 모습입니다. 둘의 마디를 합치면 원래 열둘이어야 합니다 — 머리 쪽 일곱,
+꼬리 쪽 다섯. 세어 보면 맞아야 합니다.
+
+꼬리 토막은 평타만 쓰는 대신 두 배로 빠릅니다. 그래서 다리가 더 촘촘하고
+몸이 더 짧습니다 — 같은 길이를 반으로 접은 것처럼 보이면 안 됩니다.""",
+        forms=[
+            ('split_head', '갈린 앞토막',
+             'THE FRONT HALF, JUST SEPARATED. The first seven plates only, ending '
+             'in a raw open cross-section where the clasp used to be — the ring of '
+             'five hooks is still there on the cut edge, standing out, and the '
+             'inside of the tube shows as a dark hollow ring. It is HALF THE '
+             'LENGTH of the idle cell and it is holding itself up on its remaining '
+             'eight pairs of legs, front raised, fangs spread. It looks more '
+             'dangerous than the whole animal did.'),
+            ('split_tail', '갈린 뒷토막',
+             'THE BACK HALF, JUST SEPARATED. The last five plates, the blunt tail '
+             'head now leading, the cut end trailing with the same ring of hooks '
+             'showing. SHORTER AND STOCKIER than the front half, plates packed '
+             'closer together, six pairs of legs bunched under a short body. No '
+             'fangs — the tail head has only the four short hooks. It is drawn '
+             'LOW and BUNCHED, and that low bunched shape is what says it is the '
+             'fast one.'),
+        ],
+        passive=('절단 분열',
+                 '체력 50% 이하가 되는 즉시 몸이 반으로 갈라져 머리와 꼬리 '
+                 '두 마리가 된다 (각각 남은 체력의 절반, 꼬리는 평타만 쓰지만 '
+                 '공격속도 두 배)'),
+    ),
+
+    boss(
+        'b22_apis', '황금빛 호위벌', '아피스', 22, 'swarm', 66,
+        'A soldier bee that outlived its queen and kept guarding the empty comb.'
+        + NL
+        + 'BODY: a heavy upright abdomen hanging below a compact thorax — pear '
+        'shaped, TALLER THAN WIDE, hanging as if the weight is all at the bottom. '
+        'The abdomen is banded in SEVEN thick plates. It does not stand on the '
+        'ground; it hangs in the air.' + NL
+        + 'WINGS: FOUR, held out and back, thin and hard, each one a flat blade '
+        'with a coarse grid of veins showing through. Two are whole. One is torn '
+        'to two-thirds. One is a stub. Uneven wings are what stop it looking '
+        'decorative.' + NL
+        + 'THE STING is the longest hard thing on it — a straight barbed spike '
+        'coming down and back from the tip of the abdomen, as long as the abdomen '
+        'itself, with three backward barbs along it. It is always pointing down.'
+        + NL
+        + 'HEAD: small, dominated by two enormous compound domes covering most of '
+        'it, each pitted with a coarse grid. Between them, two short mouth plates '
+        'opening sideways.' + NL
+        + 'THE ACCIDENT — this one only: it is wearing COMB. Four or five broken '
+        'HEXAGONAL cells of honeycomb are fused to the top of the thorax and the '
+        'shoulders, like a torn piece of armour it grew into. Some cells are '
+        'capped, some are open and empty. Nothing else in the game has hexagons '
+        'and that is what names it across the field.' + NL
+        + 'LEGS: three pairs, folded up tight under the thorax, each carrying a '
+        'dense brush of stiff hairs. They are drawn as hard shapes, not fur.' + NL
+        + 'SCARS: two abdomen plates are cracked across and healed crooked.',
+        'hovering, hanging nose-down at a slight angle, legs folded, the sting '
+        'pointing straight down at the ground. The four wings are held out and '
+        'still — draw them still, not blurred. The comb on its shoulders is the '
+        'brightest mass in the cell.',
+        'the jab. The whole body has TIPPED nose-down almost vertical and driven '
+        'forward, and the sting has swung UP AND FORWARD past the head, leading '
+        'the attack. Legs are out and grasping. The wings have swept back flat '
+        'against the body. Compact, committed, and pointed.',
+        [('skill1', '여왕의 황금 장막',
+          '즉시 자신에게 보호막을 두르고 5초간 시전. 5초 안에 보호막을 못 깨면 '
+          '아군 전체가 각자 최대 체력의 50% 피해 + 3초 기절 — 코스트 10',
+          'THE GOLDEN VEIL — it stops and armours itself, so this cell is CLOSED, '
+          'not reaching. The body has curled into a tight ball, head tucked, sting '
+          'folded in under the abdomen, legs drawn in. All four wings have swept '
+          'FORWARD and around it, tips nearly meeting, forming a broken shell. '
+          'Growing outward from the comb on its shoulders, SIX new hexagon cells '
+          'have opened into a ring around the whole body, not touching it, each '
+          'one a thick-walled empty hex. It is the ROUNDEST cell of the sheet and '
+          'the only one where nothing points outward. The threat is that it is '
+          'building something.')],
+        'struck. The ball is broken open — three hexes of the ring shattered to '
+        'stubs, one whole wing torn free and tumbling clear, the abdomen '
+        'wrenched sideways so the plates gape. The sting is bent. It is still '
+        'in the air but it has lost its shape.',
+        """22스테이지 우두머리.
+
+**시간 제한이 있는 첫 우두머리입니다.** 보호막을 5초 안에 못 깨면 파티가
+반쪽이 나고 3초를 못 움직입니다. 그러니까 3번 칸은 "때린다" 가 아니라
+**"닫힌다"** 로 읽혀야 합니다 — 다른 칸이 전부 뾰족한데 이 칸만 둥급니다.
+
+## 육각형이 이 놈의 이름표입니다
+
+게임 전체에서 육각형이 있는 것은 이놈 하나입니다. 어깨의 벌집 조각은 네 칸에
+다 있어야 하고, 3번 칸에서는 그것이 몸 둘레로 자라 나옵니다.
+
+## 날개는 흐리게 그리지 마세요
+
+1-bit 라 잔상이 안 그려집니다. 흐리게 시도하면 흰 얼룩이 됩니다. 날개는
+**멈춘 딱딱한 판**으로 그리고, 움직임은 각도로만 말합니다.""",
+    ),
+
+    boss(
+        'b23_nucanus', '강철 갑각의 폭군', '누카누스', 23, 'swarm', 72,
+        'A beetle that answered every wound by growing another plate.' + NL
+        + 'BODY: a MASSIVE low wedge, WIDER THAN TALL, front end high and thick and '
+        'tapering back — like a shield dragged along the ground. The whole upper '
+        'surface is ONE enormous domed carapace made of five overlapping plates, '
+        'each thicker than the last toward the front.' + NL
+        + 'THE HORN is the front third of the animal: a single solid IRON-COLOURED '
+        'ram, flat on top, blunt at the tip, as wide as the head and reaching '
+        'forward past everything else. It is not a spike — it is a wall on the '
+        'front of the body. It has three deep dents in it that never healed.' + NL
+        + 'LEGS: three pairs, short and thick, spread wide and braced, each knee '
+        'bending up then down, each foot a broad hook that grips. It is built low '
+        'and it is built to push.' + NL
+        + 'HEAD: almost hidden under the horn. Two small compound domes visible '
+        'from the side, and two short mouth plates below.' + NL
+        + 'THE MOULT SEAMS — this one only: running down the middle of the '
+        'carapace, front to back, is a single raised RIDGE with SIX crossbars over '
+        'it, evenly spaced, like stitches holding it shut. That ridge is where the '
+        'shell opens when it moults. It is the only regular repeating pattern on '
+        'the animal and it must be in every cell.' + NL
+        + 'SCARS: the rear two plates are chipped along their edges and one has a '
+        'hole punched clean through, healed over from underneath.',
+        'braced. All six legs planted wide, body low to the ground, horn levelled '
+        'straight forward. Nothing is raised and nothing is reaching. It reads as '
+        'weight that has stopped moving, not as an animal at rest.',
+        'the shove. The whole mass has driven FORWARD a body length, front legs '
+        'off the ground and folded, back legs extended straight behind and still '
+        'pushing, horn first. The body is at its LONGEST here — stretched from '
+        'horn tip to back foot. Nothing rises.',
+        [('skill1', '짓밟는 무쇠 뿔',
+          '맨 앞의 아군에게 공격력의 250% 물리 피해 + 3초 기절 — 코스트 5',
+          'THE TRAMPLE — one target, all the weight. The front of the body has '
+          'REARED up so the horn is held high and angled DOWN, the front two pairs '
+          'of legs clawing at nothing above the ground, the whole mass balanced on '
+          'the back pair. It is the only cell where this animal leaves the ground, '
+          'and it is about to come down on one spot. The carapace ridge is bent '
+          'into a curve by the arch of the body.')],
+        'struck. Two legs have folded the wrong way and the body has dropped onto '
+        'that side, the horn ploughed into nothing and turned aside, and the front '
+        'carapace plate has split along the moult ridge showing a hand-width of '
+        'soft dark seam. The stitches on that stretch are torn apart.',
+        """23스테이지 우두머리.
+
+**때리는 횟수로 푸는 첫 기믹입니다.** 체력이 절반이 되면 고치에 들어가고,
+30번을 때려야 깨집니다 — 그 사이 초당 2% 씩 찹니다. 딜이 모자라면 영영 안
+깨지므로, 여기가 이 지역의 첫 벽입니다.
+
+## 고치는 기술 칸이 아니라 형태 칸입니다
+
+`cocoon` 은 한순간의 동작이 아니라 **그 뒤로 몇 초 동안 계속 그 모습**입니다.
+그래서 동작이 아니라 **덩어리**로 그려야 합니다 — 다리도 뿔도 안 보이고,
+공 하나만 남습니다.
+
+깨야 할 곳이 보여야 합니다. 등의 이음매 여섯 바늘이 고치 겉면에도 남아
+있어야 하고, 그게 "여기를 치면 된다" 를 말합니다.
+
+## 뿔은 뾰족하면 안 됩니다
+
+창이 아니라 **벽**입니다. 끝이 뾰족해지면 21판 지네의 독니와 겹치고, 무엇보다
+250% 짜리 한 방이 "찌른다" 로 읽힙니다 — 이건 짓밟는 기술입니다.""",
+        forms=[
+            ('cocoon', '단단한 고치',
+             'THE COCOON — this is a STATE, not an action. The entire animal has '
+             'pulled itself into a single closed OVOID sitting on the ground, '
+             'legs folded away underneath and invisible, horn tucked down and '
+             'flush so only its blunt outline shows as a ridge on the front. It '
+             'is SMOOTH where the animal is jagged — the carapace plates have '
+             'clamped shut over everything. It is the only cell with no legs, no '
+             'points and no gaps.' + NL
+             + '  The six crossbar stitches down the middle ridge are still there '
+             'and are now the ONLY detail on the whole shape. Draw them heavier '
+             'than anywhere else: that seam is what the player has to break.'),
+        ],
+        passive=('경화 갑각',
+                 '체력 50% 이하가 되면 5초간 단단한 고치 상태. 30번을 때려야 '
+                 '깨지고, 그 동안 1초마다 체력 2% 회복'),
+    ),
+
+    boss(
+        'b24_biblis', '환각 인분을 뿌리는 유령나방', '비블리스', 24, 'swarm', 68,
+        'A moth that has been dead long enough that the dust does the flying.' + NL
+        + 'BODY: a narrow furred thorax and a short tapering abdomen, small and '
+        'almost an afterthought — the WINGS are the animal. The body hangs '
+        'vertically, head up.' + NL
+        + 'WINGS: TWO enormous pairs, spread wide and held FLAT, together three '
+        'times the width of the body. They are ragged: the outer edges are eaten '
+        'into deep scallops, three holes are punched clean through the upper '
+        'pair, and the lower pair is torn to half length on one side. Across each '
+        'upper wing is ONE huge EYE-SPOT — a thick ring with a solid centre, as '
+        'wide as the thorax. The two eye-spots are DIFFERENT SIZES and sit at '
+        'different heights.' + NL
+        + 'THE REAL EYES are small, two dull domes on a head half buried in fur, '
+        'and they are far less noticeable than the false ones. That mismatch is '
+        'the whole idea: the thing looking at you is not looking at you.' + NL
+        + 'THE DUST — this one only: fine loose FLAKES are coming off the wing '
+        'edges and hanging in the black. Draw them as a scatter of separate small '
+        'solid shapes, biggest near the wing and smaller further out, thinning to '
+        'nothing. Never as a cloud, never as a gradient. They are in every cell '
+        'and they are how the passive shows.' + NL
+        + 'ANTENNAE: two wide feathered combs off the head, held back, one broken '
+        'to a stub.' + NL
+        + 'LEGS: three thin pairs held tucked and useless against the thorax.',
+        'hanging in the air, wings spread FLAT and level, both eye-spots facing '
+        'front, dust drifting off the lower edges. It is the WIDEST cell of the '
+        'sheet and the stillest. Nothing about it says which way it will go.',
+        'the brush. The wings have swept DOWN and forward together, curling under '
+        'at the tips so the whole span has narrowed by half, and a heavy sheet of '
+        'dust has been thrown off the leading edges — twice as many flakes as any '
+        'other cell, all travelling one way. The body has barely moved. It '
+        'attacks by shedding.',
+        [('skill1', '정신 착란',
+          '아군 1명에게 4초간 혼란 — 3초간 스킬을 못 쓰고 평타로 아군을 친다 '
+          '— 코스트 10',
+          'DERANGEMENT — it is not hitting anyone; it is showing them something. '
+          'The wings have swung fully FORWARD and OVERLAPPED in front of the body, '
+          'facing the viewer square on, so the two eye-spots are now side by side '
+          'and centred — a single enormous pair of eyes staring straight out, '
+          'nothing else visible behind them. The real head is completely hidden. '
+          'This is the ONLY cell that faces the front instead of the side, and '
+          'the only one that is symmetrical. Dust hangs thick and still around it '
+          'in a wide ring, not travelling anywhere.')],
+        'struck. One upper wing is folded backwards at a break halfway along, its '
+        'eye-spot creased through the middle, and the body has tipped nose-down '
+        'and started to fall. The dust has stopped coming off — the flakes still '
+        'in the air are all far from the wings and thinning out.',
+        """24스테이지 우두머리.
+
+**아군이 아군을 때리는 첫 기믹입니다.** 혼란에 걸린 사람은 3초간 스킬을 못
+쓰고 평타로 아군을 칩니다. 그러니까 3번 칸은 때리는 그림이면 안 됩니다 —
+**보여 주는** 그림입니다.
+
+## 눈알 무늬가 진짜 눈보다 커야 합니다
+
+이 놈이 하는 일이 "보게 만드는 것" 이라, 날개의 가짜 눈이 화면에서 제일 큰
+덩어리여야 합니다. 진짜 눈은 털에 묻혀 거의 안 보입니다. 그 어긋남이 이
+놈의 전부입니다.
+
+## 3번 칸만 정면입니다
+
+넷 중 셋은 옆모습이고 이 칸만 앞을 봅니다. 좌우 대칭인 것도 이 칸뿐입니다.
+그 두 가지가 "지금 이건 다른 종류의 일이다" 를 말합니다.
+
+## 인분은 구름이 아닙니다
+
+흑백 2색이라 뿌연 것을 못 그립니다. **낱개의 작은 덩어리**로 흩어 그리고,
+날개에서 멀어질수록 작아지다 사라지게 하세요.""",
+        passive=('독침',
+                 '평타에 맞으면 2초간 중독 — 0.5초마다 최대 체력의 1% 씩, '
+                 '최대 3중첩 (중첩마다 1% 씩 늘어 3%)'),
+    ),
+
+    boss(
+        'b25_arachnes', '우화의 모체, 여왕 아라크네스', '아라크네스', 25, 'swarm', 80,
+        'The one that lays the others. She has not finished growing and she is '
+        'already the largest thing in the region.' + NL
+        + 'BODY: TWO masses joined at a narrow waist — a compact armoured '
+        'cephalothorax in front, and behind it an ENORMOUS swollen abdomen, twice '
+        'its size, hanging low and heavy. The abdomen is not armoured: it is soft, '
+        'stretched, and banded with strain lines. That contrast is the animal.' + NL
+        + 'LEGS: FOUR pairs, long, each folding up above the body before coming '
+        'down — so the knees stand HIGHER THAN THE BACK and the body hangs slung '
+        'between them. Two legs are shorter than the rest and one ends in a stump. '
+        'The span of the legs is twice the span of the body.' + NL
+        + 'THE UNFINISHED MOULT — this one only: her whole front half is still '
+        'half inside the old skin. A split, dry, hollow SHELL is peeled back off '
+        'the cephalothorax and hangs down behind the head like a torn hood, still '
+        'attached at the waist. Through the split you can see the new plates '
+        'underneath, paler and unhardened. She has been interrupted mid-emergence '
+        'and she stayed like that.' + NL
+        + 'HEAD: a bank of EIGHT eyes in two uneven rows, three of them clouded '
+        'over. Two hard fangs fold down and inward, each with a groove.' + NL
+        + 'THE SPINNERETS at the tip of the abdomen are four short nozzles, and '
+        'three thick strands of web already hang from them into empty black.' + NL
+        + 'ON HER BACK, clinging to the abdomen: SIX small young, each a simple '
+        'round body with four legs, at different sizes, none of them symmetrical '
+        'with the others.',
+        'slung between her legs, abdomen nearly touching the ground, fangs folded, '
+        'the torn moult hood hanging behind her head. The young cling still. The '
+        'web strands hang straight down. She is the LARGEST silhouette in the '
+        'game and she is not doing anything with it yet.',
+        'the bite. The front half has driven forward and down between the front '
+        'legs, fangs swung out, while the abdomen stays exactly where it was — '
+        'the waist stretches. Only two of the eight legs have moved. Almost all '
+        'of her stays put, and that is what makes her look heavy.',
+        [('skill1', '포식의 거미줄',
+          '공격력이 가장 높은 아군 1명을 5초간 고치로 묶어 행동 불능으로 만들고 '
+          '매초 그 대상의 체력 10% 를 흡수 — 코스트 6',
+          'THE FEEDING WEB — she throws and then pulls. The abdomen has swung UP '
+          'and FORWARD over the cephalothorax, tip pointed at the viewer, and from '
+          'the four spinnerets a thick BUNDLE of strands has been fired forward '
+          'and out of the cell edge — draw the bundle leaving as a broad fan of '
+          'six or seven heavy lines converging to one point beyond the body, '
+          'stopping short of the magenta line. Her front legs are drawn back and '
+          'braced to HAUL. This is the only cell where the abdomen is higher than '
+          'the head.')],
+        'struck. Three legs have collapsed and the abdomen has dropped hard, '
+        'splitting one strain band open. The moult hood has torn most of the way '
+        'off and hangs by a thread. Two of the six young have been thrown clear '
+        'and are falling. The head is turned away.',
+        """25스테이지 우두머리. **이 지역의 중간 관문**이고, 지금까지 나온 것 중
+제일 큽니다.
+
+## 반쯤 벗다 만 허물이 이 놈의 이름표입니다
+
+"우화의 모체" 라는 이름이 그림에 있어야 합니다. 앞몸은 아직 낡은 껍질 속에
+반쯤 들어 있고, 그 껍질이 목덜미 뒤로 찢어져 늘어져 있습니다.
+
+체력이 절반이 되면 **그 껍질을 마저 벗습니다** (`imago`). 그때 몸이 커지고
+공격력이 30% 영구히 오릅니다. 그러니까 벗기 전의 모습이 먼저 있어야 합니다 —
+`idle` 에서 이미 다 벗고 있으면 우화하는 순간이 아무 뜻이 없습니다.
+
+## 우화 뒤에는 새끼가 없습니다
+
+`idle` 의 등에 붙어 있는 새끼 여섯이 우화 칸에서는 사라집니다. 패시브(군체의
+지배자)가 그때 꺼지기 때문입니다 — 화면에서 그 둘이 같이 사라져야 "아, 저것
+때문이었구나" 가 읽힙니다.
+
+## 다리 무릎이 등보다 높아야 합니다
+
+거미를 거미로 보이게 하는 것은 다리 수가 아니라 그 실루엣입니다. 몸이 다리
+사이에 **매달려** 있어야 하고, 그래야 40px 에서도 지네·딱정벌레와 안 겹칩니다.""",
+        forms=[
+            ('imago', '우화한 성체 · 대기',
+             'THE IMAGO — she has finished. This is a STATE and everything after '
+             'this cell uses it. The old shell is GONE: no hood, no split, no dry '
+             'skin anywhere. The cephalothorax is now fully hardened and visibly '
+             'LARGER than in the idle cell, with three new ridges across it that '
+             'were not there before. The legs are longer and held higher, the '
+             'body slung further off the ground. THE SIX YOUNG ARE GONE from her '
+             'back — that surface is bare and smooth. All eight eyes are clear. '
+             'Same animal, same broken leg, same eight-eye arrangement, but '
+             'nothing about her is unfinished any more.'),
+            ('imago_skill', '우화한 성체 · 포식의 거미줄',
+             'THE FEEDING WEB, AFTER THE MOULT. The same pose as the skill cell — '
+             'abdomen swung up and forward, strand bundle fired out, front legs '
+             'braced to haul — but drawn on the imago body: no hood, no young, '
+             'bigger front half, longer legs. The strand bundle is THICKER here, '
+             'nine or ten lines instead of six.'),
+        ],
+        passive=('군체의 지배자',
+                 '3초마다 아군 전체의 스킬 코스트를 한 칸씩 깎는다 '
+                 '(우화하면 꺼진다)'),
+    ),
+
+    boss(
+        'b26_pyros', '거대한 발광충, 피로스', '피로스', 26, 'swarm', 66,
+        'A firefly that swallowed its own light and has been swelling ever since.'
+        + NL
+        + 'BODY: a long soft segmented GRUB, TALLER THAN WIDE, held upright and '
+        'curved back like a comma — heavy round tail end at the bottom, narrow '
+        'head reaching forward at the top. NINE segments, each a fat ring, each '
+        'ring divided from the next by a deep pinch.' + NL
+        + 'THE LIGHT ORGANS — this one only: the last THREE segments before the '
+        'tail are not soft. They are hard, translucent CHAMBERS, drawn as thick '
+        'rings with hollow black centres, and each one is packed with a coarse '
+        'grid of small cells like a honeycomb seen edge-on. They are the only '
+        'hollow shapes on the whole animal, and they are what is about to go off.'
+        + NL
+        + 'THE SKIN IS TOO TIGHT. Between every pair of segments the surface has '
+        'SPLIT into a short crack, four of them, and something pale is showing '
+        'through. It is over-full.' + NL
+        + 'LEGS: six short pairs down the front half, stubby and hooked, plus four '
+        'fleshy prolegs at the back that grip. All small — it barely walks.' + NL
+        + 'HEAD: tiny, a hard capsule with two mouth plates opening sideways and '
+        'a pair of very short blunt horns. Eyes are four dull dots, almost lost.'
+        + NL
+        + 'DRIPS: two heavy drops hang off the underside of the tail and stop in '
+        'empty black.',
+        'upright and curled back, tail heavy on the ground, head lowered and '
+        'forward, the three light chambers plainly visible at the base. The four '
+        'skin splits are closed to slits. It looks swollen and slow.',
+        'the lunge. The curve has straightened — the whole body has whipped '
+        'FORWARD and DOWN so head and tail are almost in a line, head plates '
+        'spread. It is the LONGEST cell of the sheet. The tail has come off the '
+        'ground and the prolegs are trailing.',
+        [('skill1', '인화성 분무',
+          '아군 전체에 5초간 화상 — 받는 피해 30% 증가 — 코스트 5',
+          'THE SPRAY — it goes to EVERYONE, so it goes UP AND OUT, not forward. '
+          'The body has REARED into a tall column, tail planted, head thrown back '
+          'and up, and the four skin splits have GAPED OPEN into wide gashes along '
+          'the whole length. Out of every gash, a fan of separate small solid '
+          'flakes is thrown sideways and up — six to eight per gash, biggest near '
+          'the body, thinning outward, stopping well inside the cell. It is the '
+          'TALLEST cell and the only one throwing anything.'),
+         ('skill2', '날카로운 찌르기',
+          '아군 전체에 공격력의 70% 물리 피해 — 코스트 2',
+          'THE JAB — cheap, quick, and it must NOT look like the spray. The body '
+          'has folded into a tight compressed S and the HEAD has shot straight '
+          'forward on a stretched neck, the two mouth plates locked together into '
+          'a single hard point. Everything else is pulled BACK and small. It is '
+          'the NARROWEST cell of the sheet, and nothing leaves the body — no '
+          'flakes, no drips, no light. One point, going one way.')],
+        'struck. Two of the three light chambers are cracked across and their grid '
+        'is broken, the body has slumped sideways off its curve, and two skin '
+        'splits have torn wide open along their whole length. The head hangs down '
+        'loose. It is still swollen — that is what makes the next thing worse.',
+        """26스테이지 우두머리.
+
+**죽은 뒤에 진짜 싸움이 시작되는 첫 우두머리입니다.** 체력이 0 이 되면 죽지
+않고 폭탄 애벌레 넷으로 흩어지고, 5초 안에 넷을 못 잡으면 파티가 각자 최대
+체력의 25% 를 맞습니다.
+
+## 그래서 몸이 터질 것처럼 보여야 합니다
+
+마디 사이가 네 군데 갈라져 있고, 그 안이 비쳐야 합니다. 죽을 때 그 자리에서
+넷이 나오므로, 갈라진 자리가 미리 보여야 "아 저기서 나오는구나" 가 됩니다.
+
+## 발광 기관 셋이 유일한 빈 모양입니다
+
+몸은 전부 꽉 찬 덩어리인데 꼬리 쪽 세 마디만 속이 비어 있습니다. 흑백에서
+빛나는 것을 그릴 방법이 그것뿐입니다 — 밝게 하면 그냥 흰 얼룩이 됩니다.
+
+## 기술 둘이 정반대여야 합니다
+
+3번(분무)은 온몸이 벌어져 사방으로 흩고, 4번(찌르기)은 온몸이 오므라들어 한
+점으로 나갑니다. 이 둘이 닮으면 코스트 5 짜리와 2 짜리가 화면에서 같아집니다.
+
+폭탄 애벌레는 따로 그립니다 → [`FOE_ART_PROMPTS.md`](../FOE_ART_PROMPTS.md)""",
+        passive=('최후의 발악',
+                 '체력이 0 이 되면 죽지 않고 폭탄 애벌레 4마리로 분열한다. '
+                 '5초 뒤 자폭해 아군 전체에 각자 최대 체력의 25% 피해'),
+    ),
+
+    boss(
+        'b27_locusta', '대지를 갉아먹는 식탐귀', '로쿠스타', 27, 'swarm', 70,
+        'A locust that ate a field, then the fence, then the plough, and did not '
+        'stop.' + NL
+        + 'BODY: a long armoured trunk held at a low forward angle, WIDER THAN '
+        'TALL, front half thick and back half tapering. Six overlapping plates. '
+        'The whole thing is built around the front end.' + NL
+        + 'THE MOUTH IS THE ANIMAL. It takes up the entire front quarter of the '
+        'body: FOUR hard chewing plates arranged around a square opening, opening '
+        'SIDEWAYS in two pairs, each plate ridged with a coarse row of grinding '
+        'teeth along its inner edge. It is far too big to close properly and it '
+        'never does.' + NL
+        + 'HIND LEGS: one enormous pair, folded into a tight Z that stands HIGHER '
+        'THAN THE BACK — the thigh as thick as the body. Four smaller front legs '
+        'below. That folded Z is the second thing you see after the mouth.' + NL
+        + 'WHAT IT ATE — this one only: hard things are lodged in the mouth plates '
+        'and in the throat behind them, half ground down and never swallowed — a '
+        'ploughshare, a bent horseshoe, two broken fence staves. They stand in the '
+        'gaps between the plates at wrong angles. Nothing else in the region has '
+        'worked metal in it.' + NL
+        + 'WINGS: a short hard pair folded flat along the back, too small to lift '
+        'anything this size, both chipped along the trailing edge.' + NL
+        + 'HEAD: two dull compound domes set far apart on the sides, and two short '
+        'antennae, one snapped.' + NL
+        + 'ABDOMEN: distended and banded, dragging.',
+        'settled low and forward, the mouth plates hanging apart, hind legs folded '
+        'tight and loaded. The lodged metal is plainly visible in the gaps. It has '
+        'stopped moving but the mouth has not closed.',
+        'the bite. The front half has driven forward and the four mouth plates '
+        'have swung WIDE APART to their full spread — the opening is at its '
+        'biggest here, wider than the body. The hind legs have straightened '
+        'halfway to push. Everything is about that one opening.',
+        [('skill1', '포식',
+          '아군 1명에게서 체력 · 스킬 코스트 · 버프 중 하나를 빼앗는다 '
+          '(체력이면 최대치의 20% 를 흡수해 회복, 코스트면 뺏은 칸당 공격속도 '
+          '10% 5초, 버프면 3초간 그 버프를 제가 쓴다) — 코스트 8',
+          'DEVOURING — it takes something and it keeps it. The body has REARED '
+          'back and UP onto the hind legs, which are now fully extended and '
+          'straight for the first time, lifting the front of the animal clear of '
+          'the ground. The mouth plates have clamped SHUT into a single closed '
+          'hard block — the only cell where that mouth is closed — and the throat '
+          'behind it is visibly SWOLLEN, the two plates behind the head forced '
+          'apart by something passing through them. The lodged metal has been '
+          'pushed further in. It is the TALLEST cell, and it is the only one where '
+          'nothing is open.')],
+        'struck. It has come down hard on its side, the loaded hind legs sprawled '
+        'and one bent backwards at the Z, two mouth plates broken off at the '
+        'hinge and hanging. The ploughshare has been knocked loose and is falling '
+        'clear of the mouth.',
+        """27스테이지 우두머리.
+
+**뺏는 우두머리입니다.** 체력을 뺏으면 그만큼 회복하고, 스킬 코스트를 뺏으면
+빨라지고, 버프를 뺏으면 3초간 그 버프를 제가 씁니다. 그래서 이 놈 앞에서는
+"모아 두는 것" 자체가 위험해집니다.
+
+## 입이 닫히는 칸이 하나 있어야 합니다
+
+네 칸 중 셋은 입이 벌어져 있고, 3번 칸에서만 **꽉 닫힙니다.** 삼킨 것이므로
+닫혀야 하고, 목이 부풀어 있어야 "지금 뭔가 넘어갔다" 가 보입니다.
+
+## 뒷다리가 몸보다 높아야 합니다
+
+메뚜기를 메뚜기로 만드는 것은 접힌 뒷다리의 Z 자입니다. 그게 등보다 높이
+서 있어야 지네(길다)·딱정벌레(낮고 넓다)와 실루엣이 안 겹칩니다.
+
+## 삼킨 쇠붙이가 이 지역에서 유일합니다
+
+21~30 어디에도 사람이 만든 물건이 없습니다. 이 놈만 보습과 편자를 물고
+있습니다 — 그게 "대지를 갉아먹었다" 를 말하는 유일한 방법입니다.""",
+    ),
+
+    boss(
+        'b28_mosquito', '핏빛 가시 입자루', '모스키토', 28, 'swarm', 62,
+        'A mosquito that has fed so long it can no longer fly straight.' + NL
+        + 'BODY: a thin, LONG, needle-straight abdomen held at a steep angle, '
+        'attached to a small hunched thorax. The abdomen is the length of the '
+        'whole rest of the animal and it is SWOLLEN in its middle third — a taut '
+        'bulge with the segment bands stretched apart around it. Empty at both '
+        'ends, full in the middle.' + NL
+        + 'THE PROBOSCIS is the point of the creature: a single rigid needle '
+        'projecting forward from the head, AS LONG AS THE ABDOMEN, dead straight, '
+        'with a hair-fine taper and three tiny backward barbs near the tip. It is '
+        'the longest straight line in the region.' + NL
+        + 'LEGS: three pairs, absurdly long and thin, each bending twice, splayed '
+        'wide so the body hangs low between them. One is broken at the second '
+        'joint and hangs. They are drawn as hard hairlines with visible joints, '
+        'never as smooth curves.' + NL
+        + 'WINGS: one pair only, narrow and held back, both scarred with two long '
+        'tears each. Too small for the swollen body.' + NL
+        + 'HEAD: mostly two compound domes, and between them the base of the '
+        'needle, thickened into a hard collar.' + NL
+        + 'THE ACCIDENT — this one only: it did not empty. Three heavy DROPS hang '
+        'from the underside of the swollen abdomen, and one more is halfway down '
+        'the needle. They stop in empty black. It is the only creature in the '
+        'region that is visibly carrying something wet.' + NL
+        + 'SCARS: the swollen section has two healed punctures in it, ringed and '
+        'puckered.',
+        'standing high on its splayed legs, body hanging low between them, needle '
+        'held level and forward, abdomen angled up and back. The drops hang. It '
+        'is the THINNEST silhouette of the region — almost all of it is line.',
+        'the settle. The legs have bent and lowered the body until the head is '
+        'close to the ground, and the needle has angled DOWN, tip nearly touching. '
+        'The abdomen has swung up higher behind. Nothing lunges — it lands and '
+        'lowers. Restraint is the point of this cell.',
+        [('skill1', '치명적 흡혈 침',
+          '방어력이 가장 높은 아군에게 관통 물리 피해 200%, 입힌 피해의 300% '
+          '만큼 자신을 회복. 대상은 5초간 치유량 50% 감소 — 코스트 5',
+          'THE DRAIN — it is taking, and you can see it arriving. The whole body '
+          'has driven forward and the needle is at FULL EXTENSION, angled steeply '
+          'DOWN and out past the cell centre, rigid as a spear, legs braced and '
+          'splayed to their widest. The swollen abdomen has DOUBLED — it is now '
+          'the biggest mass in the cell, the segment bands pulled to thin lines '
+          'around it, one healed puncture split open by the stretch. Two fat drops '
+          'are being forced off the abdomen tip. It is the WIDEST cell of the '
+          'sheet and the only one where the body outweighs the legs.')],
+        'struck. The needle has snapped at two-thirds and the broken end hangs by '
+        'a shred; three legs have folded and the body has dropped between them '
+        'onto the swollen abdomen, which has split along one band and is emptying '
+        '— four heavy drops falling clear. The wings are folded the wrong way.',
+        """28스테이지 우두머리.
+
+**회복하는 우두머리입니다.** 입힌 피해의 세 배를 스스로 채우므로, 비앙카의
+화산(회복량 50% 감소)이 없으면 딜이 안 통합니다 — 이 지역에서 화산이 처음
+필수가 되는 자리입니다.
+
+## 방어력이 제일 높은 사람을 노립니다
+
+앞의 우두머리들은 앞에 선 사람이나 체력이 적은 사람을 노렸습니다. 이 놈은
+**제일 단단한 사람**을 노립니다 — 관통이라 방어가 소용없고, 그래서 탱커를
+세워 두는 것이 오히려 위험합니다.
+
+## 이 놈은 얇아야 합니다
+
+이 지역의 다른 아홉이 전부 두꺼운 마디 덩어리입니다. 이 놈만 **거의 선**
+입니다. 다리도 침도 가늘고, 부푼 배 한 곳만 두껍습니다. 그 대비가 40px 에서
+이 놈을 알아보게 합니다.
+
+## 물방울은 이 놈만 답니다
+
+21~30 에서 젖은 것을 그리는 것은 이놈뿐입니다. 슬라임 장(1~10)이 이미 물방울을
+많이 썼으므로, 여기서 아껴 쓰면 그것만으로 "피를 빨았다" 가 됩니다.""",
+    ),
+
+    boss(
+        'b29_formica', '신경을 지배하는 동충하초', '포르미카', 29, 'swarm', 74,
+        'An ant that died a long time ago. The thing standing there is what grew '
+        'out of it.' + NL
+        + 'BODY: a hollowed ant — three masses (head, thorax, abdomen) joined at '
+        'two narrow waists, held low and forward. The chitin is DRY and cracked; '
+        'in three places it has caved in and you can see the shell is empty '
+        'behind it. It is a husk being worn.' + NL
+        + 'THE STALKS — this one only: growing OUT THROUGH the shell are FIVE '
+        'rigid FRUITING BODIES, each a straight stem ending in a swollen club '
+        'head covered in a coarse grid of pores. They come out at wrong angles: '
+        'two from the back of the thorax, one from the top of the head, one from '
+        'the abdomen, one through the joint of a leg. They are TALLER THAN THE '
+        'ANT — the tallest stalk doubles its height. Where each stalk emerges, the '
+        'shell is cracked open in a star of splits around it.' + NL
+        + 'THAT IS THE SILHOUETTE: a low insect body with a crown of five clubs '
+        'standing above it, all different heights. Nothing else in the game grows '
+        'up out of itself like that.' + NL
+        + 'LEGS: three pairs, locked stiff and splayed — the joints have set and '
+        'no longer bend properly. One leg is fully rigid and drags.' + NL
+        + 'HEAD: mandibles locked half open and they no longer close. The eyes are '
+        'gone: both sockets are open and one has a small stalk growing from it.' + NL
+        + 'SPORES: a scatter of separate small solid flecks drifts off the club '
+        'heads and stops in empty black. Present in every cell — this is what the '
+        'passive looks like.',
+        'standing rigid on locked legs, head low, the five clubs held upright and '
+        'still, spores drifting off the tops. It does not shift its weight. '
+        'Nothing about it reads as breathing.',
+        'the seize. The body has jerked forward on its stiff legs — a lurch, not a '
+        'lunge — and the locked mandibles have driven ahead. The five clubs have '
+        'NOT moved with the body; they lag behind, still upright, as if the ant '
+        'and the growth are not moving at the same time. That mismatch is the '
+        'whole cell.',
+        [('skill1', '신경 마비 포자',
+          '아군 전체에 4초간 지속 마법 피해 + 평타를 쳐도 스킬 코스트가 안 '
+          '차는 신경 마비 — 코스트 6',
+          'THE SPORE BURST — it goes to everyone, so it goes UP and OUT. All five '
+          'club heads have SPLIT OPEN along their length into four peeled petals '
+          'each, and out of every one a fan of separate flecks is thrown up and '
+          'outward — the densest scatter of the sheet, biggest at the club and '
+          'thinning to nothing well inside the cell. The stalks have straightened '
+          'to their full height and spread apart into a wide crown; the ant body '
+          'below has SAGGED, legs buckling, head down. The growth is standing up '
+          'and the corpse is giving way. It is the TALLEST and WIDEST cell.')],
+        'struck. Two stalks have snapped off partway and are falling, their club '
+        'heads separate in the air; a third of the shell has caved in completely '
+        'along a crack. The body has dropped onto one side but the legs are still '
+        'locked in their standing position, sticking out wrong. Nothing about it '
+        'looks like pain.',
+        """29스테이지 우두머리. **최종 보스 직전**입니다.
+
+**아군끼리 싸우게 만드는 우두머리입니다.** 체력이 절반이 되면 쉴드를 얻고,
+5초 안에 못 깨면 파티 전체가 5초간 서로를 칩니다.
+
+## 이 놈은 살아 있으면 안 됩니다
+
+앞의 아홉이 전부 "살아 있는 것" 이었습니다. 이 놈만 **이미 죽은 것**입니다.
+껍질은 마르고 갈라졌고 속은 비었고 눈은 없습니다. 움직이는 것은 개미가
+아니라 개미에서 자란 것입니다.
+
+그래서 2번 칸(평타)에서 **몸과 버섯대가 따로 움직입니다.** 몸이 앞으로
+꺾이는데 대가리 다섯은 그 자리에 남아 있습니다. 그 어긋남 하나가 이 놈이
+무엇인지 다 말합니다.
+
+## 버섯대 다섯이 실루엣입니다
+
+몸보다 대가 높아야 합니다. 낮게 깔린 개미 위로 곤봉 다섯이 서로 다른 높이로
+서 있는 모양 — 21~30 중에 위로 자라는 것은 이놈뿐입니다.
+
+## 포자도 인분(24판)과 같은 규칙입니다
+
+구름으로 그리지 말고 **낱개 조각**으로. 다만 24판은 날개에서 옆으로 떨어지고
+이놈은 **곤봉에서 위로** 솟습니다.""",
+        passive=('포자 감염',
+                 '체력 50% 이하가 되면 쉴드를 얻는다. 5초 안에 못 깨면 아군 '
+                 '전체가 5초간 서로를 공격한다 (그동안 평타만)'),
+    ),
+
+    boss(
+        'b30_baal', '침식을 완료한 군체의 절대자, 바알', '바알', 30, 'swarm', 84,
+        'The last one. It is not one insect — it is what happens when the whole '
+        'brood finishes becoming a single thing.' + NL
+        + 'BODY: an upright TOWERING mass, TALLER THAN WIDE, built of segmented '
+        'plates that do not all belong to the same animal. Read from the ground '
+        'up: a broad braced base of SIX legs, none of them a matching pair — one '
+        'is a beetle\'s thick hook, one a mantis blade, one a spider\'s long '
+        'joint, one a centipede\'s row of small hooks fused into a single limb. '
+        'Above them a barrel thorax of NINE overlapping plates. Above that, a head '
+        'that is too small for it.' + NL
+        + 'IT IS MADE OF THE OTHERS — this one only, and it is the whole point: '
+        'set into the plates of the thorax and the base, half absorbed and still '
+        'recognisable, are parts of the creatures from earlier in the region: '
+        'ONE hexagon of comb, ONE fruiting-body stalk with a club head, ONE '
+        'moth wing with an eye-spot, ONE fang with a groove. Four, no more, '
+        'spaced apart, each clearly a foreign shape sunk into the surface. Do not '
+        'add a fifth and do not repeat one.' + NL
+        + 'THE ARMS: TWO enormous forelimbs raised and held apart, each ending in '
+        'a hard splitting blade, both bending the wrong way at the elbow. They '
+        'are the only symmetrical thing on it, and they are held wide.' + NL
+        + 'HEAD: a hard capsule with a bank of TEN eyes in three rows, and four '
+        'mouth plates that open sideways in two pairs. It is a fraction of the '
+        'body and it is the darkest, most closed part.' + NL
+        + 'THE MOULT: a full split, dry, hollow SHELL of a previous body stands '
+        'behind and below it, empty and upright, still holding the shape it was '
+        'left in. It is attached at nothing. It is standing there because it never '
+        'fell over.' + NL
+        + 'SCARS: three plates are punched through and healed from beneath.',
+        'standing upright and braced, six mismatched legs planted, both blades '
+        'raised and held apart, head lowered. The empty shell stands behind it. '
+        'It is the TALLEST silhouette in the game and it is completely still.',
+        'the cut. ONE blade has come down and across in a single diagonal, the '
+        'body turned into it, the other blade still raised and untouched. The legs '
+        'have not moved at all — six planted points and one arm. It attacks '
+        'without shifting its weight, and that is what makes it look final.',
+        [('skill1', '군체의 대염쇄',
+          '체력 50% 이하가 되면 허물을 벗고 본체와 같은 능력치의 환영 분신을 '
+          '하나 만든다 (분신은 체력 25% · 스킬 2를 같이 쓴다)',
+          'THE SHEDDING — this is the moment it makes the copy. The body has '
+          'ARCHED backwards and the thorax has SPLIT OPEN down the middle seam, '
+          'the nine plates peeling apart to both sides, and out of that split the '
+          'new body is emerging — draw it as a SECOND, PALER outline rising up and '
+          'forward out of the old one, head and one blade already clear, still '
+          'joined at the waist. Both bodies are in this cell. The old shell that '
+          'was standing behind has TOPPLED and lies across the base. It is the '
+          'only cell containing two of the creature.'),
+         ('skill2', '군주 붕괴파',
+          '아군 전체에 공격력의 180% 마법 피해 + 30% 확률로 3초 기절 — 코스트 6',
+          'THE COLLAPSE WAVE — everyone at once. BOTH blades have been driven '
+          'DOWN and INWARD to meet at a single point in front of the base, and the '
+          'whole body has folded over that point — head down, thorax hunched, the '
+          'six legs splayed out and skidding. From the meeting point, a broad flat '
+          'RING of separate hard shards is thrown outward at ground level, '
+          'strongest near the point and thinning outward, stopping well inside the '
+          'cell. It is the LOWEST and WIDEST cell of the sheet: everything that '
+          'was upright has come down.')],
+        'struck. One blade is severed at the elbow and falling; three of the six '
+        'mismatched legs have buckled and the tower has begun to lean. Four thorax '
+        'plates are lifted off their neighbours and the absorbed parts — the comb '
+        'hexagon, the eye-spot wing — are cracked through. The head is turned '
+        'away and half the eyes are dulled.',
+        """30스테이지 우두머리. **최종 보스입니다.**
+
+## 앞의 아홉이 이 놈 안에 있어야 합니다
+
+이 지역을 다 지나온 사람이 마지막에 봐야 하는 것은 "제일 센 벌레" 가 아니라
+**여태 잡은 것들이 하나로 뭉친 것**입니다. 그래서 몸에 넷을 박아 둡니다 —
+벌집 육각(22판) · 버섯 곤봉(29판) · 눈알 무늬 날개(24판) · 홈 파인 독니(21판).
+
+**넷입니다. 다섯을 넣지 마세요.** 더 넣으면 잡동사니가 되고, 40px 에서는
+그냥 지저분한 표면이 됩니다. 넷이 서로 떨어져 있고 각각 확실히 남의 모양이면
+됩니다.
+
+## 다리 여섯이 짝이 안 맞아야 합니다
+
+한 쌍도 같으면 안 됩니다. 딱정벌레 갈고리 · 사마귀 낫 · 거미 관절 · 지네
+갈고리 뭉치 — 아래를 보는 것만으로 "여러 마리로 만들어졌다" 가 읽혀야 합니다.
+
+## 5번 칸에는 두 마리가 들어갑니다
+
+허물을 벗으면서 분신이 나오는 칸입니다. 낡은 몸과 새 몸이 허리에서 아직
+붙어 있고, 뒤에 서 있던 빈 허물은 그 순간 쓰러집니다. 시트에서 유일하게
+같은 놈이 둘 있는 칸입니다.
+
+분신은 별도 시트가 없습니다 — 게임이 같은 그림을 붉게 물들여 씁니다
+(`Sprite` 의 `tint`).
+
+## 마지막 칸(피격)이 이 게임의 마지막 그림입니다
+
+쓰러지는 것이 아니라 **기울기 시작하는** 것으로 그리세요. 다 무너진 모습은
+화면에 안 뜹니다 — 잡히면 그 자리에서 사라집니다.""",
+        passive=('부식성 아우라',
+                 '바알의 평타에 맞으면 이번 판이 끝날 때까지 방어력과 '
+                 '마법저항력이 10% 씩 누적으로 깎인다 (최대 10중첩 · '
+                 '정화로 풀 수 있다)'),
+    ),
+]
+
 PASSIVE_ICONS = [
     ('bp_thorn', '가시 갑옷', 'b05 스피나투스',
      'A SPIKED BALL. A solid round core filling the middle of the cell with SIX '
@@ -1604,6 +2466,53 @@ PASSIVE_ICONS = [
      'heavy rounded head, the middle one tallest and reaching the top edge. The '
      'stalks are as wide as the gaps between them. Squint test: three stalks on a '
      'mound.'),
+    ('bp_split', '절단 분열', 'b21 센티페다',
+     'A BAR CUT IN TWO. One thick horizontal bar running the full width of the '
+     'cell, a third of its height, SEVERED at the middle by a straight vertical '
+     'gap as wide as the bar is tall — two separate solid blocks, left and right, '
+     'the same size, with clean square ends facing each other. Nothing joins '
+     'them. Squint test: two blocks with a gap.'),
+    ('bp_shell', '경화 갑각', 'b23 누카누스',
+     'A CLOSED DOME. One solid half-circle sitting on the bottom edge of the '
+     'cell, flat side down, filling the full width — and across it, from the flat '
+     'base up over the top, THREE straight vertical bars of black cutting it into '
+     'four bands. The dome is unbroken at its outline; the bands are inside it. '
+     'It is the only ROUND-TOPPED FLAT-BOTTOMED shape in the set. '
+     'Squint test: a banded dome.'),
+    ('bp_sting', '독침', 'b24 비블리스',
+     'A DROP ON A POINT. One long straight NEEDLE running from the top-left '
+     'corner down to the bottom-right, a fifth of the cell wide, tapering to a '
+     'point at the lower end — and hanging just clear of that point, not '
+     'touching, ONE fat round DROP a third of the cell wide. Two shapes, one '
+     'long and thin, one small and round. Squint test: a needle and a bead.'),
+    ('bp_hive', '군체의 지배자', 'b25 아라크네스',
+     'A BIG ONE AND FOUR SMALL. One solid circle filling the middle two-thirds '
+     'of the cell, and around it FOUR much smaller solid circles — one at each '
+     'corner — each a quarter of its width, none touching it or each other. '
+     'Perfectly plain circles, no rings, no dots inside. It is the only icon in '
+     'the set made of separate round pieces. Squint test: one big dot, four '
+     'small.'),
+    ('bp_burst', '최후의 발악', 'b26 피로스',
+     'A SHAPE FLYING APART. FOUR thick solid WEDGES, all pointing OUTWARD from '
+     'the centre of the cell — up-left, up-right, down-left, down-right — each '
+     'with its blunt end toward the middle and its point at a corner, and an '
+     'EMPTY BLACK CROSS-SHAPED GAP between them where the centre should be. The '
+     'middle of this icon is empty; the mass is at the corners. It is the only '
+     'icon that is hollow in the middle. Squint test: four wedges, nothing in '
+     'the middle.'),
+    ('bp_spore', '포자 감염', 'b29 포르미카',
+     'A CLUB ON A STALK. One straight vertical BAR rising from the bottom edge '
+     'to two-thirds height, a fifth of the cell wide, topped by one much wider '
+     'solid OVAL head that overhangs the bar on both sides and reaches the top '
+     'edge. It is a nail seen head-on from the side: thin below, heavy above. '
+     'It must not sprout a second stalk — one only. Squint test: a mushroom.'),
+    ('bp_corrode', '부식성 아우라', 'b30 바알',
+     'A SQUARE BEING EATEN. One solid square filling most of the cell, with its '
+     'ENTIRE RIGHT EDGE eaten away into four deep square NOTCHES cut in from the '
+     'right, like teeth taken out of it, each notch a fifth of the square deep. '
+     'The left, top and bottom edges are perfectly straight and untouched. The '
+     'asymmetry is the whole read — solid on one side, chewed on the other. '
+     'Squint test: a square with a ragged right edge.'),
     ('bp_ward', '수호수의 가호', 'b20 실바누스',
      'A SHIELD-LEAF. One solid shape combining both: a broad flat straight top '
      'edge running the full width of the cell, sides dropping straight down and '
@@ -1661,6 +2570,21 @@ TEMPLATE = """# %(name)s, %(latin)s
 
 ## 다시 뽑을 때
 
+**흰 덩어리로 나왔을 때** (실루엣 안이 통째로 메워짐)
+
+```
+The creature has come out as a solid white silhouette with no interior detail. At
+game size it reads as a white blob and nothing else.
+
+The palette is two colours: white and transparent. Depth and detail are drawn as
+BLACK GAPS INSIDE the white mass, not as shading. Redraw with real holes: the gap
+between the legs, the dark seam between every pair of plates, the hollow of the
+open mouth, the black centre of each eye socket, the space under an overhanging
+part. At least a fifth of the area inside the outline must be black.
+
+Keep the outline and the poses exactly as they are. Only open up the inside.
+```
+
 **칸들이 서로 너무 비슷하게 나왔을 때** (제일 자주 납니다)
 
 ```
@@ -1714,31 +2638,32 @@ PASSIVE_PAGE = """# 보스 패시브 로고
 
 **이 파일은 자동 생성됩니다** — `python tools/gen-boss.py`.
 
-패시브를 가진 우두머리가 **넷**입니다. 패시브는 껐다 켜지는 것이 아니라 싸우는
-내내 걸려 있으므로, 화면 위쪽에 로고가 **계속** 떠 있어야 합니다.
+패시브를 가진 우두머리가 **%(n)d마리**입니다. 패시브는 껐다 켜지는 것이 아니라
+싸우는 내내 걸려 있으므로, 화면 위쪽에 로고가 **계속** 떠 있어야 합니다.
 
 이건 생물 그림이 아니라 **아이콘**입니다 — 쿼터뷰가 아니고, 12~16px 에서
 읽혀야 하고, 규칙이 통째로 다릅니다.
 
-## 넷의 윤곽이 겹치면 안 됩니다
+## 열하나의 윤곽이 전부 겹치면 안 됩니다
 
-12px 에서 안쪽은 없는 것과 같습니다. 그래서 넷을 **모양으로** 갈랐습니다 —
+12px 에서 안쪽은 없는 것과 같습니다. 그래서 **모양으로** 갈랐습니다 —
 
 | 로고 | 우두머리 | 윤곽 |
 |---|---|---|
 %(rows)s
 
-## 셀 순서
+**장을 나눠 그리지만 겹침은 전체를 봅니다.** 한 장에 넷씩 그리는 것은 한 번에
+열하나를 그리면 뒤로 갈수록 뭉개지기 때문이고, 안 겹쳐야 하는 것은 여전히
+열하나 전부입니다 — 같은 화면에 같이 뜹니다.
 
-%(table)s
-## 프롬프트
+%(sheets)s
 
-%(prompt)s
+---
+
 ## 슬라이서 설정
 
 ```json
-{ "file": "<파일명>", "name": "boss_passive", "expect": [4, 1],
-  "labels": [%(labels)s] }
+%(config)s
 ```
 """
 
@@ -1748,7 +2673,7 @@ INDEX = """# 보스 이미지 프롬프트
 **이 파일은 자동 생성됩니다** — `python tools/gen-boss.py`.
 고치려면 `tools/gen-boss.py` 의 `BOSSES` 를 고치세요.
 
-우두머리 **스무 마리**입니다. 잡몹 프롬프트는 따로 있습니다
+우두머리 **서른 마리**입니다. 잡몹 프롬프트는 따로 있습니다
 ([`FOE_ART_PROMPTS.md`](FOE_ART_PROMPTS.md)) — 그린 이유가 달라서 생성기를
 갈랐습니다.
 
@@ -1757,7 +2682,13 @@ INDEX = """# 보스 이미지 프롬프트
 **칸 수가 다릅니다.** 잡몹은 대기·공격·피격 셋이면 끝입니다. 우두머리는
 기술을 가지고 있고 **기술마다 동작이 달라야** 하므로 칸이 더 필요합니다 —
 기술이 하나면 **4칸** (대기 · 평타 · 스킬1 · 피격), 둘이면 **5칸** 입니다.
-지금 5칸짜리는 둘뿐입니다 (10판 슬러지누스, 20판 실바누스).
+
+21판부터는 **형태 칸**이 더 붙습니다. 기술 칸은 "한 번 하고 원래대로 돌아오는
+것" 이지만, 형태 칸은 **그 뒤로 계속 그 모습**입니다 — 반으로 갈린 지네, 고치를
+쓴 딱정벌레, 우화를 마친 여왕. 그래서 6칸짜리도 있습니다.
+
+형태 칸을 그릴 때 지킬 것: **바뀐 뒤에도 같은 놈으로 보여야 합니다.** 마디 수,
+다리 수, 부러진 자리는 그대로 가고 자세와 껍질만 달라집니다.
 
 **볼 시간이 깁니다.** 잡몹은 넷이 겹쳐 서서 각자 45px 이지만, 우두머리는 혼자
 서서 칸의 60~86%% 를 씁니다. 체력이 500 이라 한 판이 깁니다. 그래서 잡몹에는
@@ -1821,9 +2752,20 @@ INDEX = """# 보스 이미지 프롬프트
 """
 
 
-ZONE = {True: '오염된 응집체들의 평원', False: '타락한 군락의 정원'}
+def zone_of(stage):
+    """그 판이 속한 지역.
 
-FAMILY_RULE = {'slime': SLIME_BOSS, 'growth': GROWTH_BOSS}
+    예전에는 `{True: ..., False: ...}` 한 줄이었다 (10판을 기준으로 둘). 지역이
+    셋이 되면서 참·거짓으로는 못 가른다 — 넷째 지역이 생길 때 또 같은 일이
+    나지 않게 아예 구간으로 적는다.
+    """
+    if stage <= 10:
+        return '오염된 응집체들의 평원'
+    if stage <= 20:
+        return '타락한 군락의 정원'
+    return '우화하는 군체들의 침식지'
+
+FAMILY_RULE = {'slime': SLIME_BOSS, 'growth': GROWTH_BOSS, 'swarm': SWARM_BOSS}
 
 
 def does_of(b):
@@ -1837,6 +2779,10 @@ def does_of(b):
                '칸이라 제일 절제되어야 합니다.')
     for i, (sid, ko, does, _art) in enumerate(b['skills'], 1):
         out.append('**스킬 %d · %s** (`%s` 칸) — %s' % (i, ko, sid, does))
+    for sid, ko, _art in b.get('forms', []):
+        out.append('**형태 · %s** (`%s` 칸) — 한순간의 동작이 아니라 **그 뒤로 '
+                   '계속 그 모습**입니다. 자세가 아니라 몸이 바뀐 것으로 '
+                   '그리세요.' % (ko, sid))
     return (NL + NL).join(out) + NL
 
 
@@ -1891,7 +2837,7 @@ def page(b):
     )
     return TEMPLATE % {
         'name': b['name'], 'latin': b['latin'], 'set': b['id'],
-        'stage': b['stage'], 'zone': ZONE[b['stage'] <= 10],
+        'stage': b['stage'], 'zone': zone_of(b['stage']),
         'cells': cells, 'intro': b['intro'], 'does': does_of(b),
         'table': table_of(b['frames']), 'prompt': prompt,
         'labels': labels_of(b['frames']), 'fill': b['fill'],
@@ -1899,30 +2845,86 @@ def page(b):
 
 
 def passive_page():
-    cells = [(i, ko, art) for i, ko, _who, art in PASSIVE_ICONS]
+    """
+    로고가 열하나가 되면서 **장을 나눴다.**
+
+    한 장에 넷씩이다. 한 번에 열하나를 그리라고 하면 뒤로 갈수록 뭉개지고,
+    무엇보다 앞의 넷은 이미 들어와 있어서 다시 뽑을 이유가 없다. 새 일곱만
+    두 장으로 그려 **덧붙인다** (`append`).
+
+    윤곽이 안 겹쳐야 하는 것은 **장 안이 아니라 열하나 전체**다. 같은 화면에
+    같이 뜨기 때문이다. 그래서 겹침 표는 장을 나누기 전과 똑같이 전부를 싣고,
+    프롬프트에도 "이미 있는 것들과도 안 겹쳐야 한다" 를 적는다.
+    """
+    order = ['bp_thorn', 'bp_viscous', 'bp_rot', 'bp_ward',
+             'bp_split', 'bp_shell', 'bp_sting', 'bp_hive',
+             'bp_burst', 'bp_spore', 'bp_corrode']
+    by_id = {i[0]: i for i in PASSIVE_ICONS}
+    assert set(order) == set(by_id), '로고 목록과 장 순서가 어긋난다'
+
     rows = NL.join(
-        '| `%s` | %s · %s | %s |' % (i, who, ko, art.split('.')[0].strip())
-        for i, ko, who, art in PASSIVE_ICONS)
-    prompt = block(
-        NOTEXT,
-        'SUBJECT: a single sheet of 4 ICONS in one row, left to right. They are a '
-        'matched set — same weight, same fill, same size within their cells.'
-        + NL + NL
-        + rows_of(cells, 'The 4 cells, in this exact order:'),
-        PIXEL_STYLE,
-        ICON_STYLE,
-        'THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and '
-        'squint. If any two have a similar outline, redraw the weaker one — the '
-        'outline is the only thing that survives at 14 pixels. These four are '
-        'deliberately a STAR, a DRIP, a THREE-STALK MOUND and a SHIELD; if any of '
-        'them '
-        'has drifted toward another, pull it back.',
-        grid(4, 1),
-    )
+        '| `%s` | %s · %s | %s |'
+        % (by_id[i][0], by_id[i][2], by_id[i][1],
+           by_id[i][3].split('.')[0].strip())
+        for i in order)
+
+    sheets = [order[i:i + 4] for i in range(0, len(order), 4)]
+    blocks = []
+    cfg = []
+    for n, ids in enumerate(sheets):
+        cells = [(by_id[i][0], by_id[i][1], by_id[i][3]) for i in ids]
+        prompt = block(
+            NOTEXT,
+            'SUBJECT: a single sheet of %d ICONS in one row, left to right. They '
+            'are a matched set — same weight, same fill, same size within their '
+            'cells.' % len(cells) + NL + NL
+            + rows_of(cells, 'The %d cells, in this exact order:' % len(cells)),
+            PIXEL_STYLE,
+            ICON_STYLE,
+            'THEY MUST NOT BE CONFUSABLE — and not only with each other. These '
+            'join %d icons that already exist in the game and appear on the same '
+            'screen. Squint at each finished icon and make sure its OUTLINE is '
+            'not close to any of the others listed in the table above; the '
+            'outline is the only thing that survives at 14 pixels.'
+            % (len(order) - len(cells)),
+            grid(len(cells), 1),
+        )
+        blocks.append(SHEET_TPL % {
+            'tag': chr(ord('A') + n),
+            'n': len(cells),
+            'table': table_of(cells),
+            'prompt': prompt,
+            'done': '이미 들어와 있습니다 — 다시 뽑을 필요가 없습니다.' if n == 0
+                    else '아직 안 들어왔습니다.',
+        })
+        cfg.append(
+            '{ "file": "bp-%d.jpg", "name": "boss_passive", "expect": [%d, 1],%s'
+            % (n + 1, len(cells), ' "append": true,' if n else '')
+            + NL + '  "labels": [%s] }' % labels_of(cells))
+
     return PASSIVE_PAGE % {
-        'rows': rows, 'table': table_of(cells), 'prompt': prompt,
-        'labels': labels_of(cells),
+        'n': len(order),
+        'rows': rows,
+        'sheets': ''.join(blocks),
+        'config': (',' + NL).join(cfg),
     }
+
+
+SHEET_TPL = """
+
+---
+
+## %(tag)s장 — %(n)d칸
+
+%(done)s
+
+### 셀 순서
+
+%(table)s
+### 프롬프트
+
+%(prompt)s
+"""
 
 
 if __name__ == '__main__':
@@ -1945,6 +2947,9 @@ if __name__ == '__main__':
     open('docs/BOSS_PASSIVE_PROMPTS.md', 'w', encoding='utf-8').write(
         passive_page())
 
-    five = sum(1 for b in BOSSES if len(b['frames']) == 5)
-    print('우두머리 %d마리 (4칸 %d · 5칸 %d) · 패시브 로고 %d'
-          % (len(BOSSES), len(BOSSES) - five, five, len(PASSIVE_ICONS)))
+    from collections import Counter
+    per = Counter(len(b['frames']) for b in BOSSES)
+    print('우두머리 %d마리 (%s) · 패시브 로고 %d'
+          % (len(BOSSES),
+             ' · '.join('%d칸 %d' % (k, per[k]) for k in sorted(per)),
+             len(PASSIVE_ICONS)))
