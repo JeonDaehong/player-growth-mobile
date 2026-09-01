@@ -1530,7 +1530,6 @@ export function BattleView() {
                     canCast={canCast}
                     costSeq={battle.costSeq ?? 0}
                     struck={struck[c.id] ?? 0}
-                    struckName={battle.pat ?? ''}
                     /* 정화로 걷힌 사람에게서만 조각이 떠오른다 */
                     purify={purified[c.id] ?? 0}
                     onCharge={onCharge}

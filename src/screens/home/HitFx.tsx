@@ -24,7 +24,6 @@ import { Animated, Easing, Text, View } from 'react-native';
 import type { HitFx } from '@/core/chars';
 import { Sprite } from '@/ui/Sprite';
 import { BAD_C, BLACK, GOOD_C, MONO, WHITE } from '@/ui/theme';
-import { T } from '@/ui/atoms';
 
 /** 이펙트 한 판의 길이 */
 export const FX_MS = 260;
@@ -863,153 +862,107 @@ export function DamageNumber({
 }
 
 /**
- * ── 표적 ── 우두머리 특수기에 **맞은 사람**에게 씌운다.
+ * ── 맞으면 몸이 붉어진다 ──
  *
- * ## 왜 필요했나
+ * ## 여기 있던 표적을 걷어 냈다
  *
- * 특수기를 맞으면 피해 숫자가 떴다. 그게 전부였다. 그래서 넷이 동시에 맞는
- * 전원기(`aim: 'all'`)와 한 명만 맞는 기술(`aim: 'one'`)이 화면에서 **똑같이
- * 보였다** — 숫자가 몇 개 뜨는지로 세는 수밖에 없는데, 평타 숫자도 같은
- * 자리에 같이 뜨므로 그것도 안 된다.
+ * 붉은 네 귀퉁이가 몸을 감싸고, 칸 안이 옅게 물들고, 기술 이름이 아래
+ * 붙었다. "이 사람이, 이 기술에, 방금 맞았다" 를 한 덩어리로 만들려던
+ * 것인데 — 54px 짜리 인물 위에 상자 하나를 더 얹은 꼴이었다. 알려 주는
+ * 것에 비해 화면에서 차지하는 자리가 너무 컸다.
  *
- * 붉은 네 귀퉁이가 몸을 감싸고 기술 이름이 붙는다. "이 사람이, 이 기술에,
- * 방금 맞았다" 가 한 덩어리로 읽힌다.
+ * 기술 이름은 어차피 **우두머리 머리 위에서** 이미 외치고 있다. 그러니
+ * 여기서 남길 것은 하나뿐이다 — **누가 맞았나.**
  *
- * ## 왜 네 귀퉁이인가
+ * ## 몸을 물들인다
  *
- * 사각형 테두리로 감싸면 54px 짜리 인물이 상자에 갇힌 것으로 보인다. 귀퉁이
- * 넷만 그리면 **표적을 잡은 것**으로 읽히고, 인물이 안 가려진다.
+ * 에셋이 흰 픽셀 + 투명 배경이라 `tintColor` 로 색만 갈아 끼울 수 있다
+ * (`ui/Sprite`). 그래서 **같은 그림을 붉게 한 장 더 겹치고** 투명도만
+ * 굴린다 — 자세가 바뀌면 붉은 쪽도 같이 바뀌므로 늘 정확히 이 사람의
+ * 윤곽이고, 상자처럼 자리를 더 먹지 않는다.
  *
- * ## 얼마나 켜 두나
+ * 덧대는 방식인 이유는 `tint` 가 그냥 `prop` 이라서다. 본체 색을 직접
+ * 갈면 렌더가 돌아야 색이 바뀌는데, 그러면 0.5초 박자에 맞춰 깜빡이는
+ * 것이 아니라 **렌더가 도는 대로** 깜빡인다.
  *
- * 1.1초다. 짧으면 못 보고 지나가고, 다음 특수기까지 켜져 있으면 표시가
- * 아니라 배경이 된다. 그 사이에서 **이름을 한 번 읽을 만큼**이 이 길이다.
+ * ## 두 가지 세기
+ *
+ *   평타   한 번, 240ms. 계속 맞는 것이라 길면 늘 붉은 사람이 된다
+ *   특수기  세 번, 780ms. 전원기와 한 명기를 여기서 가른다 —
+ *          넷이 다 깜빡이면 전원기고, 하나만 깜빡이면 그 사람만 맞은 것
  */
-const STRUCK_MS = 1100;
+const SOFT_MS = 240;
+const HARD_MS = 780;
 
-export function StruckMark({
-  nonce, name, size,
-}: { nonce: number; name: string; size: number }) {
+export function HurtTint({
+  nonce, hard, size, children,
+}: {
+  /** 맞은 횟수 — 평타든 뭐든 체력이 깎이면 오른다 */
+  nonce: number;
+  /** 우두머리 특수기에 맞은 횟수 — 이쪽이 오르면 길고 세게 깜빡인다 */
+  hard: number;
+  size: number;
+  /** 이 사람의 그림을 **붉게** 한 장. 부르는 쪽이 `tint` 를 준다 */
+  children: React.ReactNode;
+}) {
   const t = useRef(new Animated.Value(0)).current;
   const [on, setOn] = useState(false);
+  const [big, setBig] = useState(false);
+  /*
+    둘 중 **무엇이 올랐는지**를 봐야 한다. 특수기에 맞으면 체력도 같이
+    깎이므로 두 숫자가 함께 오르는데, 그때는 센 쪽이 이겨야 한다.
+  */
+  const seen = useRef({ n: nonce, h: hard });
 
   useEffect(() => {
-    if (nonce <= 0) return undefined;
+    const isHard = hard !== seen.current.h;
+    const isHit = nonce !== seen.current.n;
+    seen.current = { n: nonce, h: hard };
+    if (!isHard && !isHit) return undefined;
+
+    setBig(isHard);
     setOn(true);
     t.setValue(0);
     let alive = true;
     const a = Animated.timing(t, {
-      toValue: 1, duration: STRUCK_MS, easing: Easing.linear, useNativeDriver: true,
+      toValue: 1,
+      duration: isHard ? HARD_MS : SOFT_MS,
+      easing: Easing.linear,
+      useNativeDriver: true,
     });
     a.start(() => { if (alive) setOn(false); });
-    return () => { alive = false; a.stop(); };
-  }, [nonce, t]);
+    /* 멈출 때 값을 되돌린다 — `stop()` 은 그 자리에 두고 멈춘다 */
+    return () => { alive = false; a.stop(); t.setValue(0); };
+  }, [nonce, hard, t]);
 
-  /*
-    ── 깜빡이지 않는다 ──
-
-    두 번 깜빡였었다 (1 → 0.15 → 1 → 0.15 → 0). 눈에 띄게 하려던 것인데,
-    깜빡이는 물건은 **켜져 있는 시간이 절반**이라 오히려 덜 보인다. 게다가
-    이 표시는 화면 흔들기와 붉은 막이 같이 돌던 때에 만든 것이라, 소란
-    속에서 두드러지려고 저 혼자 더 시끄러워진 꼴이었다.
-
-    그 둘을 걷어 냈으므로(`BattleView` 의 `rush` 주석) 이제 표적은 **한 번
-    조여들고, 켜진 채로 버티다, 끝에서만 스러진다.** 켜져 있는 동안 내내
-    보이는 것이 요란한 것보다 잘 읽힌다.
-
-    `interpolate` 는 한 번만 만든다 — 렌더마다 부르면 값에 가지가 쌓인다.
-  */
-  const fade = useMemo(() => t.interpolate({
-    inputRange: [0, 0.08, 0.75, 1],
-    outputRange: [0, 1, 1, 0],
+  /* `interpolate` 는 한 번만 만든다 — 렌더마다 부르면 값에 가지가 쌓인다 */
+  const one = useMemo(() => t.interpolate({
+    inputRange: [0, 0.3, 1], outputRange: [0, 0.85, 0],
   }), [t]);
-  /* 밖에서 조여든다 — 조준하는 동작이다 */
-  const grow = useMemo(() => t.interpolate({
-    inputRange: [0, 0.25, 1], outputRange: [1.5, 1, 1],
+  const three = useMemo(() => t.interpolate({
+    inputRange: [0, 0.06, 0.2, 0.34, 0.48, 0.62, 1],
+    outputRange: [0, 0.95, 0.1, 0.95, 0.1, 0.95, 0],
   }), [t]);
 
   if (!on) return null;
-
-  /*
-    ── 귀퉁이 한 조각 — ㄱ 자 두 획 ──
-
-    획을 2px 에서 3px 로, 길이를 몸의 0.22 에서 0.3 으로 키웠다. 아군은 화면
-    안에서 54px 짜리 흰 그림이고 그 위에 숫자와 상태 아이콘이 이미 얹혀
-    있다. 그 사이에서 2px 짜리 붉은 선은 **테두리가 아니라 먼지로** 보였다.
-  */
-  const arm = Math.max(7, Math.round(size * 0.3));
-  const corner = (top: boolean, left: boolean) => (
-    <View
-      style={{
-        position: 'absolute',
-        [top ? 'top' : 'bottom']: 0,
-        [left ? 'left' : 'right']: 0,
-        width: arm,
-        height: arm,
-        [top ? 'borderTopWidth' : 'borderBottomWidth']: 3,
-        [left ? 'borderLeftWidth' : 'borderRightWidth']: 3,
-        borderColor: BAD_C,
-      }}
-    />
-  );
-
   return (
     <Animated.View
       pointerEvents="none"
       style={{
         position: 'absolute',
-        left: -3,
-        right: -3,
-        top: -3,
-        height: size + 6,
-        opacity: fade,
-        transform: [{ scale: grow }],
-        zIndex: 44,
+        left: 0,
+        top: 0,
+        width: size,
+        height: size,
+        opacity: big ? three : one,
+        /*
+          몸(기본 층)보다 **앞**이다 — 물들이는 것이라 덮어야 한다.
+          불꽃(38)과 숫자(40)보다는 뒤라, 그 둘을 가리지 않는다.
+        */
+        zIndex: 5,
       }}
     >
-      {/*
-        ── 표적 안이 붉게 물든다 ──
-
-        네 귀퉁이만으로는 **누가** 인지가 한눈에 안 왔다. 넷이 나란히 서
-        있으면 귀퉁이 획은 옆 사람 것과 섞여 보인다. 칸 전체를 옅게 칠하면
-        그 사람 하나가 통째로 물들어서, 줄에서 바로 골라진다.
-
-        아주 옅게(0.16) 칠한다. 이 게임은 검은 배경에 흰 그림이라 붉은 것을
-        진하게 얹으면 그림이 그 밑으로 사라진다 — 물들이되 덮지 않는다.
-      */}
-      <View
-        style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: BAD_C,
-          opacity: 0.16,
-        }}
-      />
-      {corner(true, true)}
-      {corner(true, false)}
-      {corner(false, true)}
-      {corner(false, false)}
-      {/*
-        기술 이름 — 표적 **아래**에 붙인다.
-
-        위는 이미 말풍선(`SkillShout`)과 피해 숫자가 쓰는 자리다. 셋이 겹치면
-        정작 제일 중요한 숫자가 가려진다.
-      */}
-      {!!name && (
-        <View style={{ position: 'absolute', left: -26, right: -26, bottom: -15, alignItems: 'center' }}>
-          <View
-            style={{
-              backgroundColor: BLACK,
-              borderWidth: 1,
-              borderColor: BAD_C,
-              paddingHorizontal: 4,
-              paddingVertical: 1,
-            }}
-          >
-            <T size={10} style={{ color: BAD_C }}>{name}</T>
-          </View>
-        </View>
-      )}
+      {children}
     </Animated.View>
   );
 }

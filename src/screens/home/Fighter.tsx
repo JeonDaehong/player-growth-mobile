@@ -38,9 +38,9 @@ import {
 
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
-import { WHITE } from '@/ui/theme';
+import { BAD_C, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
-import { DamageNumber, HealMarks, HitBurst, SkillShout, StruckMark } from './HitFx';
+import { DamageNumber, HealMarks, HitBurst, HurtTint, SkillShout } from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
 import { BodyFlash, SkillFx } from './SkillFx';
@@ -178,7 +178,7 @@ type Frame = 'guard' | 'lose'
 
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
-  struck, struckName, purify, cut, onCharge, damage, bless, advance, leapTo,
+  struck, purify, cut, onCharge, damage, bless, advance, leapTo,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -248,13 +248,14 @@ function FighterView({
   /**
    * 이 사람이 우두머리 특수기에 맞은 횟수 (`BattleState.struck`).
    *
-   * 오를 때마다 몸에 붉은 표적이 씌워진다. 예전에는 피해 숫자만 떴는데,
-   * 전원기와 한 명기가 화면에서 똑같아 보여서 **누가 맞았는지**를 알 수가
-   * 없었다.
+   * 오를 때마다 몸이 **길게 세 번** 붉게 깜빡인다 (`HurtTint`). 평타로 맞는
+   * 짧은 한 번과 세기가 달라서, 넷이 다 깜빡이면 전원기고 하나만 깜빡이면
+   * 그 사람만 맞은 것으로 읽힌다.
+   *
+   * 맞은 기술의 **이름은 여기 안 붙는다.** 우두머리 머리 위에서 이미 외치고
+   * 있어서, 맞은 사람 발밑에 또 달면 같은 말이 두 번 나온다.
    */
   struck: number;
-  /** 그때 맞은 기술의 이름 — 표적 위에 같이 뜬다 */
-  struckName: string;
   /**
    * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
    *
@@ -1020,16 +1021,31 @@ function FighterView({
       <SkillFx kind="cleanse" nonce={purify} size={size} />
 
       {/*
-        ── 우두머리 특수기에 맞았다 ──
+        ── 맞으면 몸이 붉게 깜빡인다 ──
 
-        붉은 표적이 씌워지고 기술 이름이 같이 뜬다. 예전에는 피해 숫자만
-        떴는데, 넷이 동시에 맞는 전원기와 한 명만 맞는 기술이 화면에서
-        똑같아 보였다 — 무슨 일이 일어났는지 읽을 방법이 없었다.
+        여기 붉은 네 귀퉁이 표적이 씌워졌었다. 알려 주는 것은 "이 사람이
+        맞았다" 하나인데, 54px 짜리 인물 위에 상자를 하나 더 얹느라 화면에서
+        차지하는 자리가 그보다 훨씬 컸다.
 
-        평타에는 안 뜬다. 평타는 계속 맞는 것이라 표적이 늘 켜져 있게 되고,
-        그러면 아무것도 안 알려 주면서 화면만 시끄러워진다.
+        같은 그림을 **붉게 한 장 겹치고** 투명도만 굴린다. 자세가 바뀌면
+        붉은 쪽도 같이 바뀌므로 늘 정확히 이 사람의 윤곽이고, 자리를 하나도
+        더 안 먹는다.
+
+        평타에도 뜬다 — 짧게(240ms) 한 번이라 "늘 붉은 사람" 이 되지 않는다.
+        우두머리 특수기(`struck`)만 길게 세 번 깜빡여서, 넷이 다 깜빡이면
+        전원기고 하나만 깜빡이면 그 사람만 맞은 것으로 읽힌다.
       */}
-      <StruckMark nonce={struck} name={struckName} size={size} />
+      <HurtTint nonce={hurtNo} hard={struck} size={size}>
+        <Sprite
+          set={ch.id}
+          name={frame}
+          size={size}
+          tint={BAD_C}
+          style={{ transform: [{ translateY: Math.round(size * spriteGap(ch.id, frame)) }] }}
+          fallbackSet="duel"
+          fallbackName={SK_FALLBACK[frame] ?? CUT_FALLBACK[frame] ?? frame}
+        />
+      </HurtTint>
 
       {/*
         맞은 숫자 — **머리 바로 위**에서 뜬다.
@@ -1178,7 +1194,6 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.noCharge === b.noCharge
   && a.costSeq === b.costSeq
   && a.struck === b.struck
-  && a.struckName === b.struckName
   && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge
