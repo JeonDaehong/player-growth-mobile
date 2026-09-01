@@ -360,20 +360,50 @@ STYLE (strict):
 
 VERTICAL COMPOSITION — this is a PHONE wallpaper, 9:16 portrait (tall).
 
-- The frame is TALL, not wide. Build the picture UP AND DOWN. Where the scene
-  description says something "runs away into the distance" or "stretches across the
-  floor", stage that as DEPTH climbing the frame, never as width crossing it.
-- FULL FIGURE, or three-quarter at the very least — head to foot is best. A tall frame
-  cropped at the chest throws away its whole lower half, which is the reason to shoot
-  portrait in the first place.
-- She stands (or kneels, or sits) so that her head sits near the UPPER THIRD line and
-  her feet near the bottom. Above her head is the place itself — ceiling, sky, canopy,
-  high window — and it stays quiet.
-- KEEP THE TOP AND BOTTOM STRIPS QUIET. A phone puts a clock across the top and a home
-  bar across the bottom. Nothing that must be read — her face above all — goes there.
-- Nothing important touches the left or right edge. The frame is narrow, so a prop
-  running off the side reads as CUT, not as continuing past the edge.
-- One figure only. No second character, no crowd, no inset panel.
+THREE BANDS, TOP TO BOTTOM. Fill all three; a tall frame fails when one of them is
+empty wall.
+
+  TOP THIRD     THE PLACE ABOVE HER — ceiling, sky, canopy, chandeliers, high
+                windows, the hole where the roof was. It carries the light source
+                and it stays quiet. Her face is never up here.
+  MIDDLE THIRD  HER — head, torso, hands, and whatever she is holding. This band
+                is the reason for the picture.
+  BOTTOM THIRD  THE GROUND, coming TOWARD the viewer — floor, stumps, ash, spilled
+                things, her own shadow. It is nearest, so it is largest.
+
+FULL FIGURE, head to foot. Kneeling, sitting and half-turned are all fine — what
+matters is that her feet are in frame and that the space above her head is the
+PLACE, not blank wall. A tall frame cropped at the chest throws away its own lower
+half, which is the only reason to shoot portrait.
+
+TURN EVERY WIDE IDEA INTO A DEEP ONE. The scene below may describe things in
+horizontal language — a long table, rows running away, a long shadow thrown across
+the floor, a hall stretching out. In a narrow frame none of that fits sideways.
+Stage each of them along the DEPTH axis instead:
+
+  "runs away into the distance"    -> it recedes UP the frame and shrinks
+  "a long table / a long aisle"    -> it points INTO the picture, not across it
+  "throws a long shadow"           -> the shadow reaches DOWN toward the viewer
+  "stretches across the floor"     -> the floor itself climbs from the bottom edge
+
+VERTICAL LINES ARE FREE HEIGHT. If she is holding, planting or leaning on something
+long — a sword, a bow, a stave, a censer chain — stand it UPRIGHT and let it run
+through two of the three bands. One strong vertical is worth more than any amount
+of detail in a frame this shape.
+
+KEEP THE TOP AND BOTTOM STRIPS QUIET. A phone puts a clock across the top eighth
+and a home bar across the bottom eighth. Nothing that must be read goes there —
+her face above all.
+
+Nothing important touches the left or right edge. The frame is narrow, so a prop
+running off the side reads as CUT, not as continuing past the edge.
+
+One figure only. No second character, no crowd, no inset panel.
+
+VERTICAL STAGING FOR THIS SCENE — how the three bands are filled here:
+TOP: the chapel goes UP. Two or three tall narrow windows rise out of the top of the frame, and one shaft of light comes down through them at a steep angle onto her. Banners hang vertically beside them. The ribbed ceiling is implied at the very top and left dark.
+MIDDLE: her, kneeling on one knee, three-quarter view. THE GREATSWORD IS THE SPINE OF THE PICTURE — planted point-down in front of her, it stands upright through the middle band and its pommel reaches to her bowed head. Draw it dead vertical, not angled.
+BOTTOM: the stone floor comes toward the viewer. The shaft of light lands as a bright patch that reaches DOWN out of the bottom of the frame, with the flagstone joints running into it. Her trailing skirt and half-cape spread across this band.
 
 CHARACTER CONSISTENCY — if a reference image is attached, match it exactly. Treat the written description above as a checklist against that reference, not as licence to redesign. Keep every asymmetric detail on the stated side: the half-cape is pinned at her RIGHT shoulder and nowhere else.
 

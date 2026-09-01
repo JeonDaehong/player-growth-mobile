@@ -1032,6 +1032,20 @@ CHARS = [
             'oath, or just after one. The light falls from a high window onto her '
             'shoulders and the top of the blade.'
         ),
+        'stack': (
+            'TOP: the chapel goes UP. Two or three tall narrow windows rise out of '
+            'the top of the frame, and one shaft of light comes down through them at '
+            'a steep angle onto her. Banners hang vertically beside them. The ribbed '
+            'ceiling is implied at the very top and left dark.' + NL
+            + 'MIDDLE: her, kneeling on one knee, three-quarter view. THE GREATSWORD '
+            'IS THE SPINE OF THE PICTURE — planted point-down in front of her, it '
+            'stands upright through the middle band and its pommel reaches to her '
+            'bowed head. Draw it dead vertical, not angled.' + NL
+            + 'BOTTOM: the stone floor comes toward the viewer. The shaft of light '
+            'lands as a bright patch that reaches DOWN out of the bottom of the '
+            'frame, with the flagstone joints running into it. Her trailing skirt '
+            'and half-cape spread across this band.'
+        ),
         'mood': (
             'Reverent and still. Not a battle image and not a pin-up — this is the '
             'quietest moment of her life, and the picture should feel like holding '
@@ -1087,6 +1101,19 @@ CHARS = [
             'of a long banquet table with one boot up on it, the axe laid across her lap, '
             'holding a glass she has not drunk from. Light comes down hard from the '
             'chandeliers and throws her shadow long across the wrecked floor.'
+        ),
+        'stack': (
+            'TOP: three or four chandeliers hang DOWN into the frame at different '
+            'heights, the nearest largest and cut by the top edge, the furthest small '
+            'and high. They are the light and they fill the whole top band.' + NL
+            + 'MIDDLE: her, sitting sideways on the near end of the banquet table, '
+            'one boot up. THE TABLE POINTS INTO THE PICTURE — it recedes away from '
+            'the viewer and narrows as it goes, so it reads as long without crossing '
+            'the frame. The axe lies across her lap, its haft angled to echo the '
+            'table\'s recession. The raised glass is her one vertical.' + NL
+            + 'BOTTOM: the wrecked floor comes toward the viewer — an overturned '
+            'chair on its side, glasses, confetti scattered largest at the very '
+            'bottom. Her shadow reaches DOWN out of the bottom edge, not sideways.'
         ),
         'mood': (
             'Loud night, quiet morning. She is grinning but the room behind her is ruined, '
@@ -1145,6 +1172,20 @@ CHARS = [
             'fingers but not nocked, looking back at the standing trees. Low sun rakes '
             'across the stumps and throws a long grid of shadows.'
         ),
+        'stack': (
+            'TOP: the few surviving tall trees, small and pale in mist at the top of '
+            'the frame, with the low sun behind them. Nothing else — this band is '
+            'what she is looking at.' + NL
+            + 'MIDDLE: her, standing among the stumps, bow held loose at her side and '
+            'turned to look back and up toward the trees. THE BOW STANDS UPRIGHT '
+            'beside her, running from the middle band down into the bottom one.' + NL
+            + 'BOTTOM: THE STUMPS COME TOWARD THE VIEWER, not across. Rows of cut '
+            'stumps recede UP the frame from the bottom edge, smallest and mistiest '
+            'near her feet, largest and sharpest at the very bottom where one is cut '
+            'by the frame edge. Their shadows all reach DOWN toward the viewer and '
+            'lengthen as they come. The empty ground takes more of the picture than '
+            'she does.'
+        ),
         'mood': (
             'Still and unsentimental. Not grief and not defiance — she is counting what is '
             'left. The empty ground should take up more of the picture than she does.'
@@ -1199,6 +1240,19 @@ CHARS = [
             'viewer, half-turned to look back over her shoulder, swinging the censer at her '
             'side so that a bright arc of light hangs in the ash behind her. Everything is '
             'grey except that arc.'
+        ),
+        'stack': (
+            'TOP: the missing roof — open grey sky between broken rafters, with ash '
+            'drifting up into it. This band is the brightest thing in the picture '
+            'apart from the censer arc, and it is empty on purpose.' + NL
+            + 'MIDDLE: her, walking away up the aisle, half-turned to look back over '
+            'her shoulder at the viewer. Behind and beside her the swung censer '
+            'leaves ONE bright arc hanging in the ash — the only white in the frame. '
+            'The censer chain hangs vertically from her hand.' + NL
+            + 'BOTTOM: THE AISLE COMES TOWARD THE VIEWER. It runs from her feet down '
+            'and out of the bottom edge, widening as it comes, with burnt pews '
+            'flanking it — nearest ones large and cut by the frame, far ones small. '
+            'Ash lies over them like snow.'
         ),
         'mood': (
             'Gentle and slightly frightening at once. She is the only source of light in a '
@@ -1372,6 +1426,8 @@ def page(c):
         'MOOD: ' + c['mood'],
         ILLUST_STYLE,
         PORTRAIT,
+        'VERTICAL STAGING FOR THIS SCENE — how the three bands are filled here:\n'
+        + c['stack'],
         'CHARACTER CONSISTENCY — if a reference image is attached, match it exactly. '
         'Treat the written description above as a checklist against that reference, '
         'not as licence to redesign. Keep every asymmetric detail on the stated side: '
