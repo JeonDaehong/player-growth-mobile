@@ -3081,6 +3081,34 @@
       ]
     },
     {
+      "file": "21-25.jpg",
+      "name": "bg_chapter",
+      "grid": [
+        1,
+        1
+      ],
+      "append": true,
+      "allowFilled": true,
+      "note": "우화하는 군체들의 침식지 배경 (docs/FOE_BG_PROMPTS.md). 검은 바탕에 흰 그림으로 제대로 왔다 — 뒤집지 않는다",
+      "labels": [
+        "05"
+      ]
+    },
+    {
+      "file": "26-30.jpg",
+      "name": "bg_chapter",
+      "grid": [
+        1,
+        1
+      ],
+      "append": true,
+      "allowFilled": true,
+      "note": "침식이 끝난 군체의 둥지 배경 (docs/FOE_BG_PROMPTS.md). 벌집이 하늘을 덮은 장이다 — 위쪽 격자가 두꺼우므로 채움률 경고가 나도 정상",
+      "labels": [
+        "06"
+      ]
+    },
+    {
       "file": "pb_creeper.jpg",
       "name": "pb_creeper",
       "region": [
@@ -3666,13 +3694,18 @@
       "file": "status-4.jpg",
       "name": "status_icon",
       "expect": [
-        1,
+        4,
         1
       ],
       "append": true,
-      "note": "상태 효과 로고 D장 — 도발 한 칸 (docs/STATUS_ICON_PROMPTS.md). 이졸데의 도발이 생기면서 하나만 늘었다 — 앞의 열둘을 다시 뽑을 이유가 없어 한 칸만 덧붙인다",
+      "note": "상태 효과 로고 D장 — 도발 (docs/STATUS_ICON_PROMPTS.md). 한 칸만 부탁했는데 넉 칸짜리 띠로 와서, 첫 칸만 쓰고 나머지 셋은 버린다 (2·3·4번은 사양에 없는 그림이다)",
       "labels": [
         "st_taunt"
+      ],
+      "drop": [
+        2,
+        3,
+        4
       ]
     },
     {
