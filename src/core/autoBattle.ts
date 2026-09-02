@@ -229,13 +229,16 @@ export interface FoeKind {
    */
   def?: number;
   /**
-   * 우두머리 자리에 서지만 **작게 그리는** 놈 (26판 폭탄 애벌레).
+   * 우두머리 자리에 서지만 **작게 그리는** 놈. 안 적으면 1 (그대로).
    *
    * 자리 계산은 안 건드린다 — 줄의 폭과 간격은 판이 정한 하나의 값에서
    * 나오므로 (`BOSS_W`), 마리마다 다르게 하면 배치가 통째로 흔들린다.
    * 그리는 크기만 줄인다.
+   *
+   * 셋이 쓴다. 반으로 갈라진 지네는 **반 마리**이므로 0.62, 허물을 벗은
+   * 분신은 본체보다 옅은 것이라 0.82, 소환된 애벌레는 0.5 다.
    */
-  small?: boolean;
+  scale?: number;
   /**
    * 이 놈이 쓸 **기본 자세 칸**. 안 적으면 `idle` 이다.
    *
@@ -796,8 +799,8 @@ export interface ForkPart {
   pose?: string;
   /** 다른 시트를 쓰나 (26판 애벌레는 `sw_bomb` 이다) */
   art?: string;
-  /** 우두머리보다 작게 그리나 — 소환물은 작다 */
-  small?: boolean;
+  /** 그리는 크기 배수 (1 이면 우두머리 크기 그대로) */
+  scale?: number;
   /** 공격속도 배수 */
   spd?: number;
   /** 평타만 쓰나 — 특수기를 통째로 뗀다 */
@@ -866,6 +869,14 @@ export interface ShieldGim extends GimBase {
   pct: number;
   /** 버티는 시간 (ms) */
   ms: number;
+  /**
+   * 막을 두르는 동안 쓸 **그림 칸.**
+   *
+   * 22판 벌과 29판 동충하초 둘 다 시트에 `skill1` 이 있다 — 기를 모으는
+   * 자세다. 그걸 안 쓰면 막을 둘렀는데 평소처럼 서 있어서, 화면에서
+   * 벌어지는 일이 붉은 막대 한 줄뿐이 된다.
+   */
+  pose?: string;
   /** 못 깼을 때 */
   fail: FailBlast | FailCharm;
 }
@@ -913,12 +924,16 @@ export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
     at: 0.50,
     keep: false,
     parts: [
-      { name: '센티페다의 머리', pct: 0.5, of: 'left', pose: 'split_head' },
+      {
+        name: '센티페다의 머리', pct: 0.5, of: 'left', pose: 'split_head', scale: 0.62,
+      },
       {
         name: '센티페다의 꼬리',
         pct: 0.5,
         of: 'left',
         pose: 'split_tail',
+        /* 반 마리씩이다 — 둘 다 본체 크기로 그리면 화면에 안 들어간다 */
+        scale: 0.62,
         spd: 2,
         dumb: true,
       },
@@ -933,6 +948,7 @@ export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
     at: null,
     pct: 0.18,
     ms: 5000,
+    pose: 'skill1',
     fail: { kind: 'blast', pct: 0.50, stun: 3 },
   }],
   23: [{
@@ -974,7 +990,7 @@ export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
       pct: 0.05,
       of: 'max' as const,
       art: 'sw_bomb',
-      small: true,
+      scale: 0.5,
       dumb: true,
       fuse: 5000,
       blast: 0.25,
@@ -995,6 +1011,7 @@ export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
     at: 0.50,
     pct: 0.15,
     ms: 5000,
+    pose: 'skill1',
     fail: { kind: 'charm', sec: 5 },
   }],
   30: [{
@@ -1005,7 +1022,7 @@ export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
     at: 0.50,
     /* 본체는 그대로 남는다 — 21판과 다른 점이 이것뿐이다 */
     keep: true,
-    parts: [{ name: '환영 분신', pct: 0.25, of: 'max' }],
+    parts: [{ name: '환영 분신', pct: 0.25, of: 'max', scale: 0.82 }],
   }],
 };
 
@@ -1047,6 +1064,15 @@ interface GimCtx {
   taken: number;
   hurtId: string | null;
   fell: string | null;
+  /**
+   * **무언가 크게 터진 횟수** (`BattleState.burst`).
+   *
+   * 막이 못 깨져 터질 때와 우화가 터질 때 하나씩 오른다. 화면은 숫자가
+   * 오르는 것만 보고 무대에 파동을 한 번 그린다 — 무엇이 터졌는지는 안
+   * 나눈다. 둘 다 "지금 큰 게 왔다" 하나만 말하면 되고, 나누기 시작하면
+   * 판마다 다른 연출을 들고 다녀야 한다.
+   */
+  burst: number;
   rand: () => number;
 }
 
@@ -1114,7 +1140,7 @@ function forkInto(cx: GimCtx, src: FoeSlot, kind: Foe, gim: ForkGim): FoeSlot[] 
       spd: kind.spd * (part.spd ?? 1),
       art: part.art ?? kind.art,
       pose: part.pose ?? kind.pose,
-      small: part.small,
+      scale: part.scale,
       patterns: part.dumb ? [] : kind.patterns,
       /* 성질은 본체만 갖는다 — 분신까지 반사하고 회복하면 두 배가 된다 */
       passive: undefined,
@@ -1232,7 +1258,9 @@ function runGim(cx: GimCtx): void {
       const left = gim.shieldMs - TICK_MS;
       if ((gim.shield ?? 0) <= 0) {
         /* 깼다 — 아무 일도 안 일어난다. 그게 상이다 */
-        gim = { ...gim, shield: undefined, shieldMs: undefined, still: undefined };
+        gim = {
+          ...gim, shield: undefined, shieldMs: undefined, still: undefined, form: undefined,
+        };
       } else if (left <= 0) {
         const sg = gims.find((x): x is ShieldGim => x.kind === 'shield');
         if (sg?.fail.kind === 'blast') blastAll(cx, sg.fail.pct, sg.fail.stun ?? 0);
@@ -1242,7 +1270,11 @@ function runGim(cx: GimCtx): void {
             who: cx.line.filter((c) => (cx.hp[c.id] ?? 0) > 0).map((c) => c.id),
           };
         }
-        gim = { ...gim, shield: undefined, shieldMs: undefined, still: undefined };
+        gim = {
+          ...gim, shield: undefined, shieldMs: undefined, still: undefined, form: undefined,
+        };
+        /* 터졌다 — 화면이 이 번호를 보고 파동을 한 번 그린다 */
+        cx.burst += 1;
       } else {
         gim = { ...gim, shieldMs: left };
       }
@@ -1294,6 +1326,8 @@ function runGim(cx: GimCtx): void {
           gim = {
             ...gim, charge: undefined, still: undefined, form: ig.pose, atkMul: ig.atkUp,
           };
+          /* 우화도 터지는 것이다 — 막이 터질 때와 같은 파동을 쓴다 */
+          cx.burst += 1;
         }
       } else {
         gim = { ...gim, charge: left };
@@ -1342,6 +1376,8 @@ function runGim(cx: GimCtx): void {
             ...gim,
             shield: Math.max(1, Math.round(kind.hp * gm.pct)),
             shieldMs: gm.ms,
+            /* 기를 모으는 자세로 선다 — 화면이 이 칸을 그대로 쓴다 */
+            form: gm.pose,
             still: true,
           };
         }
@@ -1370,6 +1406,17 @@ function runGim(cx: GimCtx): void {
  *
  * 판이 **최대 몇 마리까지 될 수 있나**로 잡으면 처음부터 끝까지 같은 값이다.
  */
+/*
+  ⚠ 화면은 이제 이걸 안 쓴다.
+
+  자리를 미리 비워 두면 **서 있지도 않은 놈 몫까지 줄이 넓어져서** 우두머리가
+  아군 쪽으로 끌려오고 인물이 겹쳤다 (`BattleView` 의 `cap`). 지금은 서 있는
+  만큼만 잡는다.
+
+  남겨 두는 이유는 검사가 이걸로 "조각이 네 자리에 들어가나" 를 보기 때문이다
+  (`scratchpad/bossfx-test.js`). 다섯으로 갈라지는 우두머리를 적으면 한 마리가
+  화면 밖에 서는데, 그건 굴려 보기 전에는 안 보인다.
+*/
 export function bossRoom(stage: number): number {
   let most = 1;
   for (const g of gimmicksOf(stage)) {
@@ -2684,6 +2731,16 @@ export interface BattleState {
    */
   cut: Record<string, number>;
   /**
+   * **무언가 크게 터진 횟수.**
+   *
+   * 22·29판의 막이 못 깨져 터질 때와 25판이 우화하며 터질 때 하나씩 오른다.
+   * 화면은 숫자가 오르는 것만 보고 무대에 파동을 한 번 그린다 (`BattleView`).
+   *
+   * `patSeq` 와 같은 얼개다 — 틱 결과는 다음 그리기 전에 사라지므로, 화면이
+   * 놓치지 않게 **상태에 번호로** 남긴다.
+   */
+  burst: number;
+  /**
    * 아군끼리 싸우는 중인가 (`Charm`). 아니면 `null`.
    *
    * 24판 정신 착란과 29판 포자 감염이 건다. 걸린 사람은 평타로 **다른
@@ -2878,7 +2935,7 @@ export const newBattle = (): BattleState => {
     foes: first.foes, seq: first.seq,
     slain: 0, target: 0, hp: {}, down: 0, spawnIn: 0,
     openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
-    called: false, pat: null, patId: null, patSeq: 0, charm: null,
+    called: false, pat: null, patId: null, patSeq: 0, charm: null, burst: 0,
     hex: {}, cut: {}, bossMs: 0, swingSeq: 0,
     fade: {}, taunt: null, foeHex: {}, foeHeal: { seq: 0, amt: 0 },
     struck: [], costSeq: 0,
@@ -3672,6 +3729,7 @@ export function battleTick(
     곧바로 반영돼야, "갈라졌는데 본체가 한 대 더 쳤다" 가 안 생긴다.
   */
   let charm = st.charm ?? null;
+  let burst = Number.isFinite(st.burst) ? st.burst : 0;
   if (isBoss) {
     const cx: GimCtx = {
       stage: st.stage,
@@ -3687,6 +3745,7 @@ export function battleTick(
       taken,
       hurtId,
       fell,
+      burst,
       rand,
     };
     runGim(cx);
@@ -3696,6 +3755,7 @@ export function battleTick(
     taken = cx.taken;
     hurtId = cx.hurtId;
     fell = cx.fell;
+    burst = cx.burst;
   }
   /*
     돌아선 아군도 시간이 지나면 제정신으로 돌아온다.
@@ -4007,7 +4067,7 @@ export function battleTick(
       pat: pattern ?? st.pat ?? null,
       patId: patId ?? st.patId ?? null,
       patSeq: pattern ? (Number.isFinite(st.patSeq) ? st.patSeq : 0) + 1 : (st.patSeq ?? 0),
-      hex, cut, bossMs, swingSeq, charm,
+      hex, cut, bossMs, swingSeq, charm, burst,
       fade, taunt, foeHex, foeHeal,
       /*
         맞은 사람 명단은 **특수기가 나간 틱에만** 채운다. 안 나간 틱에 지난

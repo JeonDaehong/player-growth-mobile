@@ -53,7 +53,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { Sprite } from '@/ui/Sprite';
-import { WHITE } from '@/ui/theme';
+import { BAD_C, WHITE } from '@/ui/theme';
 
 /** 우두머리 쪽에서 나는 것 */
 export type BossKind = 'swing' | 'ripple' | 'spikes' | 'stench';
@@ -890,6 +890,63 @@ function Stench({ size }: { size: number }) {
   );
 }
 
+/**
+ * ── 기 모으기 ── 막을 두르고 버티는 동안 계속 도는 것.
+ *
+ * 22판 여왕의 황금 장막과 29판 포자 감염. 다른 연출과 **성격이 다르다** —
+ * 나머지는 한 번 터지고 마는 것이라 `nonce` 에 맞춰 한 판 돌면 끝인데,
+ * 이건 "지금 이러고 있는 중" 이라 **끝날 때까지 돈다.**
+ *
+ * 안으로 조여드는 고리다. `Ripple`(밖으로 퍼진다)과 방향이 반대인 것이
+ * 중요하다 — 저쪽은 이미 나간 것이고 이쪽은 **모으는 중**이다. 같은 방향이면
+ * 둘이 같은 일로 보인다.
+ *
+ * 붉다. 이 게임에서 붉은색은 "급하다" 하나만 말하는데 (`BAD_C`), 5초 안에
+ * 깨야 하는 것이 정확히 그것이다. 체력 막대 위의 붉은 겹과 같은 색이라
+ * 둘이 한 가지 일로 읽힌다.
+ */
+export function Charging({ size }: { size: number }) {
+  const t = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.timing(t, {
+      toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true,
+    }));
+    loop.start();
+    return () => { loop.stop(); t.setValue(0); };
+  }, [t]);
+
+  /* 셋이 시차를 두고 조여든다 — 하나면 깜빡이는 것으로 보인다 */
+  const rings = useMemo(() => [0, 0.33, 0.66].map((d) => ({
+    scale: t.interpolate({
+      inputRange: [0, 1], outputRange: [2.4 - d * 0.7, 0.5 - d * 0.15],
+    }),
+    fade: t.interpolate({
+      inputRange: [0, 0.15, 0.8, 1], outputRange: [0, 0.8, 0.5, 0],
+    }),
+  })), [t]);
+
+  const w = size * 1.1;
+  return (
+    <View pointerEvents="none" style={sideBox(size)}>
+      {rings.map((r, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            width: w,
+            height: w * 0.5,
+            borderRadius: w,
+            borderWidth: 2,
+            borderColor: BAD_C,
+            opacity: r.fade,
+            transform: [{ scale: r.scale }],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 /** 우두머리 몸 자리에 얹는 연출 하나 (해일만은 무대 것이라 여기 없다) */
 export function BossSideFx({ kind, size }: { kind: BossKind; size: number }) {
   switch (kind) {
@@ -975,6 +1032,68 @@ export function Tide({ w, h }: { w: number; h: number }) {
         />
       ))}
     </Animated.View>
+  );
+}
+
+/** 터진 파동이 무대를 건너는 데 걸리는 시간 (ms) */
+export const BURST_MS = 620;
+
+/**
+ * ── 터짐 ── 무대 한가운데에서 고리 셋이 크게 퍼진다.
+ *
+ * 막을 못 깼을 때(22·29판)와 우화가 터질 때(25판). 셋 다 **전원이 한꺼번에
+ * 당하는 일**이라 어느 한 사람 위에서는 그릴 수가 없다.
+ *
+ * 해일(`Tide`)과 같은 자리를 쓰는데 규칙이 다르다. 저건 한쪽에서 다른 쪽으로
+ * 지나가는 것이라 아래 절반만 쓰지만, 이건 **한 점에서 퍼지는 것**이라 무대를
+ * 다 쓴다. 대신 **테두리뿐**이라 (속을 안 채운다) 뒤가 다 보인다 — 화면을
+ * 덮는 연출은 안 쓴다는 규칙이 여기서도 산다.
+ */
+export function Burst({ w, h }: { w: number; h: number }) {
+  const { t, on } = useRun(BURST_MS);
+  const rings = useMemo(() => [0, 0.18, 0.36].map((d) => ({
+    scale: t.interpolate({
+      inputRange: [0, d, 1], outputRange: [0.1, 0.1, 2.2], extrapolate: 'clamp',
+    }),
+    fade: t.interpolate({
+      inputRange: [0, d, Math.min(1, d + 0.12), Math.min(1, d + 0.6), 1],
+      outputRange: [0, 0, 0.85, 0.15, 0],
+      extrapolate: 'clamp',
+    }),
+  })), [t]);
+
+  if (!on) return null;
+  const size = Math.max(w, h);
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: w,
+        height: h,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 44,
+      }}
+    >
+      {rings.map((r, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            width: size,
+            height: size * 0.5,
+            borderRadius: size,
+            borderWidth: 3,
+            borderColor: BAD_C,
+            opacity: r.fade,
+            transform: [{ scale: r.scale }],
+          }}
+        />
+      ))}
+    </View>
   );
 }
 

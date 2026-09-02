@@ -181,8 +181,14 @@ export function shotMsOf(dist: number): number {
  * 시트가 들어오는 순간 코드를 안 고치고 바뀐다.
  */
 export function FoeShot({
-  art, size, dist,
-}: { art: string; size: number; dist: number }) {
+  art, size, dist, magic,
+}: {
+  art: string;
+  size: number;
+  dist: number;
+  /** 마법으로 때리는 놈인가 — 날아오는 모양이 갈린다 */
+  magic?: boolean;
+}) {
   const t = useRef(new Animated.Value(0)).current;
   const [on, setOn] = useState(true);
 
@@ -237,12 +243,28 @@ export function FoeShot({
         opacity: fade,
       }}
     >
+      {/*
+        ── 뭘 날리나 ──
+
+        제 시트(`<종>_shot`)가 있으면 그걸 쓴다. 그런데 서른 판을 통틀어
+        그런 시트가 **한 벌도 없다** — 지금까지 모든 원거리 적이 `fx/smoke_1`
+        (동그란 연기 한 덩이)로 떨어지고 있었다.
+
+        연기는 **무엇이 날아오는지를 안 말한다.** 산을 뱉든 실을 던지든 침을
+        쏘든 같은 회색 덩이라, 앞줄과 뒷줄이 다른 일을 하고 있다는 것이 화면에
+        안 나온다.
+
+        우두머리 것으로 받아 둔 시트 둘을 나눠 쓴다 (`bfx_*`) — 마법으로
+        때리는 놈은 **덩이**를, 물리로 때리는 놈은 **가시**를 날린다. 피해
+        종류와 날아오는 모양이 같은 말을 하므로, 마저를 올려야 할 판인지가
+        눈으로 읽힌다.
+      */}
       <Sprite
         set={`${art}_shot`}
         name="shot_1"
         size={size * 0.5}
-        fallbackSet="fx"
-        fallbackName="smoke_1"
+        fallbackSet={magic ? 'bfx_glob' : 'bfx_thorn'}
+        fallbackName="1"
         flip
       />
     </Animated.View>

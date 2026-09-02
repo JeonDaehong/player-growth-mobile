@@ -31,7 +31,7 @@ import { Animated, Easing, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  MOB_CAP, STAGE_MS, bossReady, bossRoom, fightHeld, foeAt as kindAt, foeHexOf, foeOf,
+  BOSS_SKILLS, MOB_CAP, STAGE_MS, bossReady, fightHeld, foeAt as kindAt, foeHexOf, foeOf,
   healPlan, pickAim,
   RAGE_MS, rageIn, raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
@@ -50,8 +50,8 @@ import { BAD_C, BORDER, SP, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
-  BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, FxPlan, ShotKind, Tide,
-  blowFx, castFx, useLeap,
+  BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, Burst, Charging, FxPlan,
+  ShotKind, Tide, blowFx, castFx, useLeap,
 } from './BossFx';
 import {
   BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, MarkNotes,
@@ -670,6 +670,8 @@ export function BattleView() {
   const [shots, setShots] = useState<
     {
       key: number; art: string; x: number; y: number; size: number; dist: number;
+      /** 마법으로 때리는 놈인가 — 날아오는 모양이 갈린다 (`FoeShot`) */
+      magic?: boolean;
       /**
        * 우두머리가 날린 것이면 그 종류 (`BossFx`). 없으면 뒷줄 잡몹이 뱉은
        * 것이라 제 그림을 줄여 날린다 (`FoeShot`).
@@ -821,7 +823,18 @@ export function BattleView() {
     */
     const plan = castFx(battle.patId ?? null);
     casting.current = !!plan.leap;
-    castLead.current = fireRef.current(plan, battle.struck ?? []);
+    /*
+      명단이 비어 있으면 **살아 있는 사람 전부**에 건다.
+
+      `struck` 은 특수기가 나간 틱에만 채워지는데, 저장본을 이어서 켠 직후처럼
+      아직 못 받은 순간이 있다. 그때 빈 배열을 그대로 넘기면 몸 위 연출이
+      한 사람도 안 뜬다 — 판이 시작되고 **첫 특수기만** 아무 일도 안 일어나는
+      것이 그것이었다.
+    */
+    const on = (battle.struck ?? []).length
+      ? battle.struck
+      : members(party, chars).filter((c) => hpOf(c, battle.hp) > 0).map((c) => c.id);
+    castLead.current = fireRef.current(plan, on);
     /* 치우고 나간다 — 화면을 떠난 뒤에 상태를 건드리면 안 된다 */
     const off = setTimeout(() => setPatShown(false), FOE_BEAT_MS + 300);
     return () => clearTimeout(off);
@@ -889,6 +902,22 @@ export function BattleView() {
 
   /** 지금 광폭화 중인가 — 붉게 물들고 두 배로 때린다 (`core/autoBattle`) */
   const rage = raging(battle);
+
+  /**
+   * 방금 나간 기술이 시트의 몇 번째 칸인가 (`skill1` · `skill2`).
+   *
+   * 기술이 둘인 우두머리가 넷이다 (10 · 20 · 26 · 30판). 시트에도 칸이 둘씩
+   * 들어와 있는데 화면이 늘 `skill1` 만 써서, 어느 것을 써도 같은 자세가
+   * 나왔다 — 받아 둔 그림이 절반 놀고 있었던 셈이다.
+   *
+   * 못 찾으면 `skill1` 이다. 없는 칸을 부르면 `Sprite` 가 대체 그림으로
+   * 떨어지므로 (`fallbackSet`), 틀리게 부르는 것보다 첫 칸이 낫다.
+   */
+  const bossSkillFrame = React.useMemo(() => {
+    const list = BOSS_SKILLS[battle.stage] ?? [];
+    const at = list.findIndex((x) => x.id === battle.patId);
+    return at > 0 ? `skill${at + 1}` : 'skill1';
+  }, [battle.stage, battle.patId]);
 
   const [bossCall, setBossCall] = useState(0);
   const wasBoss = useRef(battle.boss);
@@ -1309,10 +1338,13 @@ export function BattleView() {
       싸울 때 그동안의 변화가 통째로 "방금 맞은 것" 으로 뜬다.
     */
     const hurt: [string, number][] = [];
+    /* 살아 있는 사람들 — 누가 아팠는지 모를 때 연출을 걸 자리다 */
+    const livingIds: string[] = [];
     for (const c of members(party, chars)) {
       const now = hpOf(c, battle.hp);
       const was = prevHp.current[c.id];
       if (was !== undefined && now < was) hurt.push([c.id, Math.round(was - now)]);
+      if (now > 0) livingIds.push(c.id);
       prevHp.current[c.id] = now;
     }
     /*
@@ -1342,7 +1374,7 @@ export function BattleView() {
     const cast = patNow !== prevPatHp.current;
     prevPatHp.current = patNow;
 
-    if (empty || down || !hurt.length) return undefined;
+    if (empty || down) return undefined;
 
     const late: ReturnType<typeof setTimeout>[] = [];
     const after = (ms: number, fn: () => void) => { late.push(setTimeout(fn, ms)); };
@@ -1356,12 +1388,25 @@ export function BattleView() {
     /*
       ── 이번에 아프게 한 것이 무엇인가 ──
 
-      특수기면 위에서 재 둔 값을 그대로 쓰고, 평타면 여기서 불을
-      붙인다. 잡몹은 표가 없으므로 0 이라, 예전처럼 바로 숫자가 뜼다.
+      특수기면 위에서 잰 값을 그대로 쓰고, 평타면 여기서 불을 붙인다. 잡몹은
+      표가 없으므로 0 이라, 예전처럼 바로 숫자가 뜬다.
+
+      ## 아무도 안 아파도 연출은 한다
+
+      한동안 이 갈래가 **누군가 아팠을 때만** 돌았다 (`!hurt.length` 면 그
+      자리에서 돌아섰다). 그런데 우두머리가 휘둘렀는데 아무도 안 아픈 경우가
+      실제로 있다 — 전부 빗나갈 만큼 방어가 두껍거나, 맞은 사람이 그 틱에
+      회복을 같이 받아 체력이 안 줄었거나, 앱을 막 켜서 **비교할 지난 값이
+      없을 때**다. 마지막 것이 "껐다 켜면 첫 공격에 아무것도 안 보인다" 였다.
+
+      연출은 아픈 것과 별개다. 휘둘렀으면 휘두른 것이 보여야 한다.
     */
+    const who = hurt.length ? hurt.map(([id]) => id) : livingIds;
     const lead = !battle.boss ? 0
       : cast ? castLead.current
-        : (swung ? fireRef.current(blowFx(battle.stage), hurt.map(([id]) => id)) : 0);
+        : (swung ? fireRef.current(blowFx(battle.stage), who) : 0);
+
+    if (!hurt.length) return () => late.forEach(clearTimeout);
 
     /*
       뒷줄은 **뭔가를 날린다.**
@@ -1440,7 +1485,7 @@ export function BattleView() {
         return next;
       });
       if (at <= 0) put();
-      else fxT.current.push(setTimeout(put, at));
+      else fxT.current = [...fxT.current.slice(-40), setTimeout(put, at)];
     }
     if (!plan.shot) return plan.lead;
 
@@ -1470,9 +1515,16 @@ export function BattleView() {
     setShots((old) => [...old.slice(-5), ...made]);
     /* 제일 먼 것이 닿을 때까지가 이 공격의 `lead` 다 */
     const reach = Math.max(...made.map((m) => m.ms));
-    fxT.current.push(setTimeout(() => {
+    /*
+      **마흔 개까지만 들고 있는다.**
+
+      이미 터진 시계의 번호를 `clearTimeout` 해 봐야 아무 일도 안 하지만,
+      목록이 끝없이 자라면 한 시간 켜 둔 판에서 수천 개가 쌓인다. 치우는
+      것은 화면을 떠날 때 한 번뿐이라 그때까지 안 준다.
+    */
+    fxT.current = [...fxT.current.slice(-40), setTimeout(() => {
       setShots((old) => old.filter((x) => !made.some((m) => m.key === x.key)));
-    }, reach + 80));
+    }, reach + 80)];
     return reach;
   };
 
@@ -1500,9 +1552,12 @@ export function BattleView() {
       .map(({ f, b }, i) => {
         const sp = spotOf(b);
         const to = marks.length ? marks[i % marks.length] : 0;
+        const kf = kindAt(battle, f);
         return {
           key: hitSeq.current++,
-          art: kindAt(battle, f).art,
+          art: kf.art,
+          /* 마법으로 때리는 놈은 덩이를, 물리는 가시를 날린다 (`FoeShot`) */
+          magic: kf.dmg === 'magic',
           x: sp.x, y: sp.y, size: sp.size,
           dist: Math.max(20, Math.round(sp.x - allyRightOf(to))),
         };
@@ -1550,13 +1605,19 @@ export function BattleView() {
    * `FoeSlot.pos`).
    */
   /*
-    우두머리 판도 자리가 여럿일 수 있다 (`bossRoom`).
+    ── 우두머리 줄이 잡는 자리 ──
 
-    21판은 반으로 갈라지고, 26판은 죽으면서 애벌레 넷을 남기고, 30판은
-    분신을 만든다. **서 있는 마릿수가 아니라 최대 마릿수**로 잡는다 — 마릿수로
-    잡으면 하나 죽을 때마다 줄 폭이 줄어 남은 놈들이 통째로 앞으로 당겨진다.
+    한동안 그 판이 **최대 몇 마리까지 될 수 있나**로 잡았다 (`bossRoom`).
+    자리가 안 밀린다는 장점은 있었는데, **서 있지도 않은 놈 자리를 미리
+    비워 두는** 값이라 21판(둘)과 26판(넷)에서 우두머리가 아군 쪽으로 한참
+    끌려와 인물이 통째로 겹쳤다. 132px 짜리 두 자리에 파티 넷을 얹으면
+    360px 무대에 137px 이 모자란다.
+
+    지금 **서 있는 만큼**만 잡는다. 갈라지는 순간 줄이 한 번 넓어지지만,
+    잡몹처럼 계속 죽고 나는 자리가 아니라 판마다 한두 번뿐이라 눈에 덜
+    거슬린다 — 늘 겹쳐 있는 것보다 훨씬 낫다.
   */
-  const cap = cur.boss ? bossRoom(battle.stage) : MOB_CAP;
+  const cap = cur.boss ? Math.max(1, battle.foes.length) : MOB_CAP;
   const closeIn = closeInFor(stageW, line.length, cap, cur.boss);
   /**
    * 그 자리의 아군이 적 앞줄까지 가려면 몇 px 을 더 가야 하나.
@@ -2095,10 +2156,21 @@ export function BattleView() {
                   제 모습으로 돌아와야 한다.
                 */
                 const rest = f.gim?.form ?? kf.pose ?? 'idle';
+                /*
+                  ── 기술 칸도 **몇 번째 기술이냐**를 따라간다 ──
+
+                  `skill1` 로 못 박혀 있었다. 그런데 26판 피로스와 30판 바알은
+                  기술이 둘이고 시트에도 `skill1`·`skill2` 가 다 들어와 있다 —
+                  둘 중 어느 것을 써도 같은 자세가 나오고 있었다.
+
+                  우화한 뒤에는 `imago_skill` 이다 (25판). 몸이 통째로 바뀌었는데
+                  기술만 옛 몸으로 나가면 그 순간 딴 놈이 된다.
+                */
+                const swingFrame = f.gim?.form === 'imago' ? 'imago_skill' : bossSkillFrame;
                 const foeFrame = flinch.includes(back) && !down ? 'down'
                   /* 고치 · 기 모으기 · 막 두르기 중에는 안 휘두른다 */
                   : (foeSwing && !f.gim?.still)
-                    ? (battle.boss && patShown ? 'skill1' : 'attack')
+                    ? (battle.boss && patShown ? swingFrame : 'attack')
                     : rest;
                 const bossOne = battle.boss && back === 0;
                 /*
@@ -2224,6 +2296,15 @@ export function BattleView() {
                     {bossOne && !!bossFx && (
                       <BossSideFx key={bossFx.no} kind={bossFx.kind} size={foeSize} />
                     )}
+
+                    {/*
+                      ── 막을 두르고 버티는 중 ── 22 · 29판.
+
+                      다른 연출과 달리 **끝날 때까지 돈다.** 저것들은 한 번
+                      터지고 마는 것이라 번호에 맞춰 한 판 돌면 되는데, 이건
+                      "지금 이러고 있다" 라 그동안 계속 보여야 한다.
+                    */}
+                    {(f.gim?.shield ?? 0) > 0 && <Charging size={foeSize} />}
 
                     <FoeMarks status={fMarks} />
 
@@ -2359,7 +2440,7 @@ export function BattleView() {
                         우두머리 자리에 서지만 우두머리가 아니다 — 132px 로
                         그리면 넷이 화면을 덮는다.
                       */
-                      size={kf.small ? Math.round(foeSize * 0.5) : foeSize}
+                      size={Math.round(foeSize * (kf.scale ?? 1))}
                       /*
                         **발을 상자 바닥에 맞춘다** (아군과 같은 이유).
 
@@ -2425,7 +2506,7 @@ export function BattleView() {
                 size={sh.size}
               />
             ) : (
-              <FoeShot art={sh.art} size={sh.size} dist={sh.dist} />
+              <FoeShot art={sh.art} size={sh.size} dist={sh.dist} magic={sh.magic} />
             )}
           </View>
         ))}
@@ -2552,6 +2633,17 @@ export function BattleView() {
         */}
         {!down && tideNo > 0 && stageW > 0 && (
           <Tide key={tideNo} w={stageW} h={STAGE_H} />
+        )}
+
+        {/*
+          ── 크게 터졌다 ── 막을 못 깼거나(22 · 29판) 우화했을 때(25판).
+
+          셋 다 **전원이 한꺼번에 당하는 일**이라 어느 한 사람 위에서는 못
+          그린다. 무대 한가운데에서 고리가 퍼진다 — 속이 빈 테두리뿐이라
+          화면을 덮지 않는다.
+        */}
+        {!down && (battle.burst ?? 0) > 0 && stageW > 0 && (
+          <Burst key={battle.burst} w={stageW} h={STAGE_H} />
         )}
 
         {/* 우두머리 등장 — 무대 한가운데. 전멸 안내보다 아래에 둔다 */}

@@ -291,6 +291,7 @@ export function migrateState(persisted: unknown): GameState {
     pat: null,
     patId: null,
     charm: null,
+    burst: 0,
     patSeq: 0,
     /*
       걸려 있던 것도 안 믿는다.
