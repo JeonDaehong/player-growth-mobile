@@ -39,6 +39,7 @@ import {
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
 import type { Mark } from '@/core/passives';
+import { BodyKind, BossBodyFx } from './BossFx';
 import { BAD_C, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import {
@@ -182,7 +183,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
-  live,
+  live, hitNo, hitKind,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -282,6 +283,16 @@ function FighterView({
    * 통째로 알린다 — 판마다 패시브가 새로 붙는 것처럼 보인다.
    */
   live: boolean;
+  /**
+   * 우두머리에게 맞은 횟수 — 오를 때마다 몸 위에서 연출이 한 번 도다.
+   *
+   * 붉은 깜빡임(`HurtTint`)과 따로 둔다. 저건 "맞았다" 하나만 말하고
+   * 어느 판에서든 같은데, 이건 **무엇에** 맞았는지를 말한다 — 암석이
+   * 떨어졌는지 덩쿨에 감겼는지 베였는지.
+   */
+  hitNo: number;
+  /** 그 연출이 무엇인가 (`BossFx` 의 표). 없으면 안 그린다 */
+  hitKind: BodyKind | null;
   /**
    * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
    *
@@ -1058,6 +1069,17 @@ function FighterView({
       <SkillFx kind="cleanse" nonce={purify} size={size} />
 
       {/*
+        ── 우두머리가 무엇으로 쳤나 ──
+
+        번호를 `key` 로 쓴다. 그러면 맞을 때마다 **새로 태워지므로**
+        안에서 "번호가 올랐나" 를 볼 필요가 없고, 도는 중에 또 맞으면
+        앞엣것이 끝까지 돌고 새것이 따로 돌다.
+      */}
+      {!!hitKind && hitNo > 0 && (
+        <BossBodyFx key={hitNo} kind={hitKind} size={size} />
+      )}
+
+      {/*
         ── 맞으면 몸이 붉게 깜빡인다 ──
 
         여기 붉은 네 귀퉁이 표적이 씌워졌었다. 알려 주는 것은 "이 사람이
@@ -1234,6 +1256,8 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   /* 걸려 있는 것이 바뀌었나 — 배열이 아니라 열쇠로 본다 */
   && a.markKey === b.markKey
   && a.live === b.live
+  && a.hitNo === b.hitNo
+  && a.hitKind === b.hitKind
   && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge

@@ -1435,6 +1435,16 @@ export interface BattleState {
    * 이름만 보면 휩쓸기 다음에 또 휩쓸기가 나올 때 안 바뀐 것으로 읽힌다.
    */
   pat: string | null;
+  /**
+   * 그 특수기의 **변하지 않는 이름표** (`BossPattern.id`).
+   *
+   * 이름(`pat`)과 따로 둔다. 저건 화면에 적는 글이라 언제든 바뀔 수
+   * 있고, 실제로 `뻐개기` 같은 한글을 문자열로 비교해 연출을 고르면 이름
+   * 한 글자 고치는 순간 연출이 조용히 사라진다.
+   *
+   * 화면은 이걸로 **무슨 연출을 할지**를 고른다 (`screens/home/BossFx`).
+   */
+  patId: string | null;
   patSeq: number;
   /**
    * 판 시작 연출이 끝나기까지 남은 시간 (ms). 0 이면 평소.
@@ -1676,7 +1686,7 @@ export const newBattle = (): BattleState => {
     foes: first.foes, seq: first.seq,
     slain: 0, target: 0, hp: {}, down: 0, spawnIn: 0,
     openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
-    called: false, pat: null, patSeq: 0,
+    called: false, pat: null, patId: null, patSeq: 0,
     hex: {}, cut: {}, bossMs: 0, swingSeq: 0,
     fade: {}, taunt: null, foeHex: {}, foeHeal: { seq: 0, amt: 0 },
     struck: [], costSeq: 0,
@@ -1750,6 +1760,7 @@ export function enterStage(
     called: false,
     /* 판이 바뀌면 지난 판의 특수기 이름이 남아 있으면 안 된다 */
     pat: null,
+    patId: null,
     /*
       걸려 있던 것도 **판과 함께 걷힌다.**
 
@@ -2512,6 +2523,8 @@ export function battleTick(
 
   /* 이번 틱에 나간 특수기 — 화면이 이름을 띄운다. 여럿이면 마지막 것 */
   let pattern: string | null = null;
+  /* 같은 것의 이름표 — 화면이 연출을 이걸로 고른다 (`patId`) */
+  let patId: string | null = null;
 
   /** 우두머리가 흡혈로 가져간 양 (10판 포식의 점액) */
   let drained = 0;
@@ -2583,7 +2596,7 @@ export function battleTick(
       if (list.length) hex[who2.id] = list;
       else delete hex[who2.id];
     }
-    if (h.pat) pattern = h.pat.name;
+    if (h.pat) { pattern = h.pat.name; patId = h.pat.id; }
   }
 
   /*
@@ -2671,6 +2684,7 @@ export function battleTick(
         나갔다" 를 알아보게 한다.
       */
       pat: pattern ?? st.pat ?? null,
+      patId: patId ?? st.patId ?? null,
       patSeq: pattern ? (Number.isFinite(st.patSeq) ? st.patSeq : 0) + 1 : (st.patSeq ?? 0),
       hex, cut, bossMs, swingSeq,
       fade, taunt, foeHex, foeHeal,

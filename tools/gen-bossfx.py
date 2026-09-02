@@ -212,6 +212,29 @@ FX = [
      'segments themselves.',
      'Two short straight segments left, far apart, one near the top and one near '
      'the bottom of where the bolt was.'),
+
+    # 유일하게 **몸에 붙는** 것이다. 나머지 일곱은 몸에서 떨어져 나온다.
+    ('bfx_bind', '몸을 감는 덩굴', 'playout', [2, 13],
+     'A single loose vine entering from the RIGHT edge, hanging slack in one wide '
+     'lazy curve across the middle of the cell, both ends open. It touches nothing '
+     'and encircles nothing yet.',
+     'The vine has doubled back on itself once, forming ONE open loop in the '
+     'middle of the cell with the slack pulled most of the way out. Three short '
+     'barbs now show along its length.',
+     'THE FULL BINDING. THREE horizontal coils stacked one above another, evenly '
+     'spaced, each a closed flattened ring seen edge-on so it reads as wrapping '
+     'AROUND something rather than lying flat. They are drawn TAUT — every curve '
+     'is tight, nothing sags. The middle coil is the widest, the top and bottom '
+     'ones narrower, so the three together describe a barrel shape. Short hard '
+     'barbs bristle outward all along them. The CENTRE OF EVERY COIL IS EMPTY: '
+     'this effect is drawn over a character, so anything filled in the middle '
+     'hides the person it is binding. This is the only effect in this document '
+     'that must read as a hollow shape.',
+     'The three coils have gone slack and lost their alignment — each has sagged '
+     'into a different open curve, no longer stacked, the barrel shape gone. Still '
+     'three separate lengths of vine.',
+     'Two short curled fragments of vine left, far apart, drifting down and away '
+     'from where the coils were. No loop closed.'),
 ]
 
 KIND = {
@@ -224,9 +247,11 @@ PAGE = """# 보스 공격 이펙트
 
 **이 파일은 자동 생성됩니다** — `python tools/gen-bossfx.py`.
 
-보스 기술 중 **몸에서 떨어져 나와 따로 그려져야 하는 것** 일곱입니다.
-6판 페트로스가 던지는 바위, 3판 아시두스가 뱉는 산성 덩이, 20판 실바누스의
-벼락 같은 것들입니다.
+보스 기술 중 **보스 시트에 못 그리는 것** 여덟입니다. 6판 페트로스가 던지는
+바위, 3판 아시두스가 뱉는 산성 덩이, 20판 실바누스의 벼락 같은 것들입니다.
+
+일곱은 몸에서 **떨어져 나오는** 것이고, 마지막 하나(`bfx_bind`)만 반대로
+**아군 몸에 감기는** 것입니다.
 
 ## 왜 보스 시트에 안 그립니까
 
@@ -242,11 +267,17 @@ PAGE = """# 보스 공격 이펙트
 박아 두었습니다 ([`BOSS_ART_PROMPTS.md`](BOSS_ART_PROMPTS.md)). 그것들을
 여기서 그립니다.
 
-## 일곱뿐입니다
+## 여덟뿐입니다
 
-보스마다 하나씩 만들면 스무 벌인데, 실제로 필요한 것은 일곱입니다 — 가시는
+보스마다 하나씩 만들면 스무 벌인데, 실제로 필요한 것은 여덟입니다 — 가시는
 5판과 11판이 같이 쓰고, 포자는 4판과 14판이 같이 씁니다. 상태 로고와 같은
 이유입니다: **맛이 아니라 하는 일로 묶습니다.**
+
+나머지 열둘은 시트를 안 받습니다. 그어짐 · 찌르기 · 찍힘 · 솟구침 · 휘두름 ·
+파동 · 사방으로 퍼지는 가시 · 해일이 그것인데, 전부 **"선 하나가 자란다 /
+고리가 퍼진다"** 가 본질이라 도형이 오히려 낫습니다 — 2색 시트에는 옅음이
+없어서 저것들을 그리면 흰 얼룩 몇 장이 됩니다
+(`screens/home/BossFx` 머리말에 같은 이야기가 있습니다).
 
 | 이펙트 | 무엇 | 칸 | 쓰는 보스 |
 |---|---|---|---|
@@ -259,6 +290,10 @@ PAGE = """# 보스 공격 이펙트
 | 날아가는 것 | 3칸 | 같은 것이 화면을 가로지르다 사라집니다. 움직이는 것은 게임이 합니다 — 세 칸은 **경로가 아니라 수명**입니다 |
 | 터지는 것 | 5칸 | 한 자리에서 피었다 집니다. 3번 칸이 제일 크고, 그 칸이 실제로 보이는 그림입니다 |
 
+`bfx_bind` 만 **터지는 것인데 속이 비어 있어야** 합니다. 다른 일곱은 빈 곳에
+뜨지만 저건 아군 몸 **위에** 뜨므로, 가운데가 찬 그림이면 감긴 사람이 안
+보입니다. 프롬프트에 그 한 줄을 따로 박아 뒀습니다.
+
 ## 안 만든 것
 
 - **관통 · 방어 무시** 자체 — 그림이 없습니다. 방어를 뚫는다는 것은 숫자에만
@@ -267,8 +302,13 @@ PAGE = """# 보스 공격 이펙트
   `bfx_thorn` 을 씁니다.)
 - **17판 카부스의 공허한 울림** — 소리라 형체가 없습니다. 기존 `fx/glow_1~5`
   (퍼지는 고리)를 쓰면 됩니다.
-- **1·2·7·10·13·16·18·19판** — 전부 몸이 직접 닿는 기술이라 따로 날아가는
-  것이 없습니다.
+- **1·7·10·16·18·19판** — 전부 몸이 직접 닿는 기술이라 따로 날아가는 것이
+  없습니다. 화면에서는 도형으로 그립니다 (`screens/home/BossFx`).
+
+`2·13판`은 이 목록에서 빠져 있었는데, 저 둘은 날아가는 것이 없는 대신
+**아군 몸에 감기는** 것이 있어야 했습니다 — 13판 속박의 덩굴은 행동 불가를
+거는 기술이라, 묶인 그림이 없으면 왜 안 움직이는지가 화면에서 설명되지
+않습니다. `bfx_bind` 가 그 자리입니다.
 
 ---
 %(pages)s"""

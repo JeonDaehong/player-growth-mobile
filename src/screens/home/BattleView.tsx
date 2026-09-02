@@ -47,8 +47,12 @@ import { BAD_C, BORDER, SP, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
+  BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, FxPlan, ShotKind, Tide,
+  blowFx, castFx, useLeap,
+} from './BossFx';
+import {
   BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, MarkNotes,
-  SkillShout, useShake,
+  SkillShout, shotMsOf, useShake,
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
@@ -233,6 +237,15 @@ function rowWidth(count: number, front: number, lap: number): number {
  * 고정 거리로 두면 화면 폭과 무관하게 늘 같은 만큼만 뒤에 선다.
  */
 const RANGED_BACK = Math.round(4 * ZOOM);
+
+/**
+ * 우두머리가 날리는 것의 크기 (px).
+ *
+ * 뜻은 놓의 크기를 안 따른다. 뒷줄 잡몹은 **제 그림을 줄여** 날리므로
+ * (`FoeShot`) 몸집이 그대로 따라가는 게 맞는데, 우두머리는 132px 이라 그
+ * 비율대로 잡으면 **우두머리만 한 덩어리가 하나 더** 날아간다.
+ */
+const BOSS_SHOT_W = Math.round(24 * ZOOM);
 
 /** 뒷줄일수록 덜 나간다 — 같은 줄이 한 점에 겹치지 않게 */
 const DEPTH_STEP = Math.round(8 * ZOOM);
@@ -638,7 +651,16 @@ export function BattleView() {
     날아가던 것은 제 길을 마저 간다.
   */
   const [shots, setShots] = useState<
-    { key: number; art: string; x: number; y: number; size: number; dist: number }[]
+    {
+      key: number; art: string; x: number; y: number; size: number; dist: number;
+      /**
+       * 우두머리가 날린 것이면 그 종류 (`BossFx`). 없으면 뒷줄 잡몹이 뱉은
+       * 것이라 제 그림을 줄여 날린다 (`FoeShot`).
+       */
+      kind?: ShotKind;
+      /** 그것이 나는 데 걸리는 시간 (ms) — 닿는 순간이 곧 아픈 순간이다 */
+      ms?: number;
+    }[]
   >([]);
 
   /*
@@ -681,6 +703,57 @@ export function BattleView() {
   const staging = useStageStaging(battle);
 
   /*
+    ── 우두머리 연출 ──
+
+    스무 우두머리가 화면에서 전부 같아 보였다 — 이름이 뜨고, 앞으로 한 번
+    나왔다 들어가고, 숫자가 뜬다. **암석 낙하에 암석이 없었다.**
+
+    무엇을 그릴지는 표가 안다 (`BossFx` 의 `BOSS_BLOW`·`BOSS_CAST`). 여기는
+    그 표를 읽어 불을 붙이고, **언제 아프게 할지**를 정한다.
+  */
+  /** 맞은 사람 몸 위에서 나는 것 — 사람마다 번호를 따로 센다 */
+  const [bodyFx, setBodyFx] = useState<Record<string, { no: number; kind: BodyKind }>>({});
+  /** 우두머리 몸 자리에서 나는 것 */
+  const [bossFx, setBossFx] = useState<{ no: number; kind: BossKind } | null>(null);
+  /** 무대를 쓸고 지나가는 해일 (10판 하나뿐이다) */
+  const [tideNo, setTideNo] = useState(0);
+  /** 아군 진영으로 뛰어들어 찍기 (1판 하나뿐이다) — 번호와 건너갈 거리 */
+  const [leap, setLeap] = useState({ no: 0, span: 0 });
+  const fxSeq = useRef(0);
+  /*
+    치우는 시계들.
+
+    연출은 스스로 꺼지지만 **날아가는 것**은 목록에서 빼 줘야 한다. 갈래의
+    정리 함수에 맡길 수가 없다 — 이건 갈래가 아니라 함수 안에서 걸리므로,
+    여기 모아 두고 화면을 떠날 때 한꺼번에 끈다.
+  */
+  const fxT = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => { fxT.current.forEach(clearTimeout); fxT.current = []; }, []);
+
+  /**
+   * 연출에 불을 붙이고 **닿기까지 걸리는 시간**을 돌려준다.
+   *
+   * 부르는 쪽은 그 시간만큼 피해 숫자와 붉은 깜빡임을 미룬다. 안 미루면
+   * 암석이 아직 하늘에 있는데 숫자가 먼저 떠서, 암석이 원인이 아니라
+   * 장식으로 보인다.
+   *
+   * 갈래가 아니라 **ref 에 갈아 끼우는 함수**다 (`shotsRef` 와 같은 이유) —
+   * 자리 재는 함수가 렌더마다 바뀌는데, 그걸 갈래의 딸림값에 넣으면 갈래가
+   * 매 렌더 다시 돌아 연출이 두 번씩 난다.
+   */
+  const fireRef = useRef<(plan: FxPlan, ids: readonly string[]) => number>(() => 0);
+
+  /**
+   * 방금 나간 특수기가 **닿기까지** 걸리는 시간 (ms).
+   *
+   * 특수기 갈래가 먼저 돌면서 여기 적어 두면, 뒤에 도는 갈래들(표적 · 피해
+   * 숫자)이 그만큼 미룬다. 갈래 셋이 같은 값을 따로 재면 언젠가 갈린다.
+   */
+  const castLead = useRef(0);
+  /** 이번 특수기가 뛰어드는 것인가 — 그러면 앞으로 나왔다 들어가기(`rush`)를 안 한다 */
+  const casting = useRef(false);
+
+  /*
     우두머리 특수기가 방금 나갔나.
 
     `battle.patSeq` 는 특수기가 나갈 때마다 하나씩 오른다. 이름만 보면
@@ -704,9 +777,27 @@ export function BattleView() {
     lastPat.current = now2;
     setPatCall((n) => n + 1);
     setPatShown(true);
+    /*
+      ── 여기서 연출에 불을 붙인다 ──
+
+      **체력이 닿는 갈래가 아니라 여기여야 한다.** 열아홉 중 여섯은
+      그 자리에서 아무도 안 아프기 때문이다 (즉시 피해 0 — 3·4·8·12·14·15판).
+      체력을 보고 그렸다면 저 여섯은 영영 아무 연출도 안 난다.
+
+      누구에게 난지는 `battle.struck` 이 안다 — 저건 피해가 아니라
+      **노린 사람**을 담은 명단이라 피해가 0 이어도 채워진다.
+    */
+    const plan = castFx(battle.patId ?? null);
+    casting.current = !!plan.leap;
+    castLead.current = fireRef.current(plan, battle.struck ?? []);
     /* 치우고 나간다 — 화면을 떠난 뒤에 상태를 건드리면 안 된다 */
     const off = setTimeout(() => setPatShown(false), FOE_BEAT_MS + 300);
     return () => clearTimeout(off);
+    /*
+      `battle.struck` 은 일부러 뺀다. 특수기가 나간 틱에만 채워지므로
+      (`core/autoBattle`) 번호(`patSeq`)가 바뀌는 그 순간의 값이 곳 이번 명단이다.
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battle.patSeq]);
 
   /*
@@ -725,12 +816,20 @@ export function BattleView() {
     if (at <= lastStruck.current) { lastStruck.current = at; return; }
     lastStruck.current = at;
     const who = battle.struck ?? [];
-    if (!who.length) return;
-    setStruck((old) => {
+    if (!who.length) return undefined;
+    /*
+      **닿는 순간에 씩힌다** (`castLead`).
+
+      암석이 아직 하늘에 있는데 몸이 먼저 붉어지면, 암석은 원인이
+      아니라 뒤따라 떨어지는 장식이 된다. 앞 갈래가 재 둔 값을 그대로
+      쓴다 — 둘이 따로 재면 언젠가 갈린다.
+    */
+    const off = setTimeout(() => setStruck((old) => {
       const next = { ...old };
       for (const id of who) next[id] = (next[id] ?? 0) + 1;
       return next;
-    });
+    }), castLead.current);
+    return () => clearTimeout(off);
   }, [battle.patSeq, battle.struck]);
 
   /*
@@ -1072,6 +1171,14 @@ export function BattleView() {
     됐다.
   */
   const [foeSwing, setFoeSwing] = useState(false);
+  /**
+   * 체력 갈래가 따로 세는 특수기 번호.
+   *
+   * 특수기 갈래의 `lastPat` 과 같은 값을 보지만 **번호를 공유하면 안
+   * 된다** — 먼저 도는 쪽이 값을 올려 버리면 다른 쪽은 영영 "특수기가
+   * 나갔다" 를 못 본다.
+   */
+  const prevPatHp = useRef(battle.patSeq ?? 0);
   /** 무대 폭 — 근접이 얼마나 나갈지 여기서 나온다 */
   const [stageW, setStageW] = useState(0);
 
@@ -1119,6 +1226,14 @@ export function BattleView() {
   const rush = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!patCall) return undefined;
+    /*
+      **뛰어드는 판은 이걸 안 한다** (1판 뻐개기).
+
+      저쪽은 아군 진영까지 건너가는 길이라 (`useLeap`), 여기서 34px 를
+      더 밀면 두 길이 같은 값을 두고 싸운다 — 돌아오는 길에 한 번 밀리고
+      끌에 제자리가 섞인다.
+    */
+    if (casting.current) return undefined;
     const a = Animated.sequence([
       Animated.timing(rush, {
         toValue: 1, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true,
@@ -1143,6 +1258,14 @@ export function BattleView() {
   const rushScale = useMemo(() => rush.interpolate({
     inputRange: [0, 1], outputRange: [1, 1.18],
   }), [rush]);
+
+  /*
+    ── 1판 뻐개기 ── 아군 진영까지 **진짜로 뛰어간다.**
+
+    나머지 열아홉과 똑같이 앞으로 34px 나왔다 들어갔다. 이름이
+    뻐개기이고 전원을 때리는 기술인데 화면에서는 구분이 안 됐다.
+  */
+  const leapAt = useLeap(leap.no, leap.span);
 
   useEffect(() => {
     /*
@@ -1174,6 +1297,19 @@ export function BattleView() {
     const swung = battle.swingSeq !== prevSwing.current;
     prevSwing.current = battle.swingSeq;
 
+    /*
+      **이번 틱에 특수기가 나갔나.**
+
+      나갔으면 연출은 위의 특수기 갈래가 이미 맡았다. 여기서 또
+      불을 붙이면 평타 연출과 상 연출이 같은 순간에 겹쳐 난다.
+
+      번호는 따로 들고 있는다. 위에서 쓰는 것을 같이 쓰면 둘 중 먼저
+      도는 갈래가 값을 소비해 다른 쪽은 영영 못 본다.
+    */
+    const patNow = battle.patSeq ?? 0;
+    const cast = patNow !== prevPatHp.current;
+    prevPatHp.current = patNow;
+
     if (empty || down || !hurt.length) return undefined;
 
     const late: ReturnType<typeof setTimeout>[] = [];
@@ -1184,6 +1320,16 @@ export function BattleView() {
       setFoeSwing(true);
       after(200, () => setFoeSwing(false));
     }
+
+    /*
+      ── 이번에 아프게 한 것이 무엇인가 ──
+
+      특수기면 위에서 재 둔 값을 그대로 쓰고, 평타면 여기서 불을
+      붙인다. 잡몹은 표가 없으므로 0 이라, 예전처럼 바로 숫자가 뜼다.
+    */
+    const lead = !battle.boss ? 0
+      : cast ? castLead.current
+        : (swung ? fireRef.current(blowFx(battle.stage), hurt.map(([id]) => id)) : 0);
 
     /*
       뒷줄은 **뭔가를 날린다.**
@@ -1199,9 +1345,19 @@ export function BattleView() {
       });
     }
 
+    /*
+      ── 숫자는 **닿는 순간**에 뜨곳 ──
+
+      이 숫자가 `Fighter` 의 붉은 깜빡임도 같이 켜므로 (`HurtTint` 가
+      `damage` 를 본다) 한 줄만 미루면 둘이 같이 맞추어진다.
+
+      체력 막대는 상태를 그대로 그리므로 그만큼 먼저 줄어든다. `lead`
+      를 420ms 아래로 묶어 둔 이유가 그것이다 — 더 미루면 막대가 먼저
+      내려가는 것이 눈에 보인다.
+    */
     const made = hurt.map(([id, v]) => ({ key: seq.current++, who: id, text: `-${v}` }));
-    setPops((old) => [...old.slice(-4), ...made]);
-    after(750, () => {
+    after(lead, () => setPops((old) => [...old.slice(-4), ...made]));
+    after(lead + 750, () => {
       setPops((old) => old.filter((x) => !made.some((m) => m.key === x.key)));
     });
 
@@ -1216,6 +1372,78 @@ export function BattleView() {
     읽으려면 ref 를 거쳐야 한다. 타이머를 매 렌더마다 다시 걸면 박자가
     영영 안 채워진다.
   */
+  fireRef.current = (plan, ids) => {
+    fxSeq.current += 1;
+    const no = fxSeq.current;
+    /* 우두머리가 선 자리 — 날리는 것도 뛰는 것도 여기서 출발한다 */
+    const from = spotOf(0);
+
+    if (plan.boss) setBossFx({ no, kind: plan.boss });
+    if (plan.tide) setTideNo(no);
+    if (plan.leap) {
+      /*
+        아군 맨 앞까지 간다. 무대 폭으로 어림잡지 않는다 — 근접이 얼마나
+        나가 있느냐에 따라 둘 사이가 매번 다르고, 어림잡으면 우두머리가
+        아군을 지나쳐 무대 밖까지 뛰어가는 판이 생긴다.
+      */
+      const span = Math.max(40, Math.round(from.x - allyRightRef.current(0)));
+      setLeap({ no, span });
+    }
+    if (plan.body) {
+      const kind = plan.body;
+      /*
+        **닿는 순간에서 거꾸로 잡는다.**
+
+        암석은 떨어지는 데 418ms 가 걸린다 (`BODY_HIT`). 아픈 순간(`lead`)에
+        켜면 아프고 나서 암석이 떨어진다 — 원인과 결과가 뒤집힌다.
+
+        1판 뭉개기가 이게 왜 필요한지를 그대로 보여 준다. 우두머리가 아군
+        진영까지 뛰어가 내리꽂는 데 274ms 가 걸리는데, 찍힌 자국을 0 에 켜면
+        우두머리가 아직 공중에 있는 동안 이미 찍혀 있다.
+      */
+      const at = Math.max(0, plan.lead - BODY_HIT[kind]);
+      const put = () => setBodyFx((old) => {
+        const next = { ...old };
+        for (const id of ids) next[id] = { no: (next[id]?.no ?? 0) + 1, kind };
+        return next;
+      });
+      if (at <= 0) put();
+      else fxT.current.push(setTimeout(put, at));
+    }
+    if (!plan.shot) return plan.lead;
+
+    /*
+      날리는 것 — **맞는 사람마다 한 발.**
+
+      한 발만 날려서 맨 앞에 꽂으면, 뒤엣사람이 맞았을 때 숫자는 뒤에서
+      뜨는데 날아온 것은 앞에서 멎는다 (뒷줄 잡몹에서 이미 겪은 그것이다).
+    */
+    const kind = plan.shot;
+    const made = ids.map((id) => {
+      const back = backRef.current[id] ?? 0;
+      const dist = Math.max(24, Math.round(from.x - allyRightRef.current(back)));
+      return {
+        key: hitSeq.current++,
+        art: '',
+        kind,
+        ms: shotMsOf(dist),
+        /* 아군 쪽(왼쪽) 몸통 높이에서 나간다 */
+        x: from.x + 6,
+        y: from.y + Math.round(from.size * 0.34),
+        size: BOSS_SHOT_W,
+        dist,
+      };
+    });
+    if (!made.length) return plan.lead;
+    setShots((old) => [...old.slice(-5), ...made]);
+    /* 제일 먼 것이 닿을 때까지가 이 공격의 `lead` 다 */
+    const reach = Math.max(...made.map((m) => m.ms));
+    fxT.current.push(setTimeout(() => {
+      setShots((old) => old.filter((x) => !made.some((m) => m.key === x.key)));
+    }, reach + 80));
+    return reach;
+  };
+
   shotsRef.current = (hurt: string[]) => {
     /*
       **실제로 맞은 사람에게 날아간다.**
@@ -1628,6 +1856,12 @@ export function BattleView() {
                       상시효과를 알리는 줄이 딱 그랬다 (`MarkNotes`).
                     */
                     live={!held && !down}
+                    /*
+                      우두머리가 **무엇으로** 쳤나 (`BossFx`). 암석이 떨어졌는지
+                      덩쿨에 감겼는지 베였는지 — 붉은 깜빡임은 그걸 못 말한다.
+                    */
+                    hitNo={bodyFx[c.id]?.no ?? 0}
+                    hitKind={bodyFx[c.id]?.kind ?? null}
                     /* 정화로 걷힌 사람에게서만 조각이 떠오른다 */
                     purify={purified[c.id] ?? 0}
                     onCharge={onCharge}
@@ -1821,7 +2055,15 @@ export function BattleView() {
                           특수기를 쓸 때 아군 쪽으로 크게 나왔다 돌아온다.
                           우두머리에게만 얹는다 — 잡몹은 특수기를 안 쓴다.
                         */
-                        ...(bossOne ? [{ translateX: rushX }, { scale: rushScale }] : []),
+                        /*
+                          뛰어드는 판은 그것만, 나머지는 앞으로 나왔다 들어간다.
+                          둘을 같이 얹지 않는다 — 같은 값을 둘이 밀면 돌아오는 길에
+                          한 번 밀리고 끌에 제자리가 섞인다.
+                        */
+                        ...(bossOne ? (leap.no > 0 && casting.current
+                          ? [{ translateX: leapAt.x }, { translateY: leapAt.y },
+                            { scale: leapAt.s }]
+                          : [{ translateX: rushX }, { scale: rushScale }]) : []),
                       ],
                     }}
                   >
@@ -1860,6 +2102,17 @@ export function BattleView() {
                       뜬다. 안 보이면 걸렸는지 알 방법이 없다 — 회복량이
                       줄어드는 것은 두 판을 비교해야 보인다.
                     */}
+                    {/*
+                      ── 우두머리 몸 자리에서 나는 것 ──
+
+                      휘두름 · 파동 · 사방으로 퍼지는 가시 · 악취 (`BossFx`).
+                      그림의 `attack` 칸은 자세만 바뀌므로, **무언가가 지나갔다**를
+                      따로 그려야 때리는 것으로 보인다.
+                    */}
+                    {bossOne && !!bossFx && (
+                      <BossSideFx key={bossFx.no} kind={bossFx.kind} size={foeSize} />
+                    )}
+
                     <FoeMarks status={fMarks} />
 
                     {/*
@@ -2011,12 +2264,26 @@ export function BattleView() {
             pointerEvents="none"
             style={{
               position: 'absolute',
-              left: sh.x + sh.size * 0.1,
-              top: sh.y + sh.size * 0.25,
+              /*
+                우두머리 것은 쓸 때 이미 자리를 잡아 넣는다 (`fireRef`).
+                잡몹 것은 제 몸통 높이로 밀어 준다 — 상자 왼쪽 위에서
+                나가면 머리 옆 허공에서 나간 것으로 보인다.
+              */
+              left: sh.x + (sh.kind ? 0 : sh.size * 0.1),
+              top: sh.y + (sh.kind ? 0 : sh.size * 0.25),
               zIndex: 50,
             }}
           >
-            <FoeShot art={sh.art} size={sh.size} dist={sh.dist} />
+            {sh.kind ? (
+              <BossShot
+                kind={sh.kind}
+                dist={sh.dist}
+                ms={sh.ms ?? FOE_SHOT_MS}
+                size={sh.size}
+              />
+            ) : (
+              <FoeShot art={sh.art} size={sh.size} dist={sh.dist} />
+            )}
           </View>
         ))}
 
@@ -2130,6 +2397,19 @@ export function BattleView() {
             )}
           </React.Fragment>
         ))}
+
+        {/*
+          ── 해일 ── 10판 하나뿐이다.
+
+          화면을 덮는 연출은 안 쓰기로 했는데(붉은 막 이야기가 아래에 있다)
+          해일만은 휩쓰는 것이 곧 내용이라 그 규칙과 부딪힌다.
+
+          아래 절반만 쓰고(머리 위 숫자를 안 가린다) 흐리고(0.3) 빠르게
+          (620ms) 지나가는 것으로 타협했다 — 지난 뒤에 아무것도 안 남는다.
+        */}
+        {!down && tideNo > 0 && stageW > 0 && (
+          <Tide key={tideNo} w={stageW} h={STAGE_H} />
+        )}
 
         {/* 우두머리 등장 — 무대 한가운데. 전멸 안내보다 아래에 둔다 */}
         {!down && <BossCall nonce={bossCall} name={cur.name} title={cur.title} />}
