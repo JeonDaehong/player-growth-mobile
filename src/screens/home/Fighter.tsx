@@ -42,7 +42,7 @@ import type { Mark } from '@/core/passives';
 import { BAD_C, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import {
-  DamageNumber, HealMarks, HitBurst, HurtTint, NOTE_MS, SkillShout, StatusNote,
+  DamageNumber, HealMarks, HitBurst, HurtTint, MarkNotes, SkillShout,
 } from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
@@ -182,6 +182,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
+  live,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -273,6 +274,14 @@ function FighterView({
    * 없다. 열쇠가 같으면 걸려 있는 것도 같다.
    */
   markKey: string;
+  /**
+   * 지금 실제로 싸우는 중인가 (`core/autoBattle` 의 `fightHeld` 를 뒤집은 값).
+   *
+   * 머리 위에 뜨는 한 줄이 이걸 본다 (`MarkNotes`). 검은 막이 걸려 있는 동안은
+   * 아무 말도 안 하고, 막이 걷혀 제자리에 서는 그 순간에 지금 걸려 있는 것을
+   * 통째로 알린다 — 판마다 패시브가 새로 붙는 것처럼 보인다.
+   */
+  live: boolean;
   /**
    * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
    *
@@ -522,65 +531,6 @@ function FighterView({
     나온다) 이걸 세는 것만으로 이펙트가 정확한 사람에게 간다. 값 자체는
     `HitBurst` 의 `nonce` 로만 쓰이고, 0 이면 아무것도 안 터진다.
   */
-  /*
-    ── 새로 걸린 것을 머리 위에 한 줄로 알린다 ──
-
-    로고만으로는 뜻이 안 통했다 (`HitFx` 의 `StatusNote`). 걸리는 그 순간에
-    한 번만 말하고, 그다음부터는 로고가 맡는다.
-
-    두 가지를 기억해야 한다.
-
-      `had`   바로 앞 순간에 붙어 있던 것. 여기 없던 것이 곧 **새로 걸린 것**
-      `told`  이 판에서 이미 말한 **상시효과**. 패시브는 판이 바뀔 때마다
-              다시 붙으므로 이것이 없으면 잡몹 한 마리 잡을 때마다 말한다
-
-    판이 바뀌면 둘 다 비운다 — `costSeq` 가 그 신호다 (판을 옮기면 스킬
-    코스트가 0 이 되므로 그때 하나 오른다, `core/autoBattle` 의 `enterStage`).
-  */
-  const [notes, setNotes] = useState<{ key: number; text: string; good: boolean }[]>([]);
-  const noteSeq = useRef(0);
-  const had = useRef<Set<string>>(new Set());
-  const told = useRef<Set<string>>(new Set());
-  const lastStage = useRef(costSeq);
-
-  useEffect(() => {
-    if (costSeq !== lastStage.current) {
-      lastStage.current = costSeq;
-      had.current = new Set();
-      told.current = new Set();
-    }
-    const now = new Set<string>();
-    const fresh: { key: number; text: string; good: boolean }[] = [];
-    for (const m of marks) {
-      const k = `${m.set}:${m.name}`;
-      now.add(k);
-      if (had.current.has(k)) continue;
-      /* 상시효과는 판마다 한 번만 — 매번 말하면 잔소리가 된다 */
-      if (m.set === 'passive_icon') {
-        if (told.current.has(k)) continue;
-        told.current.add(k);
-      }
-      fresh.push({
-        key: noteSeq.current++,
-        text: `${m.good ? '버프' : '디버프'}:${m.what}`,
-        good: m.good,
-      });
-    }
-    had.current = now;
-    if (!fresh.length) return undefined;
-    /* 한꺼번에 셋 넘게 걸리면 앞엣것부터 버린다 — 넷이 쌓이면 벽이 된다 */
-    setNotes((old) => [...old, ...fresh].slice(-3));
-    const off = setTimeout(() => {
-      setNotes((old) => old.filter((n) => !fresh.some((f) => f.key === n.key)));
-    }, NOTE_MS);
-    return () => clearTimeout(off);
-    /*
-      `marks` 는 **일부러 뺀다.** 매 렌더마다 새 배열이라 넣으면 이 갈래가
-      끊임없이 돈다. 열쇠(`markKey`)가 같으면 내용도 같다.
-    */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markKey, costSeq]);
-
   const [hurtNo, setHurtNo] = useState(0);
   const lastDmg = useRef(-1);
   const hurt = useRef(new Animated.Value(0)).current;
@@ -1060,10 +1010,11 @@ function FighterView({
 
         `디버프:지속 피해` 처럼 한 줄이 머리 위에 떴다 사라진다. 걸리는 그
         순간에만 뜨고, 그다음부터는 파티 칸의 로고가 맡는다 (`StatusRow`).
+
+        적 머리 위에도 **같은 부품**이 붙는다 (`BattleView`) — 두 규칙이
+        다르면 보는 사람이 규칙을 두 벌 익혀야 한다.
       */}
-      {notes.map((n, k) => (
-        <StatusNote key={n.key} text={n.text} good={n.good} i={k} />
-      ))}
+      <MarkNotes marks={marks} markKey={markKey} live={live} />
 
       {/*
         ── 기술이 나갈 때의 큰 연출 ──
@@ -1282,6 +1233,7 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.struck === b.struck
   /* 걸려 있는 것이 바뀌었나 — 배열이 아니라 열쇠로 본다 */
   && a.markKey === b.markKey
+  && a.live === b.live
   && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge

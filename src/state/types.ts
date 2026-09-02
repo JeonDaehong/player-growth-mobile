@@ -459,6 +459,13 @@ export interface GameActions {
    * 서 있던 잡몹을 마저 잡으면 그때 걸어 나온다.
    */
   callBossNow: () => boolean;
+  /**
+   * ⚠ **테스트용** — 광폭화를 그 자리에서 켜다 (`core/autoBattle` 의 `forceRage`).
+   *
+   * 우두머리와 싸우는 중이 아니거나 이미 광폭화였으면 아무 일도 안 하고
+   * `false` 를 돌려준다. ⚠ 출시 전에 이 갈래를 통째로 지운다.
+   */
+  rageNow: () => boolean;
   /** 한 명이 검을 내려친 순간. 화면이 부른다 */
   /** @param aim 화면이 이미 고른 자리. 없으면 확률대로 고른다 */
   strikeFoe: (who: string, aim?: number) => void;

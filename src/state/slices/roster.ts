@@ -16,8 +16,8 @@ import { PARTY_SIZE, Party, cleanParty } from '@/core/party';
 import { drawChar, poolOf, recruitCost } from '@/core/recruit';
 import { optKey } from '@/core/skillOpt';
 import {
-  BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, leaveFor,
-  TICK_MS,
+  BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, forceRage,
+  leaveFor, TICK_MS,
 } from '@/core/autoBattle';
 import type { SliceGet, SliceSet } from './kit';
 
@@ -63,6 +63,13 @@ export interface RosterActions {
    * 서 있던 잡몹을 마저 잡으면 그때 걸어 나온다.
    */
   callBossNow: () => boolean;
+  /**
+   * ⚠ **테스트용** — 광폭화를 그 자리에서 켜다 (`core/autoBattle` 의 `forceRage`).
+   *
+   * 우두머리와 싸우는 중이 아니거나 이미 광폭화였으면 아무 일도 안 하고
+   * `false` 를 돌려준다. ⚠ 출시 전에 이 갈래를 통째로 지운다.
+   */
+  rageNow: () => boolean;
   /**
    * 한 명이 검을 내려친 순간. 그 사람 공격력만큼 맨 앞 적에게 들어간다.
    *
@@ -272,6 +279,15 @@ export const createRosterSlice = (
   callBossNow: () => {
     const st = get();
     const next = callBoss(st.battle);
+    if (next === st.battle) return false;
+    set({ battle: next });
+    return true;
+  },
+
+  /* ⚠ 테스트용 — 두 분을 기다리지 않고 광폭화를 본다 (`forceRage`) */
+  rageNow: () => {
+    const st = get();
+    const next = forceRage(st.battle);
     if (next === st.battle) return false;
     set({ battle: next });
     return true;

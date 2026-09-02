@@ -27,12 +27,12 @@
  * 비추기만 한다. 화면이 전투를 굴리면 화면을 떠날 때 전투가 멈춘다.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View } from 'react-native';
+import { Animated, Easing, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
   MOB_CAP, STAGE_MS, bossReady, fightHeld, foeHexOf, foeOf, healPlan, pickAim,
-  raging, rowMelee, skillDamage,
+  RAGE_MS, rageIn, raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf, skillsOf, statOf } from '@/core/chars';
@@ -47,8 +47,8 @@ import { BAD_C, BORDER, SP, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
-  BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, SkillShout,
-  useShake,
+  BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, MarkNotes,
+  SkillShout, useShake,
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
@@ -377,6 +377,8 @@ export function BattleView() {
   const skillOpts = useGame((s) => s.skillOpts);
   const goStage = useGame((s) => s.goStage);
   const callBossNow = useGame((s) => s.callBossNow);
+  /* ⚠ 테스트용 — 아래 TEST 단추가 부른다. 출시 전에 같이 지운다 */
+  const rageNow = useGame((s) => s.rageNow);
 
   const mob = foeOf(battle.stage, false);
   /*
@@ -1264,6 +1266,15 @@ export function BattleView() {
   const bgH = STAGE_H - GROUND_H;
 
   const secLeft = Math.ceil(battle.msLeft / 1000);
+  /**
+   * 광폭화까지 남은 초 (`core/autoBattle` 의 `RAGE_MS`).
+   *
+   * 이건 **어디에도 안 나오던 숫자**였다. 두 분이 지나면 우두머리가
+   * 붉어지면서 두 배로 때리는데, 그게 언제 오는지를 모르면 "어느순간
+   * 갑자기 진 판" 이 된다. 남은 시간을 알면 그것이 **제한 시간**이
+   * 되어, 밀어붙일지 물러날지를 사람이 고를 수 있다.
+   */
+  const rageSec = Math.ceil(rageIn(battle) / 1000);
   /*
     맨 앞 적이 서 있는 자리 — 이펙트와 숫자가 여기에 붙는다.
 
@@ -1610,6 +1621,13 @@ export function BattleView() {
                     /* 새로 걸린 것만 골라 머리 위에 한 줄 띄운다 */
                     marks={markOf[c.id]?.marks ?? NO_MARK}
                     markKey={markOf[c.id]?.key ?? ''}
+                    /*
+                      머리 위 한 줄은 **싸우는 동안에만** 뜼다.
+
+                      검은 막이 걸려 있는 동안 띄워 봐야 아무도 못 본다 —
+                      상시효과를 알리는 줄이 딱 그랬다 (`MarkNotes`).
+                    */
+                    live={!held && !down}
                     /* 정화로 걷힌 사람에게서만 조각이 떠오른다 */
                     purify={purified[c.id] ?? 0}
                     onCharge={onCharge}
@@ -1737,6 +1755,29 @@ export function BattleView() {
                   : foeSwing ? (battle.boss && patShown ? 'skill1' : 'attack')
                     : 'idle';
                 const bossOne = battle.boss && back === 0;
+                /*
+                  이 마리에게 걸려 있는 것 — **한 번만 재서 둘이 나누어 쓴다.**
+
+                  로고 줄(`FoeMarks`)과 머리 위 한 줄(`MarkNotes`)이 같은 목록을
+                  본다. 따로 부르면 둔 것이 갈라질 수 있고, 그러면 로고는 뗴는데
+                  설명은 안 뜨는 일이 생긴다.
+                */
+                const fMarks = foeMarksOf(
+                    foeHexOf(battle.foeHex, f.id),
+                    /*
+                      **이 마리가** 도발에 걸렸을 때만 뜬다.
+
+                      한동안 "도발이 걸려 있나" 만 보고 서 있는 놈 전부에게
+                      띄웠다. 그래서 계산은 그때 있던 놈만 끌려오는데
+                      (`aimOf`) 화면에는 나중에 걸어 들어온 놈에게도 로고가
+                      떴다 — 화면이 계산과 다른 말을 하고 있었다.
+                    */
+                    !!battle.taunt
+                      && battle.taunt.ms > 0
+                      && (battle.taunt.foes ?? []).includes(f.id),
+                    battle.taunt?.ms ?? 0,
+                );
+                const fKey = fMarks.map((m) => `${m.set}:${m.name}`).join(',');
                 return (
                   <Animated.View
                     /*
@@ -1819,23 +1860,17 @@ export function BattleView() {
                       뜬다. 안 보이면 걸렸는지 알 방법이 없다 — 회복량이
                       줄어드는 것은 두 판을 비교해야 보인다.
                     */}
-                    <FoeMarks
-                      status={foeMarksOf(
-                        foeHexOf(battle.foeHex, f.id),
-                        /*
-                          **이 마리가** 도발에 걸렸을 때만 뜬다.
+                    <FoeMarks status={fMarks} />
 
-                          한동안 "도발이 걸려 있나" 만 보고 서 있는 놈 전부에게
-                          띄웠다. 그래서 계산은 그때 있던 놈만 끌려오는데
-                          (`aimOf`) 화면에는 나중에 걸어 들어온 놈에게도 로고가
-                          떴다 — 화면이 계산과 다른 말을 하고 있었다.
-                        */
-                        !!battle.taunt
-                          && battle.taunt.ms > 0
-                          && (battle.taunt.foes ?? []).includes(f.id),
-                        battle.taunt?.ms ?? 0,
-                      )}
-                    />
+                    {/*
+                      ── 방금 걸린 것이 무엇인지 ──
+
+                      아군과 **같은 부품, 같은 규칙이다** (`Fighter`). 화산이 거는
+                      시듬과 도발은 걸리는 쪽이 적이라, 이게 없으면 정작 알려야 할
+                      것이 화면에 안 나온다 — 적 머리 위에는 로고만 있었고 그건
+                      외운 사람만 읽는다.
+                    */}
+                    <MarkNotes marks={fMarks} markKey={fKey} live={!held && !down} />
 
                     {/*
                       ── 우두머리가 스스로 채운 양 ──
@@ -2007,7 +2042,22 @@ export function BattleView() {
             {h.erupt && (
               <View
                 pointerEvents="none"
-                style={{ position: 'absolute', left: h.x, top: h.y, zIndex: 58 }}
+                /*
+                  **상자를 적 몸만큼 벌려 둔다.**
+
+                  불기둥은 제 상자 바닥에 발을 맞춘다 (`SkillFx` 의 `bottom: 0`).
+                  그런데 여기가 **높이 없는 상자**여서 그 바닥이 곰 적의 머리
+                  높이였다 — 발밑에서 솔아야 할 불이 머리 위에서 피어올랐다.
+                  `height` 를 주면 그 바닥이 곰 적의 발 높이다.
+                */
+                style={{
+                  position: 'absolute',
+                  left: h.x,
+                  top: h.y,
+                  width: h.size,
+                  height: h.size,
+                  zIndex: 58,
+                }}
               >
                 <SkillFx kind="erupt" nonce={h.key} size={h.size} />
               </View>
@@ -2161,7 +2211,7 @@ export function BattleView() {
       <Row between style={{ marginTop: SP.sm }}>
         <T size={9} dim="sub">
           {battle.boss
-            ? '우두머리와 싸우는 중'
+            ? (rage ? '광폭화 — 두 배로 때린다' : `광폭화까지 ${rageSec}초`)
             : battle.called
               ? '남은 적을 정리하면 우두머리가 나온다'
               : battle.msLeft > 0
@@ -2169,9 +2219,16 @@ export function BattleView() {
                 : '우두머리를 부를 수 있다'}
         </T>
       </Row>
+      {/*
+        우두머리 구간에서는 **광폭화까지**를 그린다.
+
+        저 막대는 원래 "우두머리 토벌까지" 만 그렸는데, 우두머리가
+        서면 `msLeft` 가 멈춰서 (`battleTick`) 정작 제일 급한 대목에 막대가
+        꼽촉 서 있었다. 같은 자리에 지금 도는 시계를 넣는다.
+      */}
       <Bar
-        value={STAGE_MS - battle.msLeft}
-        max={STAGE_MS}
+        value={battle.boss ? RAGE_MS - rageIn(battle) : STAGE_MS - battle.msLeft}
+        max={battle.boss ? RAGE_MS : STAGE_MS}
         blocks={MOB_CAP * 8}
         height={5}
       />
@@ -2187,6 +2244,30 @@ export function BattleView() {
         늘 허전하고, 나타났을 때 "생겼다" 가 안 읽힌다.
       */}
       {bossReady(battle) && <BossCallBtn onPress={callBossNow} />}
+
+      {/*
+        ⚠ ── 테스트 단추 ── 출시 전에 통째로 지운다
+
+        광폭화를 보려면 두 분을 버텀 다음이어야 한다 (`RAGE_MS`). 고치고
+        확인하는 한 바퀴가 사 분이라 손이 안 간다.
+
+        `TEST` 를 적어 둔다. 같은 자리에 "우두머리 토벌" 이 있으므로,
+        표시가 없으면 둘이 같은 종류의 단추로 보인다.
+      */}
+      {battle.boss && !rage && (
+        <Pressable onPress={rageNow} style={{ marginTop: SP.sm }}>
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: BAD_C,
+              paddingVertical: SP.xs,
+              alignItems: 'center',
+            }}
+          >
+            <T size={10} bold style={{ color: BAD_C }}>TEST · 광폭화 바로보기</T>
+          </View>
+        </Pressable>
+      )}
 
       {/*
         ── "1스테이지부터 시작" 단추는 없앴다 ──

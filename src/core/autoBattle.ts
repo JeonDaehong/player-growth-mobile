@@ -641,6 +641,23 @@ export const rageIn = (st: { boss: boolean; bossMs: number }): number => (
   st.boss ? Math.max(0, RAGE_MS - (Number.isFinite(st.bossMs) ? st.bossMs : 0)) : RAGE_MS
 );
 
+/**
+ * ⚠ **테스트용** — 광폭화를 그 자리에서 켜다.
+ *
+ * 광폭화를 눈으로 보려면 **두 분을 버텀 다음**이어야 한다 (`RAGE_MS`).
+ * 그런데 그걸 고치려면 두 분을 또 기다려야 하므로, 고치고 확인하는 한
+ * 바퀴가 한 번에 사 분이 된다.
+ *
+ * 시계를 직접 `RAGE_MS` 로 밀어 놓는다 — `raging` 을 따로 속이는 게
+ * 아니라 진짜로 그 시각이 된 것이라, 그다음은 평소와 똑같이 흥러간다.
+ *
+ * ⚠ **출시 전에 지운다.** `FREE_BOSS` · `FLAT_FOES` 와 같은 스위치다 —
+ * 이 함수와 부르는 곳(`BattleView` 의 TEST 단추)을 같이 지운다.
+ */
+export const forceRage = (st: BattleState): BattleState => (
+  st.boss && !raging(st) ? { ...st, bossMs: RAGE_MS } : st
+);
+
 export function patternAt(
   n: number, list: readonly BossPattern[] = BOSS_PATTERNS,
 ): BossPattern | null {

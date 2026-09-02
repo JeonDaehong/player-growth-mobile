@@ -22,6 +22,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 import type { HitFx } from '@/core/chars';
+import type { Mark } from '@/core/passives';
 import { Sprite } from '@/ui/Sprite';
 import { BAD_C, BLACK, GOOD_C, MONO, WHITE } from '@/ui/theme';
 
@@ -1083,6 +1084,119 @@ export function StatusNote({
         {text}
       </Animated.Text>
     </Animated.View>
+  );
+}
+
+/**
+ * ── 새로 걸린 것을 머리 위에 한 줄로 알린다 ──
+ *
+ * 로고만으로는 뜻이 안 통했다 (`StatusNote` 머리말). 걸리는 그 순간에 한 번만
+ * 말하고, 그다음부터는 로고가 맡는다.
+ *
+ * ## 아군과 적이 같은 부품을 쓴다
+ *
+ * 예전에는 이 갈래가 `Fighter` 안에만 있어서 **아군에게만** 떴다. 그런데
+ * 화산이 거는 시듦이나 도발은 걸리는 쪽이 적이라, 정작 알려야 할 것이 화면에
+ * 안 나왔다 — 적 머리 위에는 로고만 있었고 그건 외운 사람만 읽는다.
+ *
+ * 두 곳에서 같은 규칙으로 뜬다. 아군 것과 적 것이 다른 규칙이면 보는 사람이
+ * 규칙을 두 벌 익혀야 한다.
+ *
+ * ## 기억하는 것 두 가지
+ *
+ *   `had`   바로 앞 순간에 붙어 있던 것. 여기 없던 것이 곧 **새로 걸린 것**
+ *   `told`  이 판에서 이미 말한 **상시효과**. 패시브는 판이 바뀔 때마다 다시
+ *           붙으므로 이것이 없으면 잡몹 한 마리 잡을 때마다 말한다
+ *
+ * ## 판이 끝나면 둘 다 비운다 (`live`)
+ *
+ * 한동안 `costSeq` 로 판이 바뀐 것을 알아봤다. 숫자는 맞았는데 **시점이
+ * 틀렸다** — 그 값은 검은 막이 내려간 뒤에 오르므로, 상시효과를 알리는 줄이
+ * 막 아래에서 떴다 사라졌다. 판을 열 때마다 아무도 못 보는 글이 뜨고 있었다.
+ *
+ * 이제 "지금 실제로 싸우는 중인가" 하나만 본다 (`core/autoBattle` 의
+ * `fightHeld` 를 뒤집은 값). 막이 걸리면 비우고, 막이 걷혀 양쪽이 제자리에
+ * 서는 그 순간에 지금 걸려 있는 것을 통째로 알린다 — 판마다 패시브가 새로
+ * 붙는 것처럼 보이는데, 규칙상으로도 실제로 그렇다.
+ */
+export function MarkNotes({
+  marks, markKey, live,
+}: {
+  marks: readonly Mark[];
+  /**
+   * `marks` 를 줄인 열쇠 (`set:name` 을 이어 붙인 것).
+   *
+   * `marks` 자체를 갈래에 걸 수가 없다 — 매 렌더마다 새 배열이라 끝없이
+   * 돈다. 열쇠가 같으면 내용도 같다.
+   */
+  markKey: string;
+  /** 지금 실제로 싸우는 중인가 — 막이 걸려 있으면 아무 말도 안 한다 */
+  live: boolean;
+}) {
+  const [notes, setNotes] = useState<{ key: number; text: string; good: boolean }[]>([]);
+  const seq = useRef(0);
+  const had = useRef<Set<string>>(new Set());
+  const told = useRef<Set<string>>(new Set());
+  /*
+    줄을 걷는 시계들.
+
+    예전에는 갈래의 정리 함수에서 껐다. 그런데 이 갈래는 상태가 바뀔 때마다
+    다시 도므로, `NOTE_MS` 가 지나기 전에 다른 것이 걸리면 **앞 줄을 걷는
+    시계가 취소됐다** — 그 줄은 영영 안 사라졌다. 여기 모아 두고 화면을 떠날
+    때만 끈다.
+  */
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  }, []);
+
+  useEffect(() => {
+    if (!live) {
+      had.current = new Set();
+      told.current = new Set();
+      /* 이미 떠 있던 줄도 같이 걷는다 — 막 위에 남으면 다음 판까지 따라온다 */
+      setNotes((old) => (old.length ? [] : old));
+      return;
+    }
+    const now = new Set<string>();
+    const fresh: { key: number; text: string; good: boolean }[] = [];
+    for (const m of marks) {
+      const k = `${m.set}:${m.name}`;
+      now.add(k);
+      if (had.current.has(k)) continue;
+      /* 상시효과는 판마다 한 번만 — 매번 말하면 잔소리가 된다 */
+      if (m.set === 'passive_icon') {
+        if (told.current.has(k)) continue;
+        told.current.add(k);
+      }
+      fresh.push({
+        key: seq.current++,
+        text: `${m.good ? '버프' : '디버프'}:${m.what}`,
+        good: m.good,
+      });
+    }
+    had.current = now;
+    if (!fresh.length) return;
+    /* 한꺼번에 셋 넘게 걸리면 앞엣것부터 버린다 — 넷이 쌓이면 벽이 된다 */
+    setNotes((old) => [...old, ...fresh].slice(-3));
+    timers.current.push(setTimeout(() => {
+      setNotes((old) => old.filter((n) => !fresh.some((f) => f.key === n.key)));
+    }, NOTE_MS));
+    /*
+      `marks` 는 **일부러 뺀다.** 매 렌더마다 새 배열이라 넣으면 이 갈래가
+      끊임없이 돈다 (`markKey` 가 그 자리를 대신한다).
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markKey, live]);
+
+  if (!notes.length) return null;
+  return (
+    <>
+      {notes.map((n, k) => (
+        <StatusNote key={n.key} text={n.text} good={n.good} i={k} />
+      ))}
+    </>
   );
 }
 
