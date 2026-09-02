@@ -1043,9 +1043,10 @@ export const LEAP_MS = 760;
  * 세로를 **따로** 굴린다. 하나로 굴리면 반드시 포물선이 되는데, 내리꽂는
  * 동안에는 가로로 한 발짝도 안 움직여야 찍는 것으로 보인다.
  *
- * @param span 아군 진영까지의 거리 (px). 무대 폭에서 나온다
+ * @param span 아군 진영까지의 거리 (px). 부르는 쪽이 잰다 (`BattleView`)
+ * @param rise 얼마나 높이 뜨나 (px)
  */
-export function useLeap(nonce: number, span: number): {
+export function useLeap(nonce: number, span: number, rise: number): {
   x: Animated.AnimatedInterpolation<number>;
   y: Animated.AnimatedInterpolation<number>;
   s: Animated.AnimatedInterpolation<number>;
@@ -1066,10 +1067,20 @@ export function useLeap(nonce: number, span: number): {
     inputRange: [0, 0.22, 0.36, 0.5, 1],
     outputRange: [0, -span, -span, -span, 0],
   }), [t, span]);
+  /*
+    높이는 **거리에서 안 뽑는다.**
+
+    한동안 `span * 0.42` 였다. 그런데 뛰는 거리가 멀수록 높이 뜨는 셈이라,
+    파티가 뒤에 물러서 있으면 우두머리가 무대 천장을 뚫고 올라갔다 — 무대는
+    193px 이고 우두머리는 132px 이라 남는 높이가 49px 뿐이다 (`overflow`
+    가 잘라 내므로 머리가 통째로 사라진다).
+
+    이제 부르는 쪽이 **제 몸 크기로** 재서 넘긴다.
+  */
   const y = useMemo(() => t.interpolate({
     inputRange: [0, 0.22, 0.36, 0.5, 0.72, 1],
-    outputRange: [0, -span * 0.42, 0, 0, -span * 0.18, 0],
-  }), [t, span]);
+    outputRange: [0, -rise, 0, 0, -rise * 0.42, 0],
+  }), [t, rise]);
   /* 뛰어오르면 커지고 내려앉으면 눌린다 — 무게가 실린다 */
   const s = useMemo(() => t.interpolate({
     inputRange: [0, 0.22, 0.36, 0.44, 0.5, 1],

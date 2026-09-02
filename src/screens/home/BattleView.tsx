@@ -734,7 +734,22 @@ export function BattleView() {
   /** 무대를 쓸고 지나가는 해일 (10판 하나뿐이다) */
   const [tideNo, setTideNo] = useState(0);
   /** 아군 진영으로 뛰어들어 찍기 (1판 하나뿐이다) — 번호와 건너갈 거리 */
-  const [leap, setLeap] = useState({ no: 0, span: 0 });
+  const [leap, setLeap] = useState({ no: 0, span: 0, rise: 0 });
+  /**
+   * 뛰어들 거리와 높이를 재는 함수 — 렌더마다 갈아 끼운다.
+   *
+   * `allyRightRef` 로는 못 잰다. 저건 **지금 나가 있는 자리**의 오른쪽 끝인데,
+   * 근접 아군은 싸우는 동안 적 앞까지 걸어 나가 있으므로 (`allyAdv`) 그 값으로
+   * 재면 둘 사이가 40px 도 안 된다 — 우두머리가 한 발짝 움찔하고 만다.
+   * 실제로 그렇게 보였다.
+   *
+   * 여기서는 **파티가 원래 서는 자리**로 잰다 (나가 있는 만큼을 뺀다). 그리고
+   * 맨 앞 아군의 폭만큼 더 간다 — 옆에 서는 것이 아니라 **덮는** 것이라야
+   * 뭉개기다.
+   */
+  const leapRef = useRef<() => { span: number; rise: number }>(
+    () => ({ span: 0, rise: 0 }),
+  );
   const fxSeq = useRef(0);
   /*
     치우는 시계들.
@@ -1281,7 +1296,7 @@ export function BattleView() {
     나머지 열아홉과 똑같이 앞으로 34px 나왔다 들어갔다. 이름이
     뻐개기이고 전원을 때리는 기술인데 화면에서는 구분이 안 됐다.
   */
-  const leapAt = useLeap(leap.no, leap.span);
+  const leapAt = useLeap(leap.no, leap.span, leap.rise);
 
   useEffect(() => {
     /*
@@ -1402,8 +1417,8 @@ export function BattleView() {
         나가 있느냐에 따라 둘 사이가 매번 다르고, 어림잡으면 우두머리가
         아군을 지나쳐 무대 밖까지 뛰어가는 판이 생긴다.
       */
-      const span = Math.max(40, Math.round(from.x - allyRightRef.current(0)));
-      setLeap({ no, span });
+      const { span, rise } = leapRef.current();
+      setLeap({ no, span, rise });
     }
     if (plan.body) {
       const kind = plan.body;
@@ -1573,6 +1588,48 @@ export function BattleView() {
     한 번만 만들고, 바뀌는 값은 ref 로 건넨다.
   */
   allyRightRef.current = (back: number) => allyRightOf(back);
+  /*
+    ── 1판 뭉개기가 건너갈 거리 ──
+
+    ## 아군 옆이 아니라 **파티 한가운데**로 간다
+
+    처음엔 맨 앞 아군의 오른쪽 끝까지로 쟀다. 재 보니 휴대폰 폭(무대 340~390px)
+    에서 그 값이 **40px** 이었다 — 앞으로 나왔다 들어가는 평소 동작이 34px 이라,
+    뭉개기가 평타와 구분이 안 됐다. 실제로 "안 온다" 는 말을 들었다.
+
+    까닭은 무대가 좁다는 것이다. 360px 무대에 우두머리가 132px, 파티 줄이
+    202px 이라 둘 사이에 남는 자리가 거의 없다. **비어 있는 곳으로 뛰면 갈 데가
+    없다.**
+
+    그래서 **파티 줄 한가운데**를 찍는다. 전원을 때리는 기술이므로 (`aim: 'all'`)
+    넷 위에 내려앉는 것이 규칙과도 맞고, 그 자리는 늘 무대 왼쪽이라 거리가
+    넉넉하게 나온다.
+
+    ## 나가 있는 만큼은 뺀다
+
+    `allyRightOf` 는 **지금 서 있는 자리**를 준다. 근접은 싸우는 동안 적 앞까지
+    걸어 나가 있으므로 (`allyAdv`) 그 값으로 재면 파티가 실제보다 오른쪽에 있는
+    것으로 잡힌다. 뛰어드는 목표는 **원래 서는 자리**여야 한다.
+
+    ## 높이는 거리로 안 잰다
+
+    `span * 0.42` 였다. 멀리 뛸수록 높이 뜨는 셈이라, 넓은 화면에서 무대
+    천장을 뚫고 머리가 잘렸다 — 무대는 193px 이고 우두머리는 132px 이라
+    남는 높이가 49px 뿐이다. 제 몸으로 재면 화면 크기와 상관없이 같다.
+  */
+  leapRef.current = () => {
+    const boss = spotOf(0);
+    /* 파티 줄이 원래 차지하는 구간 — 나가 있는 만큼을 뺀 오른쪽 끝까지 */
+    const home = allyRightOf(0) - (allyAdv[0] ?? 0);
+    const mid = (edge + home) / 2;
+    /* 우두머리 **가운데**가 거기 오게 */
+    const want = Math.round(boss.x - (mid - boss.size / 2));
+    return {
+      /* 무대 왼쪽 벽을 넘지는 않는다 — 넘으면 몸 절반이 잘린다 */
+      span: Math.max(60, Math.min(want, Math.round(boss.x))),
+      rise: Math.round(boss.size * 0.3),
+    };
+  };
   backRef.current = Object.fromEntries(
     line.map((c, i) => [c.id, line.length - 1 - i]),
   );
