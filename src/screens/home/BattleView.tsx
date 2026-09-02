@@ -2529,14 +2529,11 @@ export function BattleView() {
           phase={staging.phase}
           t={staging.t}
           /*
-            옮기는 중에는 **갈 판**의 이름을 띄운다 (`goTo`).
-
-            판은 막이 다 덮인 뒤에 틱이 바꾸므로 (`leaveFor` → `battleTick`),
-            그때까지 `battle.stage` 는 아직 떠나는 판이다. 그걸 그대로 띄우면
-            `>` 를 눌러 3판으로 가는데 검은 화면에 `2 스테이지` 가 뜬다.
+            옮기는 중에는 이름을 안 띄우므로 (`StageVeil` 의 `quiet`) 여기서
+            갈 판을 따로 넘길 것도 없다. 이름은 다 옮긴 뒤 시작 연출이 한 번만
+            띄운다 — 두 곳에서 띄웠더니 실제로 두 번 떴다.
           */
-          stage={staging.phase === 'move' ? (battle.goTo ?? battle.stage) : battle.stage}
-          fromClear={staging.fromClear}
+          stage={battle.stage}
         />
 
         {/*

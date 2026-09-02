@@ -72,8 +72,6 @@ const WALK_DONE = 0.93;
 export function useStageStaging(battle: BattleState): {
   phase: StagePhase;
   t: Animated.Value;
-  /** 바로 앞이 `Clear` 였나 — 그러면 이미 까맣다 */
-  fromClear: boolean;
 } {
   const opening = (battle.openIn ?? 0) > 0;
   const shutting = (battle.clearIn ?? 0) > 0;
@@ -89,21 +87,42 @@ export function useStageStaging(battle: BattleState): {
   const [nonce, setNonce] = useState(0);
   const was = useRef<StagePhase>('none');
   /*
-    `Clear` 는 화면이 완전히 어두워지면서 끝난다. 곧바로 붙는 시작 연출이
-    투명도 0 부터 덮어 오면 그 사이에 **다음 판의 무대가 한 번 번쩍한다.**
-    바로 앞이 무엇이었는지를 들고 있다가, 클리어 다음이면 까만 채로 연다.
+    ── "바로 앞이 클리어였나" 를 들고 다니던 것을 없앴다 ──
+
+    앞 국면이 무엇이었나에 따라 시작 투명도를 0 이나 1 로 골랐다 (`fromClear`).
+    그런데 그 값이 **상태**라 한 그리기 늦게 도착했다 — 국면이 바뀐 첫
+    프레임에는 아직 옛 값이라, 이미 까맣던 화면이 한 프레임 투명해지고 그
+    사이로 전투 화면이 번쩍했다.
+
+    이제 시작 연출은 **언제나 까만 채로 연다** (아래 `veil`). 그러면 앞이
+    무엇이었는지를 알 필요가 없다. 앱을 처음 켤 때도 검은 화면에서 판 이름이
+    떠오르는 것이라 그림이 오히려 낫다.
   */
-  const [fromClear, setFromClear] = useState(false);
   useEffect(() => {
-    if (phase !== 'none' && was.current !== phase) {
-      /* 덮고 온 것이면 이미 까맣다 — `clear` 든 `move` 든 마찬가지다 */
-      setFromClear(was.current === 'clear' || was.current === 'move');
-      setNonce((n) => n + 1);
-    }
+    if (phase !== 'none' && was.current !== phase) setNonce((n) => n + 1);
     was.current = phase;
   }, [phase]);
 
   const t = useRef(new Animated.Value(0)).current;
+  /*
+    ── 국면이 바뀌면 **그리기 전에** 시계를 되돌린다 ──
+
+    앞 연출은 `t` 를 1 에 두고 끝난다. 갈래(`useEffect`)는 그리고 **난 뒤에**
+    도므로, 새 국면의 첫 한 프레임은 앞 연출이 남긴 1 로 그려진다.
+
+    옮기기는 막이 늘 1 이라 아무 일도 없지만, 시작 연출의 막은 t=1 에서
+    0(투명)이다 — 그래서 옮기기가 끝나고 시작 연출로 넘어가는 그 한 프레임에
+    **전투 화면이 샜다.** 정확히 "전투화면이 한 번 보였다가" 그것이다.
+
+    `Animated.Value` 는 React 상태가 아니라 그리기 중에 건드려도 안전하다.
+    갈래가 다시 0 으로 두고 애니메이션을 시작하지만, 같은 값이라 무해하다.
+  */
+  const seen = useRef<StagePhase>('none');
+  if (seen.current !== phase) {
+    seen.current = phase;
+    t.setValue(0);
+  }
+
   useEffect(() => {
     if (phase === 'none') return undefined;
     t.setValue(0);
@@ -118,7 +137,7 @@ export function useStageStaging(battle: BattleState): {
     return () => a.stop();
   }, [nonce, phase, t]);
 
-  return { phase, t, fromClear };
+  return { phase, t };
 }
 
 /**
@@ -150,33 +169,22 @@ export function walkInX(
  * 멈춘 것처럼 보인다.
  */
 export function StageVeil({
-  phase, t, stage, fromClear,
+  phase, t, stage,
 }: {
   phase: StagePhase;
   t: Animated.Value;
   stage: number;
-  fromClear: boolean;
 }) {
   /*
-    덮는 대목의 시작 투명도.
+    ── 옮기는 중에는 글씨가 없다 ──
 
-    클리어 다음이면 이미 1 이다 — 거기서 0 으로 시작하면 두 연출 사이에
-    새 판이 한 프레임 보인다. 그냥 판을 열 때(앱을 켰을 때, `< >` 로 골라
-    갔을 때)는 0 에서 서서히 덮는다.
+    한동안 여기서도 판 이름을 띄웠다. 그런데 바로 뒤에 시작 연출이 같은
+    이름을 다시 띄우므로, **이름이 두 번 떴다** — 떴다가 꺼졌다가 또 뜬다.
+
+    옮기기는 덮기만 하고 이름은 시작 연출 한 곳에서만 띄운다. 판이 무엇인지
+    말하는 자리는 하나여야 한다.
   */
-  const from = phase === 'open' && fromClear ? 1 : 0;
-  /*
-    ── 옮기는 중에도 글씨를 띄운다 ──
-
-    예전에는 덮기만 했다 (`quiet`). 그런데 `< >` 를 누르면 **막이 0 에서
-    서서히 덮이는 400ms 동안 지난 판이 그대로 보였다** — 그동안 계산은 이미
-    멈춰 있으므로(`fightHeld`) 아군도 적도 가만히 선 채였다. 누른 사람 눈에는
-    "다들 멀뚱히 서 있다가 화면이 꺼지는" 것으로 보인다.
-
-    이제 곧장 까맣게 덮고(`veil` 의 12%) 갈 판의 이름을 띄운다. 그러면
-    누르는 순간부터 검은 화면에 판 이름 하나이고, 이어 붙는 시작 연출과 같은
-    그림이라 둘이 한 동작으로 읽힌다.
-  */
+  const quiet = phase === 'move';
   /*
     ── 왜 `useMemo` 인가 ──
 
@@ -187,32 +195,42 @@ export function StageVeil({
   */
   const veil = useMemo(() => (phase === 'move'
     /*
-      옮기기 — **곧장** 까맣게. 400ms 의 12% 면 50ms 다.
+      옮기기 — **처음부터 끝까지 까맣다.** 덮는 대목이 아예 없다.
 
-      서서히 덮으면 그 사이에 지난 판이 그대로 보이는데, 계산이 멈춰 있어서
-      다들 가만히 서 있다. 덮는 것을 연출로 쓸 자리가 아니다 — 누른 사람이
-      보고 싶은 것은 갈 판이지 떠나는 판이 아니다.
+      두 번 고쳤다. 처음엔 400ms 에 걸쳐 서서히 덮었고, 그다음엔 12%(50ms)
+      만에 덮게 줄였다. 둘 다 지난 판이 보였다 — 계산은 이미 멈춰 있어서
+      (`fightHeld`) 아군도 적도 가만히 선 채라, 50ms 라도 **멀뚱히 서 있는
+      한 장**이 눈에 들어온다.
+
+      덮는 것은 연출로 쓸 자리가 아니다. 누른 사람이 보고 싶은 것은 갈 판이지
+      떠나는 판이 아니므로, 떠나는 판은 한 프레임도 안 보이는 것이 맞다.
     */
-    ? t.interpolate({ inputRange: [0, 0.12, 1], outputRange: [0, 1, 1] })
+    ? t.interpolate({ inputRange: [0, 1], outputRange: [1, 1] })
     : phase === 'clear'
     /* 클리어 — 글씨가 먼저 뜨고, 그 뒤로 서서히 어두워진다 */
     ? t.interpolate({
       inputRange: [0, 0.35, 1], outputRange: [0, 0.2, 1],
     })
     /* 시작 — 덮였다가 걷힌다 */
+    /*
+      시작 — **까만 채로 열어서** 걷힌다.
+
+      예전엔 0 에서 덮어 왔다. 앞이 클리어나 옮기기였으면 이미 까만데 거기서
+      0 으로 시작하므로, 두 연출 사이에 다음 판의 무대가 한 번 번쩍했다.
+      그걸 막으려고 "앞이 무엇이었나" 를 상태로 들고 다녔는데(`fromClear`),
+      상태는 한 그리기 늦게 도착해서 정작 그 한 프레임을 못 막았다.
+
+      **늘 1 에서 시작하면 그 질문 자체가 없어진다.** 앱을 처음 켤 때도 검은
+      화면에서 판 이름이 떠오르는 것이라 그림이 오히려 낫다.
+    */
     : t.interpolate({
       inputRange: [0, IN_DONE, HOLD_DONE, VEIL_DONE, 1],
-      outputRange: [from, 1, 1, 0, 0],
-    })), [from, phase, t]);
+      outputRange: [1, 1, 1, 0, 0],
+    })), [phase, t]);
 
   const text = useMemo(() => (phase === 'clear'
     ? t.interpolate({
       inputRange: [0, 0.25, 0.72, 1], outputRange: [0, 1, 1, 0],
-    })
-    : phase === 'move'
-    /* 막이 덮이는 것과 같이 뜬다. 나갈 때는 시작 연출이 이어받는다 */
-    ? t.interpolate({
-      inputRange: [0, 0.12, 1], outputRange: [0, 1, 1],
     })
     : t.interpolate({
       inputRange: [0, IN_DONE, HOLD_DONE, VEIL_DONE, 1],
@@ -221,13 +239,8 @@ export function StageVeil({
 
   /* 글씨가 살짝 다가온다 — 제자리에서 켜지면 자막처럼 보인다 */
   const zoom = useMemo(() => t.interpolate({
-    /*
-      옮기기는 **안 다가온다** (1 에서 1). 400ms 안에 1.3 에서 1 로 오면
-      다가오는 것이 아니라 튀어나오는 것으로 보이고, 곧바로 시작 연출이
-      같은 글씨를 다시 한 번 다가오게 하므로 두 번 튄다.
-    */
     inputRange: [0, phase === 'clear' ? 0.25 : IN_DONE, 1],
-    outputRange: phase === 'move' ? [1, 1, 1] : [1.3, 1, 1.05],
+    outputRange: [1.3, 1, 1.05],
   }), [phase, t]);
 
   if (phase === 'none') return null;
@@ -259,7 +272,7 @@ export function StageVeil({
           transform: [{ scale: zoom }],
         }}
       >
-        {phase === 'clear' ? (
+        {quiet ? null : phase === 'clear' ? (
           <Animated.Text
             style={{
               color: WHITE, fontFamily: MONO, fontSize: 22, fontWeight: '700',
