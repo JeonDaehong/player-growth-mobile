@@ -1201,6 +1201,90 @@ export function MarkNotes({
 }
 
 /**
+ * ── 못 움직이는 동안 머리 위에 붙어 있는 딱지 ──
+ *
+ * `💫기절` · `🔇침묵` (`core/status` 의 `CC`·`STATUS_MARK`).
+ *
+ * ## 왜 이것만 계속 떠 있나
+ *
+ * 나머지 상태는 걸리는 순간에 한 줄 뜨고 만다 (`MarkNotes`). 그걸로 되는
+ * 이유는 **결과가 화면에 남기 때문**이다 — 중독이면 숫자가 계속 뜨고,
+ * 둔화면 휘두르는 박자가 눈에 띄게 늘어진다.
+ *
+ * 기절과 침묵은 결과가 **아무 일도 안 일어나는 것**이다. 그래서 걸린 사람과
+ * 그냥 적이 멀어서 아직 못 치는 사람이 화면에서 똑같이 보인다. 한 번 뜨고
+ * 사라지면 그 뒤 2초 동안은 왜 가만히 있는지를 알 방법이 없다.
+ *
+ * ## 깜빡이지 않는다
+ *
+ * 파티 칸의 로고는 풀리기 직전에 깜빡이는데(`StatusRow`) 여기는 안 그런다.
+ * 저긴 늘 있는 자리라 "곧 없어진다" 를 따로 말해 줘야 하지만, 여기는 **있는
+ * 것 자체가 곧 걸려 있다는 뜻**이라 사라지는 것이 이미 신호다.
+ */
+export function CcTag({ text }: { text: string }) {
+  const t = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const a = Animated.timing(t, {
+      toValue: 1, duration: 160, easing: Easing.out(Easing.quad), useNativeDriver: true,
+    });
+    a.start();
+    return () => { a.stop(); t.setValue(0); };
+  }, [t, text]);
+  /* 뜰 때만 살짝 내려앉는다 — 제자리에서 켜지면 원래 있던 것으로 보인다 */
+  const drop = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [-5, 0],
+  }), [t]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        /*
+          머리 **바로 위**다. 걸린 순간 한 줄(`StatusNote`)은 그보다 더 위에
+          뜨므로 (`marginBottom: 16`) 둘이 같이 떠도 안 겹친다.
+        */
+        bottom: '100%',
+        marginBottom: 3,
+        left: -26,
+        right: -26,
+        alignItems: 'center',
+        opacity: t,
+        transform: [{ translateY: drop }],
+        zIndex: 47,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          /*
+            테를 두르고 안을 채운다. 이 딱지만은 **배경과 안 섞여야** 한다 —
+            무엇이 지나가든 가려지면 안 되는 한 줄이다.
+          */
+          borderWidth: 1,
+          borderColor: BAD_C,
+          backgroundColor: BLACK,
+          paddingHorizontal: 3,
+          paddingVertical: 1,
+        }}
+      >
+        <Text
+          style={{
+            color: BAD_C,
+            fontFamily: MONO,
+            fontSize: 8,
+            fontWeight: '700',
+          }}
+        >
+          {text}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+/**
  * 화면 흔들기 — 무대 전체에 건다.
  *
  * **스타일을 한 번만 만든다.** 예전에는 부르는 쪽이 렌더마다 `shakeStyle(v)`

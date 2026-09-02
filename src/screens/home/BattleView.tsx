@@ -37,7 +37,9 @@ import {
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf, skillsOf, statOf } from '@/core/chars';
 import { hpOf, livingMembers, members, partyStat } from '@/core/party';
-import { hasHex, hexOf } from '@/core/status';
+import {
+  CC, Hex, STATUS_MARK, STATUS_NAME, hasHex, hexOf,
+} from '@/core/status';
 import { Mark, NO_MARK, foeMarksOf, liveSpd, marksOf } from '@/core/passives';
 import { cleanseOptOf, cleanseTargets } from '@/core/skillOpt';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
@@ -151,6 +153,20 @@ const NUM_GAP = Math.round(28 * ZOOM);
 
 function rowFor(live: readonly { x: number }[], x: number): number {
   return live.filter((h) => Math.abs(h.x - x) < NUM_GAP).length;
+}
+
+/**
+ * 못 움직이게 하는 것이 걸려 있으면 그 딱지 (`💫기절`). 없으면 빈 글자.
+ *
+ * **하나만 돌려준다.** 기절과 침묵이 같이 걸릴 수 있는데, 둘을 다 붙이면
+ * 40px 인물 위에 딱지가 두 줄이 되어 정작 인물이 안 보인다. 기절이 이긴다 —
+ * 기절이면 어차피 스킬도 못 쓰므로 침묵은 그 안에 들어 있다.
+ */
+function ccOf(hex: readonly Hex[]): string {
+  const on = hex.filter((h) => h.ms > 0 && CC.has(h.id));
+  if (!on.length) return '';
+  const pick = on.find((h) => h.id === 'st_stun') ?? on[0];
+  return `${STATUS_MARK[pick.id] ?? ''}${STATUS_NAME[pick.id]}`;
 }
 
 /** 한 줄이 먹는 높이 */
@@ -1862,6 +1878,14 @@ export function BattleView() {
                     */
                     hitNo={bodyFx[c.id]?.no ?? 0}
                     hitKind={bodyFx[c.id]?.kind ?? null}
+                    /*
+                      못 움직이는 동안 머리 위에 붙어 있는 딱지 (`core/status` 의 `CC`).
+
+                      이건 다른 상태처럼 걸리는 순간에 한 번만 말하고 말 수가
+                      없다 — 기절의 결과는 **아무 일도 안 일어나는 것**이라, 걸린
+                      사람과 적이 멀어서 아직 못 치는 사람이 똑같아 보인다.
+                    */
+                    cc={ccOf(hexOf(battle.hex, c.id))}
                     /* 정화로 걷힌 사람에게서만 조각이 떠오른다 */
                     purify={purified[c.id] ?? 0}
                     onCharge={onCharge}
@@ -2447,7 +2471,14 @@ export function BattleView() {
         <StageVeil
           phase={staging.phase}
           t={staging.t}
-          stage={battle.stage}
+          /*
+            옮기는 중에는 **갈 판**의 이름을 띄운다 (`goTo`).
+
+            판은 막이 다 덮인 뒤에 틱이 바꾸므로 (`leaveFor` → `battleTick`),
+            그때까지 `battle.stage` 는 아직 떠나는 판이다. 그걸 그대로 띄우면
+            `>` 를 눌러 3판으로 가는데 검은 화면에 `2 스테이지` 가 뜬다.
+          */
+          stage={staging.phase === 'move' ? (battle.goTo ?? battle.stage) : battle.stage}
           fromClear={staging.fromClear}
         />
 

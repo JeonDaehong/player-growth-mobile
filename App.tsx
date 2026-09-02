@@ -29,7 +29,7 @@ import { connectGuilds } from '@/state/useGuilds';
 import { useNetSync } from '@/state/useNetSync';
 import { BLACK, MONO, WHITE } from '@/ui/theme';
 import { applyWebTextRendering } from '@/ui/webText';
-import { applyWebViewport, armImmersive } from '@/ui/webViewport';
+import { applyWebViewport } from '@/ui/webViewport';
 import { InstallBar } from '@/ui/InstallBar';
 
 import AuthScreen from '@/screens/AuthScreen';
@@ -230,14 +230,20 @@ function useLive(active: boolean) {
 export default function App() {
   applyWebTextRendering();
   /*
-    확대 금지와 전체 화면. 둘 다 웹에서만 하는 일이고, 여러 번 불려도
-    안전하게 되어 있다 (`ui/webViewport`).
+    확대 금지. 웹에서만 하는 일이고, 여러 번 불려도 안전하다
+    (`ui/webViewport`).
 
-    전체 화면은 여기서 **들어가는 게 아니라 걸어 두는** 것이다 — 브라우저가
-    사용자 입력 없이는 안 내주므로 첫 탭까지 기다린다.
+    ── 전체 화면 가로채기는 뺐다 ──
+
+    첫 탭에 `requestFullscreen` 을 걸어 시스템 바를 치우고 있었다. 브라우저가
+    사용자 입력 없이는 전체 화면을 안 내주므로 **아무 데나 처음 누른 것**을
+    그 입력으로 썼는데, 그건 누른 사람이 시킨 일이 아니다 — 단추를 누르려던
+    사람에게 화면이 통째로 넘어간다.
+
+    시스템 바를 없애는 것은 웹이 할 일이 아니다. 앱으로 만들 때 Expo 쪽에서
+    한다 (`expo-navigation-bar`).
   */
   applyWebViewport();
-  armImmersive();
   /*
     지난 세션 시도의 결과를 되살린다. 리디렉션으로 구글에 다녀오면 이 앱은
     통째로 새로 뜨므로, 안 되살리면 방금 한 시도가 없던 일이 된다.

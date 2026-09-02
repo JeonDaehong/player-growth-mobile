@@ -64,7 +64,7 @@ export type ShotKind = 'bolt' | 'lob' | 'bomb' | 'blob';
 /** 맞은 아군 몸 위에서 나는 것 */
 export type BodyKind =
   | 'slashV' | 'slashD' | 'lance' | 'spore' | 'coil'
-  | 'rock' | 'crush' | 'spike' | 'thunder' | 'drip';
+  | 'rock' | 'crush' | 'spike' | 'thunder' | 'drip' | 'whip';
 
 /**
  * 한 번의 공격이 화면에서 어떻게 보이나.
@@ -123,6 +123,7 @@ export const BODY_HIT: Record<BodyKind, number> = {
   rock: 418,
   thunder: 208,
   drip: 248,
+  whip: 90,
 };
 
 /**
@@ -149,6 +150,13 @@ export const SHEET: Partial<Record<BodyKind, { set: string; cells: number }>> = 
   spore: { set: 'bfx_spore', cells: 5 },
   thunder: { set: 'bfx_bolt', cells: 5 },
   drip: { set: 'bfx_drip', cells: 5 },
+  /*
+    감김만 **아군 몸 위에** 겹친다. 나머지는 빈 곳에 뜬다.
+
+    그래서 이 시트만 가운데가 비어 있어야 했고, 프롬프트에 그 한 줄을 따로
+    박아 뒀다 (`docs/BOSS_FX_PROMPTS.md`) — 속이 차면 감긴 사람이 안 보인다.
+  */
+  coil: { set: 'bfx_bind', cells: 5 },
 };
 
 /** 아무 연출도 없는 평범한 한 대 */
@@ -189,8 +197,14 @@ export const BOSS_BLOW: Record<number, FxPlan> = {
 export const BOSS_CAST: Record<string, FxPlan> = {
   /* 1판 뭉개기 — 진짜로 아군 쪽으로 뛰어들어 찍는다 */
   squash: { leap: true, body: 'crush', lead: 280 },
-  /* 2판 식인 덩굴 휘감기 — 뭘 맞았는지 알 수 없다는 말을 들었다 */
-  coil: { body: 'coil', lead: 320 },
+  /*
+    2판 식인 덩굴 휘감기 — 후려친다. **감기지 않는다.**
+
+    감기는 그림은 행동 불가일 때만 쓴다 (13판). 이건 그냥 2배로 아픈 한
+    대라, 감긴 그림을 붙이면 화면이 "묶였다" 고 말하는데 실제로는 다음
+    순간 멀쩡히 휘두른다 — 화면이 거짓말을 한다.
+  */
+  coil: { body: 'whip', lead: 120 },
   /* 3판 맹독 오물 분사 */
   spray: { shot: 'blob', lead: 300 },
   /* 4판 환각 포자 폭발 — 맞은 사람 몸에서 터진다 */
@@ -214,7 +228,13 @@ export const BOSS_CAST: Record<string, FxPlan> = {
   spike: { body: 'lance', lead: 140 },
   /* 12판 포식자의 소화액 */
   digest: { shot: 'blob', lead: 300 },
-  /* 13판 속박의 덩굴 — 행동 불가라 몸이 감겨야 한다 */
+  /*
+    13판 속박의 덩굴 — **여기만 감긴다.** 행동 불가를 거는 기술이라
+    (`st_stun`) 묶인 그림이 없으면 왜 안 움직이는지가 화면에 없다.
+
+    감겨 있는 **동안**은 머리 위 딱지가 맡는다 (`core/status` 의 `CC`) —
+    이 연출은 감기는 그 순간만 그린다.
+  */
   bind: { body: 'coil', lead: 320 },
   /* 14판 독성 포자 분출 — 맞은 사람마다 터진다 */
   burst: { body: 'spore', lead: 300 },
@@ -412,56 +432,39 @@ function Lance({ size }: { size: number }) {
 }
 
 /**
- * ── 감김 ── 몸을 두르는 띠 셋이 조여든다.
+ * ── 후려침 ── 덩굴이 밖에서 들어와 한 번 치고 빠진다.
  *
- * 2판 식인 덩굴과 13판 속박의 덩굴. 13판은 **행동 불가**를 거는 기술이라
- * (`st_stun`) "묶였다" 가 화면에 없으면 왜 안 움직이는지 알 수가 없다.
+ * 2판 식인 덩굴. **감기지 않는다** — 저건 그냥 2배로 아픈 한 대이고, 감긴
+ * 그림을 붙이면 화면이 "묶였다" 고 말하는데 다음 순간 멀쩡히 휘두른다.
  *
- * 조여드는 것이 핵심이다 (`grip` 이 1.7 → 0.95). 처음부터 몸에 붙어 있으면
- * 감긴 것이 아니라 원래 거기 있던 무늬로 보인다.
- *
- * ## 여기만 시트가 없다
- *
- * 받아 둔 일곱(`SHEET`) 중에 넝쿨이 없다 — 저것들은 전부 **몸에서 떨어져
- * 나오는 것**이고, 감기는 것은 몸에 붙는 것이라 목록에 안 들어갔다.
- * 프롬프트를 `docs/BOSS_FX_PROMPTS.md` 에 새로 적어 뒀다.
- *
- * 그때까지는 납작한 타원 **테두리** 셋이다. 채우면 인물이 통째로 가려진다.
+ * 같은 시트의 **앞 두 칸만** 쓴다 (`bfx_bind/1`·`2`). 저 둘은 아직 안 닫힌
+ * 덩굴이라 후려치는 것으로 읽히고, 고리가 닫히는 3번 칸부터가 감긴 것이다.
  */
-function Coil({ size }: { size: number }) {
-  const { t, on } = useRun(900);
-  const bands = useMemo(() => [-0.18, 0.02, 0.22].map((at, i) => ({
-    at,
-    grip: t.interpolate({
-      inputRange: [0, 0.3 + i * 0.06, 1],
-      outputRange: [1.7, 0.95, 0.95],
-      extrapolate: 'clamp',
-    }),
-    fade: t.interpolate({
-      inputRange: [0, 0.1 + i * 0.05, 0.72, 1], outputRange: [0, 1, 1, 0],
-    }),
-  })), [t]);
+function Whip({ size }: { size: number }) {
+  const MS = 300;
+  const { t, on } = useRun(MS);
+  const n = useFrames(2, MS);
+  /* 오른쪽에서 들어와 몸을 지나쳐 나간다 — 30% (90ms) 에 몸 한가운데다 */
+  const sweep = useMemo(() => t.interpolate({
+    inputRange: [0, 0.3, 1], outputRange: [size * 0.9, 0, -size * 0.5],
+  }), [t, size]);
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.12, 0.55, 1], outputRange: [0, 1, 0.9, 0],
+  }), [t]);
 
   if (!on) return null;
-  const w = size * 0.86;
   return (
     <View pointerEvents="none" style={bodyBox(size)}>
-      {bands.map((b, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            width: w,
-            height: w * 0.30,
-            borderRadius: w,
-            borderWidth: 2,
-            borderColor: WHITE,
-            top: size * (0.44 + b.at),
-            opacity: b.fade,
-            transform: [{ scaleX: b.grip }, { scaleY: b.grip }],
-          }}
-        />
-      ))}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          opacity: fade,
+          /* 비스듬히 눕힌다 — 곧게 들어오면 창(`Lance`)과 구분이 안 된다 */
+          transform: [{ translateX: sweep }, { rotate: '-22deg' }],
+        }}
+      >
+        <Sprite set="bfx_bind" name={String(n)} size={Math.round(size * 1.15)} />
+      </Animated.View>
     </View>
   );
 }
@@ -480,7 +483,11 @@ function Coil({ size }: { size: number }) {
  */
 function Sheeted({ kind, size }: { kind: BodyKind; size: number }) {
   const art = SHEET[kind];
-  const ms = kind === 'rock' ? 580 : 620;
+  /*
+    감김만 길다 (900ms). 저건 "감겼다" 를 읽을 시간이 필요한데, 나머지는
+    한 번 터지고 마는 것이라 길게 끌면 늘어진다.
+  */
+  const ms = kind === 'coil' ? 900 : kind === 'rock' ? 580 : 620;
   const { t, on } = useRun(ms);
   const n = useFrames(art?.cells ?? 3, ms);
 
@@ -637,14 +644,15 @@ export function BossBodyFx({ kind, size }: { kind: BodyKind; size: number }) {
     case 'slashV': return <Slash size={size} deg={4} />;
     case 'slashD': return <Slash size={size} deg={38} />;
     case 'lance': return <Lance size={size} />;
-    case 'coil': return <Coil size={size} />;
     case 'crush': return <Crush size={size} />;
     case 'spike': return <GroundSpike size={size} />;
-    /* 넷은 받아 둔 시트를 그대로 튼다 (`SHEET`) */
+    case 'whip': return <Whip size={size} />;
+    /* 다섯은 받아 둔 시트를 그대로 튼다 (`SHEET`) */
     case 'spore':
     case 'rock':
     case 'thunder':
     case 'drip':
+    case 'coil':
       return <Sheeted kind={kind} size={size} />;
     default: return null;
   }

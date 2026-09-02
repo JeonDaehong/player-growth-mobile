@@ -165,8 +165,18 @@ export function StageVeil({
     갔을 때)는 0 에서 서서히 덮는다.
   */
   const from = phase === 'open' && fromClear ? 1 : 0;
-  /* 옮기는 중에는 글씨가 없다 — 덮기만 한다 */
-  const quiet = phase === 'move';
+  /*
+    ── 옮기는 중에도 글씨를 띄운다 ──
+
+    예전에는 덮기만 했다 (`quiet`). 그런데 `< >` 를 누르면 **막이 0 에서
+    서서히 덮이는 400ms 동안 지난 판이 그대로 보였다** — 그동안 계산은 이미
+    멈춰 있으므로(`fightHeld`) 아군도 적도 가만히 선 채였다. 누른 사람 눈에는
+    "다들 멀뚱히 서 있다가 화면이 꺼지는" 것으로 보인다.
+
+    이제 곧장 까맣게 덮고(`veil` 의 12%) 갈 판의 이름을 띄운다. 그러면
+    누르는 순간부터 검은 화면에 판 이름 하나이고, 이어 붙는 시작 연출과 같은
+    그림이라 둘이 한 동작으로 읽힌다.
+  */
   /*
     ── 왜 `useMemo` 인가 ──
 
@@ -176,8 +186,14 @@ export function StageVeil({
     렉이 났다.
   */
   const veil = useMemo(() => (phase === 'move'
-    /* 옮기기 — 짧게, 곧장 까맣게 */
-    ? t.interpolate({ inputRange: [0, 1], outputRange: [0, 1] })
+    /*
+      옮기기 — **곧장** 까맣게. 400ms 의 12% 면 50ms 다.
+
+      서서히 덮으면 그 사이에 지난 판이 그대로 보이는데, 계산이 멈춰 있어서
+      다들 가만히 서 있다. 덮는 것을 연출로 쓸 자리가 아니다 — 누른 사람이
+      보고 싶은 것은 갈 판이지 떠나는 판이 아니다.
+    */
+    ? t.interpolate({ inputRange: [0, 0.12, 1], outputRange: [0, 1, 1] })
     : phase === 'clear'
     /* 클리어 — 글씨가 먼저 뜨고, 그 뒤로 서서히 어두워진다 */
     ? t.interpolate({
@@ -193,6 +209,11 @@ export function StageVeil({
     ? t.interpolate({
       inputRange: [0, 0.25, 0.72, 1], outputRange: [0, 1, 1, 0],
     })
+    : phase === 'move'
+    /* 막이 덮이는 것과 같이 뜬다. 나갈 때는 시작 연출이 이어받는다 */
+    ? t.interpolate({
+      inputRange: [0, 0.12, 1], outputRange: [0, 1, 1],
+    })
     : t.interpolate({
       inputRange: [0, IN_DONE, HOLD_DONE, VEIL_DONE, 1],
       outputRange: [0, 1, 1, 0, 0],
@@ -200,8 +221,13 @@ export function StageVeil({
 
   /* 글씨가 살짝 다가온다 — 제자리에서 켜지면 자막처럼 보인다 */
   const zoom = useMemo(() => t.interpolate({
+    /*
+      옮기기는 **안 다가온다** (1 에서 1). 400ms 안에 1.3 에서 1 로 오면
+      다가오는 것이 아니라 튀어나오는 것으로 보이고, 곧바로 시작 연출이
+      같은 글씨를 다시 한 번 다가오게 하므로 두 번 튄다.
+    */
     inputRange: [0, phase === 'clear' ? 0.25 : IN_DONE, 1],
-    outputRange: [1.3, 1, 1.05],
+    outputRange: phase === 'move' ? [1, 1, 1] : [1.3, 1, 1.05],
   }), [phase, t]);
 
   if (phase === 'none') return null;
@@ -233,7 +259,7 @@ export function StageVeil({
           transform: [{ scale: zoom }],
         }}
       >
-        {quiet ? null : phase === 'clear' ? (
+        {phase === 'clear' ? (
           <Animated.Text
             style={{
               color: WHITE, fontFamily: MONO, fontSize: 22, fontWeight: '700',

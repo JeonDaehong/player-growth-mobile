@@ -3626,6 +3626,22 @@
       ]
     },
     {
+      "file": "bfx_bind.jpg",
+      "name": "bfx_bind",
+      "expect": [
+        5,
+        1
+      ],
+      "note": "보스 공격 이펙트 — 자리에서 터지는 것 (docs/BOSS_FX_PROMPTS.md). 일곱과 달리 **아군 몸 위에** 겹치는 것이라 가운데가 비어 있어야 한다",
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
       "file": "passive.jpg",
       "name": "boss_passive",
       "expect": [
@@ -3862,6 +3878,7 @@
     "assets/2026-08-29-001",
     "assets/2026-08-30-001",
     "assets/2026-08-31-001",
-    "assets/2026-09-01-001"
+    "assets/2026-09-01-001",
+    "assets/2026-09-02-001"
   ]
 }

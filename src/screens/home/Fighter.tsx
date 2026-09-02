@@ -43,7 +43,7 @@ import { BodyKind, BossBodyFx } from './BossFx';
 import { BAD_C, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import {
-  DamageNumber, HealMarks, HitBurst, HurtTint, MarkNotes, SkillShout,
+  CcTag, DamageNumber, HealMarks, HitBurst, HurtTint, MarkNotes, SkillShout,
 } from './HitFx';
 import { SwordWave, flyMsOf } from './SwordWave';
 import { SkillAura } from './SkillAura';
@@ -183,7 +183,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
-  live, hitNo, hitKind,
+  live, hitNo, hitKind, cc,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -293,6 +293,16 @@ function FighterView({
   hitNo: number;
   /** 그 연출이 무엇인가 (`BossFx` 의 표). 없으면 안 그린다 */
   hitKind: BodyKind | null;
+  /**
+   * 지금 **못 움직이게 하는 것**이 걸려 있으면 그 딱지 (`core/status` 의 `CC`).
+   *
+   * `💫기절` 처럼 걸려 있는 **내내** 머리 위에 붙어 있는다. 빈 글자면 안 붙는다.
+   *
+   * 다른 상태처럼 걸리는 순간에 한 번만 말하고 말 수가 없다 — 기절의 결과는
+   * **아무 일도 안 일어나는 것**이라, 걸린 사람과 적이 멀어서 아직 못 치는
+   * 사람이 화면에서 똑같아 보인다.
+   */
+  cc: string;
   /**
    * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
    *
@@ -1079,6 +1089,9 @@ function FighterView({
         <BossBodyFx key={hitNo} kind={hitKind} size={size} />
       )}
 
+      {/* 못 움직이는 동안 계속 붙어 있는 딱지 — `💫기절` */}
+      {!!cc && <CcTag text={cc} />}
+
       {/*
         ── 맞으면 몸이 붉게 깜빡인다 ──
 
@@ -1258,6 +1271,7 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.live === b.live
   && a.hitNo === b.hitNo
   && a.hitKind === b.hitKind
+  && a.cc === b.cc
   && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge
