@@ -31,7 +31,8 @@ import { Animated, Easing, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  MOB_CAP, STAGE_MS, bossReady, fightHeld, foeHexOf, foeOf, healPlan, pickAim,
+  MOB_CAP, STAGE_MS, bossReady, bossRoom, fightHeld, foeAt as kindAt, foeHexOf, foeOf,
+  healPlan, pickAim,
   RAGE_MS, rageIn, raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
@@ -1501,7 +1502,7 @@ export function BattleView() {
         const to = marks.length ? marks[i % marks.length] : 0;
         return {
           key: hitSeq.current++,
-          art: foeOf(battle.stage, battle.boss, f.k).art,
+          art: kindAt(battle, f).art,
           x: sp.x, y: sp.y, size: sp.size,
           dist: Math.max(20, Math.round(sp.x - allyRightOf(to))),
         };
@@ -1548,7 +1549,14 @@ export function BattleView() {
    * 빌 뿐이다 — 그래야 남은 놈들이 안 움직인다 (`core/autoBattle` 의
    * `FoeSlot.pos`).
    */
-  const cap = cur.boss ? 1 : MOB_CAP;
+  /*
+    우두머리 판도 자리가 여럿일 수 있다 (`bossRoom`).
+
+    21판은 반으로 갈라지고, 26판은 죽으면서 애벌레 넷을 남기고, 30판은
+    분신을 만든다. **서 있는 마릿수가 아니라 최대 마릿수**로 잡는다 — 마릿수로
+    잡으면 하나 죽을 때마다 줄 폭이 줄어 남은 놈들이 통째로 앞으로 당겨진다.
+  */
+  const cap = cur.boss ? bossRoom(battle.stage) : MOB_CAP;
   const closeIn = closeInFor(stageW, line.length, cap, cur.boss);
   /**
    * 그 자리의 아군이 적 앞줄까지 가려면 몇 px 을 더 가야 하나.
@@ -1942,7 +1950,15 @@ export function BattleView() {
                       없다 — 기절의 결과는 **아무 일도 안 일어나는 것**이라, 걸린
                       사람과 적이 멀어서 아직 못 치는 사람이 똑같아 보인다.
                     */
-                    cc={ccOf(hexOf(battle.hex, c.id))}
+                    cc={battle.charm?.who.includes(c.id)
+                      /*
+                        돌아선 것이 기절보다 앞선다. 둘 다 "못 쓴다" 인데
+                        기절은 가만히 서 있고 이쪽은 **아군을 친다** — 화면에서
+                        벌어지는 일이 정반대라, 헷갈리면 왜 우리 편 체력이
+                        줄어드는지를 못 읽는다.
+                      */
+                      ? '\u{1F300}혼란'
+                      : ccOf(hexOf(battle.hex, c.id))}
                     /* 정화로 걷힌 사람에게서만 조각이 떠오른다 */
                     purify={purified[c.id] ?? 0}
                     onCharge={onCharge}
@@ -2048,7 +2064,8 @@ export function BattleView() {
                   싸우는 놈, 뒷줄은 떨어져서 던지는 놈이라 그림도 세기도
                   다르다 — 그래서 마리마다 제 종을 읽는다.
                 */
-                const kf = foeOf(battle.stage, battle.boss, f.k);
+                /* 제 것을 들고 있는 놈(분열체 · 분신 · 애벌레)은 그쪽이 이긴다 */
+                const kf = kindAt(battle, f);
                 /* 아직 걸어 들어오는 중이면 그 값 — 다 걸었으면 undefined */
                 const walking = walk.get(f.id);
                 const foeSize = Math.round(foeW * depthAt(back).scale);
@@ -2066,9 +2083,23 @@ export function BattleView() {
                   `Sprite` 가 같은 세트의 `attack` 으로 떨어뜨린다 — 챕터마다
                   시트를 다시 그리지 않아도 되도록 아래에 fallback 을 걸어 뒀다.
                 */
+                /*
+                  **다른 몸이 된 놈은 그 칸에서 산다** (`FoeKind.pose`).
+
+                  갈라진 머리와 꼬리, 고치를 쓴 몸, 우화한 몸. 같은 시트의
+                  다른 칸이라 (`split_head`·`cocoon`·`imago`) 시트를 따로 안
+                  받는다.
+
+                  지금 국면이 있으면(`gim.form`) 그쪽이 이긴다 — 고치는
+                  일시적이고 `pose` 는 그 놈의 평소 모습이라, 고치가 풀리면
+                  제 모습으로 돌아와야 한다.
+                */
+                const rest = f.gim?.form ?? kf.pose ?? 'idle';
                 const foeFrame = flinch.includes(back) && !down ? 'down'
-                  : foeSwing ? (battle.boss && patShown ? 'skill1' : 'attack')
-                    : 'idle';
+                  /* 고치 · 기 모으기 · 막 두르기 중에는 안 휘두른다 */
+                  : (foeSwing && !f.gim?.still)
+                    ? (battle.boss && patShown ? 'skill1' : 'attack')
+                    : rest;
                 const bossOne = battle.boss && back === 0;
                 /*
                   이 마리에게 걸려 있는 것 — **한 번만 재서 둘이 나누어 쓴다.**
@@ -2290,14 +2321,45 @@ export function BattleView() {
                           backgroundColor: WHITE,
                         }}
                       />
+                      {/*
+                        ── 보호막 ── 체력 막대 **위에 한 겹** 더 (22 · 29판).
+
+                        따로 그리지 않고 같은 막대에 겹친다. 5초 안에 깨야 하는
+                        것이라 **어디까지 깎았나가 곧 남은 시간**인데, 막대가
+                        둘이면 어느 쪽을 봐야 하는지가 흐려진다.
+
+                        빗금 대신 **붉은 테**로 갈랐다. 흑백 두 색에 붉은색
+                        하나가 이 게임에서 "급하다" 를 말하는 유일한 색이다
+                        (`BAD_C`).
+                      */}
+                      {(f.gim?.shield ?? 0) > 0 && (
+                        <View
+                          pointerEvents="none"
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: `${Math.max(0, Math.min(1,
+                              (f.gim?.shield ?? 0) / Math.max(1, kf.hp * 0.2))) * 100}%`,
+                            backgroundColor: BAD_C,
+                          }}
+                        />
+                      )}
                     </View>
 
                     <Sprite
                       set={kf.art}
                       /* 맞은 놈만 자세가 무너진다 — 나머지는 계속 서 있다 */
                       name={foeFrame}
-                      /* 멀수록 작다 — 크기와 높이가 같이 가야 평면 위에 선다 */
-                      size={foeSize}
+                      /*
+                        멀수록 작다 — 크기와 높이가 같이 가야 평면 위에 선다.
+
+                        소환물은 한 번 더 줄인다 (`FoeKind.small`). 26판 애벌레는
+                        우두머리 자리에 서지만 우두머리가 아니다 — 132px 로
+                        그리면 넷이 화면을 덮는다.
+                      */
+                      size={kf.small ? Math.round(foeSize * 0.5) : foeSize}
                       /*
                         **발을 상자 바닥에 맞춘다** (아군과 같은 이유).
 

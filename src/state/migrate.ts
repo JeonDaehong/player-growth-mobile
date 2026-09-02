@@ -290,6 +290,7 @@ export function migrateState(persisted: unknown): GameState {
     /* 지난 판에 나갔던 특수기 이름을 이어받을 이유가 없다 */
     pat: null,
     patId: null,
+    charm: null,
     patSeq: 0,
     /*
       걸려 있던 것도 안 믿는다.

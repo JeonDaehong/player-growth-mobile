@@ -56,7 +56,7 @@ import {
   SkillDef, Stat, blowOf, skillOf, skillsOf, statOf, swingMs,
 } from './chars';
 import {
-  Hex, StatusId, hexOf, mulOf, putHex, tickHex,
+  GOOD, Hex, StatusId, hexOf, mulOf, putHex, tickHex,
 } from './status';
 import {
   FADE_MS, allyAtkMul, healMulOf, liveArmor, liveSpd, regenOf,
@@ -229,6 +229,22 @@ export interface FoeKind {
    */
   def?: number;
   /**
+   * 우두머리 자리에 서지만 **작게 그리는** 놈 (26판 폭탄 애벌레).
+   *
+   * 자리 계산은 안 건드린다 — 줄의 폭과 간격은 판이 정한 하나의 값에서
+   * 나오므로 (`BOSS_W`), 마리마다 다르게 하면 배치가 통째로 흔들린다.
+   * 그리는 크기만 줄인다.
+   */
+  small?: boolean;
+  /**
+   * 이 놈이 쓸 **기본 자세 칸**. 안 적으면 `idle` 이다.
+   *
+   * 21판 지네가 갈라지면 머리와 꼬리가 같은 시트의 다른 칸을 쓴다
+   * (`split_head`·`split_tail`). 23판 고치와 25판 우화도 마찬가지다 —
+   * **같은 놈인데 모습만 달라지는** 것이라 시트를 따로 두지 않는다.
+   */
+  pose?: string;
+  /**
    * 이름 위에 작게 붙는 수식어. 우두머리만 쓴다.
    *
    * `탐식의 거대 슬라임, 젤라투스` 를 한 줄로 넣으면 등장 배너에서 넘친다.
@@ -369,6 +385,19 @@ export interface BossPattern {
   drain?: number;
   /** 맞은 사람의 스킬 게이지를 몇 할 깎나 */
   gauge?: number;
+  /**
+   * 이 기술이 **기믹을 부르나** (`BOSS_GIMMICK`).
+   *
+   * 기믹은 대개 체력 문턱에서 저절로 터지는데(`at`), 셋은 기술이 부른다 —
+   * 22판이 막을 두르고, 24판이 아군 하나를 돌려세우고, 27판이 빼앗는다.
+   *
+   * 문턱으로 못 두는 이유는 저 셋이 **몇 번이고 다시 나오는 것**이기
+   * 때문이다. 문턱은 한 번뿐이라 (`FoeGim.done`) 거기 두면 판마다 한 번씩만
+   * 막을 두른다.
+   */
+  casts?: 'shield' | 'charm' | 'devour';
+  /** `casts: 'charm'` 이 몇 초짜리인가 */
+  charmSec?: number;
 }
 
 /**
@@ -571,8 +600,8 @@ export const BOSS_SKILLS: Record<number, readonly BossPattern[]> = {
       터진다.** 그래서 배수를 사양(최대 체력의 50%)이 아니라 공격력 기준으로
       낮춰 잡았다. 안 그러면 열 번마다 파티가 반씩 녹는다.
     */
-    id: 'veil', name: '여왕의 황금 장막', every: 10, mul: 2.20, aim: 'all', dmg: 'magic',
-    hex: [{ id: 'st_stun', sec: 3 }],
+    id: 'veil', name: '여왕의 황금 장막', every: 10, mul: 0, aim: 'all', dmg: 'magic',
+    casts: 'shield',
   }],
   23: [{
     /* 사양: 맨 앞 아군에게 250% 물리 + 3초 기절 */
@@ -588,10 +617,10 @@ export const BOSS_SKILLS: Record<number, readonly BossPattern[]> = {
       맞다 — 이 기술의 값은 "그 사람이 4초 동안 제 몫을 못 한다" 다.
     */
     id: 'daze', name: '정신 착란', every: 10, mul: 0, aim: 'one', dmg: 'magic',
-    hex: [
-      { id: 'st_silence', sec: 4 },
-      { id: 'st_weak', sec: 4, mul: 0.60 },
-    ],
+    casts: 'charm',
+    charmSec: 4,
+    /* 돌아선 동안은 스킬이 안 나간다 — 로고로도 그렇게 보이게 같이 건다 */
+    hex: [{ id: 'st_silence', sec: 4 }],
   }],
   25: [{
     /*
@@ -641,7 +670,7 @@ export const BOSS_SKILLS: Record<number, readonly BossPattern[]> = {
       공격속도를 올린다" 인데, 빼앗기는 쪽만 지금 있다.
     */
     id: 'devour', name: '포식', every: 8, mul: 2.00, aim: 'one', dmg: 'phys',
-    drain: 1.00, gauge: 0.50,
+    drain: 1.00, gauge: 0.50, casts: 'devour',
   }],
   28: [{
     /*
@@ -695,114 +724,666 @@ export const BOSS_SKILLS: Record<number, readonly BossPattern[]> = {
 /**
  * ── 21~30 우두머리의 **특수 기믹** ──
  *
- * 사양에 있는데 **아직 엔진에 없는 것들**이다. 기술(`BOSS_SKILLS`)로 옮길 수
- * 없어서 여기 이름만 적어 둔다.
+ * 기술(`BOSS_SKILLS`)로는 못 적는 것들이다. `BossPattern` 이 할 수 있는 일은
+ * 하나뿐이기 때문이다 — **한 번 때리고, 뭔가를 걸고, 얼마쯤 가져간다.**
  *
- * ## 왜 기술로 못 옮기나
+ * 여기 것들은 그 틀 밖에 있다. 한 마리가 둘이 되고, 죽으면서 넷이 나오고,
+ * 체력 절반에서 다른 몸이 되고, 깨야만 넘어가는 막을 두른다.
  *
- * `BossPattern` 이 할 수 있는 일은 하나다 — **한 번 때리고, 뭔가를 걸고,
- * 얼마쯤 가져간다.** 아래 것들은 전부 그 틀 밖에 있다.
+ * ## 언제 터지나
  *
- *   나뉜다      한 마리가 두 마리가 된다 (21 · 30)
- *   생긴다      죽으면서 넷이 나온다 (26)
- *   바뀐다      체력 절반에서 다른 몸이 된다 (23 고치 · 25 우화)
- *   막는다      깨야만 넘어가는 보호막 (22 · 29)
- *   돌린다      아군이 아군을 친다 (24 혼란 · 29 광란)
- *   빼앗는다    버프와 코스트를 옮겨 온다 (27)
- *   쌓인다      판이 끝날 때까지 안 풀리는 중첩 (30 부식성 아우라)
+ * 전부 **문턱 하나**로 정해진다 (`at`) — 체력이 그 비율 아래로 내려가는 순간
+ * 한 번. `at: 0` 은 특별하다: 죽는 순간이다.
  *
- * 넷은 **적을 여럿으로 만드는 얼개**가, 둘은 **판의 국면**이, 하나는 **아군을
- * 적으로 돌리는 길**이 있어야 한다. 셋 다 지금 없다.
+ * 시간으로 안 재는 이유는, 시간으로 재면 세게 키운 파티가 기믹을 건너뛰기
+ * 때문이다. 30초 만에 잡으면 30초짜리 기믹은 안 본다. 체력으로 재면 **누구든
+ * 반드시 한 번 겪는다** — 그게 이 열 마리를 앞 스물과 가르는 것이다.
  *
- * ## 그동안은 어떻게 도나
+ * ## 한 번만 터진다
  *
- * 기믹 없이 돈다. 우두머리는 제 기술을 쓰고 (`BOSS_SKILLS` 의 21~30) 체력이
- * 다 닳으면 그냥 죽는다 — **판이 깨지지 않는다.** 사양대로가 아닐 뿐이다.
- *
- * 여기 적어 두는 이유는 그것이 **빠진 것인지 안 만들기로 한 것인지**를
- * 나중에 구분할 수 있게 하기 위해서다. 아무 데도 안 적어 두면 반년 뒤에는
- * 둘을 가릴 방법이 없다.
+ * 터진 기믹은 그 마리의 `gim.done` 에 이름이 남는다. 체력은 문턱 아래에서
+ * 계속 오르내리므로 (회복하는 우두머리가 여럿이다) 그것이 없으면 틱마다
+ * 다시 갈라진다.
  */
-export interface BossGimmick {
+export type BossGimmick = ForkGim | CocoonGim | ImagoGim | ShieldGim | DevourGim;
+
+/** 모든 기믹이 같이 갖는 것 */
+interface GimBase {
   /** 화면에 뜨는 이름 */
   name: string;
-  /** 무슨 일이 일어나야 하나 — 사양 그대로 */
+  /** 무슨 일이 일어나나 — 사양 그대로 */
   text: string;
-  /** 이걸 만들려면 엔진에 무엇이 생겨야 하나 */
-  needs: 'split' | 'spawn' | 'phase' | 'shield' | 'charm' | 'devour' | 'stack';
+  /**
+   * 체력이 이 비율 **아래로 내려가면** 터진다. `0` 이면 죽는 순간이다.
+   *
+   * 기술이 거는 것(22판 황금 장막)은 문턱이 없으므로 `null` 이다 — 그건
+   * `BOSS_SKILLS` 쪽에서 부른다.
+   */
+  at: number | null;
 }
 
+/**
+ * ── 갈라진다 ── 한 마리가 여러 마리가 된다.
+ *
+ * 셋이 이걸 쓴다. 셋이 서로 꽤 다른데도 한 얼개인 이유는, **결과가 같기
+ * 때문**이다 — 줄에 새 놈이 서고, 그놈은 제 능력치를 들고 있다 (`FoeSlot.own`).
+ *
+ *   21 절단 분열   본체가 사라지고 머리와 꼬리가 남은 체력을 반씩
+ *   26 최후의 발악 죽으면서 애벌레 넷 (`at: 0`)
+ *   30 군체의 대염쇄 본체는 그대로 있고 분신이 하나 더 (`keep`)
+ */
+export interface ForkGim extends GimBase {
+  kind: 'fork';
+  /** 본체가 남나. 안 남으면 그 자리에 조각들만 선다 */
+  keep: boolean;
+  parts: readonly ForkPart[];
+}
+
+/** 갈라져 나온 한 조각 */
+export interface ForkPart {
+  /** 화면에 뜨는 이름 */
+  name: string;
+  /**
+   * 체력을 얼마나 갖나.
+   *
+   * `left` 는 **본체에 남아 있던 만큼**의 비율이고 (21판 — 반씩 나눠 갖는다),
+   * `max` 는 **본체의 최대 체력**의 비율이다 (26·30판 — 본체가 얼마나 닳았든
+   * 같은 크기로 나온다).
+   */
+  pct: number;
+  of: 'left' | 'max';
+  /** 쓸 그림 칸. 안 적으면 본체의 `idle` */
+  pose?: string;
+  /** 다른 시트를 쓰나 (26판 애벌레는 `sw_bomb` 이다) */
+  art?: string;
+  /** 우두머리보다 작게 그리나 — 소환물은 작다 */
+  small?: boolean;
+  /** 공격속도 배수 */
+  spd?: number;
+  /** 평타만 쓰나 — 특수기를 통째로 뗀다 */
+  dumb?: boolean;
+  /** 자폭까지 (ms). 있으면 그때 스스로 죽으면서 아군 전원을 친다 */
+  fuse?: number;
+  /** 자폭이 각자 최대 체력의 몇 할을 깎나 (물리 — 방어가 막는다) */
+  blast?: number;
+}
+
+/**
+ * ── 고치 ── 굳어서 안 움직이고, 정해진 횟수를 맞아야 깨진다.
+ *
+ * 23판 하나뿐이다. **시간이 아니라 타격 수**가 조건인 유일한 기믹이라,
+ * 파티가 셋뿐이면 그만큼 오래 걸린다 — 그게 이 기믹의 내용이다.
+ */
+export interface CocoonGim extends GimBase {
+  kind: 'cocoon';
+  /** 깨는 데 필요한 타격 수 */
+  hits: number;
+  /** 1초에 채우는 최대 체력의 비율 */
+  regen: number;
+  /**
+   * 안전장치 (ms) — 이만큼 지나면 못 깨도 풀린다.
+   *
+   * 사양에 없는 값이다. 없으면 **판이 멈출 수 있다** — 혼자 남은 파티가
+   * 초당 두 대씩 치는데 우두머리는 초당 2% 를 채우면, 서른 대를 채우기 전에
+   * 체력이 문턱 위로 올라가 영영 안 끝난다.
+   */
+  cap: number;
+  /** 이 동안 쓸 그림 칸 */
+  pose: string;
+}
+
+/**
+ * ── 우화 ── 기를 모았다 터뜨리고, 그 뒤로 다른 몸이 된다.
+ *
+ * 25판 하나뿐이다. `cocoon` 과 달리 **되돌아오지 않는다** — 한 번 우화하면
+ * 판이 끝날 때까지 그 모습이고, 공격력도 영구히 오른다.
+ */
+export interface ImagoGim extends GimBase {
+  kind: 'imago';
+  /** 기를 모으는 시간 (ms). 이 동안은 안 때린다 */
+  charge: number;
+  /** 터질 때 아군 전원이 맞는 공격력 배수 */
+  burst: number;
+  /** 우화하면서 채우는 최대 체력의 비율 */
+  heal: number;
+  /** 그 뒤로 공격력에 곱해지는 값 */
+  atkUp: number;
+  /** 우화 뒤의 그림 칸 */
+  pose: string;
+  /** 우화하면 꺼지는 상시 효과 — 3초마다 아군 코스트를 한 칸씩 깎던 것 */
+  drainCost?: number;
+}
+
+/**
+ * ── 보호막 ── 정해진 시간 안에 못 깨면 벌칙이 터진다.
+ *
+ * 둘이 쓴다. 22판은 **기술로** 두르고 (문턱이 없다), 29판은 체력 절반에서
+ * 두른다. 벌칙이 다르다 — 하나는 때리고 하나는 아군을 돌려세운다.
+ */
+export interface ShieldGim extends GimBase {
+  kind: 'shield';
+  /** 막의 크기 — 제 최대 체력의 비율 */
+  pct: number;
+  /** 버티는 시간 (ms) */
+  ms: number;
+  /** 못 깼을 때 */
+  fail: FailBlast | FailCharm;
+}
+
+/** 못 깨면 전원이 맞는다 */
+export interface FailBlast {
+  kind: 'blast';
+  /** 각자 **최대 체력**의 몇 할 (물리 — 방어가 막는다) */
+  pct: number;
+  /** 같이 거는 기절 (초) */
+  stun?: number;
+}
+
+/** 못 깨면 아군끼리 싸운다 */
+export interface FailCharm {
+  kind: 'charm';
+  /** 몇 초 동안 */
+  sec: number;
+}
+
+/**
+ * ── 빼앗는다 ── 아군에게 걸린 좋은 것을 떼어 제가 두른다.
+ *
+ * 27판 하나뿐이다. 문턱이 없다 — 기술(`devour`)이 나갈 때마다 같이 돈다.
+ */
+export interface DevourGim extends GimBase {
+  kind: 'devour';
+  /** 빼앗은 것이 우두머리에게 붙어 있는 시간 (ms) */
+  ms: number;
+}
+
+/**
+ * 판마다의 기믹. 없는 판은 아무 일도 안 한다.
+ *
+ * 30판 부식성 아우라는 여기 없다 — 저건 **평타에 붙는 것**이라 이미 있는
+ * 얼개로 적을 수 있었다 (`BossPassive.onHit`, 10판 오염된 점성과 같은 자리).
+ * 새 얼개가 필요한 것만 여기 온다.
+ */
 export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
   21: [{
+    kind: 'fork',
     name: '절단 분열',
     text: '체력 50% 이하가 되는 즉시 몸통이 반으로 갈라져 머리와 꼬리 두 마리가 '
       + '된다. 남은 체력을 반씩 나눠 갖고, 꼬리는 평타만 쓰되 공격속도가 두 배다.',
-    needs: 'split',
+    at: 0.50,
+    keep: false,
+    parts: [
+      { name: '센티페다의 머리', pct: 0.5, of: 'left', pose: 'split_head' },
+      {
+        name: '센티페다의 꼬리',
+        pct: 0.5,
+        of: 'left',
+        pose: 'split_tail',
+        spd: 2,
+        dumb: true,
+      },
+    ],
   }],
   22: [{
+    kind: 'shield',
     name: '여왕의 황금 장막',
     text: '보호막을 두르고 5초를 버틴다. 그 안에 못 깨면 아군 전체가 제 최대 '
       + '체력의 50% 를 잃고 3초간 기절한다.',
-    needs: 'shield',
+    /* 문턱이 없다 — 기술이 부른다 (`BOSS_SKILLS[22]` 의 `veil`) */
+    at: null,
+    pct: 0.18,
+    ms: 5000,
+    fail: { kind: 'blast', pct: 0.50, stun: 3 },
   }],
   23: [{
+    kind: 'cocoon',
     name: '경화 갑각',
-    text: '체력 50% 이하에서 5초간 고치가 된다. 서른 대를 쳐야 깨지고, 그동안 '
-      + '1초에 체력의 2% 를 채운다.',
-    needs: 'phase',
+    text: '체력 50% 이하에서 고치가 된다. 서른 대를 쳐야 깨지고, 그동안 1초에 '
+      + '체력의 2% 를 채운다.',
+    at: 0.50,
+    hits: 30,
+    regen: 0.02,
+    cap: 12000,
+    pose: 'cocoon',
   }],
-  24: [{
-    name: '정신 착란',
-    text: '걸린 아군이 4초간 스킬을 못 쓰고 **평타로 아군을 친다.**',
-    needs: 'charm',
+  25: [{
+    kind: 'imago',
+    name: '약육강식',
+    text: '체력 50% 이하에서 3초간 기를 모으고 터뜨려 전원에게 공격력만큼 피해를 '
+      + '준 뒤 성체로 우화한다. 체력 20% 를 회복하고 공격력이 영구히 30% 오른다. '
+      + '우화하면 군체의 지배자가 꺼진다.',
+    at: 0.50,
+    charge: 3000,
+    burst: 1.00,
+    heal: 0.20,
+    atkUp: 1.30,
+    pose: 'imago',
+    /* 우화 전까지 3초마다 아군 코스트를 한 칸씩 깎는다 — 군체의 지배자 */
+    drainCost: 3000,
   }],
-  25: [
-    {
-      name: '군체의 지배자',
-      text: '3초마다 아군 전체의 스킬 코스트를 한 칸씩 깎는다. 우화하면 꺼진다.',
-      needs: 'phase',
-    },
-    {
-      name: '약육강식',
-      text: '체력 50% 이하에서 3초간 기를 모으고 터뜨려 전원에게 공격력만큼 '
-        + '피해를 준 뒤 성체로 우화한다. 체력 20% 를 회복하고 공격력이 영구히 '
-        + '30% 오른다.',
-      needs: 'phase',
-    },
-  ],
   26: [{
+    kind: 'fork',
     name: '최후의 발악',
     text: '죽는 순간 폭탄 애벌레 넷으로 흩어진다. 5초 안에 못 잡으면 자폭해 '
-      + '아군 전체가 제 최대 체력의 25% 를 잃는다. 애벌레의 체력은 피로스의 5% 다.',
-    needs: 'spawn',
+      + '아군 전체가 각자 최대 체력의 25% 를 잃는다. 애벌레의 체력은 피로스의 5% 다.',
+    /* 죽는 순간이다 */
+    at: 0,
+    keep: false,
+    parts: [0, 1, 2, 3].map(() => ({
+      name: '폭탄 애벌레',
+      pct: 0.05,
+      of: 'max' as const,
+      art: 'sw_bomb',
+      small: true,
+      dumb: true,
+      fuse: 5000,
+      blast: 0.25,
+    })),
   }],
   27: [{
+    kind: 'devour',
     name: '포식',
-    text: '아군 하나에게서 체력 · 스킬 코스트 · 버프 중 하나를 빼앗는다. 버프를 '
-      + '빼앗으면 3초간 우두머리에게 걸린다.',
-    needs: 'devour',
+    text: '아군 하나에게서 좋은 것을 하나 빼앗아 3초간 제가 두른다.',
+    at: null,
+    ms: 3000,
   }],
   29: [{
+    kind: 'shield',
     name: '포자 감염',
     text: '체력 50% 이하에서 보호막을 두른다. 5초 안에 못 깨면 아군 전체가 5초간 '
       + '광란에 빠져 서로를 친다.',
-    needs: 'shield',
+    at: 0.50,
+    pct: 0.15,
+    ms: 5000,
+    fail: { kind: 'charm', sec: 5 },
   }],
-  30: [
-    {
-      name: '부식성 아우라',
-      text: '바알의 평타에 맞으면 방어력과 마법저항력이 10% 씩 깎인다. 판이 끝날 '
-        + '때까지 안 풀리고 열 번까지 쌓인다 — 정화로만 걷힌다.',
-      needs: 'stack',
-    },
-    {
-      name: '군체의 대염쇄',
-      text: '체력 50% 이하에서 허물을 벗어 제 능력치를 그대로 가진 분신 하나를 '
-        + '만든다. 분신의 체력은 25% 이고 군주 붕괴파를 같이 쓴다.',
-      needs: 'split',
-    },
-  ],
+  30: [{
+    kind: 'fork',
+    name: '군체의 대염쇄',
+    text: '체력 50% 이하에서 허물을 벗어 제 능력치를 그대로 가진 분신 하나를 '
+      + '만든다. 분신의 체력은 25% 이고 군주 붕괴파를 같이 쓴다.',
+    at: 0.50,
+    /* 본체는 그대로 남는다 — 21판과 다른 점이 이것뿐이다 */
+    keep: true,
+    parts: [{ name: '환영 분신', pct: 0.25, of: 'max' }],
+  }],
 };
+
+/**
+ * ── 기믹 한 틱 ──
+ *
+ * `battleTick` 안에서 적이 팔을 휘두르기 **전에** 한 번 돈다. 순서가 중요하다 —
+ * 갈라지는 것도 고치가 되는 것도 이번 틱의 공격에 곧바로 반영돼야, 화면에서
+ * "갈라졌는데 본체가 한 대 더 쳤다" 같은 일이 안 생긴다.
+ *
+ * ## 왜 상태 덩어리를 받아 고치나
+ *
+ * 이 함수가 건드리는 것이 열 가지다 — 적 목록 · 아군 체력 · 걸린 것 · 코스트 ·
+ * 번호 · 혼란 · 받은 피해 · 쓰러진 사람... 전부 돌려주려면 반환값이 열 칸짜리
+ * 객체가 되고, 부르는 쪽에서 그걸 다시 열 줄로 풀어야 한다.
+ *
+ * `battleTick` 은 이미 저 값들을 `let` 으로 들고 있다. 덩어리로 넘겨 제자리에서
+ * 고치는 편이 **풀었다 담는 스무 줄**보다 읽기 쉽다. 이 파일에서 여기 하나만
+ * 그렇게 한다.
+ */
+interface GimCtx {
+  stage: number;
+  /** 서 있는 적들 — 여기서 갈라지고 늘고 준다 */
+  foes: FoeSlot[];
+  /** 다음 마리에게 줄 고유 번호 */
+  seq: number;
+  hp: Record<string, number>;
+  hex: Record<string, Hex[]>;
+  /** 코스트를 깎으라는 신호 (`BattleState.cut`) */
+  cut: Record<string, number>;
+  /** 살아 있든 아니든 파티 전원 */
+  line: readonly OwnedChar[];
+  /** 우두머리가 선 뒤로 흐른 시간 — 3초마다 도는 것이 이걸 본다 */
+  bossMs: number;
+  /** 아군끼리 싸우는 중인가 */
+  charm: Charm | null;
+  /** 우두머리가 스스로 채운 양 — 화면이 초록 숫자로 띄운다 */
+  foeHeal: { seq: number; amt: number };
+  taken: number;
+  hurtId: string | null;
+  fell: string | null;
+  rand: () => number;
+}
+
+/**
+ * 아군 **전원**을 각자 최대 체력의 비율만큼 친다.
+ *
+ * 22판 장막이 못 깨졌을 때와 26판 애벌레가 터질 때 쓴다.
+ *
+ * ## 최대 체력 비례인데도 방어가 막는다
+ *
+ * 사양이 "최대 체력의 50% **물리** 피해" 다. 비율로 양을 정하고, 그 뒤는
+ * 평소와 똑같이 방어를 뺀다 (`strikeFor`).
+ *
+ * 방어를 안 빼면 이 게임에서 **방어가 안 통하는 유일한 자리**가 생기고,
+ * 그러면 저 기술 앞에서는 이졸데(방어 33)와 리안느(방어 5)가 똑같아진다 —
+ * 파티를 어떻게 짜든 결과가 같은 공격은 파티를 짜는 재미를 지운다.
+ */
+function blastAll(cx: GimCtx, pct: number, stunSec = 0): void {
+  for (const c of cx.line) {
+    if ((cx.hp[c.id] ?? 0) <= 0) continue;
+    const armor = liveArmor(c, cx.hex[c.id] ?? []);
+    const dmg = strikeFor(Math.round(statOf(c).hp * pct), 1, armor, PHYS_BLOW);
+    cx.hp[c.id] = Math.max(0, cx.hp[c.id] - dmg);
+    cx.taken += dmg;
+    cx.hurtId = c.id;
+    if (cx.hp[c.id] <= 0) cx.fell = c.id;
+    if (stunSec > 0) {
+      cx.hex[c.id] = putHex(cx.hex[c.id] ?? [], {
+        id: 'st_stun', ms: Math.round(stunSec * 1000), dot: 0, dmg: 'phys', mul: 1, n: 1,
+      }, 1);
+    }
+  }
+}
+
+/**
+ * 갈라져 나온 조각들을 줄에 세운다.
+ *
+ * 자리(`pos`)는 앞에서부터 빈 곳을 채운다. 우두머리 판에는 잡몹이 없으므로
+ * 네 자리가 통째로 비어 있고 (`MOB_CAP`), 그래서 넷까지는 반드시 들어간다.
+ */
+function forkInto(cx: GimCtx, src: FoeSlot, kind: Foe, gim: ForkGim): FoeSlot[] {
+  const out: FoeSlot[] = [];
+  /* 이미 쓰인 자리 — 본체가 사라지면 그 자리는 비는 것으로 친다 */
+  const used = new Set(cx.foes.map((f) => f.pos));
+  if (!gim.keep) used.delete(src.pos);
+  const free = () => {
+    for (let i = 0; i < MOB_CAP; i += 1) if (!used.has(i)) { used.add(i); return i; }
+    return MOB_CAP - 1;
+  };
+
+  for (const part of gim.parts) {
+    const base = part.of === 'left' ? Math.max(1, src.hp) : kind.hp;
+    const hp = Math.max(1, Math.round(base * part.pct));
+    /*
+      조각은 **제 능력치를 들고 간다** (`FoeSlot.own`).
+
+      본체 것을 그대로 베끼되 체력과 공격속도만 갈고, 평타만 쓰는 조각은
+      기술 목록을 **빈 배열**로 둔다 — `undefined` 로 두면 기본값(휩쓸기)을
+      물려받아서 "평타만" 이 안 된다 (`foeOf` 의 `?? BOSS_PATTERNS`).
+    */
+    const own: Foe = {
+      ...kind,
+      hp,
+      name: part.name,
+      spd: kind.spd * (part.spd ?? 1),
+      art: part.art ?? kind.art,
+      pose: part.pose ?? kind.pose,
+      small: part.small,
+      patterns: part.dumb ? [] : kind.patterns,
+      /* 성질은 본체만 갖는다 — 분신까지 반사하고 회복하면 두 배가 된다 */
+      passive: undefined,
+      title: undefined,
+    };
+    out.push({
+      hp,
+      cd: swingMs(own.spd),
+      n: 0,
+      k: src.k,
+      id: cx.seq,
+      pos: free(),
+      own,
+      gim: part.fuse
+        ? { fuse: part.fuse, blast: part.blast ?? 0, done: [] }
+        : { done: [] },
+    });
+    cx.seq += 1;
+  }
+  return out;
+}
+
+/**
+ * 한 대 맞은 뒤의 그 마리.
+ *
+ * 두 가지를 여기서 한다 — **막이 있으면 거기부터 깎이고**, 고치를 쓰고
+ * 있으면 타격 수를 하나 센다.
+ *
+ * 부르는 곳이 둘이라 (평타 `applyHit` · 기술 `applySkill`) 함수로 뺐다.
+ * 저 둘에 같은 규칙을 두 번 적으면 언젠가 한쪽만 고친다 — 이 파일에서
+ * 이미 두 번 겪은 종류의 버그다.
+ */
+export function biteFoe(f: FoeSlot, dmg: number): FoeSlot {
+  const g = f.gim;
+  if (!g) return { ...f, hp: f.hp - dmg };
+
+  let gim: FoeGim = g;
+  /* 고치는 **맞은 횟수**로 깨진다 — 얼마나 아팠는지는 안 본다 */
+  if (g.formHit !== undefined && g.formHit > 0) {
+    gim = { ...gim, formHit: g.formHit - 1 };
+  }
+  /*
+    막이 먼저 먹는다. 넘치는 만큼만 체력으로 간다 — 한 대에 막이 깨지면
+    그 대의 나머지는 그대로 몸에 들어가야 한다. 안 그러면 막이 얇을수록
+    이득이 되는 거꾸로 된 일이 생긴다.
+  */
+  if ((g.shield ?? 0) > 0) {
+    const eat = Math.min(g.shield ?? 0, dmg);
+    return { ...f, hp: f.hp - (dmg - eat), gim: { ...gim, shield: (g.shield ?? 0) - eat } };
+  }
+  return { ...f, hp: f.hp - dmg, gim };
+}
+
+/** 이 마리의 남은 체력 비율 */
+const leftPct = (f: FoeSlot, kind: Foe): number => (
+  kind.hp > 0 ? Math.max(0, f.hp) / kind.hp : 1
+);
+
+/**
+ * 죽는 순간에 터지는 기믹 — 26판 최후의 발악 하나뿐이다.
+ *
+ * 다른 기믹과 달리 **틱이 아니라 죽인 자리**에서 부른다 (`applyHit` ·
+ * `applySkill`). 우두머리가 죽으면 그 자리에서 판이 끝나 버리므로
+ * (`clearIn`), 틱을 기다리면 애벌레가 설 자리가 이미 없다.
+ *
+ * @returns 죽은 자리에 대신 설 놈들. 없으면 빈 배열
+ */
+export function onFoeDown(
+  st: { stage: number; boss: boolean }, dead: FoeSlot, rest: readonly FoeSlot[], seq: number,
+): { born: FoeSlot[]; seq: number } {
+  if (!st.boss) return { born: [], seq };
+  const gm = gimmicksOf(st.stage)
+    .find((x): x is ForkGim => x.kind === 'fork' && x.at === 0);
+  if (!gm) return { born: [], seq };
+  /* 갈라져 나온 조각이 또 갈라지면 끝이 없다 — 제 것을 든 놈은 건너뛴다 */
+  if (dead.own) return { born: [], seq };
+
+  const cx = {
+    foes: [...rest], seq,
+  } as GimCtx;
+  const born = forkInto(cx, dead, foeAt(st, dead), gm);
+  return { born, seq: cx.seq };
+}
+
+function runGim(cx: GimCtx): void {
+  const gims = gimmicksOf(cx.stage);
+  /* 판에 기믹이 없고 붙어 있는 것도 없으면 아무 일도 안 한다 */
+  if (!gims.length && !cx.foes.some((f) => f.gim)) return;
+
+  const at = { stage: cx.stage, boss: true };
+  const next: FoeSlot[] = [];
+
+  for (const f0 of cx.foes) {
+    let f = f0;
+    const kind = foeAt(at, f);
+    const g = f.gim ?? {};
+    const done = new Set(g.done ?? []);
+    let gim: FoeGim = { ...g, done: [...done] };
+    let dead = false;
+    let born: FoeSlot[] = [];
+
+    /* ── 자폭 시계 ── 26판 애벌레 하나뿐이다 */
+    if (gim.fuse !== undefined) {
+      const left = gim.fuse - TICK_MS;
+      if (left <= 0) {
+        blastAll(cx, gim.blast ?? 0);
+        dead = true;
+      } else {
+        gim = { ...gim, fuse: left };
+      }
+    }
+
+    /* ── 보호막 시계 ── 다 되도록 못 깼으면 벌칙이 터진다 */
+    if (!dead && gim.shieldMs !== undefined) {
+      const left = gim.shieldMs - TICK_MS;
+      if ((gim.shield ?? 0) <= 0) {
+        /* 깼다 — 아무 일도 안 일어난다. 그게 상이다 */
+        gim = { ...gim, shield: undefined, shieldMs: undefined, still: undefined };
+      } else if (left <= 0) {
+        const sg = gims.find((x): x is ShieldGim => x.kind === 'shield');
+        if (sg?.fail.kind === 'blast') blastAll(cx, sg.fail.pct, sg.fail.stun ?? 0);
+        if (sg?.fail.kind === 'charm') {
+          cx.charm = {
+            ms: Math.round(sg.fail.sec * 1000),
+            who: cx.line.filter((c) => (cx.hp[c.id] ?? 0) > 0).map((c) => c.id),
+          };
+        }
+        gim = { ...gim, shield: undefined, shieldMs: undefined, still: undefined };
+      } else {
+        gim = { ...gim, shieldMs: left };
+      }
+    }
+
+    /* ── 고치 ── 서른 대를 맞아야 깨진다. 그동안 스스로 채운다 */
+    if (!dead && gim.form && gim.formHit !== undefined) {
+      const cg = gims.find((x): x is CocoonGim => x.kind === 'cocoon');
+      const capLeft = (gim.formMs ?? 0) - TICK_MS;
+      if (gim.formHit <= 0 || capLeft <= 0) {
+        gim = {
+          ...gim, form: undefined, formHit: undefined, formMs: undefined, still: undefined,
+        };
+      } else {
+        gim = { ...gim, formMs: capLeft };
+        if (cg) {
+          const room = kind.hp - f.hp;
+          const got = Math.min(room, Math.round(kind.hp * cg.regen * (TICK_MS / 1000)));
+          if (got > 0) {
+            f = { ...f, hp: f.hp + got };
+            cx.foeHeal = { seq: cx.foeHeal.seq + 1, amt: got };
+          }
+        }
+      }
+    }
+
+    /* ── 우화 ── 기를 모으고, 다 모으면 터뜨리며 몸이 바뀐다 */
+    if (!dead && gim.charge !== undefined) {
+      const left = gim.charge - TICK_MS;
+      if (left <= 0) {
+        const ig = gims.find((x): x is ImagoGim => x.kind === 'imago');
+        if (ig) {
+          for (const c of cx.line) {
+            if ((cx.hp[c.id] ?? 0) <= 0) continue;
+            const dmg = strikeFor(
+              Math.round(kind.atk * ig.burst), 1,
+              liveArmor(c, cx.hex[c.id] ?? []), PHYS_BLOW,
+            );
+            cx.hp[c.id] = Math.max(0, cx.hp[c.id] - dmg);
+            cx.taken += dmg;
+            cx.hurtId = c.id;
+            if (cx.hp[c.id] <= 0) cx.fell = c.id;
+          }
+          const got = Math.min(kind.hp - f.hp, Math.round(kind.hp * ig.heal));
+          if (got > 0) {
+            f = { ...f, hp: f.hp + got };
+            cx.foeHeal = { seq: cx.foeHeal.seq + 1, amt: got };
+          }
+          gim = {
+            ...gim, charge: undefined, still: undefined, form: ig.pose, atkMul: ig.atkUp,
+          };
+        }
+      } else {
+        gim = { ...gim, charge: left };
+      }
+    }
+
+    /*
+      ── 상시: 3초마다 아군 코스트 한 칸 ── 25판 군체의 지배자.
+
+      우화하면 꺼진다 (`atkMul` 이 서면 우화한 것이다). 사양이 그렇고,
+      화면에서도 "저 놈이 달라졌다" 가 한 가지 더 생겨서 좋다.
+    */
+    const ig0 = gims.find((x): x is ImagoGim => x.kind === 'imago');
+    if (!dead && ig0?.drainCost && !gim.atkMul) {
+      const per = Math.max(TICK_MS, ig0.drainCost);
+      if (Math.floor(cx.bossMs / per) > Math.floor((cx.bossMs - TICK_MS) / per)) {
+        for (const c of cx.line) {
+          if ((cx.hp[c.id] ?? 0) > 0) cx.cut[c.id] = (cx.cut[c.id] ?? 0) + 1;
+        }
+      }
+    }
+
+    /*
+      ── 문턱 ── 체력이 선 아래로 내려가는 순간 **한 번.**
+
+      갈라져 나온 조각(`own`)은 제 문턱을 안 본다. 머리가 또 갈라지고
+      분신이 또 분신을 만들면 끝이 없다.
+    */
+    if (!dead && !f.own) {
+      const pct = leftPct(f, kind);
+      for (const gm of gims) {
+        if (gm.at === null || gm.at <= 0) continue;
+        if (done.has(gm.name) || pct > gm.at) continue;
+        done.add(gm.name);
+        gim = { ...gim, done: [...done] };
+
+        if (gm.kind === 'fork') {
+          born = forkInto(cx, f, kind, gm);
+          if (!gm.keep) dead = true;
+        } else if (gm.kind === 'cocoon') {
+          gim = { ...gim, form: gm.pose, formHit: gm.hits, formMs: gm.cap, still: true };
+        } else if (gm.kind === 'imago') {
+          gim = { ...gim, charge: gm.charge, still: true };
+        } else if (gm.kind === 'shield') {
+          gim = {
+            ...gim,
+            shield: Math.max(1, Math.round(kind.hp * gm.pct)),
+            shieldMs: gm.ms,
+            still: true,
+          };
+        }
+      }
+    }
+
+    if (!dead) next.push({ ...f, gim });
+    next.push(...born);
+  }
+
+  cx.foes.length = 0;
+  cx.foes.push(...next);
+}
+
+/**
+ * 우두머리 줄이 **몇 자리를 잡아야 하나** (1 ~ `MOB_CAP`).
+ *
+ * 여태 우두머리는 늘 한 마리라 화면이 한 자리만 잡았다. 이제 갈라지고
+ * 분신이 생기고 애벌레가 나오므로 미리 자리를 비워 둬야 한다.
+ *
+ * ## 왜 서 있는 마릿수로 안 재나
+ *
+ * 그러면 하나 죽을 때마다 줄 폭이 줄어서 **남은 놈들이 통째로 앞으로
+ * 당겨진다** — 아무도 안 움직였는데 줄이 미끄러진다. 잡몹 줄에서 이미 겪고
+ * `pos` 를 도입한 것과 같은 문제다.
+ *
+ * 판이 **최대 몇 마리까지 될 수 있나**로 잡으면 처음부터 끝까지 같은 값이다.
+ */
+export function bossRoom(stage: number): number {
+  let most = 1;
+  for (const g of gimmicksOf(stage)) {
+    if (g.kind !== 'fork') continue;
+    most = Math.max(most, g.parts.length + (g.keep ? 1 : 0));
+  }
+  return Math.min(MOB_CAP, most);
+}
+
+/** 그 판의 기믹들. 없으면 빈 목록 */
+export const gimmicksOf = (stage: number): readonly BossGimmick[] =>
+  BOSS_GIMMICK[stage] ?? NO_GIM;
+
+const NO_GIM: readonly BossGimmick[] = [];
 
 /**
  * 다섯 판마다 하나씩 있는 우두머리 성질.
@@ -838,6 +1419,28 @@ export const BOSS_PASSIVES: Record<number, BossPassive> = {
         { id: 'st_break', sec: 1, mul: 0 },
         { id: 'st_poison', sec: 1, tick: 0.025, dmg: 'magic' },
       ],
+    },
+  },
+  /*
+    ── 30판 부식성 아우라 ──
+
+    사양은 "평타에 맞으면 방어력과 마법저항력이 10%씩 누적 감쇄, 판이 끝날
+    때까지, 최대 10중첩, 정화로 풀림" 이다.
+
+    **새 얼개가 하나도 안 필요했다.** 10판 오염된 점성이 이미 "평타에 붙는
+    것" 이고 (`onHit`), 파쇄(`st_break`)는 방어와 마저를 같이 깎으며
+    (`core/passives` 의 `liveArmor`), 겹은 `mulOf` 가 `1 - (1-mul)×n` 으로
+    센다 — 0.9 로 열 겹이면 정확히 0 이다.
+
+    "판이 끝날 때까지" 는 999초로 적었다. 걸린 것은 판이 바뀔 때 통째로
+    비워지므로 (`enterStage`) 그것으로 충분하고, 새 종류를 만들면 로고와
+    이름과 검사가 딸려 온다.
+  */
+  30: {
+    name: '부식성 아우라',
+    text: '평타에 맞은 아군의 방어력과 마법저항력을 10% 감소 (최대 10중첩 · 판이 끝날 때까지)',
+    onHit: {
+      id: 'st_break', sec: 999, mul: 0.90, stack: 10,
     },
   },
   20: {
@@ -1651,7 +2254,105 @@ export interface FoeSlot {
    * 근접이 뒷줄에 서거나 원거리가 앞줄에 서는 일이 없다.
    */
   pos: number;
+  /**
+   * **제 능력치를 직접 들고 있는 놈.** 없으면 판 표에서 읽는다 (`k`).
+   *
+   * ## 왜 필요했나
+   *
+   * 여태 적의 정체는 자기가 아니라 **판이** 들고 있었다 — `k` 는 그 판의
+   * 종 목록 안에서의 자리이고, 능력치도 그림도 거기서 나왔다 (`foeOf`).
+   *
+   * 21판에서 지네가 반으로 갈라지고, 26판에서 죽으면서 애벌레 넷이 나오고,
+   * 30판에서 분신이 생기는 순간 그 틀이 깨진다. **표에 없는 능력치를 가진
+   * 개체**가 서 있어야 하기 때문이다 — 꼬리는 본체의 공격속도 두 배이고,
+   * 분신은 최대 체력의 25% 다.
+   *
+   * 그래서 자기 것을 들고 다닐 수 있게 했다. 있으면 그쪽이 이긴다.
+   * 읽는 곳은 한 군데다 (`foeAt`) — 두 곳에서 따로 고르면 언젠가 갈린다.
+   */
+  own?: Foe;
+  /** 우두머리 기믹이 이 한 마리에 붙여 둔 것들 (`FoeGim`) */
+  gim?: FoeGim;
 }
+
+/**
+ * 기믹이 **한 마리에** 붙여 두는 값들.
+ *
+ * `FoeSlot` 에 직접 붙이지 않고 한 겹 싸 두는 이유는, 저기는 **모든 적이
+ * 늘 갖는 것**만 있는 자리이기 때문이다 (체력 · 시계 · 자리). 여기 것들은
+ * 서른 판 중 아홉 판의 우두머리만 갖는다.
+ *
+ * 전부 없어도 된다. 없으면 예전과 똑같이 돈다.
+ */
+export interface FoeGim {
+  /**
+   * 자폭까지 남은 시간 (ms). 26판 폭탄 애벌레 하나뿐이다.
+   *
+   * 0 아래로 내려가면 **스스로 죽으면서** 아군 전원에게 각자 최대 체력의
+   * 몫만큼 물리 피해를 준다 (`FUSE_PCT`).
+   */
+  fuse?: number;
+  /** 남은 보호막. 이게 있으면 피해가 체력보다 먼저 여기로 간다 */
+  shield?: number;
+  /** 보호막이 버티는 시간 (ms). 0 이 되도록 못 깨면 벌칙이 터진다 */
+  shieldMs?: number;
+  /**
+   * 지금 어떤 국면인가 (`cocoon` · `imago`).
+   *
+   * 그림 칸 이름과 같다 — 화면이 이걸 그대로 `Sprite` 에 넘긴다.
+   */
+  form?: string;
+  /** 국면이 깨지기까지 남은 **타격 수** (23판 고치는 서른 대다) */
+  formHit?: number;
+  /** 국면의 안전장치 — 이만큼 지나면 무조건 깬다 (ms) */
+  formMs?: number;
+  /** 이미 터진 기믹들. 같은 것이 두 번 터지지 않게 한다 */
+  done?: readonly string[];
+  /** 공격력에 영구히 곱해지는 값 (25판 우화의 +30%) */
+  atkMul?: number;
+  /** 자폭이 아군 각자 최대 체력의 몇 할을 깎나 (`ForkPart.blast`) */
+  blast?: number;
+  /** 우화까지 기를 모으는 중 — 남은 시간 (ms) */
+  charge?: number;
+  /**
+   * 지금 **안 움직인다.**
+   *
+   * 고치를 쓰고 있거나 기를 모으는 중이거나 막을 두르고 있으면 켜진다.
+   * 안 때리는 것이 규칙이라기보다, 저 셋은 전부 "지금 다른 일을 하는 중"
+   * 이라 때리면서 하면 화면에서 무슨 국면인지가 안 읽힌다.
+   */
+  still?: boolean;
+}
+
+/**
+ * 아군끼리 싸우는 중 (24판 혼란 · 29판 광란).
+ *
+ * 걸린 사람은 **평타만** 쓰고, 살아 있는 다른 아군 하나를 무작위로 친다.
+ * 스킬은 안 나간다 — 정화가 저를 푸는 그림이 되어 버리고, 화살비가 아군을
+ * 셋씩 치면 그 한 판으로 전투가 끝난다.
+ */
+export interface Charm {
+  /** 남은 시간 (ms) */
+  ms: number;
+  /** 돌아선 사람들. 24판은 하나, 29판은 전원 */
+  who: readonly string[];
+}
+
+/**
+ * **이 한 마리가 무엇인가** — 능력치 · 그림 · 기술을 읽는 유일한 창구.
+ *
+ * 제 것을 들고 있으면 (`own`) 그쪽이 이기고, 아니면 판 표에서 읽는다.
+ *
+ * 여태 부르는 쪽마다 `foeOf(stage, boss, f.k)` 를 직접 썼다. 자리가 여섯이라
+ * 분열체가 생기는 순간 여섯 곳을 다 고쳐야 했고, 하나라도 빠뜨리면 **거기서만
+ * 본체 수치로 계산된다** — 화면에는 꼬리가 서 있는데 피해는 머리 것으로
+ * 들어가는, 눈으로는 못 잡는 종류의 어긋남이다.
+ *
+ * @param st 지금 판 — `stage` 와 `boss` 만 본다
+ */
+export const foeAt = (
+  st: { stage: number; boss: boolean }, f: FoeSlot,
+): Foe => f.own ?? foeOf(st.stage, st.boss, f.k);
 
 /**
  * 이 슬롯이 원거리인가.
@@ -1983,6 +2684,13 @@ export interface BattleState {
    */
   cut: Record<string, number>;
   /**
+   * 아군끼리 싸우는 중인가 (`Charm`). 아니면 `null`.
+   *
+   * 24판 정신 착란과 29판 포자 감염이 건다. 걸린 사람은 평타로 **다른
+   * 아군**을 친다 (`applyHit`).
+   */
+  charm: Charm | null;
+  /**
    * 우두머리가 나온 뒤로 흐른 시간 (ms). 잡몹 구간에서는 0.
    *
    * 20판의 "15초마다 회복" 이 이걸 본다. 시계를 우두머리 슬롯에 두지 않은
@@ -2170,7 +2878,7 @@ export const newBattle = (): BattleState => {
     foes: first.foes, seq: first.seq,
     slain: 0, target: 0, hp: {}, down: 0, spawnIn: 0,
     openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
-    called: false, pat: null, patId: null, patSeq: 0,
+    called: false, pat: null, patId: null, patSeq: 0, charm: null,
     hex: {}, cut: {}, bossMs: 0, swingSeq: 0,
     fade: {}, taunt: null, foeHex: {}, foeHeal: { seq: 0, amt: 0 },
     struck: [], costSeq: 0,
@@ -2245,6 +2953,8 @@ export function enterStage(
     /* 판이 바뀌면 지난 판의 특수기 이름이 남아 있으면 안 된다 */
     pat: null,
     patId: null,
+    /* 돌아섰던 아군도 판과 함께 제정신으로 돌아온다 */
+    charm: null,
     /*
       걸려 있던 것도 **판과 함께 걷힌다.**
 
@@ -2955,6 +3665,49 @@ export function battleTick(
     bossMs = 0;
   }
 
+  /*
+    ── 특수 기믹 ── 21~30 우두머리만 갖는다 (`BOSS_GIMMICK`).
+
+    **휘두르기 전에** 돈다. 갈라지는 것도 고치가 되는 것도 이번 틱의 공격에
+    곧바로 반영돼야, "갈라졌는데 본체가 한 대 더 쳤다" 가 안 생긴다.
+  */
+  let charm = st.charm ?? null;
+  if (isBoss) {
+    const cx: GimCtx = {
+      stage: st.stage,
+      foes,
+      seq,
+      hp,
+      hex,
+      cut,
+      line,
+      bossMs,
+      charm,
+      foeHeal,
+      taken,
+      hurtId,
+      fell,
+      rand,
+    };
+    runGim(cx);
+    seq = cx.seq;
+    charm = cx.charm;
+    foeHeal = cx.foeHeal;
+    taken = cx.taken;
+    hurtId = cx.hurtId;
+    fell = cx.fell;
+  }
+  /*
+    돌아선 아군도 시간이 지나면 제정신으로 돌아온다.
+
+    적의 상태(`foeHex`)와 달리 여기는 판 전체에 하나뿐이라 (걸린 사람 목록을
+    같이 들고 다닌다) 시계도 하나다.
+  */
+  if (charm) {
+    const left = charm.ms - TICK_MS;
+    charm = left > 0 ? { ...charm, ms: left } : null;
+  }
+
   /* 시계가 줄어든 새 목록 — 원본을 안 건드린다 */
   const ticked = foes.map((f, i) => {
     /*
@@ -2964,9 +3717,18 @@ export function battleTick(
       안 띄지만, 우두머리 공격속도를 따로 잡는 순간 우두머리가 잡몹 박자로
       치게 된다 — 그리고 그건 표를 아무리 들여다봐도 안 보인다.
     */
-    const kind = foeOf(st.stage, isBoss, f.k);
+    const kind = foeAt({ stage: st.stage, boss: isBoss }, f);
     /* 광폭화 중이면 공격력도 박자도 두 배다 (`foeNow`) */
-    const live = foeNow(kind, rage);
+    const raw = foeNow(kind, rage);
+    /*
+      우화한 놈은 공격력이 영구히 오른 채다 (`FoeGim.atkMul`, 25판 +30%).
+
+      본체 수치(`kind.atk`)를 안 고치고 여기서 곱한다 — 저건 판 표에서 온
+      값이라 고치면 그 판의 **모든** 아라크네스가 세진다.
+    */
+    const live = f.gim?.atkMul
+      ? { ...raw, atk: Math.round(raw.atk * f.gim.atkMul) }
+      : raw;
     /*
       **없는 시계는 0 으로 친다.**
 
@@ -2986,7 +3748,14 @@ export function battleTick(
     let swings = 0;
     /* 한 틱 안에 두 번 칠 수도 있다 (아주 빠른 적) */
     const at: (BossPattern | null)[] = [];
-    while (cd <= 0 && swings < 4) {
+    /*
+      **지금 다른 일을 하는 중이면 안 친다** (`FoeGim.still`).
+
+      고치를 쓰고 있거나, 기를 모으는 중이거나, 막을 두르고 있을 때다.
+      시계는 그대로 줄어든다 — 멈춰 두면 풀리는 순간 밀린 만큼 한꺼번에
+      네 대가 나간다.
+    */
+    while (!f.gim?.still && cd <= 0 && swings < 4) {
       swings += 1;
       n += 1;
       cd += swingMs(live.spd);
@@ -3042,6 +3811,57 @@ export function battleTick(
     const marks = aimOf(h.pat, alive, hp, rand, baited);
     /* 특수기에 맞은 사람은 화면이 표적으로 씌운다 (`BattleState.struck`) */
     if (h.pat) for (const m of marks) if (!struck.includes(m.id)) struck.push(m.id);
+
+    /*
+      ── 기술이 부르는 기믹 ── 셋뿐이다 (`BossPattern.casts`).
+
+      막을 두르는 것과 아군을 돌려세우는 것은 **몇 번이고 다시 나오는 것**
+      이라 체력 문턱에 못 둔다 (문턱은 판마다 한 번뿐이다).
+    */
+    if (h.pat?.casts === 'shield') {
+      const sg = gimmicksOf(st.stage).find((x): x is ShieldGim => x.kind === 'shield');
+      const me2 = foes.findIndex((f) => f.id === h.id);
+      if (sg && me2 >= 0) {
+        const kind2 = foeAt({ stage: st.stage, boss: true }, foes[me2]);
+        foes[me2] = {
+          ...foes[me2],
+          gim: {
+            ...(foes[me2].gim ?? {}),
+            shield: Math.max(1, Math.round(kind2.hp * sg.pct)),
+            shieldMs: sg.ms,
+            still: true,
+          },
+        };
+      }
+    }
+    if (h.pat?.casts === 'charm' && marks.length) {
+      /* 맞은 사람 하나만 돌아선다 — 전원기가 아니다 */
+      charm = {
+        ms: Math.round((h.pat.charmSec ?? 4) * 1000),
+        who: [marks[0].id],
+      };
+    }
+    if (h.pat?.casts === 'devour' && marks.length) {
+      /*
+        ── 빼앗는다 ── 27판 하나뿐이다.
+
+        아군에게 걸린 **좋은 것** 하나를 떼어 우두머리가 두른다. 나쁜 것은
+        안 가져간다 — 중독을 빼앗아 제가 중독되는 것은 포식이 아니다.
+
+        패시브가 거는 것은 못 뺏는다. 저건 `hex` 가 아니라 파티 구성에서
+        나오므로 (`core/passives`) 뗄 자리가 없고, 떼어도 다음 프레임에
+        다시 붙는다.
+      */
+      const dg = gimmicksOf(st.stage).find((x): x is DevourGim => x.kind === 'devour');
+      const from = marks[0];
+      const list = hex[from.id] ?? [];
+      const at2 = list.findIndex((x) => GOOD.has(x.id) && x.ms > 0);
+      if (dg && at2 >= 0) {
+        const stolen = list[at2];
+        hex[from.id] = list.filter((_x, i) => i !== at2);
+        foeHex[h.id] = putHex(foeHexOf(foeHex, h.id), { ...stolen, ms: dg.ms }, 1);
+      }
+    }
 
     /*
       기술은 **제 피해 종류와 관통을 따로 갖는다** (`BossPattern.dmg`).
@@ -3187,7 +4007,7 @@ export function battleTick(
       pat: pattern ?? st.pat ?? null,
       patId: patId ?? st.patId ?? null,
       patSeq: pattern ? (Number.isFinite(st.patSeq) ? st.patSeq : 0) + 1 : (st.patSeq ?? 0),
-      hex, cut, bossMs, swingSeq,
+      hex, cut, bossMs, swingSeq, charm,
       fade, taunt, foeHex, foeHeal,
       /*
         맞은 사람 명단은 **특수기가 나간 틱에만** 채운다. 안 나간 틱에 지난
@@ -3244,6 +4064,39 @@ export function applyHit(
   if (hpOf(me, st.hp) <= 0) return { battle: st, ev: NOTHING };
 
   const mine = statOf(me);
+
+  /*
+    ── 돌아섰다 ── 적이 아니라 **아군**을 친다 (24판 혼란 · 29판 광란).
+
+    맞은 사람이 아니라 **때리는 사람** 쪽에서 갈래를 튼다. 이쪽이 아니면
+    "적을 쳤는데 아군이 아팠다" 가 되어, 화면이 검기를 어디로 날려야 할지도
+    피해가 어디서 나왔는지도 설명할 수 없다.
+
+    **평타만, 무작위로 하나.** 스킬은 안 나간다 — 정화가 저를 푸는 그림이
+    되고, 화살비가 아군 셋을 치면 그 한 판으로 전투가 끝난다.
+
+    파티 배수(아녜스의 +10%)는 안 얹는다. 저건 "아군을 돕는 값" 이라, 아군을
+    치는 데 얹히면 사제가 있을수록 서로를 잘 죽이게 된다.
+  */
+  if (st.charm && st.charm.ms > 0 && st.charm.who.includes(who)) {
+    const mates = members(party, chars)
+      .filter((c) => c.id !== who && hpOf(c, st.hp) > 0);
+    /* 혼자 남았으면 칠 사람이 없다 — 헛스윙이다 */
+    if (!mates.length) return { battle: st, ev: NOTHING };
+    const it = mates[Math.floor(rand() * mates.length) % mates.length];
+    const hurt = Math.max(1, strikeFor(
+      mine.atk, rollCrit(mine, rand),
+      liveArmor(it, hexOf(st.hex, it.id)), blowOf(me.id),
+    ));
+    const left = Math.max(0, hpOf(it, st.hp) - hurt);
+    return {
+      battle: { ...st, hp: { ...st.hp, [it.id]: left } },
+      ev: {
+        ...NOTHING, taken: hurt, hurt: it.id, fell: left <= 0 ? it.id : null,
+      },
+    };
+  }
+
   const foes = [...st.foes];
   /*
     **한 번 칠 때마다 다시 고른다.**
@@ -3279,13 +4132,13 @@ export function applyHit(
   /* 쓰러졌지만 아직 사그라드는 중인 사람의 버프도 산다 (`FADE_MS`) */
   const alive = livingMembers(party, chars, st.hp, st.fade);
   const mineHex = hexOf(st.hex, who);
-  const kind = foeOf(st.stage, st.boss, foes[at].k);
+  const kind = foeAt(st, foes[at]);
   const dmg = Math.max(1, Math.round(strikeFor(
     mine.atk * allyAtkMul(alive) * mulOf(mineHex, 'st_weak'), rollCrit(mine, rand),
     /* 20판은 체력이 낮으면 방어가 오른다 (`foeArmor`) */
     foeArmor(kind, foes[at].hp), blowOf(me.id),
   ) * foeTough(kind)));
-  foes[at] = { ...foes[at], hp: foes[at].hp - dmg };
+  foes[at] = biteFoe(foes[at], dmg);
 
   /*
     ── 반사 ──
@@ -3313,8 +4166,26 @@ export function applyHit(
   }
 
   // ── 잡았다 ──
+  const gone = foes[at];
   foes.splice(at, 1);
-  const gold = killGold(st.stage, st.boss);
+  /*
+    ── 죽으면서 나오는 것 ── 26판 최후의 발악 하나뿐이다.
+
+    **여기서 해야 한다.** 우두머리가 죽으면 그 자리에서 판이 끝나므로
+    (`clearIn`), 다음 틱을 기다리면 애벌레가 설 자리가 이미 없다.
+  */
+  const down = onFoeDown(st, gone, foes, st.seq);
+  foes.push(...down.born);
+  /*
+    ── 우두머리 판의 보상은 **줄이 빌 때 한 번** ──
+
+    21판 지네는 둘로 갈라지고 30판 바알은 분신을 만든다. 마리마다 주면
+    갈라지는 우두머리가 안 갈라지는 우두머리보다 두 배를 준다 — 기믹이
+    보상이 되어 버린다.
+
+    잡몹은 그대로 마리당이다. 저긴 원래 여러 마리를 잡는 구간이다.
+  */
+  const gold = st.boss && foes.length ? 0 : killGold(st.stage, st.boss);
 
   /*
     회복은 **살아 있는 사람에게만**, 각자 제 최대치의 비율로.
@@ -3323,8 +4194,17 @@ export function applyHit(
     일어나는 건 스테이지를 다시 시작할 때뿐이다.
   */
 
-  // 우두머리를 잡았다 — 다음 스테이지
-  if (st.boss) {
+  /*
+    ── 우두머리 판은 **줄이 빌 때** 끝난다 ──
+
+    여태 `st.boss` 하나만 봤다. 우두머리가 늘 한 마리였으므로 "우두머리를
+    잡았다 = 줄이 비었다" 가 같은 말이었기 때문이다.
+
+    이제 아니다. 지네는 머리와 꼬리로 갈라지고, 바알은 분신을 만들고,
+    피로스는 죽으면서 애벌레 넷을 남긴다. 머리를 잡았다고 판이 끝나면
+    꼬리가 서 있는 채로 다음 판으로 넘어간다.
+  */
+  if (st.boss && !foes.length) {
     /*
       **바로 안 넘어간다.** `clearIn` 을 걸어 두면 틱이 그 시간을 흘려보낸
       뒤에 넘긴다 (`battleTick` 위쪽). 그 사이 화면은 `Clear` 를 띄우고
@@ -3338,6 +4218,7 @@ export function applyHit(
         ...st,
         foes,
         hp,
+        seq: down.seq,
         slain: st.slain + 1,
         target: 0,
         clearIn: CLEAR_MS,
@@ -3353,7 +4234,12 @@ export function applyHit(
   /* 다음 놈은 **무작위로** 고른다 — 늘 맨 앞이면 한 자리만 계속 때린다 */
   return {
     battle: {
-      ...st, foes, hp, slain: st.slain + 1, target: pickTarget(foes.length),
+      ...st,
+      foes,
+      hp,
+      seq: down.seq,
+      slain: st.slain + 1,
+      target: pickTarget(foes.length),
     },
     ev: { ...NOTHING, hit: dmg, killed: 1, gold },
   };
@@ -3763,7 +4649,7 @@ export function applySkill(
   */
   const foeHex: Record<number, Hex[]> = { ...(st.foeHex ?? {}) };
   for (const i of idx) {
-    const kind = foeOf(st.stage, st.boss, foes[i].k);
+    const kind = foeAt(st, foes[i]);
     const dmg = Math.max(1, Math.round(strikeFor(
       skillBase(mine, sk, sup), rollCrit(mine, rand),
       foeArmor(kind, foes[i].hp), blow,
@@ -3778,7 +4664,7 @@ export function applySkill(
         n: 1,
       }, 1);
     }
-    foes[i] = { ...foes[i], hp: foes[i].hp - dmg };
+    foes[i] = biteFoe(foes[i], dmg);
     hit += dmg;
     /* 여러 마리를 치는 기술은 **친 만큼** 되돌아온다 (`applyHit` 과 같은 규칙) */
     const back = kind.passive?.reflect ?? 0;
@@ -3794,9 +4680,18 @@ export function applySkill(
     : st.hp;
 
   /* 죽은 놈을 걷어낸다 — 뒤에서부터 지워야 인덱스가 안 밀린다 */
+  let seq = st.seq;
+  const born: FoeSlot[] = [];
   for (let i = foes.length - 1; i >= 0; i--) {
-    if (foes[i].hp <= 0) { foes.splice(i, 1); killed += 1; }
+    if (foes[i].hp > 0) continue;
+    /* 죽으면서 나오는 것 (26판) — 평타 쪽과 같은 규칙이다 */
+    const down = onFoeDown(st, foes[i], foes, seq);
+    seq = down.seq;
+    born.push(...down.born);
+    foes.splice(i, 1);
+    killed += 1;
   }
+  foes.push(...born);
 
   if (!killed) {
     return { battle: { ...st, foes, hp, foeHex }, ev: { ...NOTHING, hit } };
@@ -3806,7 +4701,10 @@ export function applySkill(
     if (!foes.some((f) => f.id === Number(id))) delete foeHex[Number(id)];
   }
 
-  const gold = killGold(st.stage, st.boss) * killed;
+  /* 우두머리 판은 줄이 빌 때 한 번만 준다 (`applyHit` 과 같은 규칙) */
+  const gold = st.boss
+    ? (foes.length ? 0 : killGold(st.stage, true))
+    : killGold(st.stage, false) * killed;
 
 
   // 우두머리를 잡았다 — 다음 스테이지
@@ -3824,6 +4722,7 @@ export function applySkill(
         ...st,
         foes,
         hp,
+        seq,
         slain: st.slain + killed,
         target: 0,
         foeHex,
@@ -3840,6 +4739,7 @@ export function applySkill(
       ...st,
       foes,
       hp,
+      seq,
       foeHex,
       slain: st.slain + killed,
       target: pickTarget(foes.length, rand),
