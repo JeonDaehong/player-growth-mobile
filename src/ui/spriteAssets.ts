@@ -1654,7 +1654,156 @@ export const PASSIVE_ICON_SPRITES = {
   'pv_tempo': require('../../assets/sprites/passive_icon/pv_tempo.png'),
 } as const;
 
-export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'bfx_bind' | 'boss_passive' | 'status_icon' | 'sfx_erupt' | 'passive_icon';
+export const SW_GRUB_SPRITES = {
+  'attack': require('../../assets/sprites/sw_grub/attack.png'),
+  'down': require('../../assets/sprites/sw_grub/down.png'),
+  'idle': require('../../assets/sprites/sw_grub/idle.png'),
+} as const;
+
+export const SW_HOPPER_SPRITES = {
+  'attack': require('../../assets/sprites/sw_hopper/attack.png'),
+  'down': require('../../assets/sprites/sw_hopper/down.png'),
+  'idle': require('../../assets/sprites/sw_hopper/idle.png'),
+} as const;
+
+export const SW_SPITTER_SPRITES = {
+  'attack': require('../../assets/sprites/sw_spitter/attack.png'),
+  'down': require('../../assets/sprites/sw_spitter/down.png'),
+  'idle': require('../../assets/sprites/sw_spitter/idle.png'),
+} as const;
+
+export const SW_WEAVER_SPRITES = {
+  'attack': require('../../assets/sprites/sw_weaver/attack.png'),
+  'down': require('../../assets/sprites/sw_weaver/down.png'),
+  'idle': require('../../assets/sprites/sw_weaver/idle.png'),
+} as const;
+
+export const SW_ROLLER_SPRITES = {
+  'attack': require('../../assets/sprites/sw_roller/attack.png'),
+  'down': require('../../assets/sprites/sw_roller/down.png'),
+  'idle': require('../../assets/sprites/sw_roller/idle.png'),
+} as const;
+
+export const SW_SOLDIER_SPRITES = {
+  'attack': require('../../assets/sprites/sw_soldier/attack.png'),
+  'down': require('../../assets/sprites/sw_soldier/down.png'),
+  'idle': require('../../assets/sprites/sw_soldier/idle.png'),
+} as const;
+
+export const SW_DRONE_SPRITES = {
+  'attack': require('../../assets/sprites/sw_drone/attack.png'),
+  'down': require('../../assets/sprites/sw_drone/down.png'),
+  'idle': require('../../assets/sprites/sw_drone/idle.png'),
+} as const;
+
+export const SW_LANCER_SPRITES = {
+  'attack': require('../../assets/sprites/sw_lancer/attack.png'),
+  'down': require('../../assets/sprites/sw_lancer/down.png'),
+  'idle': require('../../assets/sprites/sw_lancer/idle.png'),
+} as const;
+
+export const SW_HUSK_SPRITES = {
+  'attack': require('../../assets/sprites/sw_husk/attack.png'),
+  'down': require('../../assets/sprites/sw_husk/down.png'),
+  'idle': require('../../assets/sprites/sw_husk/idle.png'),
+} as const;
+
+export const SW_MANTIS_SPRITES = {
+  'attack': require('../../assets/sprites/sw_mantis/attack.png'),
+  'down': require('../../assets/sprites/sw_mantis/down.png'),
+  'idle': require('../../assets/sprites/sw_mantis/idle.png'),
+} as const;
+
+export const SW_GLIDER_SPRITES = {
+  'attack': require('../../assets/sprites/sw_glider/attack.png'),
+  'down': require('../../assets/sprites/sw_glider/down.png'),
+  'idle': require('../../assets/sprites/sw_glider/idle.png'),
+} as const;
+
+export const SW_BOMB_SPRITES = {
+  'attack': require('../../assets/sprites/sw_bomb/attack.png'),
+  'down': require('../../assets/sprites/sw_bomb/down.png'),
+  'idle': require('../../assets/sprites/sw_bomb/idle.png'),
+} as const;
+
+export const B21_CENTIPEDA_SPRITES = {
+  'attack': require('../../assets/sprites/b21_centipeda/attack.png'),
+  'down': require('../../assets/sprites/b21_centipeda/down.png'),
+  'idle': require('../../assets/sprites/b21_centipeda/idle.png'),
+  'skill1': require('../../assets/sprites/b21_centipeda/skill1.png'),
+  'split_head': require('../../assets/sprites/b21_centipeda/split_head.png'),
+  'split_tail': require('../../assets/sprites/b21_centipeda/split_tail.png'),
+} as const;
+
+export const B22_APIS_SPRITES = {
+  'attack': require('../../assets/sprites/b22_apis/attack.png'),
+  'down': require('../../assets/sprites/b22_apis/down.png'),
+  'idle': require('../../assets/sprites/b22_apis/idle.png'),
+  'skill1': require('../../assets/sprites/b22_apis/skill1.png'),
+} as const;
+
+export const B23_NUCANUS_SPRITES = {
+  'attack': require('../../assets/sprites/b23_nucanus/attack.png'),
+  'cocoon': require('../../assets/sprites/b23_nucanus/cocoon.png'),
+  'down': require('../../assets/sprites/b23_nucanus/down.png'),
+  'idle': require('../../assets/sprites/b23_nucanus/idle.png'),
+  'skill1': require('../../assets/sprites/b23_nucanus/skill1.png'),
+} as const;
+
+export const B24_BIBLIS_SPRITES = {
+  'attack': require('../../assets/sprites/b24_biblis/attack.png'),
+  'down': require('../../assets/sprites/b24_biblis/down.png'),
+  'idle': require('../../assets/sprites/b24_biblis/idle.png'),
+  'skill1': require('../../assets/sprites/b24_biblis/skill1.png'),
+} as const;
+
+export const B25_ARACHNES_SPRITES = {
+  'attack': require('../../assets/sprites/b25_arachnes/attack.png'),
+  'down': require('../../assets/sprites/b25_arachnes/down.png'),
+  'idle': require('../../assets/sprites/b25_arachnes/idle.png'),
+  'imago': require('../../assets/sprites/b25_arachnes/imago.png'),
+  'imago_skill': require('../../assets/sprites/b25_arachnes/imago_skill.png'),
+  'skill1': require('../../assets/sprites/b25_arachnes/skill1.png'),
+} as const;
+
+export const B26_PYROS_SPRITES = {
+  'attack': require('../../assets/sprites/b26_pyros/attack.png'),
+  'down': require('../../assets/sprites/b26_pyros/down.png'),
+  'idle': require('../../assets/sprites/b26_pyros/idle.png'),
+  'skill1': require('../../assets/sprites/b26_pyros/skill1.png'),
+  'skill2': require('../../assets/sprites/b26_pyros/skill2.png'),
+} as const;
+
+export const B27_LOCUSTA_SPRITES = {
+  'attack': require('../../assets/sprites/b27_locusta/attack.png'),
+  'down': require('../../assets/sprites/b27_locusta/down.png'),
+  'idle': require('../../assets/sprites/b27_locusta/idle.png'),
+  'skill1': require('../../assets/sprites/b27_locusta/skill1.png'),
+} as const;
+
+export const B28_MOSQUITO_SPRITES = {
+  'attack': require('../../assets/sprites/b28_mosquito/attack.png'),
+  'down': require('../../assets/sprites/b28_mosquito/down.png'),
+  'idle': require('../../assets/sprites/b28_mosquito/idle.png'),
+  'skill1': require('../../assets/sprites/b28_mosquito/skill1.png'),
+} as const;
+
+export const B29_FORMICA_SPRITES = {
+  'attack': require('../../assets/sprites/b29_formica/attack.png'),
+  'down': require('../../assets/sprites/b29_formica/down.png'),
+  'idle': require('../../assets/sprites/b29_formica/idle.png'),
+  'skill1': require('../../assets/sprites/b29_formica/skill1.png'),
+} as const;
+
+export const B30_BAAL_SPRITES = {
+  'attack': require('../../assets/sprites/b30_baal/attack.png'),
+  'down': require('../../assets/sprites/b30_baal/down.png'),
+  'idle': require('../../assets/sprites/b30_baal/idle.png'),
+  'skill1': require('../../assets/sprites/b30_baal/skill1.png'),
+  'skill2': require('../../assets/sprites/b30_baal/skill2.png'),
+} as const;
+
+export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'bfx_bind' | 'boss_passive' | 'status_icon' | 'sfx_erupt' | 'passive_icon' | 'sw_grub' | 'sw_hopper' | 'sw_spitter' | 'sw_weaver' | 'sw_roller' | 'sw_soldier' | 'sw_drone' | 'sw_lancer' | 'sw_husk' | 'sw_mantis' | 'sw_glider' | 'sw_bomb' | 'b21_centipeda' | 'b22_apis' | 'b23_nucanus' | 'b24_biblis' | 'b25_arachnes' | 'b26_pyros' | 'b27_locusta' | 'b28_mosquito' | 'b29_formica' | 'b30_baal';
 
 export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   scroll: SCROLL_SPRITES,
@@ -1826,6 +1975,28 @@ export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   status_icon: STATUS_ICON_SPRITES,
   sfx_erupt: SFX_ERUPT_SPRITES,
   passive_icon: PASSIVE_ICON_SPRITES,
+  sw_grub: SW_GRUB_SPRITES,
+  sw_hopper: SW_HOPPER_SPRITES,
+  sw_spitter: SW_SPITTER_SPRITES,
+  sw_weaver: SW_WEAVER_SPRITES,
+  sw_roller: SW_ROLLER_SPRITES,
+  sw_soldier: SW_SOLDIER_SPRITES,
+  sw_drone: SW_DRONE_SPRITES,
+  sw_lancer: SW_LANCER_SPRITES,
+  sw_husk: SW_HUSK_SPRITES,
+  sw_mantis: SW_MANTIS_SPRITES,
+  sw_glider: SW_GLIDER_SPRITES,
+  sw_bomb: SW_BOMB_SPRITES,
+  b21_centipeda: B21_CENTIPEDA_SPRITES,
+  b22_apis: B22_APIS_SPRITES,
+  b23_nucanus: B23_NUCANUS_SPRITES,
+  b24_biblis: B24_BIBLIS_SPRITES,
+  b25_arachnes: B25_ARACHNES_SPRITES,
+  b26_pyros: B26_PYROS_SPRITES,
+  b27_locusta: B27_LOCUSTA_SPRITES,
+  b28_mosquito: B28_MOSQUITO_SPRITES,
+  b29_formica: B29_FORMICA_SPRITES,
+  b30_baal: B30_BAAL_SPRITES,
 };
 
 /** 세트에서 키를 안전하게 꺼낸다. 없으면 undefined — 호출부가 대체 렌더를 하도록. */
@@ -1968,6 +2139,53 @@ export const SPRITE_RATIO: Record<string, number> = {
   'b20_silvanus/idle': 1.0056,
   'b20_silvanus/skill1': 1.0169,
   'b20_silvanus/skill2': 1.0112,
+  'b21_centipeda/attack': 0.5938,
+  'b21_centipeda/down': 0.8896,
+  'b21_centipeda/idle': 0.902,
+  'b21_centipeda/skill1': 1.8372,
+  'b21_centipeda/split_head': 1.031,
+  'b21_centipeda/split_tail': 0.5205,
+  'b22_apis/attack': 0.8385,
+  'b22_apis/down': 1.1228,
+  'b22_apis/idle': 0.8646,
+  'b22_apis/skill1': 0.9583,
+  'b23_nucanus/attack': 0.7448,
+  'b23_nucanus/cocoon': 0.7834,
+  'b23_nucanus/down': 0.75,
+  'b23_nucanus/idle': 0.7316,
+  'b23_nucanus/skill1': 1.0113,
+  'b24_biblis/attack': 0.8542,
+  'b24_biblis/down': 0.7188,
+  'b24_biblis/idle': 0.849,
+  'b24_biblis/skill1': 0.8906,
+  'b25_arachnes/attack': 0.8961,
+  'b25_arachnes/down': 0.9571,
+  'b25_arachnes/idle': 0.9675,
+  'b25_arachnes/imago': 0.9272,
+  'b25_arachnes/imago_skill': 0.9877,
+  'b25_arachnes/skill1': 0.9632,
+  'b26_pyros/attack': 0.5833,
+  'b26_pyros/down': 0.7764,
+  'b26_pyros/idle': 0.895,
+  'b26_pyros/skill1': 0.9943,
+  'b26_pyros/skill2': 1.0242,
+  'b27_locusta/attack': 0.5625,
+  'b27_locusta/down': 0.6927,
+  'b27_locusta/idle': 0.5104,
+  'b27_locusta/skill1': 0.9167,
+  'b28_mosquito/attack': 0.7917,
+  'b28_mosquito/down': 0.5365,
+  'b28_mosquito/idle': 0.901,
+  'b28_mosquito/skill1': 0.8073,
+  'b29_formica/attack': 0.9323,
+  'b29_formica/down': 0.8438,
+  'b29_formica/idle': 1.0052,
+  'b29_formica/skill1': 1.0549,
+  'b30_baal/attack': 0.8646,
+  'b30_baal/down': 0.776,
+  'b30_baal/idle': 0.8906,
+  'b30_baal/skill1': 0.901,
+  'b30_baal/skill2': 0.651,
   'bfx_bind/1': 0.6615,
   'bfx_bind/2': 0.6562,
   'bfx_bind/3': 0.8221,
@@ -2891,6 +3109,42 @@ export const SPRITE_RATIO: Record<string, number> = {
   'stone/mid_crack': 0.9605,
   'stone/mid_glow': 0.9787,
   'stone/mid_idle': 1.1311,
+  'sw_bomb/attack': 0.9531,
+  'sw_bomb/down': 0.5729,
+  'sw_bomb/idle': 0.6302,
+  'sw_drone/attack': 0.7656,
+  'sw_drone/down': 1.0159,
+  'sw_drone/idle': 0.875,
+  'sw_glider/attack': 0.7812,
+  'sw_glider/down': 0.8594,
+  'sw_glider/idle': 0.5938,
+  'sw_grub/attack': 0.5365,
+  'sw_grub/down': 0.6979,
+  'sw_grub/idle': 0.4271,
+  'sw_hopper/attack': 0.9479,
+  'sw_hopper/down': 0.7396,
+  'sw_hopper/idle': 0.8542,
+  'sw_husk/attack': 0.5833,
+  'sw_husk/down': 0.7448,
+  'sw_husk/idle': 0.4844,
+  'sw_lancer/attack': 0.7396,
+  'sw_lancer/down': 0.7344,
+  'sw_lancer/idle': 0.8125,
+  'sw_mantis/attack': 1.0909,
+  'sw_mantis/down': 0.7812,
+  'sw_mantis/idle': 1.5,
+  'sw_roller/attack': 0.75,
+  'sw_roller/down': 0.6094,
+  'sw_roller/idle': 0.9948,
+  'sw_soldier/attack': 0.6875,
+  'sw_soldier/down': 0.6667,
+  'sw_soldier/idle': 0.6146,
+  'sw_spitter/attack': 0.7656,
+  'sw_spitter/down': 0.7656,
+  'sw_spitter/idle': 0.4427,
+  'sw_weaver/attack': 0.7604,
+  'sw_weaver/down': 0.4115,
+  'sw_weaver/idle': 0.9375,
   'synergy/crown': 1.0909,
   'synergy/leaf': 1.2468,
   'synergy/ring1': 1.0213,

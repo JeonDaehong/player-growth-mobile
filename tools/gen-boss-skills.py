@@ -54,15 +54,18 @@ def load_stats():
     s = io.open(SRC, encoding='utf-8').read()
     part = s[s.index('export const STAGES'):s.index('/** 그 스테이지의 구성')]
     out = []
+    # 빈칸 자리에 **주석도 온다** — 판마다 "왜 이 수치인가" 를 적어 두는
+    # 자리라, `\s*` 로 두면 주석이 붙은 판이 조용히 빠진다 (27개만 읽히던 것).
+    gap = r"(?:\s|/\*.*?\*/)*"
     for m in re.finditer(
-            r"boss: \{\s*art: '[^']+', name: '([^']+)', "
+            r"boss: \{" + gap + r"art: '[^']+', name: '([^']+)', "
             r"(?:title: '[^']*', )?bg: '[^']*', "
-            r"melee: \w+, dmg: '\w+',\s*atk: (\d+), hp: (\d+), spd: ([\d.]+), "
-            r"def: (\d+), res: (\d+),\s*\}", part):
+            r"melee: \w+, dmg: '\w+'," + gap + r"atk: (\d+), hp: (\d+), spd: ([\d.]+), "
+            r"def: (\d+), res: (\d+)," + gap + r"\}", part):
         nm, atk, hp, spd, dfn, res = m.groups()
         out.append({'name': nm, 'atk': int(atk), 'hp': int(hp),
                     'spd': float(spd), 'def': int(dfn), 'res': int(res)})
-    assert len(out) == 20, '우두머리 수치를 20개 못 읽었다: %d' % len(out)
+    assert len(out) == 30, '우두머리 수치를 30개 못 읽었다: %d' % len(out)
     return out
 
 
@@ -77,6 +80,14 @@ def load_stats():
 #
 # `check` 는 이 숫자들이 `gen-boss.py` 의 설명 문장 안에 그대로 있는지 본다.
 
+# ⚠ 여기는 아직 **1~20 뿐**이다.
+#
+# 21~30 의 기술은 `core/autoBattle.ts` 에 들어가 있는데 이 표에는 없다. 이
+# 표가 하는 일이 "사양 문장(`gen-boss.py`)과 코드가 맞나" 를 보는 것인데,
+# 저 열 마리는 사양 문장이 아직 절반만 적혀 있기 때문이다 (열 중 셋).
+#
+# 그래서 지금 21~30 은 **한 벌뿐**이다 — 코드가 곧 사양이다. `gen-boss.py` 에
+# 문장을 다 채우는 날 여기에 열 줄을 더하면 세 벌이 다시 맞물린다.
 SKILLS = [
     (1, 1, 'all', 0.90, 'phys', 4, None, None, None, []),
     (2, 1, 'one', 2.00, 'phys', 4, None, None, None, []),

@@ -186,6 +186,24 @@ export const BOSS_BLOW: Record<number, FxPlan> = {
   /* 가시 한 발 */
   18: { shot: 'bolt', lead: 300 },
   19: { boss: 'swing', lead: 160 },
+
+  /*
+    ── 21~30 · 마법으로 때리는 우두머리 셋 ──
+
+    이 장에서 처음으로 **평타가 마법인 우두머리**가 나온다 (`STAGES`).
+    붙어서 주먹을 휘두르는데 마법 피해가 들어오면 화면이 계산과 다른 말을
+    한다 — 뭔가 날아와야 마법으로 읽힌다.
+
+    나머지 일곱은 그냥 친다. 그림이 아직 없어서 (`docs/boss-art/` 에
+    프롬프트만 있다) 무슨 자세인지를 모르는 채로 연출을 붙이면, 시트가
+    들어온 날 자세와 연출이 어긋난다.
+  */
+  /* 유령나방 — 인분을 뿌린다 */
+  24: { shot: 'blob', lead: 300 },
+  /* 발광충 — 빛을 쏜다 */
+  26: { shot: 'bolt', lead: 300 },
+  /* 동충하초 — 포자를 날린다 */
+  29: { shot: 'blob', lead: 300 },
 };
 
 /**
@@ -195,6 +213,14 @@ export const BOSS_BLOW: Record<number, FxPlan> = {
  * 있고, 한 글자 고치는 순간 연출이 조용히 사라지면 원인을 찾기 어렵다.
  */
 export const BOSS_CAST: Record<string, FxPlan> = {
+  /*
+    기본값 — 표에 제 기술이 안 적힌 우두머리가 물려받는다 (`BOSS_PATTERNS`).
+
+    한동안 아무도 안 썼는데, 21~30 이 들어오면서 **열 마리가 이걸 쓴다**
+    (그 열의 기술은 그림이 들어오는 날 붙인다). 그때까지 휩쓸기가 화면에서
+    평타와 똑같아 보이면 안 되므로 크게 한 번 휘두르게 해 둔다.
+  */
+  sweep: { boss: 'swing', lead: 160 },
   /* 1판 뭉개기 — 진짜로 아군 쪽으로 뛰어들어 찍는다 */
   squash: { leap: true, body: 'crush', lead: 280 },
   /*
@@ -252,6 +278,32 @@ export const BOSS_CAST: Record<string, FxPlan> = {
   bolt: { body: 'thunder', lead: 240 },
   /* 20판 자비없는 칼날 — 비스듬히 쫙 */
   blade: { body: 'slashD', lead: 160 },
+
+  /* ── 21~30 · 우화하는 군체들 ── */
+  /* 21판 맹독 침 — 관통이라 날아와 꽂힌다 */
+  venom: { shot: 'bolt', lead: 300 },
+  /* 22판 여왕의 황금 장막 — 장막이 터지며 퍼진다 */
+  veil: { boss: 'ripple', lead: 300 },
+  /* 23판 짓밟는 무쇠 뿔 — 크게 휘두르고 맨 앞이 찍힌다 */
+  gore: { boss: 'swing', body: 'crush', lead: 200 },
+  /* 24판 정신 착란 — 인분이 몸에서 터진다 */
+  daze: { body: 'spore', lead: 300 },
+  /* 25판 포식의 거미줄 — 5초 행동 불가라 **감긴다** (`bfx_bind`) */
+  cocoon: { body: 'coil', lead: 320 },
+  /* 26판 인화성 분무 — 스멀스멀 퍼진다 */
+  ignite: { boss: 'stench', lead: 340 },
+  /* 26판 날카로운 찌르기 — 두 대마다 나오는 짧은 것이라 몸에서 끝낸다 */
+  jab: { body: 'lance', lead: 140 },
+  /* 27판 포식 — 물어뜯는다 */
+  devour: { body: 'crush', lead: 200 },
+  /* 28판 치명적 흡혈 침 — 긴 침이 밖에서 들어와 박힌다 */
+  siphon: { body: 'lance', lead: 140 },
+  /* 29판 신경 마비 포자 */
+  numb: { body: 'spore', lead: 300 },
+  /* 30판 군체의 대염쇄 — 허물이 사방으로 흩어진다 */
+  shed: { boss: 'spikes', lead: 260 },
+  /* 30판 군주 붕괴파 — 파동이 퍼지고 머리 위로 떨어진다 */
+  collapse: { boss: 'ripple', body: 'thunder', lead: 240 },
 };
 
 /** 그 판 평타의 연출. 안 적힌 판은 그냥 친다 */

@@ -49,21 +49,29 @@ def species(name):
 # 표마다 따로 들고 있는다. 키가 겹치기 때문이다 — `spore` 는 슬라임에도
 # 있고(`sg_spore`) 식물에도 있다(`pf_spore`). 하나로 합치면 뒤에 온 것이
 # 앞의 것을 덮어써서, 4판의 포자 슬라임이 홀씨대로 바뀐다.
-BY_HELPER = {'g': species('SLIME'), 'p': species('PLANT'), 'w': species('WOOD')}
+BY_HELPER = {'g': species('SLIME'), 'p': species('PLANT'), 'w': species('WOOD'),
+             's': species('SWARM')}
 
 # ── 스테이지 ──────────────────────────────────────────────
 stages_src = s[s.index('export const STAGES'):s.index('/** 그 스테이지의 구성')]
 
-BOSS = (r"boss: \{\s*art: '(?P<art>[^']+)', name: '(?P<name>[^']+)', "
+# 빈칸이 오는 자리에는 **주석도 올 수 있다.**
+#
+# 판마다 "왜 이 종을 넣었나" 를 적어 두는 자리가 실제로 저기다 (21판의 노린재,
+# 23판의 갑각). 그냥 `\s*` 로 두면 주석이 하나 붙는 순간 그 판이 조용히
+# 목록에서 빠지고, 표에는 스물아홉 판만 적힌다 — 25판만 잡히던 것이 그거였다.
+GAP = r"(?:\s|/\*.*?\*/)*"
+
+BOSS = (r"boss: \{" + GAP + r"art: '(?P<art>[^']+)', name: '(?P<name>[^']+)', "
         r"(?:title: '[^']*', )?"
-        r"bg: '[^']*', melee: (?P<melee>true|false), dmg: '(?P<dmg>\w+)',\s*"
-        r"atk: (?P<atk>\d+), hp: (?P<hp>\d+), spd: (?P<spd>[\d.]+), "
-        r"def: (?P<def>\d+), res: (?P<res>\d+),\s*\}")
+        r"bg: '[^']*', melee: (?P<melee>true|false), dmg: '(?P<dmg>\w+)'," + GAP
+        + r"atk: (?P<atk>\d+), hp: (?P<hp>\d+), spd: (?P<spd>[\d.]+), "
+        r"def: (?P<def>\d+), res: (?P<res>\d+)," + GAP + r"\}")
 
 entries = re.findall(
-    r"bg: '(\d+)', zone: '([^']+)',\s*kinds: \[(.*?)\],\s*" + BOSS + r',',
+    r"bg: '(\d+)', zone: '([^']+)'," + GAP + r"kinds: \[(.*?)\]," + GAP + BOSS + r',',
     stages_src, re.S)
-assert len(entries) == 20, '판이 20개가 아니다: %d' % len(entries)
+assert len(entries) == 30, '판이 30개가 아니다: %d' % len(entries)
 
 
 def kinds_in(raw):
@@ -74,7 +82,7 @@ def kinds_in(raw):
     """
     out = []
     for m in re.finditer(
-            r"([gpw])\('(\w+)', (\d+), (\d+), ([\d.]+), (\d+), (\d+)\)", raw):
+            r"([gpws])\('(\w+)', (\d+), (\d+), ([\d.]+), (\d+), (\d+)\)", raw):
         h, key, atk, hp, spd, dfn, res = m.groups()
         sp = BY_HELPER[h].get(key)
         assert sp, '%s(%s) 를 종 표에서 못 찾음' % (h, key)

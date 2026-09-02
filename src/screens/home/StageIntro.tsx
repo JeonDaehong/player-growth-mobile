@@ -18,7 +18,7 @@
  * 엔진에서 읽고, 그 뒤 2초는 `Animated` 가 부드럽게 끌고 간다 — 길이를 엔진과
  * 같게 맞춰 두었으므로 둘이 같이 끝난다.
  */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, Pressable, View } from 'react-native';
 import {
   BattleState, CLEAR_MS, MOVE_MS, OPEN_MS, OPEN_WALK_MS, stageOf,
@@ -80,42 +80,37 @@ export function useStageStaging(battle: BattleState): {
     : opening ? 'open' : 'none';
 
   /*
-    같은 연출이 다시 시작된 것을 알아보려면 "지금 몇 판째 여느냐" 가 있어야
-    한다. 10판을 깨고 10판을 다시 여는 경우 `stage` 가 안 바뀌기 때문이다.
-    그래서 국면이 `none` 에서 벗어날 때마다 번호를 하나 올린다.
+    ── 번호(`nonce`)를 없앴다. **글씨가 두 번 뜨던 원인이다** ──
+
+    국면이 바뀔 때마다 번호를 하나 올리고, 애니메이션 갈래가 `[nonce, phase]`
+    둘 다를 봤다. 그래서 한 번 바뀔 때 갈래가 **두 번** 돌았다 —
+
+      그리기 N      국면이 바뀐다 → 갈래가 돈다 → 애니메이션 A 시작
+      (그 사이)     `setNonce` 가 다시 그리기를 부른다
+      그리기 N+1    번호가 바뀌었다 → 갈래가 또 돈다 → A 를 멈추고 B 시작
+
+    둘 사이가 한 프레임이면 아무도 못 알아챈다. 그런데 **판이 바뀌는 순간은
+    이 게임에서 제일 바쁜 프레임**이다 (적 목록이 통째로 갈리고, 그림 스무
+    장이 새로 걸린다). 그 사이가 벌어지면 A 가 이미 글씨를 띄우는 중에 B 가
+    처음부터 다시 시작하고, 그게 **판 이름이 두 번 뜨는 것**으로 보인다.
+
+    번호는 애초에 필요가 없었다. "10판을 깨고 10판을 다시 여는" 경우를 알아
+    보려고 뒀는데, 그때도 국면이 `open → none → open` 으로 **실제로 바뀐다** —
+    `phase` 하나로 이미 잡힌다. 앞이 무엇이었나를 들고 다니던 것(`fromClear`)
+    을 없애면서 같이 없앴어야 했다.
   */
-  const [nonce, setNonce] = useState(0);
-  const was = useRef<StagePhase>('none');
-  /*
-    ── "바로 앞이 클리어였나" 를 들고 다니던 것을 없앴다 ──
-
-    앞 국면이 무엇이었나에 따라 시작 투명도를 0 이나 1 로 골랐다 (`fromClear`).
-    그런데 그 값이 **상태**라 한 그리기 늦게 도착했다 — 국면이 바뀐 첫
-    프레임에는 아직 옛 값이라, 이미 까맣던 화면이 한 프레임 투명해지고 그
-    사이로 전투 화면이 번쩍했다.
-
-    이제 시작 연출은 **언제나 까만 채로 연다** (아래 `veil`). 그러면 앞이
-    무엇이었는지를 알 필요가 없다. 앱을 처음 켤 때도 검은 화면에서 판 이름이
-    떠오르는 것이라 그림이 오히려 낫다.
-  */
-  useEffect(() => {
-    if (phase !== 'none' && was.current !== phase) setNonce((n) => n + 1);
-    was.current = phase;
-  }, [phase]);
-
   const t = useRef(new Animated.Value(0)).current;
   /*
-    ── 국면이 바뀌면 **그리기 전에** 시계를 되돌린다 ──
+    국면이 바뀌면 **그리기 전에** 시계를 되돌린다.
 
     앞 연출은 `t` 를 1 에 두고 끝난다. 갈래(`useEffect`)는 그리고 **난 뒤에**
     도므로, 새 국면의 첫 한 프레임은 앞 연출이 남긴 1 로 그려진다.
 
     옮기기는 막이 늘 1 이라 아무 일도 없지만, 시작 연출의 막은 t=1 에서
     0(투명)이다 — 그래서 옮기기가 끝나고 시작 연출로 넘어가는 그 한 프레임에
-    **전투 화면이 샜다.** 정확히 "전투화면이 한 번 보였다가" 그것이다.
+    **전투 화면이 샜다.**
 
     `Animated.Value` 는 React 상태가 아니라 그리기 중에 건드려도 안전하다.
-    갈래가 다시 0 으로 두고 애니메이션을 시작하지만, 같은 값이라 무해하다.
   */
   const seen = useRef<StagePhase>('none');
   if (seen.current !== phase) {
@@ -135,7 +130,7 @@ export function useStageStaging(battle: BattleState): {
     });
     a.start();
     return () => a.stop();
-  }, [nonce, phase, t]);
+  }, [phase, t]);
 
   return { phase, t };
 }

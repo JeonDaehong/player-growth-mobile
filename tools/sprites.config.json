@@ -3872,6 +3872,370 @@
         "pv_tempo",
         "pv_ash"
       ]
+    },
+    {
+      "file": "sw_grub.jpg",
+      "name": "sw_grub",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 갉는 유충 (docs/foe-art3/sw_grub.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_hopper.jpg",
+      "name": "sw_hopper",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 뛰는 여치 (docs/foe-art3/sw_hopper.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_spitter.jpg",
+      "name": "sw_spitter",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 뱉는 노린재 (docs/foe-art3/sw_spitter.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_weaver.jpg",
+      "name": "sw_weaver",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 실 잣는 새끼 (docs/foe-art3/sw_weaver.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_roller.jpg",
+      "name": "sw_roller",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 구르는 쇠똥구리 (docs/foe-art3/sw_roller.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_soldier.jpg",
+      "name": "sw_soldier",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 병정개미 (docs/foe-art3/sw_soldier.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_drone.jpg",
+      "name": "sw_drone",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 못 깬 일벌 (docs/foe-art3/sw_drone.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_lancer.jpg",
+      "name": "sw_lancer",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 쏘는 각다귀 (docs/foe-art3/sw_lancer.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_husk.jpg",
+      "name": "sw_husk",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 걷는 허물 (docs/foe-art3/sw_husk.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ],
+      "grid": [
+        3,
+        1
+      ],
+      "killCorner": true
+    },
+    {
+      "file": "sw_mantis.jpg",
+      "name": "sw_mantis",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 기다리는 사마귀 (docs/foe-art3/sw_mantis.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_glider.jpg",
+      "name": "sw_glider",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 활공하는 잠자리 (docs/foe-art3/sw_glider.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "sw_bomb.jpg",
+      "name": "sw_bomb",
+      "expect": [
+        3,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 잡몹 — 폭탄 애벌레 (docs/foe-art3/sw_bomb.md). 화면이 쓰는 칸은 idle·attack·down 셋뿐이다",
+      "labels": [
+        "idle",
+        "attack",
+        "down"
+      ]
+    },
+    {
+      "file": "21-boss.jpg",
+      "name": "b21_centipeda",
+      "expect": [
+        6,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b21_centipeda.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "split_head",
+        "split_tail",
+        "down"
+      ]
+    },
+    {
+      "file": "22-boss.jpg",
+      "name": "b22_apis",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b22_apis.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "23-boss.jpg",
+      "name": "b23_nucanus",
+      "expect": [
+        5,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b23_nucanus.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "cocoon",
+        "down"
+      ],
+      "grid": [
+        5,
+        1
+      ]
+    },
+    {
+      "file": "24-boss.jpg",
+      "name": "b24_biblis",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b24_biblis.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "25-boss.jpg",
+      "name": "b25_arachnes",
+      "expect": [
+        6,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b25_arachnes.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "imago",
+        "imago_skill",
+        "down"
+      ],
+      "grid": [
+        6,
+        1
+      ]
+    },
+    {
+      "file": "26-boss.jpg",
+      "name": "b26_pyros",
+      "expect": [
+        5,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b26_pyros.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "skill2",
+        "down"
+      ]
+    },
+    {
+      "file": "27-boss.jpg",
+      "name": "b27_locusta",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b27_locusta.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "28-boss.jpg",
+      "name": "b28_mosquito",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b28_mosquito.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "29-boss.jpg",
+      "name": "b29_formica",
+      "expect": [
+        4,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b29_formica.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "down"
+      ]
+    },
+    {
+      "file": "30-boss.jpg",
+      "name": "b30_baal",
+      "expect": [
+        5,
+        1
+      ],
+      "floor": true,
+      "note": "21~30 우두머리 (docs/boss-art/b30_baal.md)",
+      "labels": [
+        "idle",
+        "attack",
+        "skill1",
+        "skill2",
+        "down"
+      ],
+      "grid": [
+        5,
+        1
+      ]
     }
   ],
   "_srcDirs": [
