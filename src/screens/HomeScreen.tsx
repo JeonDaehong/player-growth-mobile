@@ -39,6 +39,7 @@ import { CharPopup } from './home/CharPopup';
 import { RewardBar } from './home/RewardBar';
 import { Ticker } from './home/Ticker';
 import { BottomNav } from './home/BottomNav';
+import { FormationPicker } from './home/FormationPicker';
 
 export default function HomeScreen() {
   const tickOnce = useGame((s) => s.battleTickOnce);
@@ -84,6 +85,14 @@ export default function HomeScreen() {
         <RewardBar />
         <BattleView />
         <Ticker />
+
+        {/*
+          대형은 파티 바로 위다 — "누가 서나" 와 "어떻게 서나" 는 같은 종류의
+          결정이라 붙어 있어야 한다 (`FormationPicker`).
+        */}
+        <View style={{ marginTop: SP.sm }}>
+          <FormationPicker />
+        </View>
 
         <View style={{ marginTop: SP.sm }}>
           <PartyBar onPick={setSlot} />

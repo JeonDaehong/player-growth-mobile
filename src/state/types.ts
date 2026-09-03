@@ -53,7 +53,7 @@ import type { RefillKind } from '@/core/refill';
 import type { Spirit } from '@/core/spirit';
 import type { AvatarId } from '@/core/avatars';
 import type { CharId, OwnedChar } from '@/core/chars';
-import type { Party } from '@/core/party';
+import type { FormationId, Party } from '@/core/party';
 import type { BattleState } from '@/core/autoBattle';
 
 /** 지난 회차 결과 한 줄. 정산할 때 확정되어 기록된다. */
@@ -129,6 +129,14 @@ export interface GameState {
   chars: Record<string, OwnedChar>;
   /** 파티 네 자리. 빈 자리는 null */
   party: Party;
+  /**
+   * 지금 고른 대형 (`core/party` 의 `FORMATIONS`) — `뒷줄-앞줄`.
+   *
+   * 파티(`party`)가 **누가 서나**라면 이건 **어떻게 서나**다. 둘을 한 칸에
+   * 묶을 수도 있었지만, 대형은 파티를 안 바꾸고도 판마다 갈아 끼우는
+   * 값이라 따로 둔다.
+   */
+  formation: FormationId;
   /** 자동 전투 진행 상태 */
   battle: BattleState;
   /**
@@ -644,6 +652,8 @@ export interface GameActions {
   /** 장인 무구의 다음 마일스톤을 해방한다 */
   liberateSlot: (slot: SlotId) => boolean;
   equipTitle: (t: TitleId | null) => void;
+  /** 대형을 바꾼다 (`core/party` 의 `FORMATIONS`) */
+  setFormation: (f: FormationId) => void;
   /** 가득 찬 게이지를 받는다 (`core/idle`) */
   claimIdle: () => boolean;
   /** 다이아로 게이지를 그 자리에서 채워 받는다 — 하루 세 번 */

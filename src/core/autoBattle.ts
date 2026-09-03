@@ -49,7 +49,8 @@
  *   최고 기록(`best`)도 그대로 남는다
  */
 import {
-  Party, allDown, allyAtk, fullHp, hpOf, livingMembers, members, partyStat,
+  DEFAULT_FORMATION, FRONT_SHARE, FormationId, Party,
+  allDown, allyAtk, frontIdsOf, fullHp, hpOf, livingMembers, members, partyStat,
 } from './party';
 import {
   Armor, Blow, CHARS, DmgType, NO_ARMOR, NO_PIERCE, OwnedChar, PHYS_BLOW, Role,
@@ -143,7 +144,7 @@ export const STAGE_CAP: number | null = 30;
  * 다섯을 넘기지 않는다 — 좁은 무대에서 서로 겹쳐 몇 마리인지 안 보인다.
  * 넷은 좁은 화면에서도 대형을 12px 씩 짜내면 들어간다 (`squeezeFor`).
  */
-export const MOB_CAP = 4;
+export const MOB_CAP = 6;
 
 /**
  * 그 중 원거리가 몇 마리까지.
@@ -3154,6 +3155,36 @@ export function leaveFor(st: BattleState, stage: number): BattleState {
 export const AIM = [0.50, 0.25, 0.15, 0.10];
 
 /**
+ * ── 아군을 고를 때는 **줄**이 정한다 ──
+ *
+ * `AIM` 은 이제 **적을 고를 때만** 쓴다 (`BattleView` 의 `onAim`). 적 줄은
+ * 여전히 한 줄로 서고, 앞에 선 놈일수록 많이 맞는다.
+ *
+ * 아군은 두 줄로 선다 (`core/party` 의 `FORMATIONS`). 그래서 "몇 번째 자리
+ * 인가" 가 아니라 **"앞줄인가 뒷줄인가"** 가 확률을 정한다 — 앞줄이 통째로
+ * 70% 를 지고, 줄 안에서는 고르게 나눈다 (`FRONT_SHARE`).
+ *
+ * 그 결과가 사양 그대로다.
+ *
+ *   2-2  앞 둘 35% 씩 · 뒤 둘 15% 씩
+ *   3-1  앞 하나 70%  · 뒤 셋 10% 씩
+ *   1-3  앞 셋 23% 씩 · 뒤 하나 30%
+ *
+ * 한쪽 줄이 비면 남은 줄이 전부 가져간다. 앞줄이 전멸했는데 아무도 안 맞는
+ * 일이 생기면 안 된다.
+ */
+function pickRow(
+  alive: readonly OwnedChar[], front: ReadonlySet<string>, rand: () => number,
+): OwnedChar {
+  const f = alive.filter((c) => front.has(c.id));
+  const b = alive.filter((c) => !front.has(c.id));
+  const use = (!f.length || !b.length)
+    ? (f.length ? f : b)
+    : (rand() < FRONT_SHARE ? f : b);
+  return use[Math.min(use.length - 1, Math.floor(rand() * use.length))];
+}
+
+/**
  * 이번에 노릴 자리를 고른다.
  *
  * 서 있는 수가 넷보다 적으면 있는 만큼의 확률만 남겨 다시 나눈다 — 둘뿐이면
@@ -3322,6 +3353,13 @@ function aimOf(
    * 들어가면 그건 범위기가 아니고, 화면에서도 무슨 기술인지 알 수가 없다.
    */
   taunt: string | null,
+  /**
+   * 지금 **앞줄에 선 사람들** (`core/party` 의 `frontIdsOf`).
+   *
+   * 비어 있으면 전원이 뒷줄로 읽히고, `pickRow` 가 그 한 줄에서 고르게
+   * 고른다 — 대형이 없던 시절과 결과가 같아진다.
+   */
+  front: ReadonlySet<string>,
 ): OwnedChar[] {
   if (!alive.length) return [];
   /*
@@ -3329,10 +3367,22 @@ function aimOf(
     안 걸린 것으로 친다 — 시체를 계속 때리면 나머지 셋이 공짜로 논다.
   */
   const bait = taunt ? alive.find((c) => c.id === taunt) : null;
-  const one = (): OwnedChar[] => [bait ?? alive[pickAim(alive.length, rand)]];
+  const one = (): OwnedChar[] => [bait ?? pickRow(alive, front, rand)];
   if (!pat || pat.aim === 'one') return one();
   if (pat.aim === 'all') return [...alive];
-  if (pat.aim === 'front') return bait ? [bait] : [alive[0]];
+  /*
+    "맨 앞" 은 이제 **앞줄에 선 사람**이다.
+
+    예전에는 파티 자리가 가장 앞인 사람이었다 (그때는 줄이 하나였으므로
+    그게 곧 맨 앞이었다). 지금은 대형이 앞줄을 정하므로, 여기서 자리 순서를
+    쓰면 `3-1` 에서 앞에 혼자 선 사람을 놔두고 뒤에 선 사람이 맞는다.
+
+    앞줄이 전멸했으면 남은 사람 중 맨 앞이다 — 칠 사람이 없으면 안 된다.
+  */
+  if (pat.aim === 'front') {
+    if (bait) return [bait];
+    return [alive.find((c) => front.has(c.id)) ?? alive[0]];
+  }
   if (pat.aim === 'low') {
     if (bait) return [bait];
     /*
@@ -3427,6 +3477,13 @@ export function battleTick(
   st: BattleState,
   party: Party,
   chars: Record<string, OwnedChar>,
+  /**
+   * 지금 고른 대형 (`core/party` 의 `FORMATIONS`).
+   *
+   * 기본값을 둔 이유는 저장본과 검사 때문이다 — 이 칸이 생기기 전의
+   * 저장본에는 대형이 없고, 검사에서도 대형을 안 주고 부르는 자리가 있다.
+   */
+  form: FormationId = DEFAULT_FORMATION,
   rand: () => number = Math.random,
 ): TickResult {
   const ps = partyStat(party, chars);
@@ -3691,6 +3748,14 @@ export function battleTick(
     35% 감소" 를 대신한다 — 역할이 아니라 **수치**가 정하는 쪽이 맞다.
   */
   const line = members(party, chars).filter((c) => hp[c.id] > 0);
+  /*
+    ── 지금 앞줄에 선 사람들 ──
+
+    **한 번만 잰다.** 적이 한 틱에 여섯 마리까지 치므로 (`MOB_CAP`) 한 대마다
+    다시 재면 여섯 번 돈다. 그리고 한 틱 안에서는 대형이 안 바뀌므로 여섯 번
+    돌아 봐야 같은 답이다.
+  */
+  const frontIds = frontIdsOf(party, chars, form);
 
   /*
     ── 우두머리가 늘 달고 있는 것 ──
@@ -3925,7 +3990,7 @@ export function battleTick(
 
     /* 도발은 **쓸 때 서 있던 놈**에게만 걸렸다 — 나중에 온 놈은 못 들었다 */
     const baited = taunt && taunt.foes.includes(h.id) ? taunt.who : null;
-    const marks = aimOf(h.pat, alive, hp, rand, baited);
+    const marks = aimOf(h.pat, alive, hp, rand, baited, frontIds);
     /* 특수기에 맞은 사람은 화면이 표적으로 씌운다 (`BattleState.struck`) */
     if (h.pat) for (const m of marks) if (!struck.includes(m.id)) struck.push(m.id);
 

@@ -18,6 +18,7 @@ import { COUPON_RESET_SEQ } from '@/core/coupons';
 import { DEFAULT_AVATAR, DEFAULT_AVATARS } from '@/core/avatars';
 import { STARTING_CHARS, newChar } from '@/core/chars';
 import { newBattle } from '@/core/autoBattle';
+import { DEFAULT_FORMATION } from '@/core/party';
 
 
 /**
@@ -107,6 +108,8 @@ export const initial = (): GameState => {
       STARTING_CHARS[2] ?? null,
       STARTING_CHARS[3] ?? null,
     ],
+    /* 넷이 가운데로 모이는 대형 — 셋 중 제일 평평하다 (`core/party` 의 `FORMATIONS`) */
+    formation: DEFAULT_FORMATION,
     battle: newBattle(),
     /* 아무도 안 건드린 상태 — 읽을 때 기본값으로 떨어진다 (`cleanseOptOf`) */
     skillOpts: {},

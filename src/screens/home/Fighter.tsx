@@ -184,11 +184,28 @@ function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
   live, hitNo, hitKind, cc, bound, shock, turn,
-  squeeze, width, lap, onAim, onSwing, onSkill,
+  x, width, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
-  /** 0 이 맨 앞 */
+  /**
+   * 줄 깊이 — **0 이 앞줄, 1 이 뒷줄** (`core/party` 의 `FORMATIONS`).
+   *
+   * 예전에는 파티 자리 번호였다 (0~3). 넷이 한 줄로 물러나며 섰기 때문인데,
+   * 이제 두 줄이라 깊이는 둘뿐이다. 그 값으로 얼마나 올라가고 작아질지가
+   * 나온다 (`Ground` 의 `depthAt`).
+   */
   back: number;
+  /**
+   * 아군 구역 **왼쪽 끝에서 몇 px** 에 서나.
+   *
+   * 예전에는 가로줄 안에서 서로 겹쳐 세웠다 (`marginLeft` 에 음수). 대형이
+   * 생기면서 자리가 **칸**으로 정해지므로 (다섯 칸 중 하나), 겹침으로는
+   * 표현할 수가 없다 — `2-2` 는 ②④ 를 쓰고 그 사이 ③ 은 비어 있어야 한다.
+   *
+   * 그래서 자리를 밖에서 받아 절대 좌표로 선다. 무대가 대형과 화면 폭을
+   * 다 알고 있으므로 (`BattleView`) 재는 곳도 거기다.
+   */
+  x: number;
   /** 파티 전체가 쓰러졌나 */
   down: boolean;
   /** 이 사람의 남은 체력 */
@@ -372,13 +389,7 @@ function FighterView({
    * 체력 막대가 조금 차는 것만으로는 뭘 했는지 알 수 없다.
    */
   bless: number;
-  /**
-   * 좁은 화면에서 추가로 겹칠 폭(px).
-   *
-   * 보통은 0 이다. 무대가 좁아 아군 줄과 적 줄이 서로 파고들 때만 커진다
-   * (`BattleView` 의 `squeezeFor`).
-   */
-  squeeze: number;
+
   /**
    * 이 사람이 차지하는 폭 (맨 앞 기준).
    *
@@ -387,8 +398,6 @@ function FighterView({
    * 넘는다. **줄 계산과 같은 값**을 써야 한다.
    */
   width: number;
-  /** 앞사람과 겹치는 폭 — 이것도 같은 배율을 탄다 */
-  lap: number;
   /**
    * 적 쪽으로 나가 있는 거리(px).
    *
@@ -949,27 +958,15 @@ function FighterView({
   /*
     ── 다 사라진 사람 ──
 
-    그림은 지우되 **자리는 남긴다.**
+    **아무것도 안 그린다.**
 
-    예전에는 `null` 을 돌려줬다. 그러면 감싸고 있는 가로줄에서 그 칸이
-    통째로 없어져서, 옆에 서 있던 사람들이 그만큼 옆으로 미끄러진다 —
-    아무도 안 움직였는데 줄이 다시 짜인다. 게다가 무대가 자리를 잴 때는
-    여전히 넷으로 세므로(`allyRightOf`), 그때부터 계산과 화면이 어긋난다.
+    예전에는 같은 폭의 빈 칸을 남겼다. 가로줄 안에서 서로 겹쳐 서던 시절에는
+    그래야 했다 — 칸이 없어지면 옆 사람들이 그만큼 미끄러졌다.
 
-    빈 칸을 같은 폭으로 남기면 1·2·3·4번 자리가 판 내내 고정된다.
+    이제 자리를 절대 좌표로 받으므로 (`x`) 하나가 사라져도 아무도 안 움직인다.
+    빈 칸이 할 일이 없어졌다.
   */
-  if (hidden && fallen) {
-    return (
-      <View
-        style={{
-          width: size,
-          height: 1,
-          marginLeft: back === 0 ? 0 : -(16 + squeeze),
-          marginBottom: lift,
-        }}
-      />
-    );
-  }
+  if (hidden && fallen) return null;
   /** 지금 나가는 중인 기술 — 평타 중이면 null */
   const castSk = casting >= 0 ? (skillsOf(ch.id)[casting] ?? null) : null;
   const max = st.hp;
@@ -978,8 +975,16 @@ function FighterView({
   return (
     <Animated.View
       style={{
-        marginLeft: back === 0 ? 0 : -(16 + squeeze),
-        marginBottom: lift,
+        /*
+          아군 구역 안에서 **제 칸에 선다** (`x` · `lift`).
+
+          가로줄 + 음수 여백이었다. 대형이 생기면서 자리가 칸으로 정해지므로
+          (`core/party` 의 `FORMATIONS`) 절대 좌표로 바꿨다 — 비는 칸을
+          겹침으로는 못 만든다.
+        */
+        position: 'absolute',
+        left: x,
+        bottom: lift,
         /*
           쓰러진 사람만 흐리다.
 
@@ -1376,9 +1381,8 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge
   && a.bless === b.bless
-  && a.squeeze === b.squeeze
+  && a.x === b.x
   && a.width === b.width
-  && a.lap === b.lap
   && a.advance === b.advance
   && a.leapTo === b.leapTo
   && a.onAim === b.onAim

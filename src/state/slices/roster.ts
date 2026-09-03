@@ -12,7 +12,7 @@ import {
   CHARS, CharId, FREE_ENHANCE, MAX_GEAR_LV, OwnedChar,
   gearCost, gearOdds, isCharId, newChar,
 } from '@/core/chars';
-import { PARTY_SIZE, Party, cleanParty } from '@/core/party';
+import { FormationId, PARTY_SIZE, Party, cleanParty } from '@/core/party';
 import { drawChar, poolOf, recruitCost } from '@/core/recruit';
 import { optKey } from '@/core/skillOpt';
 import {
@@ -26,6 +26,14 @@ export interface RosterActions {
   recruit: (id: CharId) => boolean;
   /** 파티 자리에 넣는다. `id` 가 null 이면 비운다 */
   setPartySlot: (slot: number, id: CharId | null) => void;
+  /**
+   * 대형을 바꾼다 (`core/party` 의 `FORMATIONS`).
+   *
+   * 판 중간에 바꿔도 된다. 다음 틱부터 맞을 확률이 달라지고, 화면에서는
+   * 그 자리에서 줄이 다시 선다 — 되돌릴 수 없는 선택이 아니라 **지금 이
+   * 판을 어떻게 버틸까**의 선택이라 그게 맞다.
+   */
+  setFormation: (f: FormationId) => void;
   /** 고유장비를 한 번 두들긴다 */
   enhanceGear: (id: CharId) => 'up' | 'fail' | 'max' | 'poor' | 'none';
   /**
@@ -124,6 +132,8 @@ export const createRosterSlice = (
     get().toast(`${CHARS[id].name} 합류!`, 'good');
     return true;
   },
+
+  setFormation: (f) => set({ formation: f }),
 
   setPartySlot: (slot, id) => {
     if (slot < 0 || slot >= PARTY_SIZE) return;
@@ -295,7 +305,7 @@ export const createRosterSlice = (
 
   battleTickOnce: () => {
     const st = get();
-    const { battle, ev } = battleTick(st.battle, st.party, st.chars);
+    const { battle, ev } = battleTick(st.battle, st.party, st.chars, st.formation);
 
     /*
       아무것도 안 바뀌었으면 `set` 을 부르지 않는다 — 파티가 비어 있을 때

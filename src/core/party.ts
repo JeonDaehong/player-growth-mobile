@@ -210,6 +210,168 @@ export const hpOf = (c: OwnedChar, hp: Record<string, number>): number => {
   return v === undefined ? max : Math.max(0, Math.min(max, v));
 };
 
+/* ────────────────────────────── 대형 ────────────────────────────── */
+
+/**
+ * ── 앞줄과 뒷줄 ──
+ *
+ * 넷이 한 줄로 서던 것을 **두 줄**로 나눈다. 이름은 `뒷줄-앞줄` 이다:
+ * `3-1` 이면 뒤에 셋, 앞에 하나다.
+ *
+ * ## 왜 자리가 다섯 칸인가
+ *
+ * 줄마다 다섯 칸이 있고 대형은 그중 몇 칸을 쓴다. 인원수만으로 자리를 잡으면
+ * `2-2` 일 때 넷이 왼쪽부터 차곡차곡 붙어 서서 대형이 아니라 그냥 줄이 된다.
+ *
+ * 칸을 정해 두면 **가운데를 기준으로 정갈하게** 모인다.
+ *
+ *   3-1  뒤 ①③⑤ · 앞 ③      뒤가 넓게 퍼지고 앞에 하나가 선다
+ *   2-2  뒤 ②④  · 앞 ②④     넷이 가운데로 모인다
+ *   1-3  뒤 ③   · 앞 ①③⑤    앞이 넓게 퍼진다
+ *
+ * ## 앞에 서는 사람은 누구인가
+ *
+ * 고르게 하지 않는다. **막는 순서**가 그대로 앞줄이다 (`defenseOrder` — 방어가
+ * 먼저, 그다음 공격, 마지막이 보조). 사람이 자리까지 고르게 하면 최적해가
+ * 하나로 굳고, 그러면 대형을 고르는 일이 그 하나를 찾는 일이 된다.
+ *
+ * 대형을 고르는 것으로 정하는 것은 **몇 명이 맞을 자리에 서나**다. 그게
+ * 이 선택의 내용이다.
+ */
+export type FormationId = '3-1' | '2-2' | '1-3';
+
+export const FORMATION_IDS: readonly FormationId[] = ['3-1', '2-2', '1-3'];
+
+/** 한 줄에 있는 자리 수 */
+export const FORM_COLS = 5;
+
+export interface FormationDef {
+  id: FormationId;
+  /** 뒷줄 인원 */
+  back: number;
+  /** 앞줄 인원 */
+  front: number;
+  /** 뒷줄이 쓰는 칸 (0 이 왼쪽 끝, 4 가 오른쪽 끝) */
+  backCols: readonly number[];
+  /** 앞줄이 쓰는 칸 */
+  frontCols: readonly number[];
+  /** 화면에 적는 한 줄 */
+  text: string;
+}
+
+export const FORMATIONS: Record<FormationId, FormationDef> = {
+  '3-1': {
+    id: '3-1',
+    back: 3,
+    front: 1,
+    backCols: [0, 2, 4],
+    frontCols: [2],
+    text: '앞 하나가 70% 를 혼자 받는다',
+  },
+  '2-2': {
+    id: '2-2',
+    back: 2,
+    front: 2,
+    backCols: [1, 3],
+    frontCols: [1, 3],
+    text: '앞 둘이 35% 씩 나눠 받는다',
+  },
+  '1-3': {
+    id: '1-3',
+    back: 1,
+    front: 3,
+    backCols: [2],
+    frontCols: [0, 2, 4],
+    text: '앞 셋이 23% 씩 나눠 받는다',
+  },
+};
+
+export const DEFAULT_FORMATION: FormationId = '2-2';
+
+export const isFormationId = (v: unknown): v is FormationId =>
+  typeof v === 'string' && (FORMATION_IDS as readonly string[]).includes(v);
+
+/**
+ * **앞줄이 통째로 받는 몫.**
+ *
+ * 나머지 30% 를 뒷줄이 나눠 갖는다. 줄 안에서는 고르게 나눈다 — 2-2 면
+ * 앞 둘이 35% 씩, 뒤 둘이 15% 씩이다.
+ *
+ * ## 왜 70 인가
+ *
+ * 50 이면 앞뒤가 반반이라 대형을 고를 이유가 없다. 90 이면 앞에 선 사람이
+ * 혼자 다 맞고 죽으므로 `3-1` 이 절대 안 나온다.
+ *
+ * 70 은 `3-1` 에서 앞 하나가 70% 를 지고 뒤 셋이 10% 씩 나눠 갖는 자리다.
+ * 그 10% 가 중요하다 — 0 이면 뒷줄이 안전지대가 되어 전열이 무너질 때까지
+ * 아무 일도 안 일어난다.
+ */
+export const FRONT_SHARE = 0.70;
+
+/** 대형에 따라 자리를 잡은 사람 하나 */
+export interface FormSpot {
+  c: OwnedChar;
+  row: 'front' | 'back';
+  /** 다섯 칸 중 몇 번째 (0 ~ 4) */
+  col: number;
+}
+
+/**
+ * 지금 파티를 대형에 앉힌다.
+ *
+ * **앞줄부터 채운다** (`defenseOrder` 순서로). 파티가 덜 찼으면 뒷줄이 먼저
+ * 빈다 — 둘뿐인 파티가 `3-1` 을 고르면 앞 하나 · 뒤 하나가 된다. 앞을 비우면
+ * 뒷줄이 곧 앞줄이 되어 대형이 뜻을 잃는다.
+ *
+ * 칸이 인원보다 많으면 **가운데부터** 쓴다. `1-3` 을 골랐는데 앞에 둘뿐이면
+ * ①③⑤ 중 ③⑤ 가 아니라 ①⑤ 처럼 벌어지는 것이 아니라 — 가운데를 낀 두 칸을
+ * 골라 정갈하게 모인다.
+ */
+export function formationSpots(
+  party: Party,
+  chars: Record<string, OwnedChar>,
+  form: FormationId,
+  /** 주면 쓰러진 사람을 빼고 앉힌다. 화면은 안 준다 (죽어도 자리는 그대로다) */
+  hp?: Record<string, number>,
+): FormSpot[] {
+  const def = FORMATIONS[form] ?? FORMATIONS[DEFAULT_FORMATION];
+  let line = defenseOrder(party, chars);
+  if (hp) line = line.filter((c) => hpOf(c, hp) > 0);
+
+  const nFront = Math.min(def.front, line.length);
+  const front = line.slice(0, nFront);
+  const back = line.slice(nFront);
+
+  const seat = (list: readonly OwnedChar[], cols: readonly number[], row: 'front' | 'back') => {
+    /*
+      쓸 칸이 인원보다 많으면 가운데를 낀 만큼만 골라 쓴다.
+
+      `[0,2,4]` 에 둘이면 `[0,2]` 가 아니라 **가운데 둘**(`[2,4]` 도 아니고)
+      — 목록의 한가운데를 기준으로 잘라 낸다. 그래야 어느 대형에서도 파티가
+      화면 한가운데에 선다.
+    */
+    const take = Math.min(list.length, cols.length);
+    const from = Math.floor((cols.length - take) / 2);
+    const use = cols.slice(from, from + take);
+    return list.slice(0, take).map((c, i) => ({ c, row, col: use[i] ?? 2 }));
+  };
+
+  return [...seat(front, def.frontCols, 'front'), ...seat(back, def.backCols, 'back')];
+}
+
+/** 지금 앞줄에 선 사람들의 이름표 — 전투가 이걸로 맞을 확률을 가른다 */
+export function frontIdsOf(
+  party: Party,
+  chars: Record<string, OwnedChar>,
+  form: FormationId,
+): Set<string> {
+  return new Set(
+    formationSpots(party, chars, form)
+      .filter((s) => s.row === 'front')
+      .map((s) => s.c.id),
+  );
+}
+
 /** 파티가 전멸했나 — 아무도 안 남았으면 */
 export function allDown(
   party: Party,

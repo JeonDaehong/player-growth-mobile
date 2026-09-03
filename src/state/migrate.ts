@@ -43,7 +43,7 @@ import type { Creature } from '@/core/types';
 import {
   CharId, MAX_GEAR_LV, OwnedChar, STARTING_CHARS, isCharId, newChar,
 } from '@/core/chars';
-import { cleanParty } from '@/core/party';
+import { DEFAULT_FORMATION, cleanParty, isFormationId } from '@/core/party';
 import { OPEN_MS, STAGE_MS, startFoes } from '@/core/autoBattle';
 
 export const STATE_VERSION = 3;
@@ -339,6 +339,8 @@ export function migrateState(persisted: unknown): GameState {
     */
     money: Math.max(0, Math.floor(num(p.money, base.money))) + payout,
     dia: Math.max(0, Math.floor(num(p.dia, 0))),
+    /* 대형이 없던 저장본은 기본 대형으로 — 모르는 이름이 들어와도 마찬가지다 */
+    formation: isFormationId(p.formation) ? p.formation : DEFAULT_FORMATION,
     /*
       게이지 시각이 없는 저장본(이 칸이 생기기 전)은 **지금부터** 센다.
       0 으로 두면 1970년부터 흐른 것이 되어 켜자마자 가득 차 있다.

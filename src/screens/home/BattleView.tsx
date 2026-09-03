@@ -16,10 +16,13 @@
  * 적은 한 마리씩이 아니라 최대 셋이 겹쳐 선다 (`core/autoBattle` 의 `MOB_CAP`).
  * 한 마리씩 내보내면 전투가 아니라 **줄 서기**로 보인다.
  *
- * 파티도 넷이 겹쳐 선다. 가로로 나란히 놓으면 좁은 화면에서 한 명이 30px 밖에
- * 안 되어 누가 누군지 안 보인다. 조금씩 어긋나게 겹치면 넷이 있다는 건
- * 보이면서 앞의 한 명은 크게 보인다 — 앞에 서는 건 방어 역할이다
- * (`core/party` 의 `frontOf`).
+ * 파티는 **두 줄**로 선다 (`core/party` 의 `FORMATIONS`). 다섯 칸 중 대형이
+ * 정한 칸에 서고, 앞줄은 아래에 크게 · 뒷줄은 위에 작게 그려진다. 앞줄에
+ * 선 사람이 공격의 70% 를 받으므로 (`FRONT_SHARE`), 어느 줄에 서 있나가
+ * 화면에서 바로 읽혀야 한다.
+ *
+ * 넷이 한 줄로 겹쳐 서던 시절에는 "앞에 서는 건 방어 역할" 하나였다. 지금은
+ * 대형이 **몇 명이 그 자리에 서나**를 정한다.
  *
  * ## 상태를 안 들고 있다
  *
@@ -37,7 +40,9 @@ import {
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf, skillsOf, statOf } from '@/core/chars';
-import { hpOf, livingMembers, members, partyStat } from '@/core/party';
+import {
+  FORMATIONS, FormSpot, formationSpots, hpOf, livingMembers, members, partyStat,
+} from '@/core/party';
 import {
   CC, Hex, STATUS_MARK, STATUS_NAME, STUN, hasHex, hexOf, stunned,
 } from '@/core/status';
@@ -96,7 +101,23 @@ const bgRatio = (bg: string) => SPRITE_RATIO[`bg_chapter/${bg}`] ?? 0.75;
 
 /** 맨 앞 아군 스프라이트 폭. 뒤로 갈수록 `depthAt` 이 줄인다 */
 
-/** 아군끼리 겹치는 폭 (`Fighter` 의 marginLeft) */
+/**
+ * 대형 칸 하나가 먹는 폭 — **인물 폭의 몇 할.**
+ *
+ * 1.0 이면 다섯 칸이 인물 다섯 개 폭(380px)이라 폰 화면에서 적이 설 자리가
+ * 안 남는다. 0.56 이면 옆 칸과 조금 겹치는데, 그게 오히려 대형처럼 보인다 —
+ * 딱 붙지도 뚝 떨어지지도 않은 거리다.
+ *
+ * 적이 넷에서 **여섯**으로 늘면서 (`MOB_CAP`) 한 번 더 조였다. 적 줄이
+ * 250px 을 먹으므로, 아군 줄이 넓으면 대형 전체가 통째로 줄어든다
+ * (`fitOf`) — 자리를 벌리려다 인물이 작아지면 벌린 뜻이 없다.
+ *
+ * `2-2` 는 ②④ 두 칸만 쓰므로 폭이 `1 × 칸 + 인물` 이다. 셋 다 span 이
+ * 2 칸이라 (③ 을 낀 양옆) 대형을 바꿔도 줄 폭이 안 흔들린다.
+ */
+const COL_RATIO = 0.56;
+
+/** 아군끼리 겹치는 폭 — 대형이 생기면서 안 쓴다 (자리는 칸이 정한다) */
 const PARTY_LAP = Math.round(16 * ZOOM);
 /** 맨 앞 적 스프라이트 폭 */
 
@@ -246,14 +267,58 @@ function numTop(y: number, row: number): number {
  * 나누면 답이 나온다 — 크기마다 따로 계산할 것이 없다.
  */
 function fitOf(
-  stageWidth: number, partyCount: number, foeCount: number, foeScale?: Scales,
+  stageWidth: number, allyW: number, foeCount: number, foeScale?: Scales,
 ): number {
   if (stageWidth <= 0) return 1;
   const need = rowWidth(foeCount, FOE_W, FOE_LAP, foeScale)
-    + rowWidth(partyCount, PARTY_W, PARTY_LAP)
+    + allyW
     + EDGE * 2 + MIN_GAP;
   /* 짜내기로 메울 수 있는 만큼(약 15%)은 남겨 둔다 — 다 줄이면 늘 최소 크기다 */
   return Math.min(1, (stageWidth * 1.15) / Math.max(1, need));
+}
+
+/**
+ * 뒷줄이 **몇 칸 물러나 보이나** (`Ground` 의 `depthAt`).
+ *
+ * 1 이 아니라 2 다. 1 이면 뒷줄이 앞줄보다 11px 위, 8% 작을 뿐인데 인물이
+ * 76px 이라 거의 다 가려진다 — 특히 `2-2` 는 앞뒤가 **같은 칸**(②④)을 쓰므로
+ * 뒷줄 둘이 통째로 안 보였다.
+ *
+ * 2 면 22px 위에 16% 작다. 머리와 어깨가 앞줄 위로 나오고, 크기 차이가
+ * "뒤에 있다" 를 말한다.
+ */
+const BACK_DEPTH = 2;
+
+/**
+ * 대형의 **자리와 폭** (배율 1 기준으로도, 실제 배율로도 같은 식을 쓴다).
+ *
+ * ## 뒷줄은 반 칸 왼쪽으로 비킨다
+ *
+ * 칸만으로 자리를 잡으면 앞뒤가 같은 칸을 쓸 때 정확히 포개진다. `2-2` 가
+ * ②④ 를 두 줄 다 쓰고 `3-1` 도 ③ 이 겹친다 — 세 대형 중 둘이 그렇다.
+ *
+ * 반 칸을 비키면 넷이 **마름모**로 선다. 앞줄이 두 뒷사람 사이에 서는 모양이
+ * 되어, 겹치지도 않고 두 줄이라는 것도 한눈에 읽힌다.
+ *
+ * ## 자리를 0 에서 시작하게 민다
+ *
+ * 비키다 보면 왼쪽 끝이 음수가 된다. 통째로 밀어서 제일 왼쪽 사람이 0 에
+ * 오게 맞춘다 — 그래야 아군 구역의 폭이 곧 대형의 폭이다.
+ */
+function formLayout(spots: readonly FormSpot[], base: number): {
+  x: number[]; width: number;
+} {
+  if (!spots.length) return { x: [], width: 0 };
+  const step = base * COL_RATIO;
+  const raw = spots.map((sp) => sp.col * step - (sp.row === 'back' ? step * 0.5 : 0));
+  const min = Math.min(...raw);
+  const x = raw.map((v) => Math.round(v - min));
+  const sizeOf = (sp: FormSpot) =>
+    Math.round(base * depthAt(sp.row === 'back' ? BACK_DEPTH : 0).scale);
+  return {
+    x,
+    width: Math.max(...x.map((v, i) => v + sizeOf(spots[i]))),
+  };
 }
 
 /**
@@ -355,15 +420,15 @@ function advanceRow(melee: readonly boolean[], closeIn: number): number[] {
  * 적이 줄면 그냥 틈이 넓어질 뿐이다 — 아무도 안 움직인다.
  */
 function closeInFor(
-  stageWidth: number, partyCount: number, foeCount: number, boss: boolean,
+  stageWidth: number, allyW: number, foeCount: number, boss: boolean,
   foeScale?: Scales,
 ): number {
   if (stageWidth <= 0) return 0;
-  const f = fitOf(stageWidth, partyCount, foeCount, foeScale);
+  const f = fitOf(stageWidth, allyW, foeCount, foeScale);
   const gapNow = stageWidth
     - EDGE * f
     - rowWidth(foeCount, (boss ? BOSS_W : FOE_W) * f, FOE_LAP * f, foeScale)
-    - EDGE * f - rowWidth(partyCount, PARTY_W * f, PARTY_LAP * f);
+    - EDGE * f - allyW * f;
   return Math.max(0, Math.round((gapNow - CLASH_GAP * f) / 2));
 }
 
@@ -380,18 +445,24 @@ function closeInFor(
  * @returns 한 명당 추가로 겹칠 폭
  */
 function squeezeFor(
-  stageWidth: number, partyCount: number, foeCount: number, boss: boolean,
+  stageWidth: number, allyW: number, foeCount: number, boss: boolean,
   foeScale?: Scales,
 ): number {
   if (stageWidth <= 0) return 0;
-  const f = fitOf(stageWidth, partyCount, foeCount, foeScale);
+  const f = fitOf(stageWidth, allyW, foeCount, foeScale);
   const rows = rowWidth(foeCount, (boss ? BOSS_W : FOE_W) * f, FOE_LAP * f, foeScale)
-    + rowWidth(partyCount, PARTY_W * f, PARTY_LAP * f);
+    + allyW * f;
   /* 줄 둘 + 벽여백 + 최소한의 틈이 들어가야 한다 */
   const need = rows + EDGE * 2 + MIN_GAP;
   if (need <= stageWidth) return 0;
-  /* 겹칠 수 있는 자리는 (사람 수 − 1) 곱하기 둘 */
-  const seams = Math.max(1, (partyCount - 1) + (foeCount - 1));
+  /*
+    겹칠 수 있는 자리는 **적 줄에만** 있다.
+
+    아군은 대형이 자리를 정하므로 (`core/party` 의 `FORMATIONS`) 더 겹칠 수가
+    없다 — 겹치면 `2-2` 의 비어 있는 ③ 칸이 사라진다. 대신 대형은 예전 한 줄
+    (넷이 나란히)보다 원래 좁아서, 짜낼 일 자체가 줄었다.
+  */
+  const seams = Math.max(1, foeCount - 1);
   void f;
   /*
     짜내는 폭에도 한계가 있다 — 너무 겹치면 몇인지 안 보인다.
@@ -440,6 +511,8 @@ export function BattleView() {
   const strikeFoe = useGame((s) => s.strikeFoe);
   const skillFoe = useGame((s) => s.skillFoe);
   const skillOpts = useGame((s) => s.skillOpts);
+  /* 앞줄·뒷줄을 나누는 값 — 계산도 화면도 같은 것을 본다 (`core/party`) */
+  const form = useGame((s) => s.formation);
   const goStage = useGame((s) => s.goStage);
   const callBossNow = useGame((s) => s.callBossNow);
   /* ⚠ 테스트용 — 아래 TEST 단추가 부른다. 출시 전에 같이 지운다 */
@@ -804,7 +877,7 @@ export function BattleView() {
    * 뛰어들 거리와 높이를 재는 함수 — 렌더마다 갈아 끼운다.
    *
    * `allyRightRef` 로는 못 잰다. 저건 **지금 나가 있는 자리**의 오른쪽 끝인데,
-   * 근접 아군은 싸우는 동안 적 앞까지 걸어 나가 있으므로 (`allyAdv`) 그 값으로
+   * 근접 아군은 싸우는 동안 적 앞까지 걸어 나가 있으므로 (`allyAdvOf`) 그 값으로
    * 재면 둘 사이가 40px 도 안 된다 — 우두머리가 한 발짝 움찔하고 만다.
    * 실제로 그렇게 보였다.
    *
@@ -1759,7 +1832,33 @@ export function BattleView() {
     const at = battle.foes.find((x) => (x.pos ?? 0) === b);
     return at ? (kindAt(battle, at).scale ?? 1) : 1;
   });
-  const closeIn = closeInFor(stageW, line.length, cap, cur.boss, foeScale);
+  /*
+    ── 대형 ──
+
+    누가 앞줄이고 누가 뒷줄인지, 그리고 다섯 칸 중 어느 칸에 서는지는
+    `core/party` 가 정한다 (`FORMATIONS` · `formationSpots`). **계산이 보는
+    것과 같은 함수**여야 한다 — 전투도 이걸로 맞을 확률을 가르므로
+    (`aimOf` 의 `front`), 따로 재면 화면에서 앞에 선 사람과 실제로 맞는
+    사람이 갈린다.
+
+    쓰러진 사람도 자리를 지킨다 (`hp` 를 안 넘긴다). 죽었다고 줄이 다시
+    서면 아무도 안 움직였는데 대형이 통째로 바뀐다.
+  */
+  const spots = React.useMemo(
+    () => formationSpots(party, chars, form),
+    [party, chars, form],
+  );
+  /**
+   * 대형의 자리와 폭 — **배율 1 기준.**
+   *
+   * 실제로 그릴 때는 여기에 `fit` 을 곱한다 (아래 `allyXOf`). 배율은 이
+   * 폭에서 나오므로 (`fitOf`), 배율을 먹인 값으로 배율을 계산할 수는 없다 —
+   * 그래서 한 번은 반드시 1 기준으로 재야 한다.
+   */
+  const form1 = formLayout(spots, PARTY_W);
+  const allyW1 = form1.width;
+
+  const closeIn = closeInFor(stageW, allyW1, cap, cur.boss, foeScale);
   /**
    * 그 자리의 아군이 적 앞줄까지 가려면 몇 px 을 더 가야 하나.
    *
@@ -1775,20 +1874,35 @@ export function BattleView() {
    * 적 줄의 `spotOf` 와 짝이다. 뛰어드는 거리도, 적이 날린 것이 날아갈
    * 거리도 여기서 나온다.
    */
-  const allyRightOf = (back: number) => {
-    const n = Math.max(1, line.length);
-    const lap = pLap + squeeze;
-    const sizeOf = (b: number) => Math.round(partyW * depthAt(b).scale);
-
-    /* 아군 줄 — 왼쪽 벽에서 EDGE, 맨 앞만 빼고 서로 파고든다 */
-    let left = edge;
-    for (let k = 0; k < n - 1 - back; k++) {
-      const b = n - 1 - k;
-      left += sizeOf(b) - (b === 0 ? 0 : lap);
-    }
-    if (back !== 0) left -= lap;
-    return left + sizeOf(back) + (allyAdv[back] ?? 0);
+  /** 그 사람의 줄 깊이 — 0 이 앞줄, `BACK_DEPTH` 가 뒷줄 */
+  const depthOf = (i: number) => (spots[i]?.row === 'back' ? BACK_DEPTH : 0);
+  /** 그 사람이 아군 구역 안에서 서는 자리 (왼쪽 끝에서 px) */
+  const allyXOf = (i: number) => Math.round((form1.x[i] ?? 0) * fit);
+  const allySizeOf = (i: number) => Math.round(partyW * depthAt(depthOf(i)).scale);
+  /**
+   * 그 사람이 적 쪽으로 나와 있는 거리 (px).
+   *
+   * 앞줄이 끝까지 나가고 뒷줄은 한 칸 덜 나간다 (`DEPTH_STEP`). 던지는
+   * 사람은 거기서 `RANGED_BACK` 만큼 더 물러난다 — 앞줄 원거리가 뒷줄
+   * 근접보다 뒤에 서지 않도록 두 값의 크기를 벌려 두었다 (6 < 11).
+   */
+  const allyAdvOf = (i: number) => {
+    const sp = spots[i];
+    if (!sp) return 0;
+    const melee = CHARS[sp.c.id].range === 'melee';
+    return Math.max(0, Math.round(
+      closeIn - depthOf(i) * DEPTH_STEP - (melee ? 0 : RANGED_BACK),
+    ));
   };
+
+  /**
+   * 그 사람의 **오른쪽 끝**이 무대 어디인가 (나와 있는 만큼 포함).
+   *
+   * 적 줄의 `spotOf` 와 짝이다. 뛰어드는 거리도, 적이 날린 것이 날아갈
+   * 거리도 여기서 나온다.
+   */
+  const allyRightOf = (i: number) =>
+    edge + allyXOf(i) + allySizeOf(i) + allyAdvOf(i);
 
   /*
     스윙 콜백이 쓸 값을 렌더가 끝날 때마다 최신으로 둔다 (`foeAt` 과 같은 이유).
@@ -1818,7 +1932,7 @@ export function BattleView() {
     ## 나가 있는 만큼은 뺀다
 
     `allyRightOf` 는 **지금 서 있는 자리**를 준다. 근접은 싸우는 동안 적 앞까지
-    걸어 나가 있으므로 (`allyAdv`) 그 값으로 재면 파티가 실제보다 오른쪽에 있는
+    걸어 나가 있으므로 (`allyAdvOf`) 그 값으로 재면 파티가 실제보다 오른쪽에 있는
     것으로 잡힌다. 뛰어드는 목표는 **원래 서는 자리**여야 한다.
 
     ## 높이는 거리로 안 잰다
@@ -1830,7 +1944,7 @@ export function BattleView() {
   leapRef.current = () => {
     const boss = spotOf(0);
     /* 파티 줄이 원래 차지하는 구간 — 나가 있는 만큼을 뺀 오른쪽 끝까지 */
-    const home = allyRightOf(0) - (allyAdv[0] ?? 0);
+    const home = allyRightOf(0) - allyAdvOf(0);
     const mid = (edge + home) / 2;
     /* 우두머리 **가운데**가 거기 오게 */
     const want = Math.round(boss.x - (mid - boss.size / 2));
@@ -1840,15 +1954,17 @@ export function BattleView() {
       rise: Math.round(boss.size * 0.3),
     };
   };
-  backRef.current = Object.fromEntries(
-    line.map((c, i) => [c.id, line.length - 1 - i]),
-  );
+  /*
+    이름표 → **대형 자리 번호** (`spots` 안에서의 순서).
 
-  const leapToOf = (back: number) => {
-    const n = Math.max(1, line.length);
-    const lap = pLap + squeeze;
-    const sizeOf = (b: number) => Math.round(partyW * depthAt(b).scale);
-    const myRight = allyRightOf(back) - (allyAdv[back] ?? 0);
+    예전에는 파티 자리 번호였다 (0 이 맨 앞). 대형이 생기면서 자리가
+    `spots` 로 옮겨 갔으므로, 자리를 묻는 곳들(`fire` · `shotsRef`)이
+    같은 번호를 쓰게 맞춘다.
+  */
+  backRef.current = Object.fromEntries(spots.map((sp, i) => [sp.c.id, i]));
+
+  const leapToOf = (i: number) => {
+    const myRight = allyRightOf(i) - allyAdvOf(i);
 
     /* 적 줄 — 오른쪽 벽에서 EDGE, **앞줄이 왼쪽 끝** */
     /* 자리 수로 잰다 — 마릿수로 재면 한 마리 죽을 때마다 도약 거리가 튄다 */
@@ -1863,7 +1979,7 @@ export function BattleView() {
 
     const foeLeft = stageW - edge - fwidth - (foeAdv[0] ?? 0);
 
-    return Math.max(0, Math.round(foeLeft - (myRight + (allyAdv[back] ?? 0)) + 8));
+    return Math.max(0, Math.round(foeLeft - (myRight + allyAdvOf(i)) + 8));
   };
 
   /*
@@ -1871,15 +1987,14 @@ export function BattleView() {
 
     크기와 간격이 **다 같은 값을 탄다** — 하나만 줄이면 겹치거나 벌어진다.
   */
-  const fit = fitOf(stageW, line.length, cap, foeScale);
+  const fit = fitOf(stageW, allyW1, cap, foeScale);
   const partyW = PARTY_W * fit;
   const foeW = (cur.boss ? BOSS_W : FOE_W) * fit;
   const edge = EDGE * fit;
-  const pLap = PARTY_LAP * fit;
   const fLap = FOE_LAP * fit;
 
   /* 좁은 화면에서만 0 보다 커진다 */
-  const squeeze = squeezeFor(stageW, line.length, cap, cur.boss, foeScale);
+  const squeeze = squeezeFor(stageW, allyW1, cap, cur.boss, foeScale);
 
   /*
     각 줄이 앞으로 나와 있는 거리 — 앞뒤가 안 뒤집히게 줄 단위로 잰다.
@@ -1890,10 +2005,13 @@ export function BattleView() {
   */
   const foeMelee = cur.boss ? [true] : rowMelee(battle.stage);
   const foeAdv = advanceRow(foeMelee, closeIn);
-  const allyAdv = advanceRow(
-    line.map((c) => CHARS[c.id].range === 'melee'),
-    closeIn,
-  );
+  /*
+    아군은 **사람마다** 잰다 (`allyAdvOf`).
+
+    한 줄로 설 때는 줄 전체를 한 번에 재야 했다 (앞뒤가 뒤집히지 않게).
+    두 줄이 된 지금은 깊이가 둘뿐이라 뒤집힐 일이 없고, 대신 같은 줄
+    안에서도 근접과 원거리가 다르게 나가야 한다.
+  */
   /*
     자리 계산기(`spotOf`)가 쓸 값을 렌더가 끝날 때마다 최신으로 둔다.
 
@@ -2091,8 +2209,14 @@ export function BattleView() {
             {/* ── 아군 (왼쪽, 그대로 오른쪽을 본다) ── */}
             <Animated.View
               style={{
+                /*
+                  아군 구역. 안에서는 **제 칸에 절대 좌표로** 선다
+                  (`Fighter` 의 `x`) — 대형이 비는 칸을 만들 수 있으므로
+                  (`2-2` 의 ③), 가로줄로는 자리를 못 잡는다.
+                */
                 position: 'absolute', left: edge, bottom: FLOOR,
-                flexDirection: 'row', alignItems: 'flex-end',
+                width: Math.round(allyW1 * fit),
+                height: 1,
                 /*
                   판이 열릴 때 **왼쪽 밖에서 들어온다.** 막이 걷히는 순간부터
                   제자리까지 오고, 그동안 싸움은 이미 돌고 있다 — 다 들어와서
@@ -2102,19 +2226,23 @@ export function BattleView() {
               }}
             >
               {/*
-                뒤에 선 사람부터 그린다 — 뒤에 있는 사람이 먼저 그려져야
-                앞사람에게 가려진다. `line[0]` 이 앞이라 역순으로 돈다.
-                아군은 왼쪽에 있으므로 **오른쪽 끝이 앞**이다.
+                **뒷줄부터 그린다.** 먼저 그려진 것이 아래에 깔리므로, 뒤에 선
+                사람이 앞사람에게 가려진다. `zIndex` 도 같이 걸려 있지만
+                (`Fighter`), 그리는 차례가 맞아야 형제 사이에서도 확실하다.
               */}
-              {[...line].reverse().map((c, i) => (
-                <View key={c.id}>
+              {[...spots]
+                .map((sp, i) => ({ sp, i }))
+                .sort((a, b) => (b.sp.row === 'back' ? 1 : 0) - (a.sp.row === 'back' ? 1 : 0))
+                .map(({ sp, i }) => {
+                  const c = sp.c;
+                  return (
                   <Fighter
+                    key={c.id}
                     ch={c}
-                    back={line.length - 1 - i}
-                    squeeze={squeeze}
+                    back={depthOf(i)}
+                    x={allyXOf(i)}
                     /* 무대가 좁으면 사람도 같이 줄어든다 */
                     width={partyW}
-                    lap={pLap}
                     down={down}
                     hp={hpOf(c, battle.hp)}
                     /*
@@ -2152,10 +2280,23 @@ export function BattleView() {
                       실제로 누구를 칠지는 계산이 무작위로 고르므로 (`mates`)
                       늘 맞지는 않지만, 넷 중 셋은 이 규칙으로 맞는다.
                     */
+                    /*
+                      ── 돌아섰나 ──
+
+                      혼란에 걸린 사람은 아군을 친다 (`core/autoBattle` 의
+                      `applyHit`). **내 왼쪽에 살아 있는 아군이 있으면**
+                      뒤집는다 — 대형이 자리를 칸으로 정하므로 (`allyXOf`)
+                      왼쪽인지 오른쪽인지를 그 자리로 바로 물을 수 있다.
+
+                      실제로 누구를 칠지는 계산이 무작위로 고르므로 늘
+                      맞지는 않는다. 왼쪽에 아무도 없을 때 안 뒤집는 것만
+                      확실하면 "아군이 왼쪽에 있는데 오른쪽을 보며 때린다"
+                      는 안 나온다.
+                    */
                     turn={
                       !!battle.charm?.who.includes(c.id)
-                      && line.some((m, mi) => (
-                        mi > line.length - 1 - i && hpOf(m, battle.hp) > 0
+                      && spots.some((o2, oi) => (
+                        allyXOf(oi) < allyXOf(i) && hpOf(o2.c, battle.hp) > 0
                       ))
                     }
                     cut={battle.cut?.[c.id] ?? 0}
@@ -2220,7 +2361,7 @@ export function BattleView() {
                       남아서 같은 파티로 안 보였다. 근접이 선 자리에서
                       `RANGED_BACK` 만큼만 뒤에 선다.
                     */
-                    advance={allyAdv[line.length - 1 - i] ?? 0}
+                    advance={allyAdvOf(i)}
                     /*
                       뛰어드는 기술이 적 앞줄까지 가는 데 남은 거리.
 
@@ -2228,13 +2369,13 @@ export function BattleView() {
                       적의 왼쪽 끝에 어깨가 닿는 데까지만 간다. 두 줄의 배치를
                       아는 건 여기뿐이라 여기서 잰다.
                     */
-                    leapTo={leapToOf(line.length - 1 - i)}
+                    leapTo={leapToOf(i)}
                     onAim={onAim}
                     onSwing={onSwing}
                     onSkill={onSkill}
                   />
-                </View>
-              ))}
+                  );
+                })}
             </Animated.View>
 
             {/*
