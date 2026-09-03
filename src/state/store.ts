@@ -72,6 +72,7 @@ import { createGatherSlice } from './slices/gather';
 import { createAdventureSlice } from './slices/adventure';
 import { createGuildSlice } from './slices/guild';
 import { createRosterSlice } from './slices/roster';
+import { createIdleSlice } from './slices/idle';
 
 export const useGame = create<Store>()(
   persist(
@@ -101,6 +102,7 @@ export const useGame = create<Store>()(
       ...createAdventureSlice(set, get),
       ...createGuildSlice(set, get),
       ...createRosterSlice(set, get),
+      ...createIdleSlice(set, get),
 
       reset: () => set({ ...initial(), toasts: [] }),
     }),

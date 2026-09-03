@@ -338,6 +338,29 @@ export function migrateState(persisted: unknown): GameState {
       `payout` 은 이미 정산했으면 0 이다 (marketClosed 세대로 잠근다).
     */
     money: Math.max(0, Math.floor(num(p.money, base.money))) + payout,
+    dia: Math.max(0, Math.floor(num(p.dia, 0))),
+    /*
+      게이지 시각이 없는 저장본(이 칸이 생기기 전)은 **지금부터** 센다.
+      0 으로 두면 1970년부터 흐른 것이 되어 켜자마자 가득 차 있다.
+    */
+    idleAt: num(p.idleAt, base.idleAt),
+    idleInstant: (p.idleInstant && typeof p.idleInstant === 'object'
+      ? {
+        dayKey: str((p.idleInstant as Record<string, unknown>).dayKey, ''),
+        used: Math.max(0, Math.floor(num((p.idleInstant as Record<string, unknown>).used, 0))),
+      }
+      : { dayKey: '', used: 0 }),
+    /*
+      ── 비운 시간은 **여기서 한 번만** 잰다 ──
+
+      저장본의 `lastSeenAt` 은 지난번에 앱이 마지막으로 살아 있던 시각이다.
+      화면이 뜨고 나면 1초 타이머가 그 값을 지금으로 갈아 버리므로
+      (`slices/core` 의 `tick`), 재려면 **읽는 이 순간**밖에 없다.
+
+      상한은 안 건다 — 얼마를 비웠든 값은 여덟 시간에서 멎으므로
+      (`core/idle` 의 `offlineAt`) 여기서 또 자르면 규칙이 두 곳에 생긴다.
+    */
+    awayMs: Math.max(0, Date.now() - num(p.lastSeenAt, Date.now())),
     stamina: num(p.stamina, base.stamina),
     staminaAt: num(p.staminaAt, base.staminaAt),
     exploreCleared: num(p.exploreCleared, 0),

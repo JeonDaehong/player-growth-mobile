@@ -142,6 +142,44 @@ export interface GameState {
 
   // 기본
   money: number;
+  /**
+   * 다이아 — **시간을 건너뛰는 데만 쓰는 재화.**
+   *
+   * ## 한 번 걷어냈다가 되돌렸다
+   *
+   * 화폐를 골드 하나로 줄이면서 다이아를 없앴다 (`core/currency`). 단위가
+   * 셋이면 비교할 때마다 환산을 해야 한다는 이유였는데, 그건 **같은 것을 사는
+   * 두 단위**의 이야기였다 (골드/실버/쿠퍼).
+   *
+   * 이건 다르다. 골드로 사는 것과 다이아로 사는 것이 겹치지 않는다 — 골드는
+   * 물건을, 다이아는 **기다림**을 산다 (`core/idle` 의 즉시 수령). 환산할
+   * 일이 없으므로 환산의 문제도 없다.
+   *
+   * 파는 곳은 아직 없다. 미션과 게이지 전리품에서만 나온다.
+   */
+  dia: number;
+  /**
+   * 온라인 게이지를 **마지막으로 비운 시각** (ms).
+   *
+   * 쌓인 양을 저장하지 않는다. 시각 하나면 언제 읽어도 같은 답이 나오고,
+   * 앱이 꺼져 있는 동안 흐른 시간도 저절로 들어온다 — 체력 회복이
+   * `staminaAt` 하나로 도는 것과 같은 얼개다.
+   */
+  idleAt: number;
+  /** 오늘 다이아로 즉시 채운 횟수. 날짜가 다르면 0 으로 본다 (`core/refill` 과 같은 규칙) */
+  idleInstant: { dayKey: string; used: number };
+  /**
+   * **지난번 나간 뒤로 이번에 들어오기까지 비운 시간** (ms).
+   *
+   * 저장본을 읽을 때 한 번 계산해서 넣는다 (`state/migrate`). 그 뒤로는
+   * 아무도 안 늘리고, 받거나 닫으면 0 이 된다.
+   *
+   * `lastSeenAt` 으로 화면에서 직접 재면 안 된다 — 저건 앱이 떠 있는 동안
+   * 1초마다 지금으로 갱신되므로 (`tick`), 화면이 그리는 첫 프레임에는 이미
+   * 0 이 되어 있다. 그 한 프레임 차이 때문에 오프라인 보상이 안 뜨는 것이
+   * 원인을 찾기 제일 어려운 종류다.
+   */
+  awayMs: number;
   equipped: Equipped;
   inventory: Item[];
   scrolls: Record<ScrollId, number>;
@@ -606,6 +644,14 @@ export interface GameActions {
   /** 장인 무구의 다음 마일스톤을 해방한다 */
   liberateSlot: (slot: SlotId) => boolean;
   equipTitle: (t: TitleId | null) => void;
+  /** 가득 찬 게이지를 받는다 (`core/idle`) */
+  claimIdle: () => boolean;
+  /** 다이아로 게이지를 그 자리에서 채워 받는다 — 하루 세 번 */
+  instantIdle: () => boolean;
+  /** 자리를 비운 동안의 몫을 받는다 */
+  claimAway: () => boolean;
+  /** 안 받고 닫는다 — 다시 안 묻는다 */
+  dismissAway: () => void;
   claimCollection: (id: string) => void;
 
   // 이벤트 / 부수입

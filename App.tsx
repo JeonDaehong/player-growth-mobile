@@ -8,14 +8,16 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useGame } from '@/state/store';
 import { flushStorage } from '@/state/storage';
-import { Hud } from '@/ui/Hud';
+import { TopBar } from '@/screens/home/TopBar';
 import { Toasts } from '@/ui/Toasts';
-import { ChatFab, ChatPanel } from '@/ui/Chat';
+import { ChatPanel } from '@/ui/Chat';
 import { CombatFxHost } from '@/ui/CombatFx';
 import { TutorialHost, useIntroTutorial } from '@/ui/Tutorial';
 import { EventPopupHost } from '@/ui/EventPopup';
 import { ArenaAwayPopup } from '@/ui/ArenaAwayPopup';
 import { GuidePopup } from '@/ui/GuidePopup';
+import { SoonPopupHost } from '@/ui/SoonPopup';
+import { OfflinePopup } from '@/screens/home/OfflinePopup';
 import { TitleGetPopup } from '@/ui/TitleGetPopup';
 import { ClosureNoticePopup } from '@/ui/ClosureNoticePopup';
 import { keepBgmAlive, sfx, startBgm, stopBgm } from '@/ui/sfx';
@@ -306,12 +308,20 @@ function Root() {
       <View style={{ flex: 1, backgroundColor: BLACK }}>
         <NavigationContainer theme={navTheme}>
           <RootStack.Navigator
-            screenOptions={{ ...stackOptions, header: () => <Hud /> }}
+            screenOptions={{ ...stackOptions, header: () => <TopBar /> }}
           >
             <RootStack.Screen name="홈" component={HomeScreen} />
           </RootStack.Navigator>
         </NavigationContainer>
-          <ChatFab />
+          {/*
+            ── 떠 있던 말풍선 단추는 걷었다 ──
+
+            화면 오른쪽 아래에 떠 있었는데, 새 뼈대에서는 그 자리를 아래 띠가
+            쓴다 (`screens/home/BottomNav`) — 겹치면 둘 중 하나가 안 눌린다.
+
+            채팅을 여는 단추는 흐르는 세 줄 왼쪽으로 갔다 (`Ticker`). 읽는
+            자리 옆에 쓰는 단추가 있는 편이 맞기도 하다.
+          */}
           <ChatPanel />
           <CombatFxHost />
           <RushResultHost />
@@ -326,6 +336,10 @@ function Root() {
           <TitleGetPopup active={!!account && signedUp} />
           {/* 없앤 콘텐츠 뒷정리 — 종목은 돈으로, 담보는 창고로 돌려줬다는 안내 (한 번만) */}
           <ClosureNoticePopup active={!!account && signedUp} />
+          {/* 자리를 비운 동안 쌓인 것 — 돌아오면 선술집 점원이 들고 서 있다 */}
+          <OfflinePopup active={!!account && signedUp} />
+          {/* 아직 없는 화면으로 가는 단추가 하는 말. 문은 하나만 둔다 */}
+          <SoonPopupHost />
           <TutorialHost />
           <Toasts />
           {/*

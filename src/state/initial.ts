@@ -115,6 +115,13 @@ export const initial = (): GameState => {
     // 퀘스트 보증금은 아이템레벨에 비례하므로(§7-3) 소지금 50쿠퍼로는 가장 쉬운
     // 퀘스트조차 못 받는다. 예전 비율(소지금 ≈ 쉬움 보증금 ×5)을 그대로 맞춘다.
     money: s(8),
+    /* 다이아는 0 부터. 파는 곳이 아직 없으므로 미션과 게이지에서만 들어온다 */
+    dia: 0,
+    /* 처음 켜는 사람의 게이지는 **빈 채로** 시작한다 — 켜자마자 가득이면 게이지가 아니다 */
+    idleAt: now,
+    idleInstant: { dayKey: '', used: 0 },
+    /* 새 저장본은 비운 시간이 없다 */
+    awayMs: 0,
     equipped: eq,
     inventory: [],
     scrolls: emptyScrolls(),

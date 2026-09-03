@@ -3,7 +3,7 @@ import {
   KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View,
 } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
-import { totalUnread, useChat } from '@/state/live';
+import { totalUnread, useChat, useFeed } from '@/state/live';
 import { useGame } from '@/state/store';
 import { useMePlayer, useMyGuild } from '@/state/selectors';
 import { useRoster } from '@/state/useBoard';
@@ -117,6 +117,18 @@ export function ChatPanel() {
   const connected = useChat((s) => s.connected);
   const online = useChat((s) => s.online);
   const [text, setText] = useState('');
+  /*
+    ── 시스템 탭 ──
+
+    `CHANNELS` 에 넣지 않고 **화면에만** 둔다. 저기 넣으면 안 읽은 수를 세는
+    표와 보내는 길이 같이 생기는데, 시스템은 아무도 말하지 않는 방이라
+    그 둘이 영영 안 쓰인다.
+
+    보여 주는 것은 실시간 소식이다 (`state/live` 의 `useFeed`) — 흐르는 세
+    줄에서 지나간 것을 여기서 몰아 본다 (`screens/home/Ticker`).
+  */
+  const [sys, setSys] = useState(false);
+  const feed = useFeed((s2) => s2.events);
   const scrollRef = useRef<ScrollView>(null);
   const me = useMePlayer();
   const myTitle = useGame((g) => g.equippedTitle);
@@ -196,7 +208,7 @@ export function ChatPanel() {
             <Row gap={SP.sm} style={{ flex: 1 }}>
               <Pixel sprite={BUBBLE} scale={2} />
               <T size={13} bold numberOfLines={1} style={{ flex: 1 }}>
-                {channel === 'guild' ? (guild?.name ?? '길드 채팅') : '전체 채팅'}
+                {sys ? '시스템' : channel === 'guild' ? (guild?.name ?? '길드 채팅') : '전체 채팅'}
               </T>
               {/*
                 지금 실시간인지, 그리고 몇 명이 있는지.
@@ -228,13 +240,28 @@ export function ChatPanel() {
             탭에 그대로 얹어, 안 보고 있는 쪽에 말이 쌓인 걸 여기서 바로 안다.
           */}
           <Row gap={0} style={{ borderBottomWidth: 1, borderBottomColor: WHITE }}>
+            {/*
+              시스템이 맨 앞이다. 말하는 방이 아니라 **읽는 방**이라, 말하는
+              방 둘을 가르고 앉으면 셋이 같은 종류로 보인다.
+            */}
+            <Pressable
+              onPress={() => setSys(true)}
+              style={{
+                flex: 1,
+                paddingVertical: SP.sm,
+                alignItems: 'center',
+                backgroundColor: sys ? C.bgInv : 'transparent',
+              }}
+            >
+              <T size={12} bold style={sys ? { color: C.fgInv } : undefined}>시스템</T>
+            </Pressable>
             {CHANNELS.map((c) => {
-              const on = channel === c;
+              const on = !sys && channel === c;
               const n = formatUnread(unread[c]);
               return (
                 <Pressable
                   key={c}
-                  onPress={() => setChannel(c)}
+                  onPress={() => { setSys(false); setChannel(c); }}
                   style={{
                     flex: 1,
                     paddingVertical: SP.sm,
@@ -266,15 +293,35 @@ export function ChatPanel() {
             showsVerticalScrollIndicator={false}
           >
             <T size={9} dim="faint" center style={{ marginBottom: SP.sm }}>
-              {channel === 'guild' ? '길드원만 볼 수 있습니다' : '누구나 볼 수 있습니다'}
-              {' · '}최근 {CHAT_HISTORY_MAX}개까지 보관
+              {sys
+                ? '서버에서 일어난 일들입니다'
+                : channel === 'guild' ? '길드원만 볼 수 있습니다' : '누구나 볼 수 있습니다'}
+              {!sys && `${' · '}최근 ${CHAT_HISTORY_MAX}개까지 보관`}
             </T>
-            {messages.map((m) => (
-              <Bubble key={m.id} msg={m} />
-            ))}
+            {sys ? (
+              /*
+                말풍선을 안 쓴다. 저건 "누가 한 말" 의 모양인데 여기 것은
+                아무도 하지 않은 말이다 — 흐르는 세 줄과 같은 `◆` 로 맞춘다
+                (`screens/home/Ticker`).
+              */
+              feed.length
+                ? feed.map((e) => (
+                  <T key={e.id} size={11} style={{ marginBottom: 4 }}>{`◆ ${e.text}`}</T>
+                ))
+                : <T size={11} dim="dim" center>아직 아무 일도 없었습니다.</T>
+            ) : (
+              messages.map((m) => <Bubble key={m.id} msg={m} />)
+            )}
           </ScrollView>
 
-          {/* 입력 */}
+          {/*
+            입력 — **시스템 탭에서는 아예 안 그린다.**
+
+            막아만 두면(`editable={false}`) 쓸 수 없는 칸이 자리를 차지하고,
+            보는 사람은 왜 안 써지는지를 눌러 보고서야 안다. 아무도 말하지
+            않는 방에는 말할 자리가 없는 것이 맞다.
+          */}
+          {!sys && (
           <Row
             gap={SP.sm}
             style={{
@@ -322,6 +369,7 @@ export function ChatPanel() {
               <T size={12} bold style={{ color: !locked && text.trim() ? C.fgInv : WHITE }}>전송</T>
             </Pressable>
           </Row>
+          )}
         </KeyboardAvoidingView>
       </Animated.View>
     </>
