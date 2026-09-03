@@ -1,6 +1,15 @@
 /**
  * ── 흐르는 세 줄 ── 중요한 소식과 채팅이 같이 올라온다.
  *
+ * ## 무대 **안** 왼쪽 아래다
+ *
+ * 무대 밑에 있었다. 그러면 무대와 채팅이 위아래로 나란한 두 상자가 되고,
+ * 무대는 그만큼 눌린다. 요즘 게임은 채팅을 화면 구석에 작게 얹어 두는데,
+ * 그러면 무대를 한 픽셀도 안 뺏으면서 늘 보인다.
+ *
+ * 그래서 여기는 **폭이 화면의 절반쯤**이다 (`BattleView` 의 `corner`).
+ * 넓으면 세 줄이 무대를 가로질러서, 정작 그 아래 벌어지는 싸움을 덮는다.
+ *
  * ## 왜 둘을 섞나
  *
  * 따로 두면 자리가 두 벌 필요하고, 좁은 화면에서 그건 곧 둘 다 두 줄씩이라는
@@ -38,8 +47,13 @@ import { BORDER, C, SP, WHITE } from '@/ui/theme';
 /** 몇 줄까지 */
 const LINES = 3;
 
-/** 한 줄의 높이 — 셋이 늘 같은 자리를 차지해야 무대가 위아래로 안 흔들린다 */
-const ROW_H = 15;
+/**
+ * 한 줄의 높이 — 셋이 늘 같은 자리를 차지해야 무대가 위아래로 안 흔들린다.
+ *
+ * 15 에서 13 으로 줄였다. 무대 안으로 들어오면서 이 덩이가 차지하는 높이가
+ * 곧 **가려지는 땅**이 되었다.
+ */
+const ROW_H = 13;
 
 interface Line {
   key: string;
@@ -81,21 +95,29 @@ export function Ticker() {
 
   return (
     /*
-      **띠다 — 두 개의 상자가 아니다.**
+      **한 덩이다 — 두 개의 상자가 아니다.**
 
       예전에는 단추와 세 줄이 각자 네모를 두르고 4px 떨어져 있었다. 그러면
-      한 가지 일(읽고 쓰기)이 두 덩이로 갈려 보이고, 무대와도 8px 떨어져
-      있어서 화면이 카드 세 장이 됐다.
+      한 가지 일(읽고 쓰기)이 두 덩이로 갈려 보인다.
 
-      지금은 무대 아래에 바로 붙고, 안에서는 세로줄 하나로만 갈린다.
+      무대 위에 얹히므로 (`BattleView` 의 `corner`) 뒤에 **반투명 검은 판**을
+      깐다. 배경이 밝은 챕터에서는 흰 글씨가 그냥은 안 읽힌다. 완전히 검게
+      깔지 않는 이유는, 여기가 무대의 일부라는 것이 보여야 하기 때문이다.
     */
-    <View style={{ flexDirection: 'row' }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        backgroundColor: '#000000A6',
+        borderWidth: 1,
+        borderColor: '#FFFFFF2B',
+      }}
+    >
       {/* ── 말하는 단추 ── */}
       <Pressable
         onPress={() => { sfx('tap'); setOpen(true); }}
         hitSlop={6}
         style={({ pressed }) => ({
-          width: 38,
+          width: 30,
           /* 세 줄과 키를 맞춘다 — 낮으면 글 옆에 떠 있는 것으로 보인다 */
           height: ROW_H * LINES + SP.xs * 2,
           alignItems: 'center',
@@ -106,7 +128,7 @@ export function Ticker() {
         })}
       >
         {({ pressed }: { pressed: boolean }) => (
-          <Pixel sprite={BUBBLE} scale={2} color={pressed ? C.fgInv : WHITE} />
+          <Pixel sprite={BUBBLE} scale={1.6} color={pressed ? C.fgInv : WHITE} />
         )}
       </Pressable>
 
@@ -121,8 +143,8 @@ export function Ticker() {
             BORDER,
             {
               position: 'absolute',
-              left: 28,
-              top: 2,
+              left: 21,
+              top: 1,
               minWidth: 18,
               paddingHorizontal: 3,
               alignItems: 'center',
@@ -140,7 +162,7 @@ export function Ticker() {
         style={{
           flex: 1,
           height: ROW_H * LINES + SP.xs * 2,
-          paddingHorizontal: SP.sm,
+          paddingHorizontal: SP.xs,
           paddingVertical: SP.xs,
           justifyContent: 'flex-start',
           /* 넘치면 자른다 — 줄이 길어져도 무대 높이는 안 흔들린다 */
@@ -148,12 +170,12 @@ export function Ticker() {
         }}
       >
         {!lines.length && (
-          <T size={10} dim="dim" style={{ lineHeight: ROW_H }}>
+          <T size={9} dim="dim" numberOfLines={1} style={{ lineHeight: ROW_H }}>
             아직 아무 소식도 없습니다.
           </T>
         )}
         {lines.map((l) => (
-          <T key={l.key} size={10} numberOfLines={1} style={{ lineHeight: ROW_H }}>
+          <T key={l.key} size={9} numberOfLines={1} style={{ lineHeight: ROW_H }}>
             {l.who ? `${l.who}: ${l.text}` : `◆ ${l.text}`}
           </T>
         ))}

@@ -144,16 +144,78 @@ export const STAGE_CAP: number | null = 30;
  * 다섯을 넘기지 않는다 — 좁은 무대에서 서로 겹쳐 몇 마리인지 안 보인다.
  * 넷은 좁은 화면에서도 대형을 12px 씩 짜내면 들어간다 (`squeezeFor`).
  */
-export const MOB_CAP = 6;
+/* ─────────────────────── 적이 서는 칸 (3 × 3) ─────────────────────── */
 
 /**
- * 그 중 원거리가 몇 마리까지.
+ * 적 진영의 **가로줄** 수 — 화면에서는 위아래로 늘어선다.
  *
- * 둘이다. 넷 중 둘이면 앞줄 둘이 붙어 싸우는 동안 뒤에서 둘이 던지는
- * 그림이 되고, 그게 이 화면에서 제일 읽기 쉬운 구도다. 셋을 넘기면 앞이
- * 비어서 아군 근접이 허공을 향해 걸어 나간다.
+ * 아군의 `FORM_LANES`(다섯)와 같은 뜻이고 같은 방향이다 (`core/party`).
+ * 다섯이 아니라 셋인 것은 적이 무대 **오른쪽 절반**만 쓰기 때문이다 —
+ * 다섯 줄을 다 쓰면 맨 뒷줄이 아군 뒷줄과 같은 높이에 서서, 누가 어느
+ * 편인지가 높이로는 안 갈린다.
  */
-export const RANGED_CAP = 2;
+export const FOE_LANES = 3;
+
+/**
+ * 적 진영의 **세로줄** 수 — 화면에서는 좌우로 늘어선다.
+ *
+ * 0 번이 아군과 마주 보는 앞줄이다. 아군의 앞뒤(둘)와 같은 축인데, 이쪽이
+ * 셋인 이유는 던지는 놈이 뒤에 두 줄로 설 자리가 있어야 하기 때문이다.
+ */
+export const FOE_COLS = 3;
+
+/**
+ * 적이 설 수 있는 **칸 수** — 3×3 = 아홉.
+ *
+ * 셋이었다가 넷, 여섯을 거쳐 아홉이다. 이건 **자리의 수**이지 나오는
+ * 마릿수가 아니다 — 실제로 몇 마리가 서느냐는 판이 정한다 (`mobCap`).
+ *
+ * 자리를 나오는 수보다 넉넉히 잡아 두는 이유는 `FoeSlot.pos` 때문이다.
+ * 자리 번호는 판 내내 안 바뀌어야 하는데(안 그러면 한 마리 죽을 때마다 줄이
+ * 통째로 미끄러진다), 그러려면 **제일 많이 나올 때를 기준으로** 칸을 미리
+ * 잡아 둬야 한다.
+ */
+export const MOB_CAP = FOE_LANES * FOE_COLS;
+
+/**
+ * 그 중 원거리가 쓸 수 있는 칸 수 — 앞 세로줄을 뺀 나머지 전부.
+ *
+ * 앞 세로줄 하나(`FOE_LANES` 칸)는 붙어 싸우는 놈들이 쓴다. 앞이 비면 아군
+ * 근접이 허공을 향해 걸어 나가므로, 이 경계는 마릿수와 상관없이 고정이다.
+ */
+export const RANGED_CAP = MOB_CAP - FOE_LANES;
+
+/**
+ * 세로줄 안에서 **어느 가로줄부터 채우나.**
+ *
+ * 가운데(1) → 아래(0) → 위(2). 번호 순으로 채우면 넷이 나오는 판에서 넷째가
+ * 맨 아래 줄에 혼자 붙어 서서 무리가 한쪽으로 쏠린다. 가운데부터 채우면
+ * 몇 마리가 나오든 무게중심이 늘 가운데 줄이다.
+ *
+ * `pos` → 칸은 이 표로 **못 박혀 있다.** 서 있는 마릿수를 보고 다시 짜면
+ * 한 마리 죽을 때마다 남은 놈들이 자리를 옮긴다.
+ */
+const LANE_FILL: readonly number[] = [1, 0, 2];
+
+/** 자리 번호 → 그 칸의 세로줄·가로줄 */
+export const foeCell = (pos: number): { col: number; lane: number } => ({
+  col: Math.floor(pos / FOE_LANES),
+  lane: LANE_FILL[pos % FOE_LANES] ?? 1,
+});
+
+/**
+ * 이 판에 **몇 마리까지** 서나 (칸 수와 다르다).
+ *
+ * 1~30 판은 4~6 이다. 난이도가 오를수록 한 마리씩 는다 — 적이 세지는 것과
+ * 많아지는 것은 다른 종류의 압박이라, 수치만 올리면 30판이 1판과 같은
+ * 그림에 숫자만 커진 판이 된다.
+ *
+ * 아홉 칸을 다 쓰지는 않는다. 뒷 세로줄은 비워 둔 채로 두는데, 판이 늘 때
+ * 화면 코드가 아니라 이 함수만 고치면 되게 하려는 것이다.
+ */
+export const mobCap = (stage: number): number => (
+  stage < 11 ? 4 : stage < 21 ? 5 : 6
+);
 
 /**
  * 몇 틱마다 한 마리씩 걸어 들어오는가.
@@ -248,6 +310,17 @@ export interface FoeKind {
    * **같은 놈인데 모습만 달라지는** 것이라 시트를 따로 두지 않는다.
    */
   pose?: string;
+  /**
+   * 이 시트는 **이미 왼쪽을 보고** 그려져 있나.
+   *
+   * 규칙은 "스프라이트는 전부 오른쪽을 본다" 이고, 그래서 적은 통째로
+   * 뒤집어 그린다 (`BattleView` 의 `scaleX: -1`). 그런데 28판 모기만
+   * 반대로 들어왔다 — 뒤집으니 아군에게 등을 돌린 채 싸웠다.
+   *
+   * 시트를 다시 받는 것이 맞지만, 그림 하나 때문에 그럴 일은 아니다.
+   * 여기 한 줄로 그 한 마리만 안 뒤집는다.
+   */
+  faceLeft?: boolean;
   /**
    * 이름 위에 작게 붙는 수식어. 우두머리만 쓴다.
    *
@@ -2215,6 +2288,8 @@ export const STAGES: StageDef[] = [
     boss: {
       /* 모기 — 제 장에서 제일 빠르다. 무르지만 자주 문다 */
       art: 'b28_mosquito', name: '모스키토', title: '핏빛 가시 입자루', bg: '06', melee: true, dmg: 'phys',
+      /* 이 시트만 왼쪽을 보고 들어왔다 — 안 뒤집는다 (`faceLeft`) */
+      faceLeft: true,
       atk: 368, hp: 23000, spd: 0.8, def: 60, res: 42,
     },
   },
@@ -2484,15 +2559,16 @@ const rangedKinds = (stage: number): number[] =>
  * 서 있든, 몇 마리가 죽었든 **안 바뀐다** — 그래야 자리를 고정할 수 있다
  * (`FoeSlot.pos`).
  *
- * 던지는 종이 없는 판이면 넷 다 앞줄이고, 붙어 싸우는 종이 없으면 앞줄이
- * 아예 없다. 지금 스무 판은 전부 둘 다 있어서 늘 2 다.
+ * 던지는 종이 없는 판이면 다 앞줄이고, 붙어 싸우는 종이 없으면 앞줄이 아예
+ * 없다. 둘 다 있으면 **앞 세로줄 하나**가 앞줄이라 늘 `FOE_LANES`(셋)다.
  */
 export function meleeSlots(stage: number): number {
   const m = meleeKinds(stage).length;
   const r = rangedKinds(stage).length;
   if (!m) return 0;
   if (!r) return MOB_CAP;
-  return MOB_CAP - RANGED_CAP;
+  /* 앞 세로줄 하나가 통째로 앞줄이다 — 자리 번호가 세로줄 단위로 끊긴다 */
+  return FOE_LANES;
 }
 
 /**
@@ -2915,14 +2991,21 @@ const startFoes = (stage: number, seq = 0): { foes: FoeSlot[]; seq: number } => 
     이유가 화면에서 여러 가지가 동시에 벌어지게 하려는 것이므로, 첫 대형만은
     고르게 섞어 둔다. 그 뒤로 걸어 들어오는 놈은 무작위다.
   */
-  const wantMelee = meleeSlots(stage);
+  /*
+    **칸 수가 아니라 마릿수로 막는다** (`mobCap`).
+
+    아홉 칸이 있어도 1판에 아홉이 서지는 않는다. 앞 세로줄부터 채우다가
+    이 판의 마릿수에서 멈추므로, 넷이면 앞줄 셋에 뒷줄 하나가 된다.
+  */
+  const room = mobCap(stage);
+  const wantMelee = Math.min(meleeSlots(stage), room);
   for (let i = 0; i < wantMelee && m.length; i++) {
     const k = m[i % m.length];
     /* 자리 번호가 곧 배열 순서다 — 처음 한 번은 빈자리 없이 채운다 */
     foes.push(fresh(stage, k, n++, foes.length));
   }
   /* 남은 자리를 **먼저 센다** — 안에서 세면 넣을 때마다 목표가 줄어든다 */
-  const wantRanged = r.length ? MOB_CAP - foes.length : 0;
+  const wantRanged = r.length ? room - foes.length : 0;
   for (let i = 0; i < wantRanged; i++) {
     const k = r[i % r.length];
     foes.push(fresh(stage, k, n++, foes.length));
@@ -2971,7 +3054,13 @@ function spawnInto(
   };
 
   const mFree = m.length ? freeIn(0, front) : -1;
-  const rFree = r.length ? freeIn(front, MOB_CAP) : -1;
+  /*
+    던지는 놈은 앞줄 **다음 칸부터**, 이 판의 마릿수까지만 쓴다.
+
+    칸 수(`MOB_CAP`)까지 열어 두면 넷짜리 판에서 넷째가 아홉째 칸에 가서
+    선다 — 앞이 셋뿐인데 뒤로 두 줄 건너 혼자 서 있는 그림이 된다.
+  */
+  const rFree = r.length ? freeIn(front, Math.max(front + 1, mobCap(stage))) : -1;
   /* 앞줄부터 채운다 — 앞이 빈 채로 뒤에서만 두 줄이 서면 싸움으로 안 보인다 */
   const pos = mFree >= 0 ? mFree : rFree;
   if (pos < 0) return -1;
@@ -3682,7 +3771,8 @@ export function battleTick(
   */
   if (!isBoss && !st.called) {
     spawnIn -= 1;
-    if (spawnIn <= 0 && foes.length < MOB_CAP) {
+    /* 칸 수가 아니라 **이 판의 마릿수**가 상한이다 (`mobCap`) */
+    if (spawnIn <= 0 && foes.length < mobCap(st.stage)) {
       /*
         근접은 원거리 **앞에** 끼워 넣는다. 그래서 자리가 밀릴 수 있고,
         노리던 놈의 번호도 같이 밀어 줘야 한다 — 안 그러면 때리던 놈이

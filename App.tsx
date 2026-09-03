@@ -8,7 +8,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useGame } from '@/state/store';
 import { flushStorage } from '@/state/storage';
-import { TopBar } from '@/screens/home/TopBar';
 import { Toasts } from '@/ui/Toasts';
 import { ChatPanel } from '@/ui/Chat';
 import { CombatFxHost } from '@/ui/CombatFx';
@@ -307,8 +306,18 @@ function Root() {
         <StatusBar barStyle="light-content" backgroundColor={BLACK} translucent={false} />
       <View style={{ flex: 1, backgroundColor: BLACK }}>
         <NavigationContainer theme={navTheme}>
+          {/*
+            ── 머리말을 아예 안 그린다 ──
+
+            `header: () => <TopBar />` 였다. 위 띠가 무대 **안으로** 들어가면서
+            (`HomeScreen` 이 `BattleView` 의 `top` 으로 넘긴다) 여기서 한 번 더
+            그리면 같은 띠가 두 개 뜬다.
+
+            내비게이터를 안 지우는 이유는 화면이 늘 것이기 때문이다 — 지금은
+            홈 하나뿐이라 머리말만 끈다.
+          */}
           <RootStack.Navigator
-            screenOptions={{ ...stackOptions, header: () => <TopBar /> }}
+            screenOptions={{ ...stackOptions, headerShown: false }}
           >
             <RootStack.Screen name="홈" component={HomeScreen} />
           </RootStack.Navigator>

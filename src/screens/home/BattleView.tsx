@@ -13,13 +13,17 @@
  *
  * ## 여럿이 나온다
  *
- * 적은 한 마리씩이 아니라 최대 셋이 겹쳐 선다 (`core/autoBattle` 의 `MOB_CAP`).
- * 한 마리씩 내보내면 전투가 아니라 **줄 서기**로 보인다.
+ * 적은 한 마리씩이 아니라 **3×3 격자**로 선다 (`core/autoBattle` 의 `foeCell`).
+ * 판마다 4~6 마리가 그중 앞쪽 칸부터 채운다 (`mobCap`). 한 마리씩 내보내면
+ * 전투가 아니라 **줄 서기**로 보인다.
  *
- * 파티는 **두 줄**로 선다 (`core/party` 의 `FORMATIONS`). 다섯 칸 중 대형이
- * 정한 칸에 서고, 앞줄은 아래에 크게 · 뒷줄은 위에 작게 그려진다. 앞줄에
- * 선 사람이 공격의 70% 를 받으므로 (`FRONT_SHARE`), 어느 줄에 서 있나가
- * 화면에서 바로 읽혀야 한다.
+ * 파티도 격자다 (`core/party` 의 `FORMATIONS`). 가로줄 다섯이 화면 위아래로
+ * 늘어서고, **앞줄·뒷줄은 좌우**다 — 아군이 오른쪽을 보고 서므로 앞줄이
+ * 오른쪽, 곧 적 쪽이다. 앞줄에 선 사람이 공격의 70% 를 받으므로
+ * (`FRONT_SHARE`), 어느 줄에 서 있나가 화면에서 바로 읽혀야 한다.
+ *
+ * 위아래는 두 진영이 같은 뜻이다: **뒤로 갈수록 위에, 작게** (`Ground` 의
+ * `depthAt`). 그게 이 무대가 평면으로 읽히는 이유다.
  *
  * 넷이 한 줄로 겹쳐 서던 시절에는 "앞에 서는 건 방어 역할" 하나였다. 지금은
  * 대형이 **몇 명이 그 자리에 서나**를 정한다.
@@ -34,8 +38,8 @@ import { Animated, Easing, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  BOSS_SKILLS, MOB_CAP, STAGE_MS, bossReady, fightHeld, foeAt as kindAt, foeHexOf, foeOf,
-  healPlan, pickAim,
+  BOSS_SKILLS, MOB_CAP, STAGE_MS, bossReady, fightHeld, foeAt as kindAt, foeCell,
+  foeHexOf, foeOf, healPlan, mobCap, pickAim,
   RAGE_MS, rageIn, raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
@@ -51,7 +55,7 @@ import { cleanseOptOf, cleanseTargets } from '@/core/skillOpt';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
-import { BAD_C, SHIELD_C, SP, WHITE } from '@/ui/theme';
+import { BAD_C, C, SHIELD_C, SP, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
@@ -64,7 +68,7 @@ import {
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
-  BOSS_W, DEPTH_LIFT, EDGE, FOE_W, GROUND_H, Ground, PARTY_W, STAGE_H, ZOOM, depthAt,
+  BOSS_W, EDGE, FOE_W, GROUND_H, Ground, PARTY_W, STAGE_H, ZOOM, depthAt,
 } from './Ground';
 import {
   BossCallBtn, StagePicker, StageVeil, useStageStaging, walkInX,
@@ -78,16 +82,19 @@ const NOOP = () => {};
 /**
  * 맨 앞줄의 발이 놓이는 높이.
  *
- * 바닥판(`GROUND_H`)의 앞쪽 30% 지점에서 **한 칸(`DEPTH_LIFT`) 더 내려온다.**
+ * 바닥판(`GROUND_H` = 185px)의 **앞쪽 34%** 지점, 곧 63px 이다.
  *
- * 30% 만 쓸 때는 맨 앞줄이 바닥판 한가운데쯤에 서서, 앞에 남는 바닥이 뒤보다
- * 넓었다 — 서 있는 자리가 평면의 앞쪽이 아니라 가운데로 읽힌다. 한 칸 내리면
- * 맨 앞줄이 바닥판 앞쪽에 서고, 뒷줄 셋이 그 위로 차례로 물러난다.
+ * 30% 였다가 올렸다. 무대 왼쪽 아래에 채팅이 얹히면서 (`Ticker`) 바닥의
+ * 아래 53px 이 가려졌는데, 예전 값이면 맨 앞줄의 발이 그 안에 들어가서
+ * **파티가 무릎까지 채팅에 묻혔다.**
  *
- * **자리 간격과 같은 단위로 내린다.** 다른 값으로 내리면 네 줄의 간격만
- * 어긋나고, "한 칸" 이 화면에서 한 칸이 아니게 된다.
+ * 34% 면 앞줄 발밑에 63px 이 남아 채팅(53px)이 통째로 들어간다. 그러고도
+ * 위로 다섯 줄이 다 선다: `63 + 4 × DEPTH_LIFT` = 159 ≤ 185.
+ *
+ * 예전에 여기서 한 칸(`DEPTH_LIFT`)을 빼고 있었다. 자리 간격이 11 에서 20 으로
+ * 커지면서 그 뺄셈이 바닥의 12% 나 되어 버렸으므로, 비율 하나로 합쳤다.
  */
-const FLOOR = Math.round(GROUND_H * 0.30) - DEPTH_LIFT;
+const FLOOR = Math.round(GROUND_H * 0.34);
 
 /**
  * 배경 그림의 세로 비율 (높이 ÷ 폭).
@@ -116,7 +123,7 @@ const bgRatio = (bg: string) => SPRITE_RATIO[`bg_chapter/${bg}`] ?? 0.75;
  * 통째로 들어갈 틈이 생겨 파티가 둘로 갈려 보인다.
  *
  * 이 값이 곧 아군 구역의 폭이다 (`formLayout`). 넓으면 대형 전체가 통째로
- * 줄어든다 (`fitOf`) — 적이 여섯까지 서므로 (`MOB_CAP`) 아껴 써야 한다.
+ * 줄어든다 (`fitOf`) — 적도 격자로 서므로 (`foeLayout`) 둘이 폭을 나눠 쓴다.
  */
 const ROW_RATIO = 0.80;
 
@@ -132,13 +139,17 @@ const ROW_RATIO = 0.80;
  */
 const LANE_SKEW = 0.10;
 
-/** 아군끼리 겹치는 폭 — 대형이 생기면서 안 쓴다 (자리는 칸이 정한다) */
-const PARTY_LAP = Math.round(16 * ZOOM);
-/** 맨 앞 적 스프라이트 폭 */
-
-
-/** 적끼리 겹치는 폭 */
-const FOE_LAP = Math.round(14 * ZOOM);
+/**
+ * 적 세로줄 하나가 옆 줄과 벌어지는 거리 — 적 폭의 몇 할.
+ *
+ * 적도 아군처럼 **격자**로 선다 (`core/autoBattle` 의 `foeCell`). 세로줄이
+ * 좌우, 가로줄이 위아래다.
+ *
+ * 0.62 다. 아군의 `ROW_RATIO`(0.80)보다 좁은데, 적은 세로줄이 셋이라 같은
+ * 값을 쓰면 줄 세 개가 무대 절반을 먹는다. 0.62 면 옆 줄과 조금 겹치는데,
+ * 그게 오히려 **무리**로 보인다 — 뚝 떨어져 서면 각자 다른 데 있는 놈이 된다.
+ */
+const FOE_COL_RATIO = 0.62;
 
 /**
  * 근접끼리 맞붙었을 때 남기는 틈.
@@ -180,9 +191,9 @@ const MIN_GAP = Math.round(12 * ZOOM);
  * 이 자리에 이미 떠 있는 숫자가 몇 개인가 — 그만큼 위로 올린다.
  *
  * 두 가지를 같이 푼다. 같은 적을 연달아 때리면 숫자가 한자리에 포개지고,
- * 스킬로 셋을 한꺼번에 베면 **옆 놈끼리도** 겹친다. 적은 서로 `FOE_LAP`
- * 만큼 파고들어 서 있어서, 이웃 사이가 24px 밖에 안 되기 때문이다 —
- * 두세 자리 숫자 한 개가 딱 그만한 폭이다.
+ * 스킬로 셋을 한꺼번에 베면 **옆 놈끼리도** 겹친다. 적은 세로줄 간격이
+ * 45px 인데다 같은 세로줄에 셋이 위아래로 서므로 (`foeLayout`), 이웃 사이가
+ * 숫자 한 개 폭밖에 안 되기 때문이다.
  *
  * 그래서 기준을 이웃 간격보다 넓게(28px) 잡는다. 옆 놈과도 줄이 갈린다.
  */
@@ -269,27 +280,25 @@ function numTop(y: number, row: number): number {
 }
 
 /**
- * 무대 폭에 맞춰 대형을 얼마나 줄일까 (0~1).
+ * 무대 폭에 맞춰 양쪽 대형을 얼마나 줄일까 (0~1).
  *
- * 무대를 1.4배로 키웠더니(`Ground` 의 `ZOOM`) 좁은 기기에서 두 줄이 화면을
- * 넘었다. 넷 대 넷이면 줄 둘만으로 461px 인데 260px 짜리 화면도 있다.
- *
- * 겹쳐 세우는 것(`squeezeFor`)만으로는 그만큼을 못 짜낸다 — 짜낼수록 몇인지
- * 안 보이므로 한계가 있다. 그래서 **먼저 통째로 줄이고**, 남는 어긋남만
- * 겹치기로 마무리한다.
+ * 무대를 1.4배로 키웠더니(`Ground` 의 `ZOOM`) 좁은 기기에서 두 무리가 화면을
+ * 넘었다. 260px 짜리 화면도 있다.
  *
  * 치수가 전부 배율에 **정비례**하므로 필요한 폭도 정비례한다. 그래서 한 번
  * 나누면 답이 나온다 — 크기마다 따로 계산할 것이 없다.
+ *
+ * 두 무리가 다 격자로 서면서(`formLayout` · `foeLayout`) 이 값이 거의 늘 1 이
+ * 되었다. 예전에는 적 여섯이 한 줄로 251px 을 먹었는데, 세로줄 둘이면
+ * 118px 이다 — 겹쳐 짜내는 장치(`squeezeFor`)를 통째로 지운 것이 그래서다.
+ *
+ * @param allyW 배율 1 기준 아군 격자의 폭
+ * @param foeW  배율 1 기준 적 격자의 폭
  */
-function fitOf(
-  stageWidth: number, allyW: number, foeCount: number, foeScale?: Scales,
-): number {
+function fitOf(stageWidth: number, allyW: number, foeW: number): number {
   if (stageWidth <= 0) return 1;
-  const need = rowWidth(foeCount, FOE_W, FOE_LAP, foeScale)
-    + allyW
-    + EDGE * 2 + MIN_GAP;
-  /* 짜내기로 메울 수 있는 만큼(약 15%)은 남겨 둔다 — 다 줄이면 늘 최소 크기다 */
-  return Math.min(1, (stageWidth * 1.15) / Math.max(1, need));
+  const need = allyW + foeW + EDGE * 2 + MIN_GAP;
+  return Math.min(1, stageWidth / Math.max(1, need));
 }
 
 /**
@@ -337,17 +346,46 @@ function formLayout(spots: readonly FormSpot[], base: number): {
  * 26판 폭탄 애벌레가 이걸 만들게 했다. 넷이 우두머리 자리에 서지만 실제로
  * 그려지는 것은 그 절반이다 (`scale: 0.5`). 여태 줄 폭은 **그리는 크기와
  * 상관없이** 우두머리 폭(131px)으로 잡았으므로, 네 자리에 524px 이 필요하다고
- * 셈했다 — 그러면 좁히기(`squeezeFor`)가 최대로 걸려서 넷이 한 덩어리로
- * 겹쳤다. "1 2 3 4 위치로 보이는게 아님" 이 그것이다.
+ * 셈했다 — 그러면 좁히기가 최대로 걸려서 넷이 한 덩어리로 겹쳤다.
+ * "1 2 3 4 위치로 보이는게 아님" 이 그것이다.
  */
 type Scales = readonly number[];
 
-function rowWidth(count: number, front: number, lap: number, scale?: Scales): number {
-  if (count <= 0) return 0;
-  const at = (b: number) => Math.round(front * depthAt(b).scale * (scale?.[b] ?? 1));
-  let w = at(0);
-  for (let b = 1; b < count; b++) w += at(b) - lap;
-  return w;
+/**
+ * 적 격자의 **자리 · 높이 · 크기 · 폭** (배율 1 기준으로도, 실제 배율로도 같다).
+ *
+ * 아군의 `formLayout` 과 짝이다. 다른 점은 칸을 대형이 아니라 자리 번호가
+ * 정한다는 것뿐이다 (`core/autoBattle` 의 `foeCell`) — 적은 대형을 안 고른다.
+ *
+ * ## 한 줄이 아니라 격자다
+ *
+ * 여태 적은 **한 줄로 비스듬히** 섰다. 여섯 마리면 뒤로 갈수록 작아지며
+ * 오른쪽으로 물러나는 줄 하나였는데, 그건 무리가 아니라 **줄 서 있는 것**으로
+ * 보였고 폭도 251px 이나 먹었다.
+ *
+ * 3×3 격자로 바꾸니 세로줄 둘에 118px 이다. 무리로 보이고, 남는 폭은 전부
+ * 아군 대형과 둘 사이의 틈으로 간다.
+ *
+ * @param cap   그릴 자리 수 (서 있는 마릿수가 아니다)
+ * @param base  자리 하나의 기준 폭 (`FOE_W` 또는 `BOSS_W`)
+ * @param scale 자리별 제 크기 배수 (`FoeKind.scale`)
+ */
+function foeLayout(cap: number, base: number, scale: Scales): {
+  x: number[]; lift: number[]; size: number[]; width: number;
+} {
+  const n = Math.max(1, cap);
+  const step = base * FOE_COL_RATIO;
+  const x: number[] = [];
+  const lift: number[] = [];
+  const size: number[] = [];
+  for (let p = 0; p < n; p++) {
+    const { col, lane } = foeCell(p);
+    const d = depthAt(lane);
+    x.push(Math.round(col * step));
+    lift.push(d.lift);
+    size.push(Math.round(base * d.scale * (scale[p] ?? 1)));
+  }
+  return { x, lift, size, width: Math.max(1, ...x.map((v, i) => v + size[i])) };
 }
 
 /**
@@ -375,31 +413,24 @@ const BOSS_SHOT_W = Math.round(24 * ZOOM);
 const DEPTH_STEP = Math.round(8 * ZOOM);
 
 /**
- * 줄에 선 사람들이 각자 상대 쪽으로 나와 있는 거리(px). 앞에서부터.
+ * 적이 자리마다 아군 쪽으로 나와 있는 거리(px). 자리 번호 순.
  *
- * **줄 전체를 한 번에 계산한다.** 한 명씩 따로 재면 뒤에 선 근접이 앞에 선
- * 원거리를 앞질러 버린다 — 원거리는 `RANGED_BACK` 만큼 덜 나가는데 자리
- * 차이는 `DEPTH_STEP` 뿐이라, 그 차이가 뒤집힌다. 실제로 사제가 궁수를
- * 지나쳐 둘이 겹쳐 섰다.
+ * **격자가 되면서 아주 단순해졌다.** 예전에는 한 줄로 서므로 뒤엣놈이
+ * 앞엣놈을 앞지르지 못하게 막아야 했는데(`advanceRow`, 지웠다), 지금은
+ * 세로줄이 좌표로 못 박혀 있어서 (`foeLayout`) 앞지를 수가 없다.
  *
- * 그래서 **앞사람보다 더 나가지 못하게** 막는다. 줄의 앞뒤가 무슨 일이 있어도
- * 안 뒤집힌다.
+ * 남은 규칙은 하나다: **던지는 놈은 조금 덜 나온다** (`RANGED_BACK`).
+ * 세로줄 간격이 45px 이고 이 값은 6px 이라, 줄 순서는 절대 안 뒤집힌다.
  *
- * **아군과 적이 같은 식을 쓴다.** 그리고 화면에 그릴 때(`transform`)와 자리를
- * 잴 때(`spotOf`)도 같은 식이어야 한다 — 예전에 둘이 갈라져서, 이펙트가 서
- * 있는 자리와 다른 데서 터졌다.
+ * 화면에 그릴 때(`transform`)와 자리를 잴 때(`spotOf`)가 같은 값을 봐야
+ * 한다 — 예전에 둘이 갈라져서, 이펙트가 서 있는 자리와 다른 데서 터졌다.
  *
- * @param melee 앞에서부터 각 자리가 붙어 싸우는 종인가
+ * @param melee 자리마다 붙어 싸우는 종인가 (`rowMelee`)
  */
-function advanceRow(melee: readonly boolean[], closeIn: number): number[] {
-  const out: number[] = [];
-  for (let b = 0; b < melee.length; b++) {
-    const raw = Math.max(0, Math.round(
-      closeIn - b * DEPTH_STEP - (melee[b] ? 0 : RANGED_BACK),
-    ));
-    out.push(b === 0 ? raw : Math.min(raw, out[b - 1]));
-  }
-  return out;
+function foeAdvance(melee: readonly boolean[], cap: number, closeIn: number): number[] {
+  return Array.from({ length: Math.max(1, cap) }, (_v, p) => Math.max(0, Math.round(
+    closeIn - (melee[p] === false ? RANGED_BACK : 0),
+  )));
 }
 
 /**
@@ -420,67 +451,20 @@ function advanceRow(melee: readonly boolean[], closeIn: number): number[] {
  * 이러면 사람 수가 몇이든, 화면이 몇 px 이든 틈이 `CLASH_GAP` 으로 일정하다.
  * 이미 그보다 가까우면 0 이라 제자리다 — 좁은 화면에서 억지로 파고들지 않는다.
  *
- * ## 적 수는 **실제 수가 아니라 상한**을 쓴다
+ * ## 두 무리의 폭은 **격자가 정한다**
  *
- * 처음엔 지금 서 있는 적 수를 넣었다. 그랬더니 슬라임이 한 마리 죽을 때마다
- * 줄 폭이 줄고, 그만큼 아군이 앞으로 **순간이동**했다. 0.5초마다 마리 수가
- * 바뀌니 파티가 계속 튀었다.
+ * 서 있는 마릿수로 재면 안 된다. 슬라임이 한 마리 죽을 때마다 폭이 줄고,
+ * 그만큼 아군이 앞으로 **순간이동**한다 — 0.5초마다 마리 수가 바뀌므로
+ * 파티가 계속 튀었다.
  *
- * 그래서 `MOB_CAP`(꽉 찼을 때)으로 잰다. 자리는 스테이지 내내 고정이고,
- * 적이 줄면 그냥 틈이 넓어질 뿐이다 — 아무도 안 움직인다.
+ * 격자의 폭은 **자리 수**에서 나오고 (`foeLayout` · `formLayout`) 자리는
+ * 판 내내 고정이다. 적이 줄면 그냥 빈 칸이 생길 뿐 아무도 안 움직인다.
  */
-function closeInFor(
-  stageWidth: number, allyW: number, foeCount: number, boss: boolean,
-  foeScale?: Scales,
-): number {
+function closeInFor(stageWidth: number, allyW: number, foeW: number): number {
   if (stageWidth <= 0) return 0;
-  const f = fitOf(stageWidth, allyW, foeCount, foeScale);
-  const gapNow = stageWidth
-    - EDGE * f
-    - rowWidth(foeCount, (boss ? BOSS_W : FOE_W) * f, FOE_LAP * f, foeScale)
-    - EDGE * f - allyW * f;
+  const f = fitOf(stageWidth, allyW, foeW);
+  const gapNow = stageWidth - (EDGE * 2 + foeW + allyW) * f;
   return Math.max(0, Math.round((gapNow - CLASH_GAP * f) / 2));
-}
-
-/**
- * 좁은 화면에서 대형을 얼마나 더 좁힐까 (px).
- *
- * 아주 좁은 기기에서는 **줄 두 개만으로 이미 화면을 넘는다.** 아군 넷(142px)에
- * 적 셋(116px)이면 벽여백까지 294px 인데, 무대가 260px 이면 앞으로 한 발도
- * 안 나가도 34px 이 겹친다. `closeInFor` 를 0 으로 막아도 소용이 없다.
- *
- * 그때는 같은 편끼리 **더 겹쳐 세운다.** 대형이 촘촘해질 뿐 아무도 잘리거나
- * 사라지지 않고, 넓은 화면에서는 0 이라 아무 일도 없다.
- *
- * @returns 한 명당 추가로 겹칠 폭
- */
-function squeezeFor(
-  stageWidth: number, allyW: number, foeCount: number, boss: boolean,
-  foeScale?: Scales,
-): number {
-  if (stageWidth <= 0) return 0;
-  const f = fitOf(stageWidth, allyW, foeCount, foeScale);
-  const rows = rowWidth(foeCount, (boss ? BOSS_W : FOE_W) * f, FOE_LAP * f, foeScale)
-    + allyW * f;
-  /* 줄 둘 + 벽여백 + 최소한의 틈이 들어가야 한다 */
-  const need = rows + EDGE * 2 + MIN_GAP;
-  if (need <= stageWidth) return 0;
-  /*
-    겹칠 수 있는 자리는 **적 줄에만** 있다.
-
-    아군은 대형이 자리를 정하므로 (`core/party` 의 `FORMATIONS`) 더 겹칠 수가
-    없다 — 겹치면 `2-2` 의 비어 있는 ③ 칸이 사라진다. 대신 대형은 예전 한 줄
-    (넷이 나란히)보다 원래 좁아서, 짜낼 일 자체가 줄었다.
-  */
-  const seams = Math.max(1, foeCount - 1);
-  void f;
-  /*
-    짜내는 폭에도 한계가 있다 — 너무 겹치면 몇인지 안 보인다.
-
-    무대를 키우면 줄도 같이 넓어지므로 이 한계도 같이 커져야 한다. 안 그러면
-    좁은 기기에서 대형이 화면을 넘는다.
-  */
-  return Math.min(Math.round(14 * ZOOM), Math.ceil((need - stageWidth) / seams));
 }
 /**
  * 적이 한 번 때리는 간격.
@@ -514,7 +498,24 @@ interface Pop {
   text: string;
 }
 
-export function BattleView() {
+/**
+ * 무대 위에 **얹히는** 것들.
+ *
+ * 요즘 모바일 게임의 화면이 다 이 모양이다 — 위 띠도 채팅도 배경 그림 위에
+ * 떠 있고, 그 뒤로 하늘과 풍경이 그대로 비친다. 띠를 무대 **밖 위**에 두면
+ * 화면이 "게임 창 + 정보 창" 두 덩이가 되고, 그러면 게임이 작아 보인다.
+ *
+ * 무대가 화면에 붙박이라 (`HomeScreen`) 아래를 아무리 굴려도 이것들은
+ * 그대로 있다.
+ */
+interface Props {
+  /** 무대 맨 위에 얹히는 것 — 위 띠 (`TopBar`) */
+  top?: React.ReactNode;
+  /** 무대 왼쪽 아래에 얹히는 것 — 흐르는 세 줄 (`Ticker`) */
+  corner?: React.ReactNode;
+}
+
+export function BattleView({ top, corner }: Props = {}) {
   const battle = useGame((s) => s.battle);
   const party = useGame((s) => s.party);
   const chars = useGame((s) => s.chars);
@@ -738,8 +739,8 @@ export function BattleView() {
 
     **자리는 재지 않고 계산한다.** 처음엔 `onLayout` 으로 쟀는데, 아직 한 번도
     안 불린 놈은 자리를 몰라서 전부 같은 곳에 겹쳐 떴다. 줄 배치는 이 파일이
-    직접 정한 것이라(오른쪽 벽에서 `EDGE`, 서로 `FOE_LAP` 만큼 겹침) 그대로
-    되짚으면 정확한 자리가 나온다 — 측정이 필요 없다.
+    직접 정한 것이라(오른쪽 벽에서 `EDGE`, 그 안에서 `foeLayout` 의 격자)
+    그대로 되짚으면 정확한 자리가 나온다 — 측정이 필요 없다.
   */
   /*
     걸어 들어오는 중인 적들. 키는 마리의 고유 번호(`FoeSlot.id`).
@@ -765,11 +766,11 @@ export function BattleView() {
    */
   const foeAt = useRef({
     stageW: 0, count: 0, cap: MOB_CAP,
-    squeeze: 0, closeIn: 0, base: FOE_W, edge: EDGE, lap: FOE_LAP,
+    base: FOE_W, edge: EDGE,
     /** 목록 자리 → 무대 자리 */
     pos: [] as number[],
-    /** 자리별 근접 여부 — 원거리는 안 걸어 나온다 */
-    melee: [] as boolean[],
+    /** 자리별 나와 있는 거리 (`foeAdvance`) */
+    adv: [] as number[],
     /** 자리별 제 크기 배수 (`FoeKind.scale`) — 없는 자리는 1 */
     scale: [] as number[],
   });
@@ -1135,42 +1136,26 @@ export function BattleView() {
   const flinchT = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
-   * 그 자리의 적이 지금 화면 어디에 있나 (무대 왼쪽·위 기준).
-   *
-   * 줄은 오른쪽 벽에서 `EDGE` 만큼 띄우고, 뒤에 선 놈부터 왼쪽에 세운 뒤
-   * `FOE_LAP` 만큼 서로 겹친다. 여기서는 그 배치를 그대로 되짚는다.
-   */
-  /**
    * 그 **자리**가 무대 어디인가 (목록 순서가 아니라 `FoeSlot.pos`).
    *
-   * 자리 수(`cap`)로 잰다 — 서 있는 마릿수로 재면 한 마리 죽을 때마다 줄
+   * 격자는 오른쪽 벽에서 `EDGE` 만큼 띄우고, 그 안에서 자리마다 좌표가 못
+   * 박혀 있다 (`foeLayout`). 여기서는 그리는 코드와 **같은 함수**로 되짚는다 —
+   * 예전에 그리는 식과 재는 식이 갈라져서 이펙트가 엉뚱한 데서 터졌다.
+   *
+   * 자리 수(`cap`)로 잰다 — 서 있는 마릿수로 재면 한 마리 죽을 때마다 격자
    * 폭이 줄어서 남은 놈들이 통째로 앞으로 당겨진다.
    */
-  const spotOf = React.useCallback((back: number) => {
+  const spotOf = React.useCallback((pos: number) => {
     const a = foeAt.current;
-    const n = Math.max(1, a.cap);
-    /* 줄 전체의 전진 거리 — 앞지르기가 막힌 값이다 */
-    const adv = advanceRow(a.melee.length ? a.melee : [true], a.closeIn);
-    const lap = a.lap + a.squeeze;
-    const sizeOf = (b: number) => Math.round(
-      a.base * depthAt(b).scale * (a.scale[b] ?? 1),
-    );
-    const size = sizeOf(back);
-
-    /* 맨 앞이 왼쪽 끝이고, 뒤엣놈일수록 오른쪽으로 물러나며 작아진다 */
-    let width = 0;
-    for (let k = 0; k < n; k++) width += sizeOf(k) - (k ? lap : 0);
-
-    let off = 0;
-    for (let k = 0; k < back; k++) off += sizeOf(k) - lap;
-
+    const L = foeLayout(a.cap, a.base, a.scale);
+    const size = L.size[pos] ?? a.base;
     /* 적은 아군 쪽으로 나와 있다 — `transform` 이라 배치에는 안 잡힌다 */
-    const out = -(adv[back] ?? 0);
+    const out = -(a.adv[pos] ?? 0);
 
     return {
-      x: a.stageW - a.edge - width + off + out,
-      /* 줄은 바닥에서 `FLOOR` 만큼 떠 있고, 뒤엣놈은 `lift` 만큼 더 올라간다 */
-      y: STAGE_H - FLOOR - depthAt(back).lift - size,
+      x: a.stageW - a.edge - L.width + (L.x[pos] ?? 0) + out,
+      /* 격자는 바닥에서 `FLOOR` 만큼 떠 있고, 뒷줄은 `lift` 만큼 더 올라간다 */
+      y: STAGE_H - FLOOR - (L.lift[pos] ?? 0) - size,
       size,
     };
   }, []);
@@ -1829,9 +1814,25 @@ export function BattleView() {
     제일 뒤 자리 번호로 잡는다. 그러면 몇이 죽든 서 있는 놈은 전부 그려지고,
     빈자리는 폭만 남는다 (아래 `gap`).
   */
+  /*
+    잡몹은 **칸 수가 아니라 이 판의 마릿수**로 잡는다 (`mobCap`).
+
+    칸은 아홉인데 1판에 서는 것은 넷이다. 아홉으로 잡으면 세로줄 셋 몫의
+    폭을 늘 비워 두게 되어, 넷이 무대 오른쪽 구석으로 몰린다.
+  */
+  /** 지금 서 있는 놈 중 제일 뒤 자리 번호 + 1 */
+  const lastPos = battle.foes.reduce((m, f) => Math.max(m, (f.pos ?? 0) + 1), 0);
   const cap = cur.boss
-    ? Math.max(1, battle.foes.reduce((m, f) => Math.max(m, (f.pos ?? 0) + 1), 0))
-    : MOB_CAP;
+    ? Math.max(1, lastPos)
+    /*
+      **마릿수와 실제 자리 중 큰 쪽.**
+
+      보통은 마릿수가 이긴다. 저장해 둔 판을 이어 할 때만 자리가 이기는데,
+      칸이 여섯이던 시절의 기록에는 5번 자리에 선 놈이 있을 수 있다 —
+      마릿수(넷)로만 자르면 그놈이 **안 그려진 채 살아 있어서** 판이 안
+      끝난다.
+    */
+    : Math.max(mobCap(battle.stage), lastPos);
   /*
     자리마다 **그 놈이 실제로 그려지는 배수** (`Scales`).
 
@@ -1867,8 +1868,11 @@ export function BattleView() {
    */
   const form1 = formLayout(spots, PARTY_W);
   const allyW1 = form1.width;
+  /** 적 격자의 자리와 폭 — 같은 이유로 **배율 1 기준**이다 */
+  const foeForm1 = foeLayout(cap, cur.boss ? BOSS_W : FOE_W, foeScale);
+  const foeW1 = foeForm1.width;
 
-  const closeIn = closeInFor(stageW, allyW1, cap, cur.boss, foeScale);
+  const closeIn = closeInFor(stageW, allyW1, foeW1);
   /**
    * 그 자리의 아군이 적 앞줄까지 가려면 몇 px 을 더 가야 하나.
    *
@@ -1984,46 +1988,32 @@ export function BattleView() {
 
   const leapToOf = (i: number) => {
     const myRight = allyRightOf(i) - allyAdvOf(i);
-
-    /* 적 줄 — 오른쪽 벽에서 EDGE, **앞줄이 왼쪽 끝** */
-    /* 자리 수로 잰다 — 마릿수로 재면 한 마리 죽을 때마다 도약 거리가 튄다 */
-    const fn = Math.max(1, cap);
-    const fbase = foeW;
-    const flap = fLap + squeeze;
-    const fsize = (b: number) => Math.round(
-      fbase * depthAt(b).scale * (foeScale[b] ?? 1),
-    );
-    let fwidth = 0;
-    for (let k = 0; k < fn; k++) fwidth += fsize(k) - (k ? flap : 0);
-
-    const foeLeft = stageW - edge - fwidth - (foeAdv[0] ?? 0);
-
+    /* 적 격자의 **왼쪽 끝** — 그리는 코드와 같은 값을 본다 (`foeForm`) */
+    const foeLeft = stageW - edge - foeForm.width - (foeAdv[0] ?? 0);
     return Math.max(0, Math.round(foeLeft - (myRight + allyAdvOf(i)) + 8));
   };
 
   /*
-    무대가 좁으면 대형을 통째로 줄인다. 넓으면 1 이라 아무 일도 안 일어난다.
+    무대가 좁으면 양쪽을 통째로 줄인다. 넓으면 1 이라 아무 일도 안 일어난다.
 
     크기와 간격이 **다 같은 값을 탄다** — 하나만 줄이면 겹치거나 벌어진다.
   */
-  const fit = fitOf(stageW, allyW1, cap, foeScale);
+  const fit = fitOf(stageW, allyW1, foeW1);
   const partyW = PARTY_W * fit;
   const foeW = (cur.boss ? BOSS_W : FOE_W) * fit;
   const edge = EDGE * fit;
-  const fLap = FOE_LAP * fit;
-
-  /* 좁은 화면에서만 0 보다 커진다 */
-  const squeeze = squeezeFor(stageW, allyW1, cap, cur.boss, foeScale);
+  /** 실제로 그리는 적 격자 — 배율을 먹인 값 */
+  const foeForm = foeLayout(cap, foeW, foeScale);
 
   /*
-    각 줄이 앞으로 나와 있는 거리 — 앞뒤가 안 뒤집히게 줄 단위로 잰다.
+    자리마다 앞으로 나와 있는 거리.
 
     **누가 서 있는지가 아니라 자리가 정한다** (`rowMelee`). 서 있는 놈을
-    보고 재면, 앞줄이 죽어 원거리가 0번 자리에 오는 순간 줄 전체의 전진
-    거리가 다시 계산되어 남은 놈들이 앞뒤로 미끄러진다.
+    보고 재면, 앞줄이 죽어 원거리가 0번 자리에 오는 순간 전진 거리가 다시
+    계산되어 남은 놈들이 앞뒤로 미끄러진다.
   */
   const foeMelee = cur.boss ? [true] : rowMelee(battle.stage);
-  const foeAdv = advanceRow(foeMelee, closeIn);
+  const foeAdv = foeAdvance(foeMelee, cap, closeIn);
   /*
     아군은 **사람마다** 잰다 (`allyAdvOf`).
 
@@ -2123,59 +2113,34 @@ export function BattleView() {
     count: battle.foes.length,
     cap,
     pos: battle.foes.map((f) => f.pos ?? 0),
-    squeeze,
-    melee: foeMelee,
-    closeIn,
+    adv: foeAdv,
     base: foeW,
     scale: foeScale,
     edge,
-    lap: fLap,
   };
 
   return (
-    /*
-      **테두리 없는 띠.** 위로는 상자 줄이, 아래로는 세 줄이 가는 가로줄
-      하나로 이어진다 (`HomeScreen`) — 넷을 다 카드로 두면 화면이 조각난다.
-      좌우 여백은 머리말에만 주고, 무대는 화면 폭을 꽉 쓴다.
-    */
-    <View style={{ paddingVertical: SP.xs }}>
-      {/* ── 머리말 ── 여백은 여기만 준다. 무대는 벽까지 나간다 */}
-      <Row between style={{ paddingHorizontal: SP.sm }}>
-        <Row gap={SP.xs}>
-          {/*
-            판을 골라 간다. **깬 판과 지금 판까지만** — 안 가 본 데를
-            건너뛸 수 있으면 판을 차례로 여는 것 자체가 뜻을 잃는다.
-          */}
-          <StagePicker stage={battle.stage} best={battle.best} onGo={goStage} />
-          {/*
-            **지역 이름**을 스테이지 옆에. 나오는 놈 이름이 아니다.
+      /*
+        ── 무대 하나뿐이다 ──
 
-            예전에는 주력 종의 이름을 적었다 (`cur.name`). 그런데 한 판에 두세
-            종이 섞여 서므로 그중 하나만 적으면 나머지는 없는 셈이 되고, 판이
-            넘어가도 같은 종이 남아 있으면 글자가 안 바뀌어 **올라간 티가 안
-            난다.** 지역 이름은 다섯 판마다 한 번 바뀌므로 어디쯤 왔는지가 읽힌다.
-          */}
-          <T size={10} dim="sub">{stageOf(battle.stage).zone}</T>
-          {/*
-            우두머리 꼬리표를 뗐다. 우두머리가 나오면 화면 한가운데에 이름이
-            크게 떴다 사라지고(`BossCall`), 덩치도 잡몹의 1.5배다 — 머리말에
-            글자로 한 번 더 적을 이유가 없다.
-          */}
-        </Row>
-        <T size={9} dim="dim">최고 {battle.best}</T>
-      </Row>
+        예전에는 이 컴포넌트가 세 덩이였다: 머리말(판·지역·최고) · 무대 ·
+        아래 요약(진행 막대와 우두머리 단추). 무대가 화면에 붙박이가 되면서
+        (`HomeScreen`) 위아래 둘은 갈 데가 없어졌다 — 붙박이 밖으로 내보내면
+        스크롤을 내릴 때 저것들만 따라 올라간다.
 
-      {/* ── 무대 ── */}
+        그래서 **셋 다 무대 안으로** 넣었다. 위 띠와 채팅도 같이 얹힌다
+        (`top` · `corner`). 요즘 게임 화면이 다 이 모양이고, 그렇게 하면
+        배경 그림이 정보 뒤로 그대로 비친다.
+      */
       <Animated.View
         style={[{
           height: STAGE_H,
-          marginTop: SP.xs,
           /*
-            **위아래로만 줄을 긋는다.** 무대가 화면 폭을 꽉 채우므로 좌우
+            **아래로만 줄을 긋는다.** 무대가 화면 폭을 꽉 채우므로 좌우
             테두리는 화면 가장자리에 딱 붙은 선이 되는데, 그건 액자가 아니라
-            그냥 화면이 좁아 보이게 만드는 선이다.
+            그냥 화면이 좁아 보이게 만드는 선이다. 위는 화면 끝이라 줄이
+            필요 없다.
           */
-          borderTopWidth: 1,
           borderBottomWidth: 1,
           borderColor: '#FFFFFF33',
           overflow: 'hidden',
@@ -2416,8 +2381,18 @@ export function BattleView() {
             {!down && (
             <Animated.View
               style={{
+                /*
+                  ── 적 격자 ── 3×3 (`core/autoBattle` 의 `foeCell`).
+
+                  가로줄로 세우고 음수 여백으로 겹치던 것을 **절대 좌표**로
+                  바꿨다. 격자에는 비는 칸이 있는데 (넷이 나오는 판은 다섯
+                  칸이 빈다) 가로줄로는 빈 칸을 만들 수가 없다 — 폭만 남기는
+                  유령 칸을 하나씩 세워야 했고, 그게 자리를 고정하는 일의
+                  절반이었다.
+                */
                 position: 'absolute', right: edge, bottom: FLOOR,
-                flexDirection: 'row', alignItems: 'flex-end',
+                width: foeForm.width,
+                height: 1,
                 /* 맞고 밀리는 것 위에 **오른쪽 밖에서 들어오는 것**을 얹는다 */
                 transform: [
                   { translateX: knockX },
@@ -2426,52 +2401,30 @@ export function BattleView() {
               }}
             >
               {/*
-                맨 앞 적이 **왼쪽 끝**이다 (아군과 마주 보는 쪽).
-
-                오랫동안 반대로 그리고 있었다. 아군 줄을 그리는 코드를 그대로
-                복사해 왔는데, 아군은 왼쪽에 서므로 **오른쪽 끝이 앞**이고 적은
-                오른쪽에 서므로 **왼쪽 끝이 앞**이다. 역순으로 돌린 채 두었더니
-                제일 크고 제일 앞이어야 할 놈이 아군에서 제일 먼 자리에 섰다.
-
-                눈에 잘 안 띄었던 건 무리가 뭉쳐 보이기 때문이다. 그런데 실제로
-                때리는 놈(`foes[0]`)이 저 끝에 있어서, 붙어 싸우라고 걸어 나가도
-                가운데가 90px 씩 비었다.
-
-                깊이는 `zIndex` 가 맡으므로 그리는 차례는 자리 순서면 된다.
-
-                ── **목록이 아니라 자리로 돈다** ──
+                **목록이 아니라 자리로 돈다.**
 
                 예전에는 `battle.foes` 를 그대로 돌렸다. 그러면 한 마리가
                 죽어 목록이 줄어들 때 뒤에 있던 놈들의 번호가 통째로 밀려서,
-                아무도 안 움직였는데 줄이 왼쪽으로 당겨졌다.
+                아무도 안 움직였는데 무리가 왼쪽으로 당겨졌다.
 
-                지금은 **자리 넷을 늘 그린다.** 비어 있는 자리는 폭만
-                차지하는 빈 칸이라(`flexDirection: 'row'` 라 폭이 곧 자리다),
-                옆에 선 놈들은 아무 영향을 안 받는다.
+                **먼 줄부터 그린다.** 아군과 같은 이유다 (`zIndex` 만으로는
+                같은 가로줄에 선 둘이 안 갈린다). 세로줄이 뒤면 뒤일수록 먼저,
+                같은 세로줄이면 위 가로줄이 먼저다.
               */}
-              {Array.from({ length: cap }, (_v, back) => {
+              {Array.from({ length: cap }, (_v, back) => back)
+                .sort((a, b) => (
+                  (foeCell(b).lane - foeCell(a).lane)
+                  || (foeCell(b).col - foeCell(a).col)
+                ))
+                .map((back) => {
                 const f = battle.foes.find((x) => (x.pos ?? 0) === back);
-                if (!f) {
-                  /*
-                    빈자리 — **폭만 남긴다.**
+                /*
+                  빈 칸 — **아무것도 안 그린다.**
 
-                    안 그리면 뒤에 선 놈들이 그만큼 앞으로 당겨진다. 자리를
-                    고정하는 일의 절반이 여기다.
-                  */
-                  return (
-                    <View
-                      key={`gap${back}`}
-                      style={{
-                        width: Math.round(
-                          foeW * depthAt(back).scale * (foeScale[back] ?? 1),
-                        ),
-                        height: 1,
-                        marginLeft: back === 0 ? 0 : -(fLap + squeeze),
-                        marginBottom: depthAt(back).lift,
-                      }}
-                    />
-                  );
-                }
+                  자리가 좌표로 못 박혀 있으므로 (`foeForm`) 비어도 옆엣놈이
+                  안 움직인다. 가로줄이던 시절에는 폭만 남기는 칸을 세워야 했다.
+                */
+                if (!f) return null;
                 /*
                   한 줄에 **여러 종이 섞여** 선다 (`kindsOf`). 앞줄은 붙어서
                   싸우는 놈, 뒷줄은 떨어져서 던지는 놈이라 그림도 세기도
@@ -2494,7 +2447,7 @@ export function BattleView() {
                   줄인 놈에게는 줄인 것들이 붙는다.
                 */
                 const foeSize = Math.round(
-                  foeW * depthAt(back).scale * (kf.scale ?? 1),
+                  foeW * depthAt(foeCell(back).lane).scale * (kf.scale ?? 1),
                 );
                 /*
                   이 마리가 지금 그리는 칸.
@@ -2586,16 +2539,18 @@ export function BattleView() {
                     */
                     key={f.id}
                     style={{
-                      marginLeft: back === 0 ? 0 : -(fLap + squeeze),
-                      /* 뒤에 선 놈은 바닥판 안쪽이라 위로 올라간다 (`Ground`) */
-                      marginBottom: depthAt(back).lift,
+                      /* 격자 안의 제 칸 — 그리는 값과 재는 값이 같다 (`foeForm`) */
+                      position: 'absolute',
+                      left: foeForm.x[back] ?? 0,
+                      bottom: foeForm.lift[back] ?? 0,
                       /*
                         뒤에 서도 흐려지지 않는다. 아군과 같은 이유다 —
                         54px 1-bit 그림에서 흐림은 깊이가 아니라 덜 그려진
                         것으로 보인다. 깊이는 크기와 높이가 말한다.
                       */
                       opacity: 1,
-                      zIndex: back,
+                      /* 아래 가로줄에 선 놈이 위에 그려진다 (아군의 `zIndex` 와 같다) */
+                      zIndex: 10 - foeCell(back).lane,
                       /*
                         아군 쪽(왼쪽)으로 나온다. 붙어 싸우는 놈은 끝까지,
                         던지는 놈은 절반만 (`RANGED_STEP`).
@@ -2849,10 +2804,14 @@ export function BattleView() {
                         style 에 transform 이 있으면 `flip` 을 안 얹으므로
                         (덮어써서 반전이 사라지는 걸 막는 장치다) 여기서 둘을
                         직접 합쳐야 한다.
+
+                        **`faceLeft` 인 놈은 안 뒤집는다.** 28판 모기 시트만
+                        왼쪽을 보고 들어와서, 뒤집으니 아군에게 등을 돌린 채
+                        싸웠다 (`core/autoBattle` 의 `FoeKind.faceLeft`).
                       */
                       style={{
                         transform: [
-                          { scaleX: -1 },
+                          { scaleX: kf.faceLeft ? 1 : -1 },
                           { translateY: Math.round(foeSize * spriteGap(kf.art, foeFrame)) },
                         ],
                       }}
@@ -3118,90 +3077,141 @@ export function BattleView() {
             <T size={9} dim="dim" center>스테이지는 그대로입니다</T>
           </View>
         )}
-      </Animated.View>
 
-      {/*
-        ── 아래 요약은 없앴다 ──
+        {/*
+          ══════════ 무대 위에 얹히는 층 ══════════
 
-        맨 앞 적 체력, 파티 합계 체력, 처치 수와 초당 딜이 여기 있었다. 전부
-        **무대 위에서 이미 보이는 것**이다 — 적은 머리 위에 막대가 있고, 파티는
-        머리 위 막대와 아래 파티 칸에 숫자까지 있다. 같은 값을 두 번 적으면
-        어느 쪽을 봐야 하는지가 흐려지고, 무대가 그만큼 눌린다.
+          여기부터는 싸움이 아니라 **정보**다. 세로로 네 덩이:
 
-        남긴 것은 **우두머리까지 남은 시간** 하나다. 그건 화면 어디에도 없다.
-      */}
+            위 띠      나와 재화와 갈 곳 (`top` → `TopBar`)
+            판 줄      몇 판 · 어디 · 최고 기록
+            (빈 자리)
+            아래 줄    왼쪽에 채팅(`corner`), 오른쪽에 진행과 우두머리 단추
 
-      {/* ── 스테이지 진행 ── */}
-      <Row between style={{ marginTop: SP.sm }}>
-        <T size={9} dim="sub">
-          {battle.boss
-            ? (rage ? '광폭화 — 두 배로 때린다' : `광폭화까지 ${rageSec}초`)
-            : battle.called
-              ? '남은 적을 정리하면 우두머리가 나온다'
-              : battle.msLeft > 0
-                ? `우두머리 토벌까지 ${secLeft}초`
-                : '우두머리를 부를 수 있다'}
-        </T>
-      </Row>
-      {/*
-        우두머리 구간에서는 **광폭화까지**를 그린다.
+          `box-none` 이라 빈 자리로는 손가락이 그냥 통과한다 — 안 그러면
+          투명한 판 하나가 무대를 통째로 덮는다.
+        */}
+        <View
+          pointerEvents="box-none"
+          style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            /* 싸움 연출(피해 숫자 40, 막 60, 전멸 70)보다 위다 */
+            zIndex: 80,
+          }}
+        >
+          {top}
 
-        저 막대는 원래 "우두머리 토벌까지" 만 그렸는데, 우두머리가
-        서면 `msLeft` 가 멈춰서 (`battleTick`) 정작 제일 급한 대목에 막대가
-        꼽촉 서 있었다. 같은 자리에 지금 도는 시계를 넣는다.
-      */}
-      <Bar
-        value={battle.boss ? RAGE_MS - rageIn(battle) : STAGE_MS - battle.msLeft}
-        max={battle.boss ? RAGE_MS : STAGE_MS}
-        blocks={MOB_CAP * 8}
-        height={5}
-      />
+          {/* ── 판 줄 ── */}
+          <Row between style={{ paddingHorizontal: SP.sm, paddingTop: SP.xs }}>
+            <Row gap={SP.xs}>
+              {/*
+                판을 골라 간다. **깬 판과 지금 판까지만** — 안 가 본 데를
+                건너뛸 수 있으면 판을 차례로 여는 것 자체가 뜻을 잃는다.
+              */}
+              <StagePicker stage={battle.stage} best={battle.best} onGo={goStage} />
+              {/*
+                **지역 이름**을 스테이지 옆에. 나오는 놈 이름이 아니다.
 
-      {/*
-        ── 우두머리 토벌 ──
+                예전에는 주력 종의 이름을 적었다 (`cur.name`). 그런데 한 판에
+                두세 종이 섞여 서므로 그중 하나만 적으면 나머지는 없는 셈이
+                되고, 판이 넘어가도 같은 종이 남아 있으면 글자가 안 바뀌어
+                **올라간 티가 안 난다.** 지역 이름은 다섯 판마다 한 번 바뀌므로
+                어디쯤 왔는지가 읽힌다.
+              */}
+              <T size={10} dim="sub">{stageOf(battle.stage).zone}</T>
+            </Row>
+            <T size={9} dim="dim">최고 {battle.best}</T>
+          </Row>
 
-        1분을 사냥하면 나온다 (`bossReady`). **저절로 안 나온다** — 언제
-        들어갈지는 사람이 정한다. 더 사냥해서 골드를 모으고 들어가도 되고,
-        바로 눌러도 된다.
+          {/* 가운데는 무대가 그대로 보여야 한다 */}
+          <View style={{ flex: 1 }} pointerEvents="none" />
 
-        자리를 미리 안 비워 둔다. 안 보일 때 빈 칸이 남아 있으면 화면 아래가
-        늘 허전하고, 나타났을 때 "생겼다" 가 안 읽힌다.
-      */}
-      {bossReady(battle) && <BossCallBtn onPress={callBossNow} />}
-
-      {/*
-        ⚠ ── 테스트 단추 ── 출시 전에 통째로 지운다
-
-        광폭화를 보려면 두 분을 버텀 다음이어야 한다 (`RAGE_MS`). 고치고
-        확인하는 한 바퀴가 사 분이라 손이 안 간다.
-
-        `TEST` 를 적어 둔다. 같은 자리에 "우두머리 토벌" 이 있으므로,
-        표시가 없으면 둘이 같은 종류의 단추로 보인다.
-      */}
-      {battle.boss && !rage && (
-        <Pressable onPress={rageNow} style={{ marginTop: SP.sm }}>
+          {/* ── 아래 줄 ── 채팅과 진행이 양끝에 선다 */}
           <View
+            pointerEvents="box-none"
             style={{
-              borderWidth: 1,
-              borderColor: BAD_C,
-              paddingVertical: SP.xs,
-              alignItems: 'center',
+              flexDirection: 'row',
+              alignItems: 'flex-end',
+              paddingHorizontal: SP.sm,
+              paddingBottom: SP.xs,
+              gap: SP.sm,
             }}
           >
-            <T size={10} bold style={{ color: BAD_C }}>TEST · 광폭화 바로보기</T>
+            {/*
+              채팅은 **왼쪽 아래.** 무대 안에 작게 둔다.
+
+              폭을 절반으로 묶는다 — 넓으면 세 줄이 무대를 가로질러서, 정작
+              그 아래에서 벌어지는 싸움을 덮는다.
+            */}
+            <View style={{ flex: 1 }}>{corner}</View>
+
+            {/* ── 진행과 우두머리 ── */}
+            <View style={{ width: '38%', gap: 3 }}>
+              <T size={9} dim="sub" numberOfLines={1}>
+                {battle.boss
+                  ? (rage ? '광폭화 — 두 배' : `광폭화 ${rageSec}초`)
+                  : battle.called
+                    ? '남은 적을 정리하면'
+                    : battle.msLeft > 0
+                      ? `우두머리 ${secLeft}초`
+                      : '우두머리를 부를 수 있다'}
+              </T>
+              {/*
+                우두머리 구간에서는 **광폭화까지**를 그린다.
+
+                저 막대는 원래 "우두머리 토벌까지" 만 그렸는데, 우두머리가
+                서면 `msLeft` 가 멈춰서 (`battleTick`) 정작 제일 급한 대목에
+                막대가 꼼짝 서 있었다. 같은 자리에 지금 도는 시계를 넣는다.
+              */}
+              <Bar
+                value={battle.boss ? RAGE_MS - rageIn(battle) : STAGE_MS - battle.msLeft}
+                max={battle.boss ? RAGE_MS : STAGE_MS}
+                /*
+                  칸 24 개. `MOB_CAP * 8` 이었는데, 저 값은 **적이 설 칸 수**라
+                  시계 막대와 아무 관계가 없다 — 우연히 맞아 있던 수다. 무대
+                  안으로 들어오면서 막대 폭이 화면의 38% 가 되었으므로 칸도
+                  그만큼 줄인다.
+                */
+                blocks={24}
+                height={4}
+              />
+
+              {/*
+                ── 우두머리 토벌 ──
+
+                1분을 사냥하면 나온다 (`bossReady`). **저절로 안 나온다** —
+                언제 들어갈지는 사람이 정한다. 더 사냥해서 골드를 모으고
+                들어가도 되고, 바로 눌러도 된다.
+
+                자리를 미리 안 비워 둔다. 안 보일 때 빈 칸이 남아 있으면
+                화면이 늘 허전하고, 나타났을 때 "생겼다" 가 안 읽힌다.
+              */}
+              {bossReady(battle) && <BossCallBtn onPress={callBossNow} />}
+
+              {/*
+                ⚠ ── 테스트 단추 ── 출시 전에 통째로 지운다
+
+                광폭화를 보려면 두 분을 버텨야 한다 (`RAGE_MS`). 고치고
+                확인하는 한 바퀴가 사 분이라 손이 안 간다.
+              */}
+              {battle.boss && !rage && (
+                <Pressable onPress={rageNow}>
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: BAD_C,
+                      paddingVertical: 2,
+                      alignItems: 'center',
+                      backgroundColor: C.bg,
+                    }}
+                  >
+                    <T size={9} bold style={{ color: BAD_C }}>TEST · 광폭화</T>
+                  </View>
+                </Pressable>
+              )}
+            </View>
           </View>
-        </Pressable>
-      )}
-
-      {/*
-        ── "1스테이지부터 시작" 단추는 없앴다 ──
-
-        머리말의 `< >` 로 한 판씩 옮기는 길이 이미 있고, 그것 말고 한 번에
-        1판으로 가는 길을 따로 두니 무대 아래에 단추가 둘이 되었다. 판을
-        옮기는 방법이 두 가지면 어느 쪽을 봐야 하는지가 흐려진다.
-
-        `goStage` 는 그대로 있으므로 필요하면 다시 달면 된다.
-      */}
-    </View>
+        </View>
+      </Animated.View>
   );
 }

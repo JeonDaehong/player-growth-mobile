@@ -3,28 +3,24 @@
  *
  * ## 위에서 아래로
  *
- *   위 띠      로고 · 닉네임 · 재화, 그리고 문 여섯 (`TopBar`, 네비게이터 헤더)
- *   보물 상자  쌓이는 재화 게이지 (`RewardBar`)
- *   무대       2D 자동 전투 (`BattleView`)
- *   세 줄      소식과 채팅이 흐른다 (`Ticker`)
+ *   무대       2D 자동 전투 (`BattleView`) — **화면에 붙박이**
+ *     ├ 위 띠    로고 · 닉네임 · 재화, 그리고 문 여섯 (`TopBar`)
+ *     ├ 판 줄    몇 판 · 어디 · 최고 기록
+ *     └ 채팅     왼쪽 아래에 작게 (`Ticker`)
+ *   보물 상자  쌓이는 재화 게이지 (`RewardBar`) ── 여기부터 스크롤
  *   대형       앞뒤 배치 (`FormationPicker`)
  *   파티       넷의 상태 (`PartyBar`)
- *   아래 띠    다섯 칸 (`BottomNav`)
+ *   아래 띠    다섯 칸 (`BottomNav`) — 붙박이
  *
- * ## 위 셋은 이어 붙는다
+ * ## 무대는 안 굴러간다
  *
- * 상자 줄 · 무대 · 세 줄은 **화면 폭을 꽉 채우고 서로 붙어** 있다. 사이는
- * 가는 가로줄 하나로만 갈린다. 각자 테두리를 두르고 8px 씩 떨어져 있던
- * 시절에는 화면이 떠 있는 카드 대여섯 장으로 보였다.
+ * "휠 해도 게임 화면은 보이면서 아래만 휠되게끔." 무대가 스크롤 안에 있으면
+ * 파티를 보려고 내리는 순간 싸움이 화면 밖으로 나간다. 자동 전투 게임에서
+ * 그건 **게임이 안 보이는 것**이다.
  *
- * ## 아래 띠는 스크롤 밖이다
- *
- * "밑에 캐릭터 상태랑, 우리가 누르고 들어가고자 하는 버튼들이 같이 보여야
- * 함" — 그 말이 이 배치의 전부다. 파티와 단추가 한 화면에 있어야 하는데,
- * 둘 다 스크롤 안에 넣으면 파티가 길어지는 날 단추가 밖으로 밀린다.
- *
- * 그래서 **아래 띠만 밖**이다. 위쪽이 아무리 길어져도 다섯 칸은 제자리에
- * 있고, 스크롤을 끝까지 내리면 그 바로 위에 파티가 선다.
+ * 그래서 붙박이가 셋이다: 무대(위) · 아래 띠(아래) · 그 사이의 스크롤.
+ * 위 띠와 채팅은 스크롤 밖에 따로 두지 않고 **무대 위에 얹었다** — 그래야
+ * 배경 그림이 그 뒤로 비치고, 화면이 "게임 창 + 정보 창"으로 안 갈린다.
  *
  * ## 전투 틱은 여기서 돌린다
  *
@@ -45,6 +41,7 @@ import { PartyBar } from './home/PartyBar';
 import { CharPopup } from './home/CharPopup';
 import { RewardBar } from './home/RewardBar';
 import { Ticker } from './home/Ticker';
+import { TopBar } from './home/TopBar';
 import { BottomNav } from './home/BottomNav';
 import { FormationPicker } from './home/FormationPicker';
 
@@ -65,44 +62,26 @@ export default function HomeScreen() {
   }, [tickOnce]);
 
   return (
+    /*
+      위쪽 안전영역을 **안 뺀다** (`edges` 에 `top` 이 없다). 무대가 화면 맨
+      위까지 올라가고 그 위에 띠가 얹히므로, 노치 아래 여백은 띠가 제 안에서
+      준다 (`TopBar` 의 `MIN_TOP`).
+    */
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['left', 'right']}>
+      {/* ── 붙박이 무대 ── 위 띠와 채팅을 안에 얹는다 */}
+      <BattleView top={<TopBar />} corner={<Ticker />} />
+
       <ScrollView
         style={{ flex: 1 }}
-        /*
-          ── 좌우 여백을 여기서 안 준다 ──
-
-          예전에는 스크롤 전체에 `padding: SP.sm` 이었다. 그러면 안에 든
-          것들이 전부 **양옆이 뜬 카드**가 되고, 각자 테두리까지 두르고 있어서
-          화면이 조각조각 떠 있는 것으로 보였다 ("다 뚝뚝 끊긴 느낌").
-
-          지금은 위쪽 세 덩이(상자 줄 · 무대 · 세 줄)가 화면 폭을 꽉 채운
-          **띠**로 이어지고, 사이는 가는 가로줄로만 갈린다. 여백은 각 덩이가
-          제 안에서 준다. 무대가 넓어지는 것은 덤이다 — 땅이 그만큼 넓다.
-        */
         contentContainerStyle={{ paddingBottom: SP.md }}
         showsVerticalScrollIndicator={false}
       >
         {/*
-          ── 시험 중 표시 ──
-
-          이 빌드는 **다듬는 중인 판**이다. 받아 보는 사람이 "이게 완성본인가"
-          를 헷갈리지 않게 한 줄 걸어 둔다. 내보낼 때 이 블록만 지운다.
+          상자 줄은 **무대 바로 아래 첫 줄**이다. 채팅이 있던 자리이기도
+          하다 — 채팅이 무대 안으로 들어가면서 이 자리가 비었고, 게이지는
+          "무대에서 눈을 떼면 제일 먼저 보이는 것" 이어야 하므로 여기가 맞다.
         */}
-        <View
-          style={{
-            borderBottomWidth: 1,
-            borderColor: '#FFFFFF66',
-            borderStyle: 'dashed',
-            paddingVertical: 2,
-          }}
-        >
-          <T size={9} bold center>TEST 진행중</T>
-        </View>
-
-        {/* 여기부터 셋이 이어진 한 덩어리다 — 사이에 여백을 두지 않는다 */}
         <RewardBar />
-        <BattleView />
-        <Ticker />
 
         {/*
           대형은 파티 바로 위다 — "누가 서나" 와 "어떻게 서나" 는 같은 종류의
@@ -117,6 +96,27 @@ export default function HomeScreen() {
 
         <View style={{ paddingHorizontal: SP.sm, marginTop: SP.sm }}>
           <PartyBar onPick={setSlot} />
+        </View>
+
+        {/*
+          ── 시험 중 표시 ──
+
+          이 빌드는 **다듬는 중인 판**이다. 받아 보는 사람이 "이게 완성본인가"
+          를 헷갈리지 않게 한 줄 걸어 둔다. 내보낼 때 이 블록만 지운다.
+
+          맨 아래다. 무대 바로 밑은 상자 줄 자리라 (`RewardBar`) 거기에 임시
+          표시를 두면, 눈이 무대에서 내려오자마자 이 줄부터 읽게 된다.
+        */}
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderColor: '#FFFFFF66',
+            borderStyle: 'dashed',
+            paddingVertical: 2,
+            marginTop: SP.md,
+          }}
+        >
+          <T size={9} bold center>TEST 진행중</T>
         </View>
       </ScrollView>
 

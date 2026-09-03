@@ -120,6 +120,28 @@ function VBar() {
   return <View style={{ width: 1, height: 12, backgroundColor: WHITE, opacity: O.faint }} />;
 }
 
+/**
+ * 띠 뒤에 까는 **옅어지는 검은 판.**
+ *
+ * 하늘 위에 흰 글씨를 그냥 얹으면 배경이 밝은 챕터에서 안 읽힌다. 그렇다고
+ * 통째로 검게 깔면 무대를 덮어 버려서, 배경을 비치게 한 뜻이 사라진다.
+ *
+ * 1-bit 라 그라디언트가 없으므로 **겹으로 흉내 낸다.** 위쪽 3/4 는 진하게,
+ * 아래 1/4 는 옅게 — 두 단이면 경계가 한 번뿐이라 눈에 안 띈다. 아래로 갈수록
+ * 옅어지므로 띠가 무대에 스며들어 끝난다.
+ */
+function Fade() {
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+    >
+      <View style={{ flex: 3, backgroundColor: '#000000C8' }} />
+      <View style={{ flex: 1, backgroundColor: '#00000080' }} />
+    </View>
+  );
+}
+
 export function TopBar() {
   const insets = useSafeAreaInsets();
   const money = useGame((s) => s.money);
@@ -133,18 +155,29 @@ export function TopBar() {
   const [config, setConfig] = useState(false);
 
   return (
-    <View style={{ backgroundColor: C.bg }}>
+    /*
+      ── 무대 **위에** 얹힌다 ──
+
+      배경을 안 깐다. 이 띠는 무대 안에 있고 (`BattleView` 의 `top`), 뒤로
+      배경 그림의 하늘이 그대로 비쳐야 한다 — 요즘 게임 화면이 다 그렇다.
+      검게 깔면 화면이 "게임 창 + 정보 창" 두 덩이로 갈리고, 그러면 게임이
+      작아 보인다.
+
+      대신 글씨가 하늘 위에서 읽히도록 **아래로 갈수록 옅어지는 검은 판**을
+      깐다. 1-bit 라 그라디언트를 못 쓰므로 두 겹으로 흉내 낸다 (아래 `Fade`).
+    */
+    <View pointerEvents="box-none">
       <View
+        pointerEvents="box-none"
         style={{
           paddingTop: Math.max(insets.top, MIN_TOP) + SP.xs,
           paddingLeft: SP.sm + insets.left,
           paddingRight: SP.sm + insets.right,
           paddingBottom: SP.xs,
-          borderBottomWidth: 1,
-          borderBottomColor: WHITE,
           gap: SP.xs,
         }}
       >
+        <Fade />
         {/* ── 윗줄 · 나에 관한 것 ── */}
         <Row between>
           {/*
