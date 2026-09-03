@@ -40,6 +40,7 @@ export type StatusId =
   | 'st_bleed'    // 출혈 — 물리 지속 피해
   | 'st_poison'   // 중독 — 마법 지속 피해 (맹독·산성·포자·부패 전부)
   | 'st_stun'     // 기절 — 행동 불가
+  | 'st_shock'    // 감전 — 행동 불가 + 몸에 전기가 흐른다 (20판 벼락)
   | 'st_silence'  // 침묵 — 스킬 사용 불가
   | 'st_slow'     // 둔화 — 공격속도 감소
   | 'st_weak'     // 약화 — 공격력 감소
@@ -57,6 +58,7 @@ export const STATUS_NAME: Record<StatusId, string> = {
   st_bleed: '출혈',
   st_poison: '중독',
   st_stun: '기절',
+  st_shock: '감전',
   st_silence: '침묵',
   st_slow: '둔화',
   st_weak: '약화',
@@ -78,12 +80,28 @@ export const STATUS_NAME: Record<StatusId, string> = {
  * 그건 숫자로 드러나므로 로고 하나면 충분하고, 걸린 순간에 한 줄 뜨는 것으로
  * 뜻이 통한다 (`STATUS_WHAT`).
  *
- * 기절과 침묵은 **아무 일도 안 일어나게** 만든다. 화면에서 보이는 것은
+ * 기절 · 감전 · 침묵은 **아무 일도 안 일어나게** 만든다. 화면에서 보이는 것은
  * "이 사람이 가만히 서 있다" 뿐인데, 그건 걸린 것과 **적이 멀어서 아직 못
- * 치는 것**과 구분이 안 된다. 그래서 이 둘만은 걸려 있는 **내내** 말해 줘야
+ * 치는 것**과 구분이 안 된다. 그래서 이 셋만은 걸려 있는 **내내** 말해 줘야
  * 한다 — 다른 것들처럼 한 번 뜨고 마는 것으로는 부족하다.
  */
-export const CC: ReadonlySet<StatusId> = new Set<StatusId>(['st_stun', 'st_silence']);
+export const CC: ReadonlySet<StatusId> = new Set<StatusId>([
+  'st_stun', 'st_shock', 'st_silence',
+]);
+
+/**
+ * **몸이 아예 안 움직이는 것** — 기절과 감전.
+ *
+ * `CC` 와 갈라 둔다. 저기는 "머리 위에 계속 말해 줘야 하는 것" 이라 침묵까지
+ * 들어가는데, 침묵은 스킬만 못 쓰고 평타는 그대로 나간다. 여기는 **한 대도
+ * 안 나가는 것**만이다 — 화면이 죽은 자세로 굳히는 기준이 이쪽이다
+ * (`screens/home/Fighter`).
+ *
+ * 감전을 기절과 따로 둔 이유는 로고와 몸에 흐르는 전기 하나뿐이다. 하는 일은
+ * 같으므로, 무엇이든 "못 움직이나" 를 물을 때는 이 집합을 봐야 한다 — 한
+ * 군데서 `st_stun` 만 물으면 감전된 사람이 그 한 군데서만 멀쩡히 움직인다.
+ */
+export const STUN: ReadonlySet<StatusId> = new Set<StatusId>(['st_stun', 'st_shock']);
 
 /**
  * 머리 위 글자 앞에 붙는 그림 글자.
@@ -94,7 +112,22 @@ export const CC: ReadonlySet<StatusId> = new Set<StatusId>(['st_stun', 'st_silen
  */
 export const STATUS_MARK: Partial<Record<StatusId, string>> = {
   st_stun: '\u{1F4AB}',
+  st_shock: '\u{26A1}',
   st_silence: '\u{1F507}',
+};
+
+/**
+ * 그림이 아직 없는 로고가 **대신 쓸 칸** (`assets/sprites/status_icon/`).
+ *
+ * 감전은 새 낱말이라 제 그림이 없다. 빈 칸으로 두면 파티 칸에 붉은 테두리만
+ * 남은 빈 상자가 뜨는데, 그건 "무언가 걸렸다" 는 말조차 못 한다.
+ *
+ * 제일 가까운 것으로 버틴다 — 신경 마비(`st_numb`, 끊어진 세로 막대)가
+ * 전기가 튀는 모양에 가장 가깝다. 그림이 들어오면 이 줄만 지운다
+ * (프롬프트는 `docs/STATUS_ICON_PROMPTS.md`).
+ */
+export const STATUS_ALT: Partial<Record<StatusId, string>> = {
+  st_shock: 'st_numb',
 };
 
 /**
@@ -115,6 +148,7 @@ export const STATUS_WHAT: Record<StatusId, string> = {
   st_bleed: '지속 피해',
   st_poison: '지속 피해',
   st_stun: '행동 불가',
+  st_shock: '감전 — 행동 불가',
   st_silence: '스킬 봉인',
   st_slow: '공격속도 감소',
   st_weak: '공격력 감소',
@@ -229,6 +263,16 @@ export const hexOf = (
 /** 이게 걸려 있나 */
 export const hasHex = (list: readonly Hex[], id: StatusId): boolean =>
   list.some((h) => h.id === id && h.ms > 0);
+
+/**
+ * 지금 몸을 못 쓰나 — 기절이든 감전이든 (`STUN`).
+ *
+ * `hasHex(list, 'st_stun')` 을 직접 묻던 자리를 전부 이것으로 바꿨다. 감전이
+ * 하는 일은 기절과 똑같으므로, 한 군데라도 `st_stun` 만 물으면 감전된 사람이
+ * 거기서만 멀쩡히 움직인다.
+ */
+export const stunned = (list: readonly Hex[]): boolean =>
+  list.some((h) => h.ms > 0 && STUN.has(h.id));
 
 /**
  * 이 종류가 지금 거는 배수. 안 걸려 있으면 1.

@@ -239,8 +239,104 @@ function Cleanse({ t, size }: { t: Animated.Value; size: number }) {
     }),
   })), [t, size]);
 
+  /*
+    ── 몸에서 빛이 쫙 ──
+
+    조각만 떠오르던 것에 이 한 겹을 더했다. "정화가 되는 모션이 있으면
+    좋겠음. 뭐 빛이 쫙 몸에서 나오는 효과라거나" 라는 말 그대로다.
+
+    조각(위)만으로는 **걷혔다** 가 아니라 **뭔가 빠져나갔다** 까지만
+    읽혔다. 다섯 점이 위로 흘러 올라가는 것은 조용한 그림이라, 정작
+    "이 사람이 깨끗해졌다" 는 순간이 화면에 없었다.
+
+    둘로 만든다.
+
+      **살** — 몸에서 여덟 방향으로 뻗었다 사라진다. 처음이 제일 길고
+      곧바로 짧아진다 — 터져 나오는 것은 뻗는 순간이 전부다.
+      **테** — 그 뒤를 고리 하나가 밖으로 퍼진다.
+
+    초록이다 (`GOOD_C`). 이 게임에서 초록은 "나에게 좋은 것" 하나만
+    말하므로 (`ui/theme`), 같은 자리에서 나는 우두머리의 흰 연출과 절대
+    안 헷갈린다.
+  */
+  const rays = useMemo(() => Array.from({ length: 8 }, (_v, i) => {
+    const a = (i / 8) * Math.PI * 2;
+    return {
+      deg: (a * 180) / Math.PI,
+      /* 몸 가운데에서 밖으로 */
+      x: t.interpolate({
+        inputRange: [0, 0.34, 1],
+        outputRange: [0, Math.cos(a) * size * 0.52, Math.cos(a) * size * 0.62],
+        extrapolate: 'clamp',
+      }),
+      y: t.interpolate({
+        inputRange: [0, 0.34, 1],
+        outputRange: [0, Math.sin(a) * size * 0.52, Math.sin(a) * size * 0.62],
+        extrapolate: 'clamp',
+      }),
+      /* 길게 나왔다 짧아진다 */
+      len: t.interpolate({
+        inputRange: [0, 0.12, 0.4, 1], outputRange: [0.2, 1, 0.45, 0.15],
+        extrapolate: 'clamp',
+      }),
+      o: t.interpolate({
+        inputRange: [0, 0.06, 0.34, 0.6], outputRange: [0, 1, 0.6, 0],
+        extrapolate: 'clamp',
+      }),
+    };
+  }), [t, size]);
+
+  const halo = useMemo(() => ({
+    scale: t.interpolate({
+      inputRange: [0, 0.5, 1], outputRange: [0.2, 1.5, 2.1], extrapolate: 'clamp',
+    }),
+    o: t.interpolate({
+      inputRange: [0, 0.08, 0.45, 0.75], outputRange: [0, 0.9, 0.35, 0],
+      extrapolate: 'clamp',
+    }),
+  }), [t]);
+
+  const ring = Math.round(size * 0.62);
+
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 43 }}>
+      {/* 빛 — 몸 한가운데를 기준으로 잡는다 */}
+      <View
+        style={{
+          position: 'absolute',
+          left: 0, top: 0, width: size, height: size,
+          alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <Animated.View
+          style={{
+            position: 'absolute',
+            width: ring, height: ring, borderRadius: ring,
+            borderWidth: 2, borderColor: GOOD_C,
+            opacity: halo.o,
+            transform: [{ scale: halo.scale }],
+          }}
+        />
+        {rays.map((r, i) => (
+          <Animated.View
+            key={`ray${i}`}
+            style={{
+              position: 'absolute',
+              width: 2,
+              height: Math.round(size * 0.42),
+              backgroundColor: GOOD_C,
+              opacity: r.o,
+              transform: [
+                { translateX: r.x },
+                { translateY: r.y },
+                { rotate: `${r.deg + 90}deg` },
+                { scaleY: r.len },
+              ],
+            }}
+          />
+        ))}
+      </View>
+
       {bits.map((b, i) => (
         <Animated.View
           key={i}

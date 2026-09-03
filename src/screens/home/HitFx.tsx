@@ -352,6 +352,99 @@ export function BossCall({
   );
 }
 
+/** 광폭화 알림이 떴다 사라지기까지 (ms) */
+const RAGE_CALL_MS = 3400;
+
+/**
+ * ── 광폭화 알림 ── 무대 한가운데에 **붉은 글씨**로 한 번.
+ *
+ * ## 발밑 딱지를 걷고 이걸로 바꿨다
+ *
+ * 여태 우두머리 발밑에 `광폭화` 라는 작은 딱지가 붙어 있었다. 두 가지가
+ * 문제였다.
+ *
+ *   **언제 걸렸는지를 못 말한다.** 딱지는 걸린 뒤로 계속 붙어 있으므로,
+ *   보고 있지 않던 사이에 켜지면 원래 그랬던 것처럼 보인다. 광폭화는
+ *   **그 순간**이 전부인 사건이다 — 그때부터 판이 달라진다.
+ *
+ *   **자리를 먹는다.** 발밑은 체력 막대가 있는 자리라 9px 짜리 글자가
+ *   막대 바로 아래에 겹쳐 붙었다.
+ *
+ * 몸이 붉게 물드는 것(`tint`)은 그대로 남는다. 저것이 "지금 광폭화 중" 을
+ * 계속 말하고, 이 글은 "방금 그렇게 됐다" 를 한 번 말한다 — 둘이 하는 일이
+ * 다르므로 하나로 합칠 수 없다.
+ *
+ * ## 왜 이것만 화면을 가로지르나
+ *
+ * 이 게임은 화면을 덮는 연출을 안 쓴다 (`BattleView` 의 붉은 막 이야기).
+ * 광폭화는 그 규칙에서 빼 준다 — **판 전체의 규칙이 바뀌는 유일한 사건**이라
+ * 어느 한 사람이나 한 마리 위에서는 그릴 데가 없다. 대신 속이 빈 글씨뿐이라
+ * 뒤가 다 보이고, 3.4초 뒤에 아무것도 안 남는다.
+ */
+export function RageCall({ nonce }: { nonce: number }) {
+  const t = useRef(new Animated.Value(0)).current;
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    if (nonce <= 0) return undefined;
+    setOn(true);
+    t.setValue(0);
+    let alive = true;
+    const a = Animated.timing(t, {
+      toValue: 1, duration: RAGE_CALL_MS, easing: Easing.linear, useNativeDriver: true,
+    });
+    a.start(() => { if (alive) setOn(false); });
+    return () => { alive = false; a.stop(); };
+  }, [nonce, t]);
+
+  /* 뚜렷하게 들어와서 오래 머물고 **천천히** 사라진다 — 읽을 시간이 필요하다 */
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.08, 0.62, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+  /* 살짝 커지면서 나타난다. 제자리에서 켜지면 자막처럼 보인다 */
+  const zoom = useMemo(() => t.interpolate({
+    inputRange: [0, 0.12, 1], outputRange: [0.86, 1, 1.04],
+  }), [t]);
+
+  if (!on) return null;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: 6,
+        right: 6,
+        top: '38%',
+        zIndex: 92,
+        alignItems: 'center',
+        opacity: fade,
+        transform: [{ scale: zoom }],
+      }}
+    >
+      <Animated.Text
+        style={{
+          color: BAD_C,
+          fontFamily: MONO,
+          fontSize: 11,
+          fontWeight: '700',
+          textAlign: 'center',
+          lineHeight: 15,
+          /*
+            검은 그림자를 진다. 배경이 밝은 풍경인 판이 있어서(`bg_chapter`)
+            붉은 글씨만으로는 묻힌다 — 피해 숫자가 같은 이유로 그림자를 진다.
+          */
+          textShadowColor: BLACK,
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 2,
+        }}
+      >
+        {'전투 시간이 길어져\n보스가 마기의 기운을 받아 광폭화 하였습니다'}
+      </Animated.Text>
+    </Animated.View>
+  );
+}
+
 /** 특수기 이름이 떴다 사라지기까지 (ms) */
 const PAT_MS = 950;
 

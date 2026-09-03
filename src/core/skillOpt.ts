@@ -52,12 +52,14 @@ export const DEFAULT_CLEANSE: CleanseOpt = 'all';
 /**
  * 못 움직이게 하는 것들 (CC).
  *
- * 둘뿐이다 — 기절은 아무것도 못 하고, 침묵은 기술을 못 쓴다. 둔화는 여기
- * 안 넣는다: 느려질 뿐 하던 일은 계속 한다.
+ * 셋뿐이다 — 기절과 감전은 아무것도 못 하고, 침묵은 기술을 못 쓴다. 둔화는
+ * 여기 안 넣는다: 느려질 뿐 하던 일은 계속 한다.
  *
  * 도발(`st_taunt`)은 **적에게** 걸리는 것이라 아군 정화의 대상이 아니다.
  */
-export const CC: ReadonlySet<StatusId> = new Set<StatusId>(['st_stun', 'st_silence']);
+export const CC: ReadonlySet<StatusId> = new Set<StatusId>([
+  'st_stun', 'st_shock', 'st_silence',
+]);
 
 /** 이 설정이 이 상태를 걷어내나 */
 export function cleanses(opt: CleanseOpt, id: StatusId): boolean {

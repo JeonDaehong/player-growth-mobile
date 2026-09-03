@@ -131,8 +131,20 @@ function Slot({ mark, size = ICON }: { mark: Mark; size?: number }) {
         opacity: t,
       }}
     >
-      {/* 세트를 칸이 들고 온다 — 패시브 로고와 상태 로고가 섞여 뜬다 */}
-      <Sprite set={mark.set} name={mark.name} size={size} />
+      {/*
+        세트를 칸이 들고 온다 — 패시브 로고와 상태 로고가 섞여 뜬다.
+
+        `alt` 는 **그림이 아직 없을 때 대신 쓸 칸**이다 (`core/status` 의
+        `STATUS_ALT`). 낱말이 그림보다 먼저 들어오는 일이 있어서 — 감전이
+        지금 그렇다 — 없으면 테두리만 남은 빈 상자가 뜬다.
+      */}
+      <Sprite
+        set={mark.set}
+        name={mark.name}
+        size={size}
+        fallbackSet={mark.alt ? mark.set : undefined}
+        fallbackName={mark.alt}
+      />
     </Animated.View>
   );
 }

@@ -25,7 +25,8 @@ import {
   Armor, CharId, OwnedChar, statOf,
 } from './chars';
 import {
-  BLINK_MS, GOOD, Hex, STATUS_NAME, STATUS_WHAT, StatusId, dying, mulOf, upOf,
+  BLINK_MS, GOOD, Hex, STATUS_ALT, STATUS_NAME, STATUS_WHAT, StatusId,
+  dying, mulOf, upOf,
 } from './status';
 
 /**
@@ -362,6 +363,16 @@ export interface Mark {
    * 같으므로 화면에서도 같아야 한다 — **곧 없어진다.**
    */
   blink: boolean;
+  /**
+   * **그림이 아직 없을 때 대신 쓸 칸** (`core/status` 의 `STATUS_ALT`).
+   *
+   * 낱말이 그림보다 먼저 들어오는 일이 있다 — 감전(`st_shock`)이 지금
+   * 그렇다. 빈 칸으로 두면 파티 칸에 테두리만 남은 빈 상자가 뜨는데, 그건
+   * "무언가 걸렸다" 는 말조차 못 한다.
+   *
+   * 그림이 들어오면 표에서 그 줄만 지우면 된다 — 여기도 화면도 안 고친다.
+   */
+  alt?: string;
 }
 
 /**
@@ -447,6 +458,7 @@ export function marksOf(
       what: STATUS_WHAT[h.id],
       /* 풀리기 2초 전부터 깜빡인다 — 언제 풀렸는지 알 수 있게 */
       blink: dying(h.ms),
+      alt: STATUS_ALT[h.id],
     }));
 
   const all = [...good, ...bad.filter((m) => m.good), ...bad.filter((m) => !m.good)];
@@ -481,6 +493,7 @@ export function foeMarksOf(
       set: 'status_icon', name: 'st_taunt', good: false,
       label: STATUS_NAME.st_taunt, what: STATUS_WHAT.st_taunt,
       blink: dying(tauntMs),
+      alt: STATUS_ALT.st_taunt,
     });
   }
   for (const h of hex) {
@@ -489,6 +502,7 @@ export function foeMarksOf(
       set: 'status_icon', name: h.id, good: GOOD.has(h.id),
       label: STATUS_NAME[h.id], what: STATUS_WHAT[h.id],
       blink: dying(h.ms),
+      alt: STATUS_ALT[h.id],
     });
   }
   return out.length ? out : NO_MARK;

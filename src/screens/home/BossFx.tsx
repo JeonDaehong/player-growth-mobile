@@ -63,8 +63,8 @@ export type ShotKind = 'bolt' | 'lob' | 'bomb' | 'blob';
 
 /** 맞은 아군 몸 위에서 나는 것 */
 export type BodyKind =
-  | 'slashV' | 'slashD' | 'lance' | 'spore' | 'coil'
-  | 'rock' | 'crush' | 'spike' | 'thunder' | 'drip' | 'whip';
+  | 'slashV' | 'slashD' | 'slashX' | 'lance' | 'spore' | 'coil'
+  | 'rock' | 'crush' | 'spike' | 'thunder' | 'drip' | 'whip' | 'boom';
 
 /**
  * 한 번의 공격이 화면에서 어떻게 보이나.
@@ -83,6 +83,17 @@ export interface FxPlan {
    * 막대(상태를 그대로 그린다)와 숫자가 눈에 띄게 갈린다.
    */
   lead: number;
+  /**
+   * **묶는 기술인가** — 13판 속박의 덩굴 · 25판 포식의 거미줄.
+   *
+   * 켜 두면 감기는 그 순간의 연출 말고, 못 움직이는 **동안** 계속 감겨
+   * 있는 그림이 하나 더 붙는다 (`screens/home/Fighter` 의 `Bound`).
+   *
+   * 왜 필요했나: 감기는 연출은 900ms 면 끝나는데 속박은 2~5초다. 그 사이
+   * 화면에는 멀쩡히 서 있는 사람과 머리 위 딱지만 남아서, "왜 저 사람만
+   * 가만히 있나" 가 그림으로 설명되지 않았다.
+   */
+  bind?: boolean;
   /** 우두머리가 아군 진영으로 **뛰어들어** 찍나 (1판 뭉개기 하나뿐이다) */
   leap?: boolean;
   /** 무대를 통째로 쓸고 지나가나 (10판 해일 하나뿐이다) */
@@ -112,16 +123,24 @@ export interface FxPlan {
  * 본다 (`scratchpad/bossfx-test.js`).
  */
 export const BODY_HIT: Record<BodyKind, number> = {
-  slashV: 144,
-  slashD: 144,
+  slashV: 96,
+  slashD: 96,
+  /* 두 줄이 잇달아 그어진다 — 늦은 쪽이 다 그어지는 때가 닿는 때다 */
+  slashX: 150,
   lance: 118,
+  /* 터지는 것은 **부풀기 시작하는 순간**이 곧 닿는 순간이다 */
+  boom: 60,
   coil: 300,
   crush: 92,
   spike: 123,
   /* 시트를 쓰는 넷은 **제일 큰 칸이 뜨는 때**가 닿는 때다 (`useFrames`) */
   spore: 248,
   rock: 418,
-  thunder: 208,
+  /*
+    벼락만 시트 규칙에서 빠진다 — 하늘에서 내려오는 줄기를 앞에 붙였으므로
+    (`Thunder`), 닿는 때는 **줄기가 땅에 닿는 때**다 (`BOLT_DROP`).
+  */
+  thunder: 104,
   drip: 248,
   whip: 90,
 };
@@ -252,8 +271,15 @@ export const BOSS_CAST: Record<string, FxPlan> = {
   gulp: { shot: 'blob', lead: 300 },
   /* 11판 유해의 가시 찌르기 */
   spike: { body: 'lance', lead: 140 },
-  /* 12판 포식자의 소화액 */
-  digest: { shot: 'blob', lead: 300 },
+  /*
+    12판 포식자의 소화액 — **몸에 부어 내린다.**
+
+    날아가는 덩이였다 (`shot: 'blob'`). 그런데 이름이 소화액이고 걸리는 것이
+    중독과 둔화라, 날아와 맞고 끝나는 것으로는 "녹는 중" 이 안 보였다.
+    8판 강산성 융해 액과 같은 시트를 쓴다 (`bfx_drip`) — 둘 다 몸을 타고
+    흘러내리는 것이다.
+  */
+  digest: { body: 'drip', lead: 320 },
   /*
     13판 속박의 덩굴 — **여기만 감긴다.** 행동 불가를 거는 기술이라
     (`st_stun`) 묶인 그림이 없으면 왜 안 움직이는지가 화면에 없다.
@@ -261,7 +287,7 @@ export const BOSS_CAST: Record<string, FxPlan> = {
     감겨 있는 **동안**은 머리 위 딱지가 맡는다 (`core/status` 의 `CC`) —
     이 연출은 감기는 그 순간만 그린다.
   */
-  bind: { body: 'coil', lead: 320 },
+  bind: { body: 'coil', bind: true, lead: 320 },
   /* 14판 독성 포자 분출 — 맞은 사람마다 터진다 */
   burst: { body: 'spore', lead: 300 },
   /* 15판 부패의 악취 — 스멀스멀 퍼지다 사라진다 */
@@ -276,20 +302,32 @@ export const BOSS_CAST: Record<string, FxPlan> = {
   root: { body: 'spike', lead: 160 },
   /* 20판 태고의 성난 벼락 */
   bolt: { body: 'thunder', lead: 240 },
-  /* 20판 자비없는 칼날 — 비스듬히 쫙 */
-  blade: { body: 'slashD', lead: 160 },
+  /* 20판 자비없는 칼날 — **X 자로 두 번** 촤작 (`SlashX`) */
+  blade: { body: 'slashX', lead: 200 },
 
   /* ── 21~30 · 우화하는 군체들 ── */
-  /* 21판 맹독 침 — 관통이라 날아와 꽂힌다 */
-  venom: { shot: 'bolt', lead: 300 },
+  /*
+    21판 맹독 침 — **꽂히는 것까지 보여야 한다.**
+
+    날아가는 가시만 있었다 (`shot: 'bolt'`). 날아가서 사라지고 숫자만 떴으므로
+    "맞았다" 가 화면에 없었다. 28판 흡혈 침과 같은 연출을 쓴다 — 긴 침이
+    밖에서 들어와 박혔다 빠진다 (`Lance`).
+  */
+  venom: { body: 'lance', lead: 200 },
   /* 22판 여왕의 황금 장막 — 장막이 터지며 퍼진다 */
   veil: { boss: 'ripple', lead: 300 },
-  /* 23판 짓밟는 무쇠 뿔 — 크게 휘두르고 맨 앞이 찍힌다 */
-  gore: { boss: 'swing', body: 'crush', lead: 200 },
+  /*
+    23판 짓밟는 무쇠 뿔 — 크게 휘두르고 맨 앞에서 **터진다.**
+
+    찍힌 자국이었다 (`crush`). 250% 물리에 3초 기절이 걸리는, 이 장에서
+    제일 아픈 한 대인데 화면에서는 16판 도끼와 똑같이 보였다. 터지는 것으로
+    바꾼다 (`Boom`) — 이 판의 그 한 대만 그렇게 보인다.
+  */
+  gore: { boss: 'swing', body: 'boom', lead: 220 },
   /* 24판 정신 착란 — 인분이 몸에서 터진다 */
   daze: { body: 'spore', lead: 300 },
   /* 25판 포식의 거미줄 — 5초 행동 불가라 **감긴다** (`bfx_bind`) */
-  cocoon: { body: 'coil', lead: 320 },
+  cocoon: { body: 'coil', bind: true, lead: 320 },
   /* 26판 인화성 분무 — 스멀스멀 퍼진다 */
   ignite: { boss: 'stench', lead: 340 },
   /* 26판 날카로운 찌르기 — 두 대마다 나오는 짧은 것이라 몸에서 끝낸다 */
@@ -405,13 +443,23 @@ const sideBox = (size: number, shift = 0) => ({
  * 열리는 것으로 읽힌다.
  */
 function Slash({ size, deg }: { size: number; deg: number }) {
-  const { t, on } = useRun(360);
-  /* 360ms 의 40% 에 다 그어진다 = 144ms — `BODY_HIT.slashV` 와 같은 값이다 */
+  /*
+    ## 360 에서 240 으로 줄였다
+
+    "너무 느림;; 솩! 하고 빠르게 베야됨" 이라는 말을 들었다. 베는 것은
+    **한순간**이라, 선이 자라는 것을 눈으로 따라갈 수 있으면 이미 베는 것이
+    아니다 — 자라는 과정이 보이는 순간 붓질이 된다.
+
+    240ms 의 40% = 96ms 에 다 그어진다. 그 뒤 144ms 는 벌어졌다 사라지는
+    시간이라 실제로 "긋는" 데 걸리는 것은 열 프레임 남짓이다.
+  */
+  const { t, on } = useRun(240);
+  /* 240ms 의 40% 에 다 그어진다 = 96ms — `BODY_HIT.slashV` 와 같은 값이다 */
   const grow = useMemo(() => t.interpolate({
     inputRange: [0, 0.4, 1], outputRange: [0.15, 1, 1], extrapolate: 'clamp',
   }), [t]);
   const fade = useMemo(() => t.interpolate({
-    inputRange: [0, 0.1, 0.35, 1], outputRange: [0, 1, 0.9, 0],
+    inputRange: [0, 0.08, 0.45, 1], outputRange: [0, 1, 0.9, 0],
   }), [t]);
   const open = useMemo(() => t.interpolate({
     inputRange: [0, 1], outputRange: [1, 2.4],
@@ -430,6 +478,240 @@ function Slash({ size, deg }: { size: number; deg: number }) {
           transform: [{ rotate: `${deg}deg` }, { scaleY: grow }, { scaleX: open }],
         }}
       />
+    </View>
+  );
+}
+
+/**
+ * ── X 자로 두 번 ── 20판 자비없는 칼날.
+ *
+ * 한 줄이 아니라 **두 줄이 잇달아** 그어진다. 한 줄이면 7판 양단 직격과
+ * 화면에서 같은 것이 되는데, 저건 2배짜리 한 대이고 이건 250% 마법 피해를
+ * 제일 약한 사람에게 몰아 넣는 기술이다 — 같아 보이면 안 된다.
+ *
+ * 두 줄의 **시차가 이 연출의 전부다.** 동시에 그으면 X 표시가 하나 켜진
+ * 것으로 보이고, 너무 벌리면 두 번 맞은 것으로 보인다. 54ms 쯤 벌리면
+ * "촤 · 작" 하고 두 번 스치는 것으로 읽힌다.
+ *
+ * 각도는 34도다. 45도로 두면 두 줄이 정확한 직각으로 만나 도형이 되고,
+ * 그러면 베인 자리가 아니라 그려 넣은 표시로 보인다.
+ */
+function SlashX({ size }: { size: number }) {
+  const MS = 320;
+  const { t, on } = useRun(MS);
+  /* 늦은 줄이 다 그어지는 때가 닿는 때다 (`BODY_HIT.slashX` = 150ms) */
+  const lines = useMemo(() => ([34, -34] as const).map((deg, i) => {
+    const at = i === 0 ? 0 : 0.17;
+    return {
+      deg,
+      grow: t.interpolate({
+        inputRange: [0, at, Math.min(1, at + 0.3), 1],
+        outputRange: [0.12, 0.12, 1, 1],
+        extrapolate: 'clamp',
+      }),
+      open: t.interpolate({
+        inputRange: [0, at, 1], outputRange: [1, 1, 2.6], extrapolate: 'clamp',
+      }),
+      fade: t.interpolate({
+        inputRange: [0, at, Math.min(1, at + 0.08), 0.62, 1],
+        outputRange: [0, 0, 1, 0.85, 0],
+        extrapolate: 'clamp',
+      }),
+    };
+  }), [t]);
+
+  if (!on) return null;
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      {lines.map((ln) => (
+        <Animated.View
+          key={ln.deg}
+          style={{
+            position: 'absolute',
+            width: 2,
+            height: size * 1.3,
+            backgroundColor: WHITE,
+            opacity: ln.fade,
+            transform: [
+              { rotate: `${ln.deg}deg` }, { scaleY: ln.grow }, { scaleX: ln.open },
+            ],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * ── 터짐 ── 몸에서 폭발이 한 번 일어난다.
+ *
+ * 23판 짓밟는 무쇠 뿔과 26판 폭탄 애벌레의 자폭. 둘 다 "한 대 맞았다" 가
+ * 아니라 **거기서 뭔가 터졌다** 여야 하는 것들이다.
+ *
+ * 셋이 겹쳐야 터진 것으로 읽힌다.
+ *
+ *   **속** — 흰 원이 확 부풀었다 곧 사라진다
+ *   **테** — 그 뒤를 고리 하나가 더 크게 따라 나간다 (파동)
+ *   **조각** — 여덟 방향으로 튀어 나간다
+ *
+ * 속이 먼저 꺼지고 테가 남는 순서가 중요하다. 반대로 하면 부풀어 오르는
+ * 것이 되어 폭발이 아니라 풍선이 된다.
+ */
+function Boom({ size }: { size: number }) {
+  const MS = 420;
+  const { t, on } = useRun(MS);
+  const core = useMemo(() => ({
+    scale: t.interpolate({
+      inputRange: [0, 0.14, 0.45, 1], outputRange: [0.15, 1, 1.25, 1.4],
+    }),
+    fade: t.interpolate({
+      inputRange: [0, 0.1, 0.3, 0.6], outputRange: [0.2, 1, 0.55, 0], extrapolate: 'clamp',
+    }),
+  }), [t]);
+  const wave = useMemo(() => ({
+    scale: t.interpolate({ inputRange: [0, 1], outputRange: [0.3, 2.5] }),
+    fade: t.interpolate({
+      inputRange: [0, 0.12, 0.55, 1], outputRange: [0, 0.85, 0.3, 0],
+    }),
+  }), [t]);
+  const bits = useMemo(() => Array.from({ length: 8 }, (_, i) => {
+    const a = (i / 8) * Math.PI * 2 + 0.4;
+    const far = size * 0.85;
+    return {
+      x: t.interpolate({
+        inputRange: [0, 1], outputRange: [Math.cos(a) * size * 0.1, Math.cos(a) * far],
+      }),
+      y: t.interpolate({
+        inputRange: [0, 1], outputRange: [Math.sin(a) * size * 0.1, Math.sin(a) * far],
+      }),
+      o: t.interpolate({
+        inputRange: [0, 0.1, 0.5, 1], outputRange: [0, 1, 0.6, 0],
+      }),
+    };
+  }), [t, size]);
+
+  if (!on) return null;
+  const w = Math.round(size * 0.6);
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: w, height: w, borderRadius: w,
+          backgroundColor: WHITE,
+          opacity: core.fade,
+          transform: [{ scale: core.scale }],
+        }}
+      />
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: w, height: w, borderRadius: w,
+          borderWidth: 2, borderColor: WHITE,
+          opacity: wave.fade,
+          transform: [{ scale: wave.scale }],
+        }}
+      />
+      {bits.map((b, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            width: 3, height: 3,
+            backgroundColor: WHITE,
+            opacity: b.o,
+            transform: [{ translateX: b.x }, { translateY: b.y }],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+/** 벼락 줄기가 하늘에서 몸까지 내려오는 데 걸리는 시간 (ms) */
+const BOLT_DROP = 104;
+
+/**
+ * ── 벼락 ── **하늘에서** 몸까지 한 줄로 쾅.
+ *
+ * 20판 태고의 성난 벼락. 여태 몸 위에서 시트 다섯 칸이 터지는 것이었다
+ * (`bfx_bolt`). 그림은 좋은데 **어디서 왔는지가 없었다** — 벼락은 위에서
+ * 내려오는 것이고, 그 길이 곧 벼락이다.
+ *
+ * 두 토막을 이어 붙인다.
+ *
+ *   0 ~ 104ms  줄기가 무대 천장에서 몸까지 내려온다 (`BOLT_DROP`)
+ *   104ms 부터 받아 둔 시트가 몸에서 터진다 (`SHEET.thunder`)
+ *
+ * 줄기는 **무대보다 길게** 잡는다. 무대가 위에서 잘라 주므로 (`BattleView`
+ * 의 `overflow: hidden`) 어느 높이에 서 있든 화면 맨 위에서 시작하는 것으로
+ * 보인다 — 길이를 무대 높이에 맞추려면 이 부품이 무대 치수를 알아야 하고,
+ * 그러면 인물 위 연출 하나가 무대에 묶인다.
+ *
+ * 지그재그는 세 토막을 조금씩 어긋나게 세워 만든다. 곧은 막대는 벼락이
+ * 아니라 창이다.
+ */
+function Thunder({ size }: { size: number }) {
+  const MS = 620;
+  const { t, on } = useRun(MS);
+  const drop = BOLT_DROP / MS;
+  const n = useFrames(5, MS);
+
+  /* 줄기는 위에서 아래로 훑고 내려온다 — 다 내려오면 그 자리에서 사라진다 */
+  const bolt = useMemo(() => ({
+    y: t.interpolate({
+      inputRange: [0, drop, 1], outputRange: [-size * 4.2, 0, 0], extrapolate: 'clamp',
+    }),
+    fade: t.interpolate({
+      inputRange: [0, 0.02, drop, drop + 0.06, drop + 0.2],
+      outputRange: [0, 1, 1, 0.7, 0],
+      extrapolate: 'clamp',
+    }),
+  }), [t, size, drop]);
+
+  /* 몸에서 터지는 것은 줄기가 닿은 **뒤에** */
+  const burst = useMemo(() => t.interpolate({
+    inputRange: [0, drop, drop + 0.04, 0.8, 1],
+    outputRange: [0, 0, 1, 0.5, 0],
+    extrapolate: 'clamp',
+  }), [t, drop]);
+
+  if (!on) return null;
+  const seg = Math.round(size * 1.7);
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      {/*
+        줄기. 상자 밖으로 한참 올라가므로 자리를 절대값으로 잡는다 —
+        `bodyBox` 의 가운데 정렬에 맡기면 세 토막이 서로 겹친다.
+      */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: size * 0.5 - 2,
+          bottom: size * 0.42,
+          alignItems: 'center',
+          opacity: bolt.fade,
+          transform: [{ translateY: bolt.y }],
+        }}
+      >
+        {[0.22, -0.16, 0.1].map((skew, i) => (
+          <View
+            key={i}
+            style={{
+              width: 3,
+              height: seg,
+              backgroundColor: WHITE,
+              /* 토막마다 조금씩 기울인다 — 곧으면 창이 된다 */
+              transform: [{ rotate: `${skew * 18}deg` }],
+              marginLeft: skew * size * 0.5,
+            }}
+          />
+        ))}
+      </Animated.View>
+
+      <Animated.View style={{ position: 'absolute', opacity: burst }}>
+        <Sprite set="bfx_bolt" name={String(n)} size={Math.round(size * 1.15)} />
+      </Animated.View>
     </View>
   );
 }
@@ -697,12 +979,15 @@ export function BossBodyFx({ kind, size }: { kind: BodyKind; size: number }) {
     case 'slashD': return <Slash size={size} deg={38} />;
     case 'lance': return <Lance size={size} />;
     case 'crush': return <Crush size={size} />;
+    case 'slashX': return <SlashX size={size} />;
     case 'spike': return <GroundSpike size={size} />;
     case 'whip': return <Whip size={size} />;
-    /* 다섯은 받아 둔 시트를 그대로 튼다 (`SHEET`) */
+    case 'boom': return <Boom size={size} />;
+    /* 벼락만 시트 앞에 하늘에서 내려오는 줄기가 붙는다 (`Thunder`) */
+    case 'thunder': return <Thunder size={size} />;
+    /* 넷은 받아 둔 시트를 그대로 튼다 (`SHEET`) */
     case 'spore':
     case 'rock':
-    case 'thunder':
     case 'drip':
     case 'coil':
       return <Sheeted kind={kind} size={size} />;
@@ -721,17 +1006,48 @@ export function BossBodyFx({ kind, size }: { kind: BodyKind; size: number }) {
  * 고리의 **위쪽 테두리만** 남긴다 (`borderTopColor` 하나만 흰색). 원 하나를
  * 통째로 그리면 휘두른 것이 아니라 감싼 것이 된다.
  */
-function Swing({ size }: { size: number }) {
-  const { t, on } = useRun(340);
+function Swing({ size, art }: { size: number; art: number }) {
+  /*
+    ## 340 에서 170 으로 줄였다
+
+    "너무 느림;; 솩! 하고 빠르게 베야됨" — 그어짐(`Slash`)과 같은 말을 들었다.
+    한 번 휘두르는 데 3분의 1초가 걸리면, 보는 쪽에서는 호가 **지나가는 것**이
+    아니라 **떠 있는 것**으로 보인다.
+
+    170ms 면 다섯 프레임쯤이다. 도는 각도도 125도에서 100도로 좁혔다 —
+    같은 시간에 덜 돌면 더 느려 보이므로, 빨라진 만큼 짧게 그어야 한다.
+  */
+  const { t, on } = useRun(170);
   const turn = useMemo(() => t.interpolate({
-    inputRange: [0, 1], outputRange: ['-70deg', '55deg'],
+    inputRange: [0, 1], outputRange: ['-58deg', '42deg'],
   }), [t]);
   const fade = useMemo(() => t.interpolate({
-    inputRange: [0, 0.12, 0.6, 1], outputRange: [0, 0.95, 0.7, 0],
+    inputRange: [0, 0.1, 0.55, 1], outputRange: [0, 1, 0.75, 0],
   }), [t]);
 
-  if (!on) return null;
   const w = size * 1.25;
+  /*
+    ## 왜 아래로 한참 내린다
+
+    "베는 위치도 너무 위에 있음;; 실제 보스가 베는 느낌이 안남" 이라는 말을
+    들었다. 원인은 **호가 원의 위쪽 테두리**라는 데 있다 (`borderTopColor`
+    하나만 켜져 있다) — 고리를 상자 한가운데에 두면 눈에 보이는 선은 그
+    한가운데에서 **반지름만큼 더 위**에 뜬다. 우두머리 키가 100px 남짓인데
+    호는 130px 위에 있었으니, 머리 위 허공을 긋고 있었던 셈이다.
+
+    그래서 **보이는 선의 자리**로 잡는다. 몸 높이의 55% 지점을 지나가게
+    두면 팔이 지나는 높이가 된다.
+
+      내릴 거리 = 상자 한가운데(size/2) − 노리는 높이(art*0.55) + 반지름(w/2)
+
+    `art` 는 그 우두머리 그림이 **실제로 차지하는 높이**다 (`BattleView` 가
+    `SPRITE_RATIO` 로 재서 넘긴다). 상자 높이(`size`)로 재면 안 된다 —
+    그림마다 비율이 달라서 (0.59 ~ 1.2) 같은 상자 안에서도 머리 높이가
+    두 배 가까이 차이 난다.
+  */
+  const drop = Math.round(size / 2 - Math.max(1, art) * 0.55 + w / 2);
+
+  if (!on) return null;
   return (
     /* 아군 쪽(왼쪽)으로 반쯤 나가 있다 — 휘두르는 것은 몸 앞에서 일어난다 */
     <View pointerEvents="none" style={sideBox(size, -size * 0.45)}>
@@ -747,7 +1063,7 @@ function Swing({ size }: { size: number }) {
           borderRightColor: 'transparent',
           borderBottomColor: 'transparent',
           opacity: fade,
-          transform: [{ rotate: turn }],
+          transform: [{ translateY: drop }, { rotate: turn }],
         }}
       />
     </View>
@@ -902,8 +1218,13 @@ function Stench({ size }: { size: number }) {
  * 둘이 같은 일로 보인다.
  *
  * 붉다. 이 게임에서 붉은색은 "급하다" 하나만 말하는데 (`BAD_C`), 5초 안에
- * 깨야 하는 것이 정확히 그것이다. 체력 막대 위의 붉은 겹과 같은 색이라
- * 둘이 한 가지 일로 읽힌다.
+ * 깨야 하는 것이 정확히 그것이다.
+ *
+ * ## 연하다
+ *
+ * 0.8 이었다. 5초 내내 도는 것이라 그 밝기면 우두머리 몸을 덮어서, 정작
+ * 깨야 하는 막(체력 막대 위의 하늘색 겹)과 그 아래 몸이 안 보였다. 0.35 로
+ * 내린다 — "지금 모으는 중" 만 말하면 되고, 얼마나 남았나는 막대가 말한다.
  */
 export function Charging({ size }: { size: number }) {
   const t = useRef(new Animated.Value(0)).current;
@@ -921,7 +1242,7 @@ export function Charging({ size }: { size: number }) {
       inputRange: [0, 1], outputRange: [2.4 - d * 0.7, 0.5 - d * 0.15],
     }),
     fade: t.interpolate({
-      inputRange: [0, 0.15, 0.8, 1], outputRange: [0, 0.8, 0.5, 0],
+      inputRange: [0, 0.15, 0.8, 1], outputRange: [0, 0.35, 0.2, 0],
     }),
   })), [t]);
 
@@ -947,10 +1268,191 @@ export function Charging({ size }: { size: number }) {
   );
 }
 
-/** 우두머리 몸 자리에 얹는 연출 하나 (해일만은 무대 것이라 여기 없다) */
-export function BossSideFx({ kind, size }: { kind: BossKind; size: number }) {
+/**
+ * ── 묶여 있는 동안 ── 13판 속박의 덩굴 · 25판 포식의 거미줄.
+ *
+ * ## 왜 감기는 순간만으로는 부족했나
+ *
+ * 감기는 연출(`Sheeted` 의 `coil`)은 900ms 면 끝난다. 그런데 속박은 2초(13판)
+ * 에서 5초(25판)다. 그 사이 화면에는 **멀쩡히 서 있는 사람**과 머리 위 딱지만
+ * 남아서, 왜 저 사람만 가만히 있는지가 그림으로 설명되지 않았다.
+ *
+ * 그래서 못 움직이는 **내내** 이걸 얹는다. 시트의 마지막 칸(고리가 닫힌
+ * 그림)을 그대로 세워 두고 아주 천천히 숨만 쉬게 한다 — 움직이지 않으면
+ * 배경에 그려 넣은 무늬로 보이고, 많이 움직이면 지금 감기는 중으로 보인다.
+ *
+ * `Charging` 과 성격이 같다: **끝날 때까지 돈다.** 한 번 터지고 마는 나머지
+ * 연출과 달리 `nonce` 를 안 받는 이유가 그것이다 — 켜고 끄는 것은 부르는
+ * 쪽이 상태로 정한다.
+ */
+export function Bound({ size }: { size: number }) {
+  const t = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(t, {
+        toValue: 1, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+      }),
+      Animated.timing(t, {
+        toValue: 0, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+      }),
+    ]));
+    loop.start();
+    return () => { loop.stop(); t.setValue(0); };
+  }, [t]);
+
+  /* 조였다 풀렸다 — 아주 조금이다. 크게 움직이면 지금 감기는 중으로 보인다 */
+  const squeeze = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [1, 1.04],
+  }), [t]);
+
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      <Animated.View style={{ position: 'absolute', transform: [{ scale: squeeze }] }}>
+        {/* 고리가 닫힌 마지막 칸 — 앞 칸들은 아직 안 감긴 덩굴이다 (`Whip`) */}
+        <Sprite set="bfx_bind" name="5" size={Math.round(size * 1.15)} opacity={0.9} />
+      </Animated.View>
+    </View>
+  );
+}
+
+/**
+ * 도화선이 얼마 남았을 때 얼마나 빨리 깜빡이나 (ms).
+ *
+ * 남은 시간을 그대로 쓰지 않고 **네 칸으로 나눈다.** 계산은 0.5초마다 도므로
+ * (`core/autoBattle` 의 `TICK_MS`) 남은 시간을 그대로 주기로 쓰면 0.5초마다
+ * 깜빡임이 처음부터 다시 시작해서, 빨라지기는커녕 계속 끊긴다.
+ *
+ * 칸으로 나누면 **칸이 바뀔 때만** 다시 시작한다 — 열 번 세는 동안 세 번이다.
+ */
+const FUSE_STEP: readonly { left: number; ms: number }[] = [
+  { left: 6000, ms: 760 },
+  { left: 3000, ms: 400 },
+  { left: 1200, ms: 210 },
+  { left: 0, ms: 110 },
+];
+
+const fuseMs = (left: number): number =>
+  (FUSE_STEP.find((x) => left > x.left) ?? FUSE_STEP[FUSE_STEP.length - 1]).ms;
+
+/**
+ * ── 도화선 ── 터지기 전까지 몸이 깜빡인다. 26판 폭탄 애벌레 하나뿐이다.
+ *
+ * ## 왜 깜빡임이 필요한가
+ *
+ * 애벌레 넷은 10초 뒤에 자폭한다 (`ForkPart.fuse`). 그 10초 동안 화면에서
+ * 벌어지는 일이 **아무것도 없었다** — 넷이 가만히 서 있다가 어느 순간
+ * 사라지고 파티 체력이 통째로 깎였다. 잡으라는 기믹인데 급하다는 말을
+ * 아무도 안 하고 있었다.
+ *
+ * 깜빡임은 **점점 빨라진다** (`FUSE_STEP`). 느릴 때는 "저건 뭔가 다르다",
+ * 빨라지면 "지금 터진다" 다. 같은 박자로 계속 깜빡이면 둘 중 어느 것도
+ * 아니고 그냥 무늬가 된다.
+ *
+ * 감싸는 쪽이라 자식을 그대로 받는다. 자리를 안 건드리므로 (투명도만
+ * 흔든다) 줄 배치에는 아무 영향이 없다.
+ */
+export function Fuse({ ms, children }: { ms: number; children: React.ReactNode }) {
+  const t = useRef(new Animated.Value(1)).current;
+  const beat = fuseMs(ms);
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(t, {
+        toValue: 0.25, duration: beat / 2, easing: Easing.linear, useNativeDriver: true,
+      }),
+      Animated.timing(t, {
+        toValue: 1, duration: beat / 2, easing: Easing.linear, useNativeDriver: true,
+      }),
+    ]));
+    loop.start();
+    return () => { loop.stop(); t.setValue(1); };
+    /* 칸이 바뀔 때만 다시 건다 — 남은 시간을 그대로 보면 0.5초마다 끊긴다 */
+  }, [beat, t]);
+
+  return <Animated.View style={{ opacity: t }}>{children}</Animated.View>;
+}
+
+/**
+ * ── 감전된 동안 ── 20판 벼락에 맞은 사람 (`st_shock`).
+ *
+ * 기절과 **하는 일이 똑같다** (`core/status` 의 `STUN`). 그래서 화면에서
+ * 달라야 할 것이 하나뿐이다 — 감전은 몸에 전기가 남아 있다.
+ *
+ * "지지지직 하고 아~~주 미세하게 떨리면서" 라는 말 그대로 잡았다.
+ *
+ *   **떨림** — 1px 남짓. 3px 만 되어도 몸이 통째로 흔들리는 것이 되어,
+ *   맞고 밀리는 동작(`hurtX`)과 구분이 안 된다.
+ *   **불꽃** — 몸 둘레 여섯 자리에서 제각기 다른 박자로 깜빡인다. 같은
+ *   박자면 여섯이 한 덩어리로 켜졌다 꺼져서 테두리가 된다.
+ *
+ * 떨림은 여기서 안 한다 — 인물 상자를 흔드는 것은 `Fighter` 의 일이라
+ * (거기에 이미 걸음·도약·피격이 얹혀 있다) 여기서 또 흔들면 두 값이
+ * 같은 자리를 두고 싸운다. 여기는 **불꽃만** 그린다.
+ */
+export function Shocked({ size }: { size: number }) {
+  const t = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.timing(t, {
+      toValue: 1, duration: 420, easing: Easing.linear, useNativeDriver: true,
+    }));
+    loop.start();
+    return () => { loop.stop(); t.setValue(0); };
+  }, [t]);
+
+  const sparks = useMemo(() => [
+    { x: 0.16, y: 0.30, at: 0.00 },
+    { x: 0.80, y: 0.38, at: 0.22 },
+    { x: 0.30, y: 0.66, at: 0.44 },
+    { x: 0.72, y: 0.72, at: 0.11 },
+    { x: 0.50, y: 0.20, at: 0.66 },
+    { x: 0.46, y: 0.86, at: 0.85 },
+  ].map((sp) => ({
+    left: Math.round(size * sp.x),
+    top: Math.round(size * sp.y),
+    /* 짧게 켜졌다 꺼진다 — 한 바퀴(420ms) 중 12% 만 보인다 */
+    o: t.interpolate({
+      inputRange: [
+        0, sp.at, Math.min(1, sp.at + 0.04), Math.min(1, sp.at + 0.12), 1,
+      ],
+      outputRange: [0, 0, 1, 0, 0],
+      extrapolate: 'clamp',
+    }),
+  })), [t, size]);
+
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      {sparks.map((sp, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: sp.left,
+            top: sp.top,
+            width: 2,
+            height: 5,
+            backgroundColor: WHITE,
+            opacity: sp.o,
+            /* 눕혀 둔다 — 곧추선 막대 여섯이면 울타리가 된다 */
+            transform: [{ rotate: i % 2 ? '28deg' : '-24deg' }],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * 우두머리 몸 자리에 얹는 연출 하나 (해일만은 무대 것이라 여기 없다).
+ *
+ * @param size 인물 상자의 한 변
+ * @param art  그 안에서 **그림이 실제로 차지하는 높이** (`SPRITE_RATIO`).
+ *             휘두름이 이걸로 호의 높이를 잡는다 — 상자 높이로 재면
+ *             납작한 그림에서 호가 머리 위 허공을 긋는다.
+ */
+export function BossSideFx(
+  { kind, size, art }: { kind: BossKind; size: number; art?: number },
+) {
   switch (kind) {
-    case 'swing': return <Swing size={size} />;
+    case 'swing': return <Swing size={size} art={art ?? size} />;
     case 'ripple': return <Ripple size={size} />;
     case 'spikes': return <Spikes size={size} />;
     case 'stench': return <Stench size={size} />;

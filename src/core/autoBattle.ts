@@ -572,8 +572,16 @@ export const BOSS_SKILLS: Record<number, readonly BossPattern[]> = {
   }],
   20: [
     {
+      /*
+        하늘에서 내리치는 것이라 **맞으면 감전된다** — 30% 확률로 3초.
+
+        기절(`st_stun`)이 아니라 감전(`st_shock`)으로 따로 둔다. 하는 일은
+        똑같지만(`core/status` 의 `STUN`) 로고와 몸에 흐르는 전기가 다르고,
+        그 둘이 "이건 벼락에 맞은 것" 을 말한다.
+      */
       id: 'bolt', name: '태고의 성난 벼락', every: 6, mul: 1.50, aim: 'all', dmg: 'phys',
       gauge: 0.50,
+      hex: [{ id: 'st_shock', sec: 3, odds: 0.30 }],
     },
     {
       id: 'blade', name: '자비없는 칼날', every: 5, mul: 2.50, aim: 'low', dmg: 'magic',
@@ -919,9 +927,15 @@ export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
   21: [{
     kind: 'fork',
     name: '절단 분열',
-    text: '체력 50% 이하가 되는 즉시 몸통이 반으로 갈라져 머리와 꼬리 두 마리가 '
-      + '된다. 남은 체력을 반씩 나눠 갖고, 꼬리는 평타만 쓰되 공격속도가 두 배다.',
-    at: 0.50,
+    text: '체력 30% 이하가 되는 즉시 그 자리에서 몸통이 반으로 갈라져 머리와 꼬리 '
+      + '두 마리가 된다. 남은 체력을 반씩 나눠 갖고, 꼬리는 평타만 쓰되 공격속도가 '
+      + '두 배다. 둘 다 우두머리라 둘 다 잡아야 판이 끝난다.',
+    /*
+      50% 였다. 반이나 남은 채로 갈라지면 **판의 절반이 두 마리 구간**이 되어,
+      본체와 싸운 기억보다 조각과 싸운 기억이 길어진다. 30% 면 마무리에
+      한 번 뒤집히는 것이 된다.
+    */
+    at: 0.30,
     keep: false,
     parts: [
       {
@@ -980,7 +994,7 @@ export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
   26: [{
     kind: 'fork',
     name: '최후의 발악',
-    text: '죽는 순간 폭탄 애벌레 넷으로 흩어진다. 5초 안에 못 잡으면 자폭해 '
+    text: '죽는 순간 폭탄 애벌레 넷으로 흩어진다. 10초 안에 못 잡으면 자폭해 '
       + '아군 전체가 각자 최대 체력의 25% 를 잃는다. 애벌레의 체력은 피로스의 5% 다.',
     /* 죽는 순간이다 */
     at: 0,
@@ -992,7 +1006,12 @@ export const BOSS_GIMMICK: Record<number, readonly BossGimmick[]> = {
       art: 'sw_bomb',
       scale: 0.5,
       dumb: true,
-      fuse: 5000,
+      /*
+        5초였다. 넷이 한꺼번에 나오는데 5초면 **잡을 시간이 아니라 구경할
+        시간**밖에 안 된다 — 어차피 다 터지므로 잡으라는 기믹이 아니게 된다.
+        10초면 넷 중 둘셋은 잡히고, 남은 것이 터진다.
+      */
+      fuse: 10000,
       blast: 0.25,
     })),
   }],
@@ -1155,8 +1174,8 @@ function forkInto(cx: GimCtx, src: FoeSlot, kind: Foe, gim: ForkGim): FoeSlot[] 
       pos: free(),
       own,
       gim: part.fuse
-        ? { fuse: part.fuse, blast: part.blast ?? 0, done: [] }
-        : { done: [] },
+        ? { fuse: part.fuse, blast: part.blast ?? 0, done: [], born: true }
+        : { done: [], born: true },
     });
     cx.seq += 1;
   }
@@ -1248,6 +1267,13 @@ function runGim(cx: GimCtx): void {
       if (left <= 0) {
         blastAll(cx, gim.blast ?? 0);
         dead = true;
+        /*
+          **터진 것도 터진 것이다.** 막이 못 깨져 터질 때와 우화가 터질 때만
+          이 숫자를 올리고 있었다 (`GimCtx.burst`). 그래서 애벌레 넷이 동시에
+          자폭하는 26판 마지막이 화면에서는 **그냥 사라지는 것**으로 보였다 —
+          숫자만 줄고 아무 소리도 안 났다.
+        */
+        cx.burst += 1;
       } else {
         gim = { ...gim, fuse: left };
       }
@@ -1542,6 +1568,25 @@ export const RAGE_MUL = 2;
 
 /** 1초에 최대 체력의 몇 할을 채우나 */
 export const RAGE_REGEN = 0.01;
+
+/**
+ * 광폭화 중 **한 대마다 더 얹히는 고정 피해** — 맞는 사람 최대 체력의 5%.
+ *
+ * ## 왜 배수로는 부족했나
+ *
+ * 공격력 두 배(`RAGE_MUL`)가 화면에서 거의 안 느껴진다는 말을 들었다. 까닭이
+ * 있다 — 피해는 `공격력 − 방어력` 이라 (`strikeFor`), 방어를 올린 파티에서는
+ * 공격력이 두 배가 돼도 뺄셈 뒤에 남는 것이 두 배가 안 된다. 방어가 두꺼울수록
+ * 광폭화가 약해지는, 거꾸로 된 일이었다.
+ *
+ * 고정 피해는 그 뺄셈을 **안 지난다.** 그리고 최대 체력에 비례하므로 체력을
+ * 키운 파티도 같은 속도로 녹는다 — 광폭화는 "이 판을 끝내는 것" 이라
+ * (`RAGE_MS`) 어느 쪽으로도 못 버티는 게 맞다.
+ *
+ * 5% 면 스무 대에 한 명이 쓰러진다. 광폭화 뒤에도 한참 남는 판에서 그 스무
+ * 대가 곧 남은 시간이 된다.
+ */
+export const RAGE_BITE = 0.05;
 
 /**
  * 지금 광폭화 중인가.
@@ -2369,6 +2414,18 @@ export interface FoeGim {
    * 이라 때리면서 하면 화면에서 무슨 국면인지가 안 읽힌다.
    */
   still?: boolean;
+  /**
+   * **갈라져 나온 조각이다** — 화면 밖에서 걸어 들어오지 않는다.
+   *
+   * 새 적은 무대 오른쪽 밖에서 제 자리까지 걸어온다 (`BattleView` 의
+   * `WALK_IN_MS`). 새로 나타난 놈을 **고유 번호로만** 알아보므로, 갈라져
+   * 나온 조각도 새 놈으로 보고 화면 밖에서 걸어 들어오게 했다.
+   *
+   * 그게 21판에서 그대로 보였다 — 지네가 반으로 갈라지는데 조각 둘이
+   * 오른쪽 끝에서 걸어 들어왔다. 갈라진 것은 **그 자리에서 태어나는 것**이라
+   * 어디서 걸어오면 안 된다. 26판 애벌레도 같다.
+   */
+  born?: boolean;
 }
 
 /**
@@ -3952,7 +4009,17 @@ export function battleTick(
         `strikeFor` 에 넣으면 최소 1 이 나와서, 피해가 없어야 할 기술에서
         숫자가 뜬다.
       */
-      const dmg = base > 0 ? strikeFor(base, 1, armor, blow) : 0;
+      const hit0 = base > 0 ? strikeFor(base, 1, armor, blow) : 0;
+      /*
+        ── 광폭화의 이빨 ── 맞는 사람 최대 체력의 5% 를 **그대로** 더한다.
+
+        방어를 안 지난다 (`RAGE_BITE` 에 이유가 있다). 그리고 **배수가 0 인
+        기술에도 얹힌다** — 사양이 "모든 공격" 이고, 3·4·8·12·14·15판처럼
+        거는 것만 하는 기술이 광폭화 중에도 아프지 않으면 그 판들만 광폭화가
+        없는 판이 된다.
+      */
+      const bite = rage ? Math.max(1, Math.round(statOf(who2).hp * RAGE_BITE)) : 0;
+      const dmg = hit0 + bite;
       if (dmg > 0) {
         hp[who2.id] = Math.max(0, hp[who2.id] - dmg);
         taken += dmg;
@@ -4054,6 +4121,22 @@ export function battleTick(
     };
   }
 
+  /*
+    ── 기믹이 줄을 비웠다 ── 26판 애벌레 넷이 다 터진 그 순간.
+
+    판이 끝나는 판단은 여태 **때린 자리**에만 있었다 (`applyHit`·`applySkill`
+    의 "줄이 비면 끝난다"). 그런데 폭탄 애벌레는 아무도 안 때려도 스스로
+    죽는다 — 도화선이 다 되면 틱이 목록에서 지운다.
+
+    그래서 넷을 다 잡지 않고 **터지게 두면** 적이 하나도 없는 채로 판이
+    멈췄다. 이기지도 지지도 않고, 다음 판으로도 안 넘어갔다. 26판을 "심각한
+    버그" 라고 부른 것이 이것이다.
+
+    잡은 것으로 센다. 터뜨린 것도 치운 것이고, 그 대가로 파티는 각자 최대
+    체력의 25% 를 넷 몫으로 물었다.
+  */
+  const gimCleared = isBoss && foes.length === 0;
+
   return {
     battle: {
       ...st,
@@ -4078,10 +4161,27 @@ export function battleTick(
       */
       struck: pattern ? struck : [],
       costSeq: Number.isFinite(st.costSeq) ? st.costSeq : 0,
+      /*
+        **줄이 비었으면 곧 넘어간다.** 바로 안 넘긴다 — `clearIn` 을 걸어
+        두면 틱이 그 시간을 흘려보내는 동안 화면이 `Clear` 를 띄운다
+        (`applyHit` 의 우두머리 처치와 똑같은 얼개다).
+      */
+      ...(gimCleared ? {
+        slain: slain + 1,
+        target: 0,
+        clearIn: CLEAR_MS,
+        clearKind: 'boss' as const,
+        goTo: nextStage(st.stage),
+      } : null),
     },
     ev: {
       hit, taken, hurt: hurtId, fell, pattern,
-      killed, cleared: false, bossCame, wiped: false, gold, healed,
+      killed: gimCleared ? killed + 1 : killed,
+      cleared: gimCleared,
+      bossCame,
+      wiped: false,
+      gold: gimCleared ? gold + killGold(st.stage, true) : gold,
+      healed,
       applied: true,
     },
   };

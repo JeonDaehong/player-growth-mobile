@@ -39,7 +39,7 @@ import {
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
 import type { Mark } from '@/core/passives';
-import { BodyKind, BossBodyFx } from './BossFx';
+import { BodyKind, Bound, BossBodyFx, Shocked } from './BossFx';
 import { BAD_C, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import {
@@ -183,7 +183,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
-  live, hitNo, hitKind, cc,
+  live, hitNo, hitKind, cc, bound, shock, turn,
   squeeze, width, lap, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -303,6 +303,36 @@ function FighterView({
    * 사람이 화면에서 똑같아 보인다.
    */
   cc: string;
+  /**
+   * **묶여 있나** — 13판 속박의 덩굴 · 25판 포식의 거미줄.
+   *
+   * 켜져 있는 동안 몸 위에 감긴 그림이 계속 얹힌다 (`BossFx` 의 `Bound`).
+   *
+   * 기절(`stun`)과 따로 두는 이유: 기절은 암석에 맞아서일 수도, 벼락에
+   * 맞아서일 수도 있다. 감긴 그림은 **묶는 기술에 맞았을 때만** 맞는 말이라,
+   * 기절 하나로 뭉치면 6판 암석에 맞고 덩굴에 감겨 있는 그림이 나온다.
+   *
+   * 무대가 판단해서 넘긴다 — 어느 기술에 맞았는지는 저쪽이 안다
+   * (`BossFx` 의 `FxPlan.bind`).
+   */
+  bound: boolean;
+  /**
+   * **감전됐나** (`core/status` 의 `st_shock`).
+   *
+   * 몸 둘레에서 전기가 지지직 튄다 (`BossFx` 의 `Shocked`). 몸도 아주
+   * 미세하게 떤다 — 그건 여기서 한다 (`buzz`).
+   */
+  shock: boolean;
+  /**
+   * **돌아서 있나** — 혼란에 걸려 아군을 치는 중 (24판 · 29판).
+   *
+   * 아군은 전부 오른쪽(적)을 보고 서 있다. 그런데 혼란에 걸리면 실제로
+   * 치는 것은 **왼쪽에 선 아군**이라 (`core/autoBattle` 의 `applyHit`),
+   * 그대로 두면 적을 보면서 아군을 때린다 — 화면이 계산과 정반대를 말한다.
+   *
+   * 켜지면 그림을 뒤집고 내딛는 걸음도 반대로 간다.
+   */
+  turn: boolean;
   /**
    * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
    *
@@ -628,13 +658,18 @@ function FighterView({
     */
     if (held) { setFrame('guard'); return; }
     /*
-      기절 — **서 있지만 아무것도 안 한다.**
+      기절 · 감전 — **쓰러진 자세로 굳는다.**
 
-      쓰러진 것과 다르므로 `lose` 를 쓰지 않는다. `guard` 로 굳어 있으면
-      "가만히 있다" 가 그대로 보이고, 머리 위 로고가 왜인지를 말한다
-      (`StatusRow` 의 `st_stun`).
+      한동안 `guard`(막는 자세)를 썼다. 쓰러진 것과 다르니 눕히지 말자는
+      것이었는데, 화면에서는 그게 **아무 표시가 아니었다** — 막고 서 있는
+      자세는 스윙과 스윙 사이의 평소 자세와 같은 칸이라, 기절한 사람과
+      그냥 다음 스윙을 기다리는 사람이 완전히 똑같아 보였다.
+
+      `lose` 는 다르다. 넷 중 하나만 그 자세면 한눈에 튄다. 진짜로 쓰러진
+      것과 헷갈릴 걱정은 안 해도 된다 — 저쪽은 흐려지다 사라지고(`gone`)
+      발밑 체력 막대도 지워진다.
     */
-    if (stun) { setFrame('guard'); return; }
+    if (stun) { setFrame('lose'); return; }
     setFrame('guard');
 
     let alive = true;
@@ -856,9 +891,42 @@ function FighterView({
   */
   const stepX = useMemo(() => step.interpolate({
     inputRange: [0, 1],
-    /* 붙어 있는 만큼 이미 나가 있고, 칠 때 조금 더 내디딘다 */
-    outputRange: [advance, advance + (advance > 0 ? 10 : 6)],
-  }), [step, advance]);
+    /*
+      붙어 있는 만큼 이미 나가 있고, 칠 때 조금 더 내디딘다.
+
+      **돌아섰으면 반대로 내딛는다** (`turn`). 나가 있는 자리(`advance`)는
+      그대로다 — 혼란은 4초짜리라, 그동안 줄에서 빠져나오면 풀린 뒤에 제자리로
+      돌아오는 길이 또 필요하다.
+    */
+    outputRange: [advance, advance + (turn ? -8 : (advance > 0 ? 10 : 6))],
+  }), [step, advance, turn]);
+
+  /*
+    ── 감전된 동안의 떨림 ──
+
+    "아~~주 미세하게" 라는 말 그대로 1px 이다. 3px 만 되어도 맞고 밀리는
+    동작(`hurtX`)과 세기가 비슷해져서, 감전된 사람이 계속 맞고 있는 것으로
+    보인다.
+
+    빠르다 (한 번 왕복에 90ms). 느리면 떠는 것이 아니라 흔들리는 것이 된다.
+  */
+  const buzz = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!shock) { buzz.setValue(0); return undefined; }
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(buzz, {
+        toValue: 1, duration: 45, easing: Easing.linear, useNativeDriver: true,
+      }),
+      Animated.timing(buzz, {
+        toValue: -1, duration: 45, easing: Easing.linear, useNativeDriver: true,
+      }),
+    ]));
+    loop.start();
+    return () => { loop.stop(); buzz.setValue(0); };
+  }, [shock, buzz]);
+  const buzzX = useMemo(() => buzz.interpolate({
+    inputRange: [-1, 1], outputRange: [-1, 1],
+  }), [buzz]);
 
   const hurtX = useMemo(() => hurt.interpolate({
     inputRange: [0, 1], outputRange: [0, -6],
@@ -930,6 +998,8 @@ function FighterView({
           { translateX: stepX },
           /* 맞으면 뒤로(왼쪽으로) 살짝 밀린다 */
           { translateX: hurtX },
+          /* 감전된 동안 1px 씩 떤다 — 안 걸렸으면 0 이라 없는 것과 같다 */
+          { translateX: buzzX },
           /* 도약 — 적 쪽(오른쪽)으로. 솟는 동안에 거리를 다 간다 */
           { translateX: leapDX },
           /* 높이. 가로와 **따로** 굴러서 포물선이 아니라 ㄱ 자를 그린다 */
@@ -1070,7 +1140,20 @@ function FighterView({
           set={ch.id}
           name={frame}
           size={size}
-          style={{ transform: [{ translateY: Math.round(size * spriteGap(ch.id, frame)) }] }}
+          /*
+            **돌아서면 좌우를 뒤집는다** (`turn`).
+
+            `Sprite` 의 `flip` 을 못 쓴다 — 저건 style 에 transform 이 있으면
+            스스로 물러나므로 (덮어써서 반전이 사라지는 걸 막는 장치다),
+            발을 맞추는 `translateY` 와 같이 쓰려면 여기서 직접 합쳐야 한다.
+            적 줄이 같은 자리에서 같은 일을 한다 (`BattleView`).
+          */
+          style={{
+            transform: [
+              { scaleX: turn ? -1 : 1 },
+              { translateY: Math.round(size * spriteGap(ch.id, frame)) },
+            ],
+          }}
           fallbackSet="duel"
           fallbackName={SK_FALLBACK[frame] ?? CUT_FALLBACK[frame] ?? frame}
         />
@@ -1088,6 +1171,20 @@ function FighterView({
       {!!hitKind && hitNo > 0 && (
         <BossBodyFx key={hitNo} kind={hitKind} size={size} />
       )}
+
+      {/*
+        ── 못 움직이는 **동안** 계속 붙어 있는 것 둘 ──
+
+        위의 `BossBodyFx` 와 성격이 다르다. 저건 맞는 순간 한 번 돌고 끝나는
+        것이고 (그래서 번호를 `key` 로 태운다), 이 둘은 상태가 풀릴 때까지
+        켜져 있는다 — 켜고 끄는 판단은 무대가 한다.
+
+        묶임이 먼저, 전기가 나중이다. 둘이 같이 걸릴 일은 지금 없지만
+        (13·25판과 20판은 다른 판이다), 순서를 정해 두지 않으면 나중에
+        겹치는 날 어느 쪽이 위인지가 우연히 정해진다.
+      */}
+      {bound && <Bound size={size} />}
+      {shock && <Shocked size={size} />}
 
       {/* 못 움직이는 동안 계속 붙어 있는 딱지 — `💫기절` */}
       {!!cc && <CcTag text={cc} />}
@@ -1272,6 +1369,9 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.hitNo === b.hitNo
   && a.hitKind === b.hitKind
   && a.cc === b.cc
+  && a.bound === b.bound
+  && a.shock === b.shock
+  && a.turn === b.turn
   && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge

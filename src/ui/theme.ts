@@ -68,3 +68,15 @@ export const BORDER = { borderWidth: 1, borderColor: WHITE, borderRadius: 0 } as
  */
 export const GOOD_C = '#5CE07A';
 export const BAD_C = '#FF5C5C';
+
+/**
+ * **적이 두른 막** — 깨야 넘어가는 것 (22 · 29판 우두머리의 보호막).
+ *
+ * 세 번째 색이다. 위 둘의 규칙("나에게 좋은가 나쁜가")으로는 이걸 못 적는다 —
+ * 막은 적에게 좋은 것이자 나에게 나쁜 것인데, 붉게 칠하면 체력 막대 위에서
+ * **피해와 같은 색**이 되어 "깎이는 체력" 과 "깎아야 할 막" 이 겹쳐 보인다.
+ *
+ * 하늘색은 이 게임 어디에도 없던 색이라 뜻이 하나뿐이다: 저 겹은 체력이
+ * 아니다.
+ */
+export const SHIELD_C = '#6FD4FF';

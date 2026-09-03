@@ -39,23 +39,23 @@ import {
 import { CHARS, projFrame, projSet, skillOf, skillsOf, statOf } from '@/core/chars';
 import { hpOf, livingMembers, members, partyStat } from '@/core/party';
 import {
-  CC, Hex, STATUS_MARK, STATUS_NAME, hasHex, hexOf,
+  CC, Hex, STATUS_MARK, STATUS_NAME, STUN, hasHex, hexOf, stunned,
 } from '@/core/status';
 import { Mark, NO_MARK, foeMarksOf, liveSpd, marksOf } from '@/core/passives';
 import { cleanseOptOf, cleanseTargets } from '@/core/skillOpt';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
-import { BAD_C, BORDER, SP, WHITE } from '@/ui/theme';
+import { BAD_C, BORDER, SHIELD_C, SP, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
-  BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, Burst, Charging, FxPlan,
+  BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, Burst, Charging, Fuse, FxPlan,
   ShotKind, Tide, blowFx, castFx, useLeap,
 } from './BossFx';
 import {
   BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, MarkNotes,
-  SkillShout, shotMsOf, useShake,
+  RageCall, SkillShout, shotMsOf, useShake,
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
@@ -160,14 +160,32 @@ function rowFor(live: readonly { x: number }[], x: number): number {
  * 못 움직이게 하는 것이 걸려 있으면 그 딱지 (`💫기절`). 없으면 빈 글자.
  *
  * **하나만 돌려준다.** 기절과 침묵이 같이 걸릴 수 있는데, 둘을 다 붙이면
- * 40px 인물 위에 딱지가 두 줄이 되어 정작 인물이 안 보인다. 기절이 이긴다 —
- * 기절이면 어차피 스킬도 못 쓰므로 침묵은 그 안에 들어 있다.
+ * 40px 인물 위에 딱지가 두 줄이 되어 정작 인물이 안 보인다. 몸을 못 쓰는
+ * 쪽이 이긴다 (`core/status` 의 `STUN`) — 그러면 어차피 스킬도 못 쓰므로
+ * 침묵은 그 안에 들어 있다.
  */
 function ccOf(hex: readonly Hex[]): string {
   const on = hex.filter((h) => h.ms > 0 && CC.has(h.id));
   if (!on.length) return '';
-  const pick = on.find((h) => h.id === 'st_stun') ?? on[0];
+  const pick = on.find((h) => STUN.has(h.id)) ?? on[0];
   return `${STATUS_MARK[pick.id] ?? ''}${STATUS_NAME[pick.id]}`;
+}
+
+/**
+ * 도화선이 붙은 놈만 깜빡이게 감싼다 (`BossFx` 의 `Fuse`).
+ *
+ * 껍데기 하나를 더 두는 이유: `Fuse` 는 `Animated.View` 를 만들고 그 안에서
+ * 시계를 돌린다. 서른 판 중 26판의 애벌레 넷만 도화선이 있는데, 조건 없이
+ * 감싸면 **모든 적이** 아무 일도 안 하는 시계를 하나씩 들고 서 있게 된다.
+ *
+ * 갈래를 컴포넌트로 뺀 것은 훅 규칙 때문이다 — 그리는 자리에서 `ms` 가
+ * 있을 때만 `Fuse` 를 부르면 그 갈래가 렌더마다 훅 개수를 바꾼다.
+ */
+function FuseWrap(
+  { ms, children }: { ms?: number; children: React.ReactNode },
+) {
+  if (ms === undefined || !Number.isFinite(ms)) return <>{children}</>;
+  return <Fuse ms={ms}>{children}</Fuse>;
 }
 
 /** 한 줄이 먹는 높이 */
@@ -227,19 +245,33 @@ function numTop(y: number, row: number): number {
  * 치수가 전부 배율에 **정비례**하므로 필요한 폭도 정비례한다. 그래서 한 번
  * 나누면 답이 나온다 — 크기마다 따로 계산할 것이 없다.
  */
-function fitOf(stageWidth: number, partyCount: number, foeCount: number): number {
+function fitOf(
+  stageWidth: number, partyCount: number, foeCount: number, foeScale?: Scales,
+): number {
   if (stageWidth <= 0) return 1;
-  const need = rowWidth(foeCount, FOE_W, FOE_LAP)
+  const need = rowWidth(foeCount, FOE_W, FOE_LAP, foeScale)
     + rowWidth(partyCount, PARTY_W, PARTY_LAP)
     + EDGE * 2 + MIN_GAP;
   /* 짜내기로 메울 수 있는 만큼(약 15%)은 남겨 둔다 — 다 줄이면 늘 최소 크기다 */
   return Math.min(1, (stageWidth * 1.15) / Math.max(1, need));
 }
 
-function rowWidth(count: number, front: number, lap: number): number {
+/**
+ * 자리마다의 **제 크기 배수** (`FoeKind.scale`). 없는 자리는 1 이다.
+ *
+ * 26판 폭탄 애벌레가 이걸 만들게 했다. 넷이 우두머리 자리에 서지만 실제로
+ * 그려지는 것은 그 절반이다 (`scale: 0.5`). 여태 줄 폭은 **그리는 크기와
+ * 상관없이** 우두머리 폭(131px)으로 잡았으므로, 네 자리에 524px 이 필요하다고
+ * 셈했다 — 그러면 좁히기(`squeezeFor`)가 최대로 걸려서 넷이 한 덩어리로
+ * 겹쳤다. "1 2 3 4 위치로 보이는게 아님" 이 그것이다.
+ */
+type Scales = readonly number[];
+
+function rowWidth(count: number, front: number, lap: number, scale?: Scales): number {
   if (count <= 0) return 0;
-  let w = Math.round(front * depthAt(0).scale);
-  for (let b = 1; b < count; b++) w += Math.round(front * depthAt(b).scale) - lap;
+  const at = (b: number) => Math.round(front * depthAt(b).scale * (scale?.[b] ?? 1));
+  let w = at(0);
+  for (let b = 1; b < count; b++) w += at(b) - lap;
   return w;
 }
 
@@ -324,11 +356,13 @@ function advanceRow(melee: readonly boolean[], closeIn: number): number[] {
  */
 function closeInFor(
   stageWidth: number, partyCount: number, foeCount: number, boss: boolean,
+  foeScale?: Scales,
 ): number {
   if (stageWidth <= 0) return 0;
-  const f = fitOf(stageWidth, partyCount, foeCount);
+  const f = fitOf(stageWidth, partyCount, foeCount, foeScale);
   const gapNow = stageWidth
-    - EDGE * f - rowWidth(foeCount, (boss ? BOSS_W : FOE_W) * f, FOE_LAP * f)
+    - EDGE * f
+    - rowWidth(foeCount, (boss ? BOSS_W : FOE_W) * f, FOE_LAP * f, foeScale)
     - EDGE * f - rowWidth(partyCount, PARTY_W * f, PARTY_LAP * f);
   return Math.max(0, Math.round((gapNow - CLASH_GAP * f) / 2));
 }
@@ -347,10 +381,11 @@ function closeInFor(
  */
 function squeezeFor(
   stageWidth: number, partyCount: number, foeCount: number, boss: boolean,
+  foeScale?: Scales,
 ): number {
   if (stageWidth <= 0) return 0;
-  const f = fitOf(stageWidth, partyCount, foeCount);
-  const rows = rowWidth(foeCount, (boss ? BOSS_W : FOE_W) * f, FOE_LAP * f)
+  const f = fitOf(stageWidth, partyCount, foeCount, foeScale);
+  const rows = rowWidth(foeCount, (boss ? BOSS_W : FOE_W) * f, FOE_LAP * f, foeScale)
     + rowWidth(partyCount, PARTY_W * f, PARTY_LAP * f);
   /* 줄 둘 + 벽여백 + 최소한의 틈이 들어가야 한다 */
   const need = rows + EDGE * 2 + MIN_GAP;
@@ -652,6 +687,8 @@ export function BattleView() {
     pos: [] as number[],
     /** 자리별 근접 여부 — 원거리는 안 걸어 나온다 */
     melee: [] as boolean[],
+    /** 자리별 제 크기 배수 (`FoeKind.scale`) — 없는 자리는 1 */
+    scale: [] as number[],
   });
   /*
     맞은 직후 잠깐 자세가 무너지는 **적들의 자리**.
@@ -714,6 +751,18 @@ export function BattleView() {
     그 틱을 놓치면 영영 모른다. 상태의 변화는 몇 번을 다시 그려도 같다.
   */
   /*
+    ── 광폭화 알림 ──
+
+    `raging` 이 참으로 넘어가는 그 순간에 번호를 하나 올린다. 무대 한가운데에
+    붉은 글씨가 떴다 사라진다 (`HitFx` 의 `RageCall`).
+  */
+  useEffect(() => {
+    const now2 = raging(battle);
+    if (now2 && !wasRage.current) setRageCall((n) => n + 1);
+    wasRage.current = now2;
+  }, [battle]);
+
+  /*
     판이 열리고 닫히는 연출 (`StageIntro`).
 
     얼마나 오래 하느냐는 **엔진이** 정한다 (`battle.openIn`/`clearIn`) —
@@ -732,6 +781,19 @@ export function BattleView() {
   */
   /** 맞은 사람 몸 위에서 나는 것 — 사람마다 번호를 따로 센다 */
   const [bodyFx, setBodyFx] = useState<Record<string, { no: number; kind: BodyKind }>>({});
+  /*
+    ── 지금 **묶여 있는** 사람들 ── 13판 속박의 덩굴 · 25판 포식의 거미줄.
+
+    감기는 연출은 900ms 면 끝나는데 속박은 2~5초다 (`BossFx` 의 `Bound`).
+    그동안 감긴 그림을 세워 두려면 "누가 묶는 기술에 맞았나" 를 들고 있어야
+    한다 — 걸린 것(`st_stun`)만 봐서는 6판 암석에 맞아 기절한 사람과 구분이
+    안 되고, 그러면 암석에 맞고 덩굴에 감겨 있는 그림이 나온다.
+
+    **푸는 일은 안 한다.** 화면이 그릴 때 "이 명단에 있고 **지금 못 움직이나**"
+    를 같이 물으므로(`bound` prop), 속박이 풀리는 순간 그림도 같이 꺼진다.
+    명단에 이름이 남아 있어도 아무 일이 없다.
+  */
+  const [bindIds, setBindIds] = useState<readonly string[]>([]);
   /** 우두머리 몸 자리에서 나는 것 */
   const [bossFx, setBossFx] = useState<{ no: number; kind: BossKind } | null>(null);
   /** 무대를 쓸고 지나가는 해일 (10판 하나뿐이다) */
@@ -884,6 +946,41 @@ export function BattleView() {
     피해와 구분이 안 돼서, 20판에서 15초마다 일어나던 회복을 아무도 회복인
     줄 몰랐다.
   */
+  /*
+    ── 크게 터졌다 ── 막이 못 깨졌거나(22 · 29판), 우화했거나(25판),
+    폭탄 애벌레가 자폭했을 때(26판).
+
+    여태 무대 한가운데에 고리가 한 번 퍼지는 것뿐이었다 (`Burst`). 그런데
+    저 셋은 전부 **아군 전원이 실제로 맞는** 일이라, 맞은 쪽에서 아무 일도
+    안 일어나면 "무대에 무언가 퍼졌고 그와 별개로 체력이 줄었다" 로 읽힌다.
+
+    26판이 그게 제일 심했다 — 애벌레 넷이 조용히 사라지고 파티 체력이
+    통째로 깎였다. 이제 살아 있는 사람 몸마다 폭발이 하나씩 터진다
+    (`BossFx` 의 `Boom`).
+  */
+  const lastBurst = useRef(battle.burst ?? 0);
+  useEffect(() => {
+    const at = battle.burst ?? 0;
+    if (at <= lastBurst.current) { lastBurst.current = at; return; }
+    lastBurst.current = at;
+    const who = members(party, chars)
+      .filter((c) => hpOf(c, battle.hp) > 0)
+      .map((c) => c.id);
+    if (!who.length) return;
+    setBodyFx((old) => {
+      const next = { ...old };
+      for (const id of who) next[id] = { no: (next[id]?.no ?? 0) + 1, kind: 'boom' };
+      return next;
+    });
+    /* 무대도 한 번 크게 흔든다 — 이 게임에서 제일 센 흔들림이다 (평타 0.55) */
+    shake.fire(1.6);
+    /*
+      `battle.hp` 는 일부러 안 본다. 터지는 그 틱에 체력도 같이 줄므로
+      번호(`burst`)가 오르는 순간의 명단이 곧 맞은 사람들이다.
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [battle.burst, shake]);
+
   const [heals, setHeals] = useState<{ key: number; amt: number }[]>([]);
   const lastHeal = useRef(battle.foeHeal?.seq ?? 0);
   useEffect(() => {
@@ -920,6 +1017,18 @@ export function BattleView() {
   }, [battle.stage, battle.patId]);
 
   const [bossCall, setBossCall] = useState(0);
+  /*
+    ── 방금 광폭화했나 ──
+
+    `raging` 이 거짓에서 참으로 넘어가는 순간을 본다 (`bossCall` 과 같은
+    얼개다) — 틱이 주는 신호가 아니라 **상태의 변화**를 보므로, 화면이 한
+    프레임을 놓쳐도 다음 렌더에서 잡힌다.
+
+    되돌아가는 일은 없다. 우두머리가 죽거나 판이 바뀌면 `bossMs` 가 0 이
+    되면서 거짓으로 돌아가고, 그다음 우두머리가 2분을 버티면 다시 오른다.
+  */
+  const [rageCall, setRageCall] = useState(0);
+  const wasRage = useRef(false);
   const wasBoss = useRef(battle.boss);
   useEffect(() => {
     if (battle.boss && !wasBoss.current) setBossCall((n) => n + 1);
@@ -960,7 +1069,9 @@ export function BattleView() {
     /* 줄 전체의 전진 거리 — 앞지르기가 막힌 값이다 */
     const adv = advanceRow(a.melee.length ? a.melee : [true], a.closeIn);
     const lap = a.lap + a.squeeze;
-    const sizeOf = (b: number) => Math.round(a.base * depthAt(b).scale);
+    const sizeOf = (b: number) => Math.round(
+      a.base * depthAt(b).scale * (a.scale[b] ?? 1),
+    );
     const size = sizeOf(back);
 
     /* 맨 앞이 왼쪽 끝이고, 뒤엣놈일수록 오른쪽으로 물러나며 작아진다 */
@@ -1466,6 +1577,14 @@ export function BattleView() {
       const { span, rise } = leapRef.current();
       setLeap({ no, span, rise });
     }
+    /*
+      묶는 기술이면 **맞은 사람 명단을 통째로 갈아 끼운다** (`FxPlan.bind`).
+
+      더하지 않고 갈아 끼우는 이유: 이 기술은 판마다 하나뿐이고, 새로 나갈
+      때마다 그때 맞은 사람이 곧 지금 묶인 사람이다. 더하면 앞에서 묶였다
+      풀린 사람이 명단에 남아, 나중에 다른 것으로 기절할 때 덩굴이 뜬다.
+    */
+    if (plan.bind) setBindIds([...ids]);
     if (plan.body) {
       const kind = plan.body;
       /*
@@ -1617,8 +1736,30 @@ export function BattleView() {
     잡몹처럼 계속 죽고 나는 자리가 아니라 판마다 한두 번뿐이라 눈에 덜
     거슬린다 — 늘 겹쳐 있는 것보다 훨씬 낫다.
   */
-  const cap = cur.boss ? Math.max(1, battle.foes.length) : MOB_CAP;
-  const closeIn = closeInFor(stageW, line.length, cap, cur.boss);
+  /*
+    ── 우두머리 줄이 잡는 자리 수 ──
+
+    `battle.foes.length` 였다. **마릿수와 자리 번호는 다르다** — 넷으로 갈라진
+    애벌레 중 1·2번이 먼저 죽으면 남은 것은 둘인데 자리는 0번과 3번이다.
+    길이로 잡으면 자리 둘만 그리므로 3번에 선 애벌레가 **아예 안 그려진다.**
+
+    제일 뒤 자리 번호로 잡는다. 그러면 몇이 죽든 서 있는 놈은 전부 그려지고,
+    빈자리는 폭만 남는다 (아래 `gap`).
+  */
+  const cap = cur.boss
+    ? Math.max(1, battle.foes.reduce((m, f) => Math.max(m, (f.pos ?? 0) + 1), 0))
+    : MOB_CAP;
+  /*
+    자리마다 **그 놈이 실제로 그려지는 배수** (`Scales`).
+
+    빈자리는 1 이다. 그 편이 안전하다 — 자리가 비면 폭이 조금 넓어질 뿐,
+    좁아져서 옆엣놈과 겹치지는 않는다.
+  */
+  const foeScale: number[] = Array.from({ length: cap }, (_v, b) => {
+    const at = battle.foes.find((x) => (x.pos ?? 0) === b);
+    return at ? (kindAt(battle, at).scale ?? 1) : 1;
+  });
+  const closeIn = closeInFor(stageW, line.length, cap, cur.boss, foeScale);
   /**
    * 그 자리의 아군이 적 앞줄까지 가려면 몇 px 을 더 가야 하나.
    *
@@ -1714,7 +1855,9 @@ export function BattleView() {
     const fn = Math.max(1, cap);
     const fbase = foeW;
     const flap = fLap + squeeze;
-    const fsize = (b: number) => Math.round(fbase * depthAt(b).scale);
+    const fsize = (b: number) => Math.round(
+      fbase * depthAt(b).scale * (foeScale[b] ?? 1),
+    );
     let fwidth = 0;
     for (let k = 0; k < fn; k++) fwidth += fsize(k) - (k ? flap : 0);
 
@@ -1728,7 +1871,7 @@ export function BattleView() {
 
     크기와 간격이 **다 같은 값을 탄다** — 하나만 줄이면 겹치거나 벌어진다.
   */
-  const fit = fitOf(stageW, line.length, cap);
+  const fit = fitOf(stageW, line.length, cap, foeScale);
   const partyW = PARTY_W * fit;
   const foeW = (cur.boss ? BOSS_W : FOE_W) * fit;
   const edge = EDGE * fit;
@@ -1736,7 +1879,7 @@ export function BattleView() {
   const fLap = FOE_LAP * fit;
 
   /* 좁은 화면에서만 0 보다 커진다 */
-  const squeeze = squeezeFor(stageW, line.length, cap, cur.boss);
+  const squeeze = squeezeFor(stageW, line.length, cap, cur.boss, foeScale);
 
   /*
     각 줄이 앞으로 나와 있는 거리 — 앞뒤가 안 뒤집히게 줄 단위로 잰다.
@@ -1776,10 +1919,21 @@ export function BattleView() {
     렌더가 부수 효과를 갖게 된다.
   */
   if (stageW) {
-    for (const { id } of battle.foes) {
-      if (walked.has(id)) continue;
-      walked.add(id);
-      walk.set(id, new Animated.Value(1));
+    for (const f of battle.foes) {
+      if (walked.has(f.id)) continue;
+      walked.add(f.id);
+      /*
+        **그 자리에서 태어난 놈은 안 걷는다** (`FoeGim.born`).
+
+        21판 지네가 반으로 갈라지는데 조각 둘이 무대 오른쪽 끝에서 걸어
+        들어왔다. 갈라진 것은 몸에서 나오는 것이라 어디서 걸어오면 안 되고,
+        26판 애벌레도 같다 — 죽은 자리에서 흩어져야 흩어진 것이다.
+
+        값을 아예 안 만든다. 0 으로 만들어 두면 렌더마다 `interpolate` 를
+        새로 부르게 되고, 그건 값에 가지를 하나씩 다는 일이다.
+      */
+      if (f.gim?.born) continue;
+      walk.set(f.id, new Animated.Value(1));
     }
   }
 
@@ -1836,6 +1990,7 @@ export function BattleView() {
     melee: foeMelee,
     closeIn,
     base: foeW,
+    scale: foeScale,
     edge,
     lap: fLap,
   };
@@ -1971,8 +2126,38 @@ export function BattleView() {
                       실제 피해가 갈리는데, 그건 눈으로 못 잡는다.
                     */
                     spd={liveSpd(c, hpOf(c, battle.hp), aliveLine, hexOf(battle.hex, c.id))}
-                    stun={hasHex(hexOf(battle.hex, c.id), 'st_stun')}
+                    /* 기절이든 감전이든 못 움직이는 것은 하나다 (`core/status` 의 `STUN`) */
+                    stun={stunned(hexOf(battle.hex, c.id))}
                     silent={hasHex(hexOf(battle.hex, c.id), 'st_silence')}
+                    /*
+                      묶여 있나 — **묶는 기술에 맞았고 아직 못 움직이나.**
+
+                      두 조건이 다 필요하다. 명단만 보면 속박이 풀린 뒤에도
+                      덩굴이 남고, 못 움직이는 것만 보면 암석에 맞아 기절한
+                      사람에게도 덩굴이 감긴다.
+                    */
+                    bound={
+                      bindIds.includes(c.id) && stunned(hexOf(battle.hex, c.id))
+                    }
+                    shock={hasHex(hexOf(battle.hex, c.id), 'st_shock')}
+                    /*
+                      ── 돌아섰나 ──
+
+                      혼란에 걸린 사람은 아군을 친다 (`core/autoBattle` 의
+                      `applyHit`). 아군 줄은 **뒤에 설수록 왼쪽**이므로
+                      (`back` 이 클수록 왼쪽), 나보다 뒤에 살아 있는 사람이
+                      있으면 칠 상대가 왼쪽에 있다는 뜻이다 — 그때만 뒤집는다.
+
+                      맨 뒤에 선 사람은 아군이 전부 오른쪽이라 안 뒤집는다.
+                      실제로 누구를 칠지는 계산이 무작위로 고르므로 (`mates`)
+                      늘 맞지는 않지만, 넷 중 셋은 이 규칙으로 맞는다.
+                    */
+                    turn={
+                      !!battle.charm?.who.includes(c.id)
+                      && line.some((m, mi) => (
+                        mi > line.length - 1 - i && hpOf(m, battle.hp) > 0
+                      ))
+                    }
                     cut={battle.cut?.[c.id] ?? 0}
                     /*
                       판 연출 중에는 몸도 멈춘다. 계산은 이미 막혀 있지만
@@ -2112,7 +2297,9 @@ export function BattleView() {
                     <View
                       key={`gap${back}`}
                       style={{
-                        width: Math.round(foeW * depthAt(back).scale),
+                        width: Math.round(
+                          foeW * depthAt(back).scale * (foeScale[back] ?? 1),
+                        ),
                         height: 1,
                         marginLeft: back === 0 ? 0 : -(fLap + squeeze),
                         marginBottom: depthAt(back).lift,
@@ -2129,7 +2316,21 @@ export function BattleView() {
                 const kf = kindAt(battle, f);
                 /* 아직 걸어 들어오는 중이면 그 값 — 다 걸었으면 undefined */
                 const walking = walk.get(f.id);
-                const foeSize = Math.round(foeW * depthAt(back).scale);
+                /*
+                  **제 크기 배수를 여기서 한 번만 얹는다** (`FoeKind.scale`).
+
+                  여태 자리 폭은 우두머리 폭 그대로 잡고 그림만 줄여 그렸다
+                  (`size={foeSize * kf.scale}`). 그러면 26판 애벌레 넷이 그리는
+                  것의 두 배씩 자리를 먹어서, 좁히기가 최대로 걸려 넷이 한
+                  덩어리로 겹쳤다.
+
+                  이제 자리와 그림이 **같은 값**을 쓴다. 발밑 체력 막대도,
+                  머리 위 로고도, 몸에서 나는 연출도 전부 이 값을 타므로
+                  줄인 놈에게는 줄인 것들이 붙는다.
+                */
+                const foeSize = Math.round(
+                  foeW * depthAt(back).scale * (kf.scale ?? 1),
+                );
                 /*
                   이 마리가 지금 그리는 칸.
 
@@ -2172,6 +2373,19 @@ export function BattleView() {
                   : (foeSwing && !f.gim?.still)
                     ? (battle.boss && patShown ? swingFrame : 'attack')
                     : rest;
+                /**
+                 * 이 그림이 **실제로 차지하는 높이** (px).
+                 *
+                 * `Sprite` 는 정사각 상자에 비율을 지켜 넣으므로(`contain`)
+                 * 가로로 넓은 그림은 위아래가 남는다. 발은 상자 바닥에 맞춰
+                 * 내려 두었으니 (`spriteGap`), 남는 자리는 전부 **머리 위**다.
+                 *
+                 * 머리 위에 무언가를 놓는 것들이 이걸 봐야 한다 — 회복 숫자와
+                 * 이름 말풍선. 상자 높이로 재면 그림마다 30~50px 씩 떠 버린다.
+                 */
+                const headH = Math.round(
+                  foeSize * Math.min(1, SPRITE_RATIO[`${kf.art}/${foeFrame}`] ?? 1),
+                );
                 const bossOne = battle.boss && back === 0;
                 /*
                   이 마리에게 걸려 있는 것 — **한 번만 재서 둘이 나누어 쓴다.**
@@ -2268,7 +2482,8 @@ export function BattleView() {
                         pointerEvents="none"
                         style={{
                           position: 'absolute',
-                          bottom: foeSize + 6,
+                          /* 회복 숫자와 같은 기준 — 둘 다 머리 위 자리다 (`headH`) */
+                          bottom: headH + 16,
                           left: -18,
                           right: -18,
                           alignItems: 'center',
@@ -2294,7 +2509,13 @@ export function BattleView() {
                       따로 그려야 때리는 것으로 보인다.
                     */}
                     {bossOne && !!bossFx && (
-                      <BossSideFx key={bossFx.no} kind={bossFx.kind} size={foeSize} />
+                      <BossSideFx
+                        key={bossFx.no}
+                        kind={bossFx.kind}
+                        size={foeSize}
+                        /* 호가 몸 높이를 지나가게 (`BossFx` 의 `Swing`) */
+                        art={headH}
+                      />
                     )}
 
                     {/*
@@ -2331,7 +2552,17 @@ export function BattleView() {
                         pointerEvents="none"
                         style={{
                           position: 'absolute',
-                          bottom: foeSize + 20 + hi * 12,
+                          /*
+                            **그림 꼭대기 바로 위** (`headH`).
+
+                            상자 높이(`foeSize`)에서 쟀었다. 그런데 상자는
+                            정사각이고 그림은 그 안에 비율대로 들어가므로
+                            (`SPRITE_RATIO`), 납작한 우두머리는 상자 위쪽
+                            30~40px 이 통째로 빈다 — 거기에 20px 을 더 얹으니
+                            `+100` 이 머리에서 50px 넘게 떨어져 떴다.
+                            "너무 위에 나옴 안보여" 가 그것이다.
+                          */
+                          bottom: headH + 4 + hi * 12,
                           left: foeSize * 0.3,
                           zIndex: 48,
                         }}
@@ -2351,23 +2582,17 @@ export function BattleView() {
                       머리 위에 딱지도 붙인다. 색만으로는 흑백 화면에서
                       "빨간 놈" 이 그냥 다른 종처럼 읽힐 수 있다.
                     */}
-                    {bossOne && rage && (
-                      <View
-                        pointerEvents="none"
-                        style={{
-                          position: 'absolute',
-                          bottom: -18,
-                          left: -14,
-                          right: -14,
-                          alignItems: 'center',
-                          zIndex: 41,
-                        }}
-                      >
-                        <View style={{ borderWidth: 1, borderColor: BAD_C, paddingHorizontal: 3 }}>
-                          <T size={9} bold style={{ color: BAD_C }}>광폭화</T>
-                        </View>
-                      </View>
-                    )}
+                    {/*
+                      ── 발밑 `광폭화` 딱지는 걷었다 ──
+
+                      두 가지가 걸렸다. 딱지는 걸린 뒤로 계속 붙어 있으므로
+                      **언제 그렇게 됐는지**를 못 말하고, 발밑은 체력 막대가
+                      쓰는 자리라 9px 짜리 글자가 막대에 겹쳤다.
+
+                      지금은 그 순간 무대 한가운데에 붉은 글씨가 한 번 뜬다
+                      (`HitFx` 의 `RageCall`). "지금 광폭화 중" 은 몸이 붉게
+                      물드는 것(`tint`)이 계속 말한다 — 둘이 하는 일이 다르다.
+                    */}
 
                     {/*
                       적도 **발밑에** 체력 막대를 단다.
@@ -2409,9 +2634,13 @@ export function BattleView() {
                         것이라 **어디까지 깎았나가 곧 남은 시간**인데, 막대가
                         둘이면 어느 쪽을 봐야 하는지가 흐려진다.
 
-                        빗금 대신 **붉은 테**로 갈랐다. 흑백 두 색에 붉은색
-                        하나가 이 게임에서 "급하다" 를 말하는 유일한 색이다
-                        (`BAD_C`).
+                        붉은색이었다. 그런데 이 게임에서 붉은색은 "급하다"
+                        하나만 말하는데(`BAD_C`), 그건 **피해**와 같은 색이라
+                        깎아야 할 막과 깎이는 체력이 한 색으로 겹쳐 보였다.
+
+                        하늘색으로 갈랐다 (`SHIELD_C`). 막은 이 게임에서
+                        유일하게 "적이 두른 좋은 것" 이라 제 색을 하나 쓸
+                        값어치가 있고, 흰 체력과도 붉은 무엇과도 안 닮았다.
                       */}
                       {(f.gim?.shield ?? 0) > 0 && (
                         <View
@@ -2423,12 +2652,13 @@ export function BattleView() {
                             bottom: 0,
                             width: `${Math.max(0, Math.min(1,
                               (f.gim?.shield ?? 0) / Math.max(1, kf.hp * 0.2))) * 100}%`,
-                            backgroundColor: BAD_C,
+                            backgroundColor: SHIELD_C,
                           }}
                         />
                       )}
                     </View>
 
+                    <FuseWrap ms={f.gim?.fuse}>
                     <Sprite
                       set={kf.art}
                       /* 맞은 놈만 자세가 무너진다 — 나머지는 계속 서 있다 */
@@ -2440,7 +2670,7 @@ export function BattleView() {
                         우두머리 자리에 서지만 우두머리가 아니다 — 132px 로
                         그리면 넷이 화면을 덮는다.
                       */
-                      size={Math.round(foeSize * (kf.scale ?? 1))}
+                      size={foeSize}
                       /*
                         **발을 상자 바닥에 맞춘다** (아군과 같은 이유).
 
@@ -2473,6 +2703,7 @@ export function BattleView() {
                       /* 광폭화한 우두머리만 붉다 — 흰 픽셀이라 한 줄로 물든다 */
                       tint={bossOne && rage ? BAD_C : undefined}
                     />
+                    </FuseWrap>
                   </Animated.View>
                 );
               })}
@@ -2648,6 +2879,15 @@ export function BattleView() {
 
         {/* 우두머리 등장 — 무대 한가운데. 전멸 안내보다 아래에 둔다 */}
         {!down && <BossCall nonce={bossCall} name={cur.name} title={cur.title} />}
+
+        {/*
+          ── 광폭화 ── 등장 알림보다 **위에** 둔다.
+
+          둘이 같이 뜰 일은 없다 (등장은 판 시작, 광폭화는 2분 뒤). 그래도
+          순서를 정해 두는 이유는, 우두머리를 부르자마자 앞 판의 광폭화
+          알림이 아직 사라지는 중일 수 있어서다.
+        */}
+        {!down && <RageCall nonce={rageCall} />}
 
         {/*
           ── 특수기 이름은 이제 우두머리 머리 위에 뜬다 ──
