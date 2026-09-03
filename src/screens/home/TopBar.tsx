@@ -31,7 +31,7 @@ import { fmtShort } from '@/core/currency';
 import { Row, T } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { Pixel } from '@/ui/Pixel';
-import { ICONS } from '@/ui/sprites';
+import { ICONS, NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
 import { BORDER, C, O, SP, WHITE } from '@/ui/theme';
@@ -50,45 +50,62 @@ const MIN_TOP = 14;
 /**
  * 위쪽 문 여섯.
  *
- * 그림이 아직 없다. 여섯 개를 다 받으려면 프롬프트를 여섯 벌 써야 하는데,
- * 자리를 잡는 것이 이 작업의 내용이고 자리는 **글자로도 잡힌다.** 그림이
- * 들어오면 `art` 를 채우고 `Sprite` 로 갈아 끼우면 된다.
- *
  * 설정만 실제로 열린다 (`SettingsPopup`) — 소리 스위치가 갈 데가 없어서다.
  * 나머지 다섯은 준비중 (`ui/SoonPopup`).
+ *
+ * 그림은 `ui/sprites` 의 `NAV` 다. 글자만 있던 시절에는 이 줄이 띠가 아니라
+ * **표**로 보였다 — 여섯 칸에 두 글자씩 적힌 줄은 게임이 아니라 목록이다.
  */
-const GATES: readonly { id: string; label: string }[] = [
-  { id: 'rank', label: '랭킹' },
-  { id: 'event', label: '이벤트' },
-  { id: 'mail', label: '우편' },
-  { id: 'gift', label: '선물' },
-  { id: 'mission', label: '미션' },
-  { id: 'config', label: '설정' },
+const GATES: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
+  { id: 'rank', label: '랭킹', art: 'rank' },
+  { id: 'event', label: '이벤트', art: 'event' },
+  { id: 'mail', label: '우편', art: 'mail' },
+  { id: 'gift', label: '선물', art: 'gift' },
+  { id: 'mission', label: '미션', art: 'quest' },
+  { id: 'config', label: '설정', art: 'config' },
 ];
 
-function Gate({ label, onPress }: { label: string; onPress: () => void }) {
+/**
+ * 문 하나 — 그림 위에 글자.
+ *
+ * **테두리가 없다.** 여섯이 각자 네모를 두르면 화면에 네모가 여섯 개 생기고,
+ * 그 여섯이 위 띠의 네모와 무대의 네모 사이에 끼어 전부 따로 노는 조각으로
+ * 보인다 ("다 뚝뚝 끊긴 느낌"). 칸을 가르는 것은 줄 하나로 충분하다
+ * (`GateRow` 의 세로줄) — 그러면 여섯이 **한 줄**로 읽힌다.
+ *
+ * 눌리는 것은 배경 반전으로 말한다. 흑백이라 그 편이 테두리 굵기보다 세다.
+ */
+function Gate({ label, art, onPress }: {
+  label: string; art: keyof typeof NAV; onPress: () => void;
+}) {
   return (
     <Pressable
       onPress={() => { sfx('tap'); onPress(); }}
       hitSlop={4}
-      style={({ pressed }) => [
-        BORDER,
-        {
-          flex: 1,
-          paddingVertical: 4,
-          alignItems: 'center',
-          backgroundColor: pressed ? C.bgInv : 'transparent',
-        },
-      ]}
+      style={({ pressed }) => ({
+        flex: 1,
+        paddingVertical: 5,
+        alignItems: 'center',
+        gap: 2,
+        backgroundColor: pressed ? C.bgInv : 'transparent',
+      })}
     >
       {({ pressed }: { pressed: boolean }) => (
-        <T size={10} bold style={{ color: pressed ? C.fgInv : WHITE }}>{label}</T>
+        <>
+          <Pixel sprite={NAV[art]} scale={2} color={pressed ? C.fgInv : WHITE} />
+          <T size={9} bold style={{ color: pressed ? C.fgInv : WHITE }}>{label}</T>
+        </>
       )}
     </Pressable>
   );
 }
 
-/** 재화 한 덩이 — 그림 하나에 숫자 하나 */
+/**
+ * 재화 한 덩이 — 그림 하나에 숫자 하나.
+ *
+ * 세 덩이가 **한 테두리 안에** 들어간다 (`TopBar` 의 지갑). 따로 두면 셋
+ * 사이 간격이 곧 "이건 다른 것" 이라는 말이 되는데, 내가 가진 것은 한 벌이다.
+ */
 function Coin({ icon, text }: { icon: typeof ICONS.coin; text: string }) {
   return (
     <Row gap={3}>
@@ -96,6 +113,11 @@ function Coin({ icon, text }: { icon: typeof ICONS.coin; text: string }) {
       <T size={11} bold>{text}</T>
     </Row>
   );
+}
+
+/** 지갑 안의 칸막이 — 재화 사이를 가르는 세로줄 */
+function VBar() {
+  return <View style={{ width: 1, height: 12, backgroundColor: WHITE, opacity: O.faint }} />;
 }
 
 export function TopBar() {
@@ -153,9 +175,15 @@ export function TopBar() {
             </Row>
           </Pressable>
 
-          <Row gap={SP.sm}>
+          {/* ── 지갑 ── 셋이 한 테두리 안에 들어간다 */}
+          <Row
+            gap={SP.xs}
+            style={[BORDER, { paddingHorizontal: SP.xs, paddingVertical: 3 }]}
+          >
             <Coin icon={ICONS.coin} text={fmtShort(money).replace(' 골드', '')} />
+            <VBar />
             <Coin icon={ICONS.gem} text={String(dia)} />
+            <VBar />
             {/*
               체력은 숫자만. 막대로 두면 재화 옆에서 폭을 다투고, 이 자리에서
               알아야 하는 것은 "얼마나 남았나" 하나다.
@@ -167,14 +195,25 @@ export function TopBar() {
           </Row>
         </Row>
 
-        {/* ── 아랫줄 · 갈 곳 여섯 ── */}
-        <Row gap={3}>
-          {GATES.map((g) => (
-            <Gate
-              key={g.id}
-              label={g.label}
-              onPress={() => (g.id === 'config' ? setConfig(true) : soon(g.label))}
-            />
+        {/*
+          ── 아랫줄 · 갈 곳 여섯 ──
+
+          **한 테두리 안에 여섯**이다. 사이는 세로줄로만 가른다 — 칸마다
+          네모를 두르면 여섯 개의 작은 상자가 되고, 그 여섯이 위아래 어디에도
+          안 붙어서 화면이 조각난다.
+        */}
+        <Row gap={0} style={BORDER}>
+          {GATES.map((g, i) => (
+            <React.Fragment key={g.id}>
+              {i > 0 && (
+                <View style={{ width: 1, alignSelf: 'stretch', backgroundColor: WHITE, opacity: O.dim }} />
+              )}
+              <Gate
+                label={g.label}
+                art={g.art}
+                onPress={() => (g.id === 'config' ? setConfig(true) : soon(g.label))}
+              />
+            </React.Fragment>
           ))}
         </Row>
       </View>

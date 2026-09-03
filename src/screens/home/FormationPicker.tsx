@@ -12,50 +12,73 @@
  *
  * ## 그림 없이 점으로 그린다
  *
- * 칸마다 다섯 점 두 줄을 그린다 — 찬 점이 사람이 서는 칸이다. 이름
- * (`3-1`)만으로는 어느 쪽이 앞인지 매번 헷갈리는데, 점 두 줄이면 **아래가
- * 앞**이라는 것이 그림으로 보인다 (무대에서도 아래가 앞이다).
+ * 무대와 **같은 방향**으로 그린다. 두 세로줄(왼쪽이 뒤 · 오른쪽이 앞)에
+ * 다섯 가로줄이고, 오른쪽 끝에 적을 뜻하는 점 하나를 세운다 — 그 점이
+ * 있어야 "오른쪽이 앞" 이 설명 없이 읽힌다.
+ *
+ * 한 번 위아래로 그렸다가 고쳤다. 그때는 위가 뒤 · 아래가 앞이었는데,
+ * 화면에서 앞뒤는 **적을 바라본 좌우**다 (`core/party`). 그림과 무대가
+ * 다른 방향을 가리키면 둘 중 하나는 반드시 틀리게 읽힌다.
  */
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { FORMATIONS, FORMATION_IDS, FORM_COLS, FRONT_SHARE } from '@/core/party';
+import { FORMATIONS, FORMATION_IDS, FORM_LANES, FRONT_SHARE } from '@/core/party';
 import { Row, T } from '@/ui/atoms';
 import { sfx } from '@/ui/sfx';
-import { BORDER, C, SP, WHITE } from '@/ui/theme';
+import { BORDER, C, O, SP, WHITE } from '@/ui/theme';
 
 /** 점 하나 — 찬 것과 빈 것 */
 function Dot({ on, inv }: { on: boolean; inv: boolean }) {
+  const ink = inv ? C.fgInv : WHITE;
   return (
     <View
       style={{
         width: 4,
         height: 4,
         borderWidth: 1,
-        borderColor: inv ? C.fgInv : WHITE,
-        backgroundColor: on ? (inv ? C.fgInv : WHITE) : 'transparent',
-        opacity: on ? 1 : 0.35,
+        borderColor: ink,
+        backgroundColor: on ? ink : 'transparent',
+        opacity: on ? 1 : 0.3,
       }}
     />
   );
 }
 
-function Rows({ back, front, inv }: {
+/**
+ * 대형 미리보기 — 가로가 앞뒤, 세로가 다섯 줄.
+ *
+ * 위에서 아래로 4→0 번 줄이다. 무대에서 뒤에 선 사람이 위에 그려지므로
+ * (`Ground` 의 `depthAt`) 같은 순서로 놓아야 그림과 무대가 겹쳐 읽힌다.
+ */
+function Grid({ back, front, inv }: {
   back: readonly number[]; front: readonly number[]; inv: boolean;
 }) {
-  const row = (cols: readonly number[]) => (
-    <Row gap={2}>
-      {Array.from({ length: FORM_COLS }, (_v, i) => (
-        <Dot key={i} on={cols.includes(i)} inv={inv} />
-      ))}
-    </Row>
-  );
+  const lanes = Array.from({ length: FORM_LANES }, (_v, i) => FORM_LANES - 1 - i);
   return (
-    <View style={{ gap: 3, alignItems: 'center' }}>
-      {/* 위가 뒷줄, 아래가 앞줄 — 무대와 같은 방향이다 */}
-      {row(back)}
-      {row(front)}
-    </View>
+    <Row gap={5} style={{ alignItems: 'center' }}>
+      <View style={{ gap: 3 }}>
+        {lanes.map((ln) => (
+          <Row key={ln} gap={4}>
+            <Dot on={back.includes(ln)} inv={inv} />
+            <Dot on={front.includes(ln)} inv={inv} />
+          </Row>
+        ))}
+      </View>
+      {/*
+        적 — 늘 오른쪽 가운데다. 세로 막대 하나로 두는 이유는 파티 점과
+        같은 모양이면 안 되기 때문이다. 이게 사람인지 벽인지가 아니라,
+        **어느 쪽이 적인가**만 말하면 된다.
+      */}
+      <View
+        style={{
+          width: 2,
+          height: FORM_LANES * 4 + (FORM_LANES - 1) * 3,
+          backgroundColor: inv ? C.fgInv : WHITE,
+          opacity: O.dim,
+        }}
+      />
+    </Row>
   );
 }
 
@@ -97,7 +120,7 @@ export function FormationPicker() {
               ]}
             >
               <T size={11} bold style={on ? { color: C.fgInv } : undefined}>{id}</T>
-              <Rows back={def.backCols} front={def.frontCols} inv={on} />
+              <Grid back={def.backLanes} front={def.frontLanes} inv={on} />
             </Pressable>
           );
         })}

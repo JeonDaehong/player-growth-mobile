@@ -102,7 +102,22 @@ export function RewardBar() {
   const worth = maxValue(killGold(stage, false));
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: SP.xs, marginBottom: SP.xs }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: SP.xs,
+        /*
+          **띠다 — 카드가 아니다.** 좌우 여백을 제 안에서 주고, 아래는 가는
+          가로줄로 무대와 이어진다 (`HomeScreen`). 예전에는 양옆이 뜬 채로
+          아래에 8px 을 비워 두어서, 무대와 이 줄이 서로 남남으로 보였다.
+        */
+        paddingHorizontal: SP.sm,
+        paddingVertical: SP.xs,
+        borderBottomWidth: 1,
+        borderBottomColor: '#FFFFFF33',
+      }}
+    >
       {/* ── 상자 ── */}
       <Pressable
         onPress={() => {

@@ -51,7 +51,7 @@ import { cleanseOptOf, cleanseTargets } from '@/core/skillOpt';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
-import { BAD_C, BORDER, SHIELD_C, SP, WHITE } from '@/ui/theme';
+import { BAD_C, SHIELD_C, SP, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
@@ -102,20 +102,35 @@ const bgRatio = (bg: string) => SPRITE_RATIO[`bg_chapter/${bg}`] ?? 0.75;
 /** 맨 앞 아군 스프라이트 폭. 뒤로 갈수록 `depthAt` 이 줄인다 */
 
 /**
- * 대형 칸 하나가 먹는 폭 — **인물 폭의 몇 할.**
+ * 앞줄이 뒷줄보다 **얼마나 오른쪽에** 서나 — 인물 폭의 몇 할.
  *
- * 1.0 이면 다섯 칸이 인물 다섯 개 폭(380px)이라 폰 화면에서 적이 설 자리가
- * 안 남는다. 0.56 이면 옆 칸과 조금 겹치는데, 그게 오히려 대형처럼 보인다 —
- * 딱 붙지도 뚝 떨어지지도 않은 거리다.
+ * 앞뒤는 화면 위아래가 아니라 **적을 바라본 좌우**다 (`core/party` 의 대형
+ * 설명). 아군이 왼쪽에서 오른쪽을 보므로 앞줄이 오른쪽이다.
  *
- * 적이 넷에서 **여섯**으로 늘면서 (`MOB_CAP`) 한 번 더 조였다. 적 줄이
- * 250px 을 먹으므로, 아군 줄이 넓으면 대형 전체가 통째로 줄어든다
- * (`fitOf`) — 자리를 벌리려다 인물이 작아지면 벌린 뜻이 없다.
+ * 0.80 이다. 인물이 76px 이니 61px 쯤 벌어진다 — 칸이 76px 이므로 9px 이
+ * 겹치는데, 스프라이트가 정사각 칸 안에 `contain` 으로 들어가 실제 그림은
+ * 칸보다 좁으므로 (`ui/Sprite`) 화면에서는 딱 붙어 선 정도로 보인다.
  *
- * `2-2` 는 ②④ 두 칸만 쓰므로 폭이 `1 × 칸 + 인물` 이다. 셋 다 span 이
- * 2 칸이라 (③ 을 낀 양옆) 대형을 바꿔도 줄 폭이 안 흔들린다.
+ * 0.62 로 시작했다가 올렸다. 그때는 두 줄이 23px 씩 파고들어서 `2-2` 의
+ * 네 사람이 두 덩어리로 뭉쳤다. 반대로 1.0 이면 두 줄 사이에 사람 하나가
+ * 통째로 들어갈 틈이 생겨 파티가 둘로 갈려 보인다.
+ *
+ * 이 값이 곧 아군 구역의 폭이다 (`formLayout`). 넓으면 대형 전체가 통째로
+ * 줄어든다 (`fitOf`) — 적이 여섯까지 서므로 (`MOB_CAP`) 아껴 써야 한다.
  */
-const COL_RATIO = 0.56;
+const ROW_RATIO = 0.80;
+
+/**
+ * 한 줄 물러날 때마다 **오른쪽으로** 비끼는 폭 — 인물 폭의 몇 할.
+ *
+ * 다섯 가로줄을 x 가 같은 자리에 세우면 넷이 한 줄로 위로 쌓인다. 바닥은
+ * 위로 갈수록 좁아지는 사다리꼴인데 (`Ground` 의 `BACK_W`) 인물만 수직으로
+ * 서면 뒤에 선 사람이 바닥 밖으로 나간 것처럼 보인다.
+ *
+ * 0.10 이면 네 줄에 걸쳐 30px 쯤 기운다. 바닥 기울기를 따라가면서도, 뒷줄이
+ * 앞줄을 앞지를 만큼은 아니다 (`ROW_RATIO` 가 그 여섯 배다).
+ */
+const LANE_SKEW = 0.10;
 
 /** 아군끼리 겹치는 폭 — 대형이 생기면서 안 쓴다 (자리는 칸이 정한다) */
 const PARTY_LAP = Math.round(16 * ZOOM);
@@ -278,43 +293,38 @@ function fitOf(
 }
 
 /**
- * 뒷줄이 **몇 칸 물러나 보이나** (`Ground` 의 `depthAt`).
- *
- * 1 이 아니라 2 다. 1 이면 뒷줄이 앞줄보다 11px 위, 8% 작을 뿐인데 인물이
- * 76px 이라 거의 다 가려진다 — 특히 `2-2` 는 앞뒤가 **같은 칸**(②④)을 쓰므로
- * 뒷줄 둘이 통째로 안 보였다.
- *
- * 2 면 22px 위에 16% 작다. 머리와 어깨가 앞줄 위로 나오고, 크기 차이가
- * "뒤에 있다" 를 말한다.
- */
-const BACK_DEPTH = 2;
-
-/**
  * 대형의 **자리와 폭** (배율 1 기준으로도, 실제 배율로도 같은 식을 쓴다).
  *
- * ## 뒷줄은 반 칸 왼쪽으로 비킨다
+ * ## 앞뒤는 좌우다
  *
- * 칸만으로 자리를 잡으면 앞뒤가 같은 칸을 쓸 때 정확히 포개진다. `2-2` 가
- * ②④ 를 두 줄 다 쓰고 `3-1` 도 ③ 이 겹친다 — 세 대형 중 둘이 그렇다.
+ * 한 번 **위아래**로 그렸다가 통째로 뒤집었다. 그때는 다섯 칸이 가로였고
+ * 앞뒤가 세로였는데, 그러면 앞줄과 뒷줄이 적에게서 **같은 거리**에 서 있게
+ * 된다 — 앞에 세워 막는다는 말이 화면에서 아무것도 뜻하지 않았다.
  *
- * 반 칸을 비키면 넷이 **마름모**로 선다. 앞줄이 두 뒷사람 사이에 서는 모양이
- * 되어, 겹치지도 않고 두 줄이라는 것도 한눈에 읽힌다.
+ * 지금은 반대다. 다섯 줄(`lane`)이 화면 위아래로 늘어서고, 앞뒤가 좌우다.
+ * 아군은 왼쪽에서 오른쪽을 보므로 **앞줄이 오른쪽**, 곧 적 쪽이다.
+ *
+ * ## 뒤로 갈수록 오른쪽으로 기운다
+ *
+ * `LANE_SKEW` 만큼씩. 바닥이 위로 갈수록 좁아지므로 (`Ground`) 수직으로
+ * 쌓으면 위에 선 사람이 땅 밖으로 나간 것처럼 보인다.
  *
  * ## 자리를 0 에서 시작하게 민다
  *
- * 비키다 보면 왼쪽 끝이 음수가 된다. 통째로 밀어서 제일 왼쪽 사람이 0 에
- * 오게 맞춘다 — 그래야 아군 구역의 폭이 곧 대형의 폭이다.
+ * 통째로 밀어서 제일 왼쪽 사람이 0 에 오게 맞춘다 — 그래야 아군 구역의
+ * 폭이 곧 대형의 폭이고, 그 폭으로 배율을 잰다 (`fitOf`).
  */
 function formLayout(spots: readonly FormSpot[], base: number): {
   x: number[]; width: number;
 } {
   if (!spots.length) return { x: [], width: 0 };
-  const step = base * COL_RATIO;
-  const raw = spots.map((sp) => sp.col * step - (sp.row === 'back' ? step * 0.5 : 0));
+  const gap = base * ROW_RATIO;
+  const skew = base * LANE_SKEW;
+  const raw = spots.map((sp) => sp.lane * skew + (sp.row === 'front' ? gap : 0));
   const min = Math.min(...raw);
   const x = raw.map((v) => Math.round(v - min));
-  const sizeOf = (sp: FormSpot) =>
-    Math.round(base * depthAt(sp.row === 'back' ? BACK_DEPTH : 0).scale);
+  /* 뒤에 선 줄은 작게 그려지므로 (`depthAt`) 오른쪽 끝도 그만큼 덜 나간다 */
+  const sizeOf = (sp: FormSpot) => Math.round(base * depthAt(sp.lane).scale);
   return {
     x,
     width: Math.max(...x.map((v, i) => v + sizeOf(spots[i]))),
@@ -1874,24 +1884,33 @@ export function BattleView() {
    * 적 줄의 `spotOf` 와 짝이다. 뛰어드는 거리도, 적이 날린 것이 날아갈
    * 거리도 여기서 나온다.
    */
-  /** 그 사람의 줄 깊이 — 0 이 앞줄, `BACK_DEPTH` 가 뒷줄 */
-  const depthOf = (i: number) => (spots[i]?.row === 'back' ? BACK_DEPTH : 0);
+  /**
+   * 그 사람의 **깊이** — 화면 위아래로 몇 번째 줄인가 (`Ground` 의 `depthAt`).
+   *
+   * 곧 `lane` 이다. 0 이 화면 아래(제일 크게 보이는 자리), 4 가 위다.
+   * 앞줄·뒷줄과는 상관이 없다 — 저건 좌우다 (`allyXOf`).
+   */
+  const depthOf = (i: number) => spots[i]?.lane ?? 0;
   /** 그 사람이 아군 구역 안에서 서는 자리 (왼쪽 끝에서 px) */
   const allyXOf = (i: number) => Math.round((form1.x[i] ?? 0) * fit);
   const allySizeOf = (i: number) => Math.round(partyW * depthAt(depthOf(i)).scale);
   /**
    * 그 사람이 적 쪽으로 나와 있는 거리 (px).
    *
-   * 앞줄이 끝까지 나가고 뒷줄은 한 칸 덜 나간다 (`DEPTH_STEP`). 던지는
-   * 사람은 거기서 `RANGED_BACK` 만큼 더 물러난다 — 앞줄 원거리가 뒷줄
-   * 근접보다 뒤에 서지 않도록 두 값의 크기를 벌려 두었다 (6 < 11).
+   * **줄로 잰다 — 깊이로 재지 않는다.** 깊이(`lane`)로 재면 위쪽 줄에 선
+   * 사람이 44px 이나 덜 나가서, 대형이 통째로 비스듬히 늘어진다. 적에게
+   * 가까이 가는 것은 앞줄이 하는 일이지 아래 줄이 하는 일이 아니다.
+   *
+   * 뒷줄은 `DEPTH_STEP` 만큼 덜 나가고, 던지는 사람은 거기서 `RANGED_BACK`
+   * 만큼 더 물러난다 — 앞줄 원거리가 뒷줄 근접보다 뒤에 서지 않도록 두 값의
+   * 크기를 벌려 두었다 (6 < 11).
    */
   const allyAdvOf = (i: number) => {
     const sp = spots[i];
     if (!sp) return 0;
     const melee = CHARS[sp.c.id].range === 'melee';
     return Math.max(0, Math.round(
-      closeIn - depthOf(i) * DEPTH_STEP - (melee ? 0 : RANGED_BACK),
+      closeIn - (sp.row === 'back' ? DEPTH_STEP : 0) - (melee ? 0 : RANGED_BACK),
     ));
   };
 
@@ -2114,9 +2133,14 @@ export function BattleView() {
   };
 
   return (
-    <View style={[BORDER, { padding: SP.sm }]}>
-      {/* ── 머리말 ── */}
-      <Row between>
+    /*
+      **테두리 없는 띠.** 위로는 상자 줄이, 아래로는 세 줄이 가는 가로줄
+      하나로 이어진다 (`HomeScreen`) — 넷을 다 카드로 두면 화면이 조각난다.
+      좌우 여백은 머리말에만 주고, 무대는 화면 폭을 꽉 쓴다.
+    */
+    <View style={{ paddingVertical: SP.xs }}>
+      {/* ── 머리말 ── 여백은 여기만 준다. 무대는 벽까지 나간다 */}
+      <Row between style={{ paddingHorizontal: SP.sm }}>
         <Row gap={SP.xs}>
           {/*
             판을 골라 간다. **깬 판과 지금 판까지만** — 안 가 본 데를
@@ -2146,7 +2170,13 @@ export function BattleView() {
         style={[{
           height: STAGE_H,
           marginTop: SP.xs,
-          borderWidth: 1,
+          /*
+            **위아래로만 줄을 긋는다.** 무대가 화면 폭을 꽉 채우므로 좌우
+            테두리는 화면 가장자리에 딱 붙은 선이 되는데, 그건 액자가 아니라
+            그냥 화면이 좁아 보이게 만드는 선이다.
+          */
+          borderTopWidth: 1,
+          borderBottomWidth: 1,
           borderColor: '#FFFFFF33',
           overflow: 'hidden',
           justifyContent: 'flex-end',
@@ -2210,9 +2240,9 @@ export function BattleView() {
             <Animated.View
               style={{
                 /*
-                  아군 구역. 안에서는 **제 칸에 절대 좌표로** 선다
-                  (`Fighter` 의 `x`) — 대형이 비는 칸을 만들 수 있으므로
-                  (`2-2` 의 ③), 가로줄로는 자리를 못 잡는다.
+                  아군 구역. 안에서는 **제 자리에 절대 좌표로** 선다
+                  (`Fighter` 의 `x` · `back`) — 대형이 비는 줄을 만들 수
+                  있으므로 (`2-2` 의 ③), 가로줄로는 자리를 못 잡는다.
                 */
                 position: 'absolute', left: edge, bottom: FLOOR,
                 width: Math.round(allyW1 * fit),
@@ -2226,13 +2256,19 @@ export function BattleView() {
               }}
             >
               {/*
-                **뒷줄부터 그린다.** 먼저 그려진 것이 아래에 깔리므로, 뒤에 선
-                사람이 앞사람에게 가려진다. `zIndex` 도 같이 걸려 있지만
-                (`Fighter`), 그리는 차례가 맞아야 형제 사이에서도 확실하다.
+                **먼 줄부터 그린다.** 먼저 그려진 것이 아래에 깔리므로, 위쪽
+                줄에 선 사람이 아래 줄 사람에게 가려진다.
+
+                같은 줄이면 **뒷줄이 먼저**다. 세 대형이 다 앞뒤로 같은 줄을
+                쓰는데 (`2-2` 의 ②④, 나머지 둘의 ③) 그 둘은 `depthAt` 이
+                같아서 `zIndex` 로는 안 갈린다 — 그릴 때 순서가 정한다.
               */}
               {[...spots]
                 .map((sp, i) => ({ sp, i }))
-                .sort((a, b) => (b.sp.row === 'back' ? 1 : 0) - (a.sp.row === 'back' ? 1 : 0))
+                .sort((a, b) => (
+                  (b.sp.lane - a.sp.lane)
+                  || ((a.sp.row === 'back' ? 0 : 1) - (b.sp.row === 'back' ? 0 : 1))
+                ))
                 .map(({ sp, i }) => {
                   const c = sp.c;
                   return (
@@ -2272,20 +2308,8 @@ export function BattleView() {
                       ── 돌아섰나 ──
 
                       혼란에 걸린 사람은 아군을 친다 (`core/autoBattle` 의
-                      `applyHit`). 아군 줄은 **뒤에 설수록 왼쪽**이므로
-                      (`back` 이 클수록 왼쪽), 나보다 뒤에 살아 있는 사람이
-                      있으면 칠 상대가 왼쪽에 있다는 뜻이다 — 그때만 뒤집는다.
-
-                      맨 뒤에 선 사람은 아군이 전부 오른쪽이라 안 뒤집는다.
-                      실제로 누구를 칠지는 계산이 무작위로 고르므로 (`mates`)
-                      늘 맞지는 않지만, 넷 중 셋은 이 규칙으로 맞는다.
-                    */
-                    /*
-                      ── 돌아섰나 ──
-
-                      혼란에 걸린 사람은 아군을 친다 (`core/autoBattle` 의
                       `applyHit`). **내 왼쪽에 살아 있는 아군이 있으면**
-                      뒤집는다 — 대형이 자리를 칸으로 정하므로 (`allyXOf`)
+                      뒤집는다 — 대형이 자리를 좌표로 정하므로 (`allyXOf`)
                       왼쪽인지 오른쪽인지를 그 자리로 바로 물을 수 있다.
 
                       실제로 누구를 칠지는 계산이 무작위로 고르므로 늘

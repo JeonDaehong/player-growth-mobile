@@ -218,16 +218,28 @@ export const hpOf = (c: OwnedChar, hp: Record<string, number>): number => {
  * 넷이 한 줄로 서던 것을 **두 줄**로 나눈다. 이름은 `뒷줄-앞줄` 이다:
  * `3-1` 이면 뒤에 셋, 앞에 하나다.
  *
- * ## 왜 자리가 다섯 칸인가
+ * ## 앞뒤는 **적을 바라본 쪽**이다
  *
- * 줄마다 다섯 칸이 있고 대형은 그중 몇 칸을 쓴다. 인원수만으로 자리를 잡으면
- * `2-2` 일 때 넷이 왼쪽부터 차곡차곡 붙어 서서 대형이 아니라 그냥 줄이 된다.
+ * 화면 위아래가 아니다. 아군은 무대 왼쪽에서 오른쪽을 보고 서므로,
+ * **앞줄은 오른쪽 · 뒷줄은 왼쪽**이다. 앞에 선다는 것은 적에게 더 가까이
+ * 선다는 뜻이고, 그래서 앞줄이 먼저 맞는다 (`FRONT_SHARE`).
  *
- * 칸을 정해 두면 **가운데를 기준으로 정갈하게** 모인다.
+ * 한 번 위아래로 그렸다가 고쳤다. 위아래로 두면 뒷줄이 적과 같은 거리에
+ * 서 있게 되어, "앞에 세워 막는다" 는 말이 화면에서 아무 뜻도 갖지 못한다.
  *
- *   3-1  뒤 ①③⑤ · 앞 ③      뒤가 넓게 퍼지고 앞에 하나가 선다
- *   2-2  뒤 ②④  · 앞 ②④     넷이 가운데로 모인다
- *   1-3  뒤 ③   · 앞 ①③⑤    앞이 넓게 퍼진다
+ * ## 왜 자리가 다섯 줄인가
+ *
+ * 줄마다 **가로줄 다섯**(`FORM_LANES`)이 있고 대형은 그중 몇 줄을 쓴다.
+ * 화면에서 이 다섯은 위아래로 늘어선다 — 쿼터뷰라 뒤로 갈수록 위로 올라가고
+ * 작아진다 (`Ground` 의 `depthAt`).
+ *
+ * 인원수만으로 자리를 잡으면 `2-2` 일 때 넷이 위에서부터 차곡차곡 붙어 서서
+ * 대형이 아니라 그냥 줄이 된다. 줄을 정해 두면 **가운데를 기준으로
+ * 정갈하게** 모인다.
+ *
+ *   3-1  뒤 ①③⑤ · 앞 ③      뒤 셋이 위아래로 퍼지고 그 오른쪽에 하나가 선다
+ *   2-2  뒤 ②④  · 앞 ②④     넷이 가운데 두 줄에 네모로 모인다
+ *   1-3  뒤 ③   · 앞 ①③⑤    앞 셋이 위아래로 퍼지고 그 왼쪽에 하나가 선다
  *
  * ## 앞에 서는 사람은 누구인가
  *
@@ -242,8 +254,13 @@ export type FormationId = '3-1' | '2-2' | '1-3';
 
 export const FORMATION_IDS: readonly FormationId[] = ['3-1', '2-2', '1-3'];
 
-/** 한 줄에 있는 자리 수 */
-export const FORM_COLS = 5;
+/**
+ * 가로줄 수 — 화면에서는 **위아래**로 늘어선다.
+ *
+ * 0 이 맨 앞(화면 아래, 제일 크게 보이는 자리)이고 4 가 맨 뒤(화면 위)다.
+ * 이 방향은 무대의 깊이와 같다 (`Ground` 의 `depthAt`).
+ */
+export const FORM_LANES = 5;
 
 export interface FormationDef {
   id: FormationId;
@@ -251,10 +268,10 @@ export interface FormationDef {
   back: number;
   /** 앞줄 인원 */
   front: number;
-  /** 뒷줄이 쓰는 칸 (0 이 왼쪽 끝, 4 가 오른쪽 끝) */
-  backCols: readonly number[];
-  /** 앞줄이 쓰는 칸 */
-  frontCols: readonly number[];
+  /** 뒷줄이 쓰는 가로줄 (0 이 화면 아래 끝, 4 가 위 끝) */
+  backLanes: readonly number[];
+  /** 앞줄이 쓰는 가로줄 */
+  frontLanes: readonly number[];
   /** 화면에 적는 한 줄 */
   text: string;
 }
@@ -264,24 +281,24 @@ export const FORMATIONS: Record<FormationId, FormationDef> = {
     id: '3-1',
     back: 3,
     front: 1,
-    backCols: [0, 2, 4],
-    frontCols: [2],
+    backLanes: [0, 2, 4],
+    frontLanes: [2],
     text: '앞 하나가 70% 를 혼자 받는다',
   },
   '2-2': {
     id: '2-2',
     back: 2,
     front: 2,
-    backCols: [1, 3],
-    frontCols: [1, 3],
+    backLanes: [1, 3],
+    frontLanes: [1, 3],
     text: '앞 둘이 35% 씩 나눠 받는다',
   },
   '1-3': {
     id: '1-3',
     back: 1,
     front: 3,
-    backCols: [2],
-    frontCols: [0, 2, 4],
+    backLanes: [2],
+    frontLanes: [0, 2, 4],
     text: '앞 셋이 23% 씩 나눠 받는다',
   },
 };
@@ -311,9 +328,10 @@ export const FRONT_SHARE = 0.70;
 /** 대형에 따라 자리를 잡은 사람 하나 */
 export interface FormSpot {
   c: OwnedChar;
+  /** 적에게 가까운 쪽이 `front` — 화면에서는 오른쪽이다 */
   row: 'front' | 'back';
-  /** 다섯 칸 중 몇 번째 (0 ~ 4) */
-  col: number;
+  /** 다섯 가로줄 중 몇 번째 (0 이 화면 아래, 4 가 위) */
+  lane: number;
 }
 
 /**
@@ -323,9 +341,9 @@ export interface FormSpot {
  * 빈다 — 둘뿐인 파티가 `3-1` 을 고르면 앞 하나 · 뒤 하나가 된다. 앞을 비우면
  * 뒷줄이 곧 앞줄이 되어 대형이 뜻을 잃는다.
  *
- * 칸이 인원보다 많으면 **가운데부터** 쓴다. `1-3` 을 골랐는데 앞에 둘뿐이면
- * ①③⑤ 중 ③⑤ 가 아니라 ①⑤ 처럼 벌어지는 것이 아니라 — 가운데를 낀 두 칸을
- * 골라 정갈하게 모인다.
+ * 줄이 인원보다 많으면 **가운데부터** 쓴다. `1-3` 을 골랐는데 앞에 둘뿐이면
+ * ①③⑤ 중 ①⑤ 처럼 벌어지는 것이 아니라 — 가운데를 낀 두 줄을 골라 정갈하게
+ * 모인다.
  */
 export function formationSpots(
   party: Party,
@@ -342,21 +360,21 @@ export function formationSpots(
   const front = line.slice(0, nFront);
   const back = line.slice(nFront);
 
-  const seat = (list: readonly OwnedChar[], cols: readonly number[], row: 'front' | 'back') => {
+  const seat = (list: readonly OwnedChar[], lanes: readonly number[], row: 'front' | 'back') => {
     /*
-      쓸 칸이 인원보다 많으면 가운데를 낀 만큼만 골라 쓴다.
+      쓸 줄이 인원보다 많으면 가운데를 낀 만큼만 골라 쓴다.
 
       `[0,2,4]` 에 둘이면 `[0,2]` 가 아니라 **가운데 둘**(`[2,4]` 도 아니고)
       — 목록의 한가운데를 기준으로 잘라 낸다. 그래야 어느 대형에서도 파티가
       화면 한가운데에 선다.
     */
-    const take = Math.min(list.length, cols.length);
-    const from = Math.floor((cols.length - take) / 2);
-    const use = cols.slice(from, from + take);
-    return list.slice(0, take).map((c, i) => ({ c, row, col: use[i] ?? 2 }));
+    const take = Math.min(list.length, lanes.length);
+    const from = Math.floor((lanes.length - take) / 2);
+    const use = lanes.slice(from, from + take);
+    return list.slice(0, take).map((c, i) => ({ c, row, lane: use[i] ?? 2 }));
   };
 
-  return [...seat(front, def.frontCols, 'front'), ...seat(back, def.backCols, 'back')];
+  return [...seat(front, def.frontLanes, 'front'), ...seat(back, def.backLanes, 'back')];
 }
 
 /** 지금 앞줄에 선 사람들의 이름표 — 전투가 이걸로 맞을 확률을 가른다 */

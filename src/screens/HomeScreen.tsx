@@ -7,8 +7,15 @@
  *   보물 상자  쌓이는 재화 게이지 (`RewardBar`)
  *   무대       2D 자동 전투 (`BattleView`)
  *   세 줄      소식과 채팅이 흐른다 (`Ticker`)
+ *   대형       앞뒤 배치 (`FormationPicker`)
  *   파티       넷의 상태 (`PartyBar`)
  *   아래 띠    다섯 칸 (`BottomNav`)
+ *
+ * ## 위 셋은 이어 붙는다
+ *
+ * 상자 줄 · 무대 · 세 줄은 **화면 폭을 꽉 채우고 서로 붙어** 있다. 사이는
+ * 가는 가로줄 하나로만 갈린다. 각자 테두리를 두르고 8px 씩 떨어져 있던
+ * 시절에는 화면이 떠 있는 카드 대여섯 장으로 보였다.
  *
  * ## 아래 띠는 스크롤 밖이다
  *
@@ -61,7 +68,18 @@ export default function HomeScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['left', 'right']}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: SP.sm, paddingBottom: SP.md }}
+        /*
+          ── 좌우 여백을 여기서 안 준다 ──
+
+          예전에는 스크롤 전체에 `padding: SP.sm` 이었다. 그러면 안에 든
+          것들이 전부 **양옆이 뜬 카드**가 되고, 각자 테두리까지 두르고 있어서
+          화면이 조각조각 떠 있는 것으로 보였다 ("다 뚝뚝 끊긴 느낌").
+
+          지금은 위쪽 세 덩이(상자 줄 · 무대 · 세 줄)가 화면 폭을 꽉 채운
+          **띠**로 이어지고, 사이는 가는 가로줄로만 갈린다. 여백은 각 덩이가
+          제 안에서 준다. 무대가 넓어지는 것은 덤이다 — 땅이 그만큼 넓다.
+        */
+        contentContainerStyle={{ paddingBottom: SP.md }}
         showsVerticalScrollIndicator={false}
       >
         {/*
@@ -72,16 +90,16 @@ export default function HomeScreen() {
         */}
         <View
           style={{
-            borderWidth: 1,
+            borderBottomWidth: 1,
             borderColor: '#FFFFFF66',
             borderStyle: 'dashed',
             paddingVertical: 2,
-            marginBottom: SP.xs,
           }}
         >
           <T size={9} bold center>TEST 진행중</T>
         </View>
 
+        {/* 여기부터 셋이 이어진 한 덩어리다 — 사이에 여백을 두지 않는다 */}
         <RewardBar />
         <BattleView />
         <Ticker />
@@ -89,12 +107,15 @@ export default function HomeScreen() {
         {/*
           대형은 파티 바로 위다 — "누가 서나" 와 "어떻게 서나" 는 같은 종류의
           결정이라 붙어 있어야 한다 (`FormationPicker`).
+
+          아래 둘은 위의 띠들과 성격이 다르다. 저건 보는 것이고 이건 만지는
+          것이라, 좌우 여백을 줘서 손에 잡히는 칸으로 보이게 한다.
         */}
-        <View style={{ marginTop: SP.sm }}>
+        <View style={{ paddingHorizontal: SP.sm, marginTop: SP.sm }}>
           <FormationPicker />
         </View>
 
-        <View style={{ marginTop: SP.sm }}>
+        <View style={{ paddingHorizontal: SP.sm, marginTop: SP.sm }}>
           <PartyBar onPick={setSlot} />
         </View>
       </ScrollView>

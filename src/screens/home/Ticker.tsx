@@ -80,22 +80,30 @@ export function Ticker() {
   const badge = formatUnread(totalUnread(unread));
 
   return (
-    <View style={{ flexDirection: 'row', gap: SP.xs, marginTop: SP.xs }}>
+    /*
+      **띠다 — 두 개의 상자가 아니다.**
+
+      예전에는 단추와 세 줄이 각자 네모를 두르고 4px 떨어져 있었다. 그러면
+      한 가지 일(읽고 쓰기)이 두 덩이로 갈려 보이고, 무대와도 8px 떨어져
+      있어서 화면이 카드 세 장이 됐다.
+
+      지금은 무대 아래에 바로 붙고, 안에서는 세로줄 하나로만 갈린다.
+    */
+    <View style={{ flexDirection: 'row' }}>
       {/* ── 말하는 단추 ── */}
       <Pressable
         onPress={() => { sfx('tap'); setOpen(true); }}
         hitSlop={6}
-        style={({ pressed }) => [
-          BORDER,
-          {
-            width: 34,
-            /* 세 줄과 키를 맞춘다 — 낮으면 글 옆에 떠 있는 것으로 보인다 */
-            height: ROW_H * LINES + 4,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: pressed ? C.bgInv : 'transparent',
-          },
-        ]}
+        style={({ pressed }) => ({
+          width: 38,
+          /* 세 줄과 키를 맞춘다 — 낮으면 글 옆에 떠 있는 것으로 보인다 */
+          height: ROW_H * LINES + SP.xs * 2,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRightWidth: 1,
+          borderRightColor: '#FFFFFF33',
+          backgroundColor: pressed ? C.bgInv : 'transparent',
+        })}
       >
         {({ pressed }: { pressed: boolean }) => (
           <Pixel sprite={BUBBLE} scale={2} color={pressed ? C.fgInv : WHITE} />
@@ -113,8 +121,8 @@ export function Ticker() {
             BORDER,
             {
               position: 'absolute',
-              left: 26,
-              top: -4,
+              left: 28,
+              top: 2,
               minWidth: 18,
               paddingHorizontal: 3,
               alignItems: 'center',
@@ -129,18 +137,15 @@ export function Ticker() {
 
       {/* ── 세 줄 ── */}
       <View
-        style={[
-          BORDER,
-          {
-            flex: 1,
-            height: ROW_H * LINES + 4,
-            paddingHorizontal: SP.xs,
-            paddingVertical: 2,
-            justifyContent: 'flex-start',
-            /* 넘치면 자른다 — 줄이 길어져도 무대 높이는 안 흔들린다 */
-            overflow: 'hidden',
-          },
-        ]}
+        style={{
+          flex: 1,
+          height: ROW_H * LINES + SP.xs * 2,
+          paddingHorizontal: SP.sm,
+          paddingVertical: SP.xs,
+          justifyContent: 'flex-start',
+          /* 넘치면 자른다 — 줄이 길어져도 무대 높이는 안 흔들린다 */
+          overflow: 'hidden',
+        }}
       >
         {!lines.length && (
           <T size={10} dim="dim" style={{ lineHeight: ROW_H }}>
