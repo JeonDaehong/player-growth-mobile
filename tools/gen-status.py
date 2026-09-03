@@ -174,6 +174,18 @@ STATUS = [
      'the other stops the skill from charging. Squint test: a standing bar with a '
      'gap in it.'),
 
+    ('st_shock', '감전', '나쁜', '행동 불가 + 몸에 전기가 흐른다',
+     r'감전',
+     'AN UPSIDE-DOWN U. One thick arch touching the TOP edge of the cell and '
+     'curving down into TWO STRAIGHT LEGS that run all the way to the BOTTOM '
+     'edge, the legs a quarter of the cell wide and the black gap between them a '
+     'third of the cell wide. Flat square feet. It is a staple stood on its head, '
+     'or the two prongs of a plug. It is the ONLY closed-at-one-end, open-at-the-'
+     'other shape in the whole set — everything else is a bar, a wedge, a ring or '
+     'a zigzag. It must NOT be a lightning bolt: the stun icon already is one, and '
+     'these two appear on the same party slots. '
+     'Squint test: an upside-down U with two legs.'),
+
     # ── 버프 ────────────────────────────────────────────────
     ('st_rage', '격노', '좋은', '공격력 증가', None,
      'A WHOLE BLADE. A tall narrow wedge standing upright and filling the FULL '
@@ -241,6 +253,14 @@ SHEETS = [
      '**21~30판에서 새로 생긴 넷입니다.** 앞의 열셋과도 윤곽이 안 겹쳐야 '
      '합니다 — 같은 화면에 같이 뜹니다. 넷은 각각 육각 고리 · 나선 · 불꽃 · '
      '끊어진 세로 막대이고, 이 중 나선과 육각은 이 게임에 아직 없던 모양입니다.'),
+    ('F', '감전',
+     ['st_shock'],
+     '**한 칸짜리입니다.** 20판 벼락이 30% 확률로 3초간 겁니다 — 하는 일은 '
+     '기절과 똑같고 (`core/status` 의 `STUN`), 그래서 **윤곽이 기절과 제일 '
+     '멀어야** 합니다. 기절이 이미 번개라 감전을 번개로 그리면 같은 파티 칸에 '
+     '뜬 둘을 아무도 못 가릅니다. 뒤집힌 U 자(플러그의 두 다리)로 갑니다.\n\n'
+     '그림이 들어오기 전까지는 신경 마비(`st_numb`)로 버팁니다 '
+     '(`core/status` 의 `STATUS_ALT`).'),
 ]
 
 
@@ -260,6 +280,7 @@ SHAPES = [
     ('st_shield', '두꺼운 육각 고리'), ('st_confuse', '나선'),
     ('st_burn', '불꽃 (아래가 무겁고 위가 셋)'),
     ('st_numb', '끊어진 세로 막대'),
+    ('st_shock', '뒤집힌 U 자 (다리 둘)'),
     ('st_guard', '꽉 찬 사각'), ('st_break', '귀퉁이 떨어진 사각'),
     ('st_regen', '십자'), ('st_wither', 'ㅜ 자'),
     ('bp_thorn', '여섯 갈래 별 (보스 패시브)'),
@@ -304,6 +325,7 @@ EXPECT = {
     'st_confuse': [24, 29],
     'st_burn': [26],
     'st_numb': [25, 29],
+    'st_shock': [20],
     'st_guard': [20],
     'st_regen': [20],
 }

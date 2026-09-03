@@ -1564,7 +1564,7 @@ BOSSES = [
         'without shifting its weight.',
         [('skill1', '태고의 성난 벼락',
           '아군 전체에 공격력의 150%만큼 물리 피해, 대상의 스킬 코스트를 '
-          '50% 강제 차감 (평타 6대마다)',
+          '50% 강제 차감, 30% 확률로 3초간 감전 (평타 6대마다)',
           'THE FURY — it hits EVERYONE and strips what they were charging, so the '
           'creature OPENS and takes the whole cell. THE CAGE HAS BEEN THROWN '
           'OPEN: all six boughs have swung UP AND OUT to full spread and '
