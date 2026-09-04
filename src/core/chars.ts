@@ -416,6 +416,7 @@ export type SkillKind =
   | 'holysword' // 성검 발현 — 이졸데 4-2
   | 'song'      // 정령의 노래 — 리안느 3-2
   | 'judge'     // 신의 심판 — 아녜스 3-1
+  | 'ward'      // 수호의 결의 — 이졸데 3-1
   | 'purify';  // 정화 (아녜스)
 
 export interface SkillDef {
@@ -601,6 +602,23 @@ export interface SkillDef {
    * 이것 하나뿐이다.
    */
   foeHex2?: { id: StatusId; sec: number; mul: number };
+  /**
+   * **아군 전체에 보호막을 씌우나** — 이졸데의 수호의 결의 하나다.
+   *
+   * 상태 효과(`Hex`)로 못 만든다. 저건 시간이 흐르면 풀리는 것이고 보호막은
+   * **깎여서 없어지는** 것이라, 남은 양이라는 칸이 따로 필요하다
+   * (`core/autoBattle` 의 `Ward`).
+   */
+  ward?: {
+    /** **쓰는 사람** 최대 체력의 몇 할인가 (0.12 = 12%) */
+    pct: number;
+    /** 몇 초 뒤에 저절로 사라지나 */
+    sec: number;
+    /** 걸려 있는 동안 더해지는 방어력 (수호신의 가호가 +10) */
+    def: number;
+    /** 막아 낸 만큼의 몇 할을 때린 놈에게 되돌리나 (가호가 0.1) */
+    back: number;
+  };
   /**
    * 켜고 끄는 것을 사람이 고를 수 있나 (`core/skillOpt`).
    *
@@ -976,6 +994,44 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     desc: '적 전체의 공격력을 5초간 20% 깎는다',
   },
 
+  /*
+    ── 수호의 결의 ── 이졸데 3-1. 방패 갈래의 몸통.
+
+    아군 **전체**에 이졸데 최대 체력의 12% 만큼 보호막. 다 깎이거나 8초가
+    지나면 사라진다.
+
+    ## 왜 회복이 아니라 보호막인가
+
+    회복은 이미 아녜스가 한다 (기도). 같은 일을 둘이 하면 둘 중 하나가
+    필요 없어진다. 보호막은 **미리 거는 것**이라 성격이 반대다 — 회복은
+    맞고 나서 채우고, 이것은 맞기 전에 덮는다.
+
+    그래서 이 갈래를 고른 이졸데는 "앞에서 버티는 사람" 이 아니라 **"넷을
+    덮는 사람"** 이 된다. 파쇄의 태세(혼자 세지는 쪽)와 정확히 반대다.
+
+    적을 안 때린다 (`pick: 'none'`).
+  */
+  ward: {
+    name: '수호의 결의', art: 'sk_ward', hits: 1, pick: 'none', targets: 0,
+    dmg: 'phys',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 1, cost: 10, aura: 'ring', leaps: false,
+    /*
+      **이졸데의** 최대 체력을 기준으로 한다 — 맞는 사람이 아니라.
+
+      맞는 사람 기준이면 체력이 두꺼운 사람이 두꺼운 막을 받는데, 그건 이미
+      두꺼운 쪽을 더 두껍게 만드는 것이라 얇은 사람이 먼저 죽는 것은 그대로다.
+      한 명이 두르는 막이 넷에게 똑같이 가야 "덮어 준다" 가 된다.
+
+      기본은 12%. 4-1 수호신의 가호를 찍으면 두 배가 되고 방어와 반격이
+      붙는다 (`skillsFor`).
+    */
+    ward: { pct: 0.12, sec: 8, def: 0, back: 0 },
+    cast: 'roar',
+    fx: 'holy',
+    desc: '아군 전체에 이졸데 최대 체력의 12%만큼 보호막을 씌운다',
+  },
+
   purify: {
     name: '정화', art: 'sk_purify', hits: 1, pick: 'none', targets: 0, dmg: 'magic',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
@@ -1058,6 +1114,7 @@ const NODE_SKILL: Record<string, SkillKind> = {
   kg1: 'wave',
   kg2a: 'taunt',
   kg2b: 'shout',
+  kg3a: 'ward',
   kg4b: 'holysword',
   ba1: 'leap',
   ba2: 'volcano',
@@ -1144,6 +1201,18 @@ export function skillsFor(c: OwnedChar): SkillDef[] {
         targets: 4,
         /* 적이 하나면 네 발이 다 그 하나에게 (`SkillDef.stack`) */
         stack: true,
+      };
+    }
+    /*
+      ── 수호신의 가호 ── 막이 두 배가 되고, 방어와 반격이 붙는다.
+
+      막 자체를 새로 만드는 것이 아니라 **이미 있는 막을 키운다.** 그래서
+      3-1 을 안 찍으면 이 자리 자체가 안 열린다 (`TreeNode.needs`).
+    */
+    if (has('kg4a') && kind === 'ward' && sk.ward) {
+      sk = {
+        ...sk,
+        ward: { ...sk.ward, pct: sk.ward.pct * 2, def: 10, back: 0.1 },
       };
     }
     /* ── 정화의 손길 ── 20 → 15 */

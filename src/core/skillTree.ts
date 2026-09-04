@@ -114,7 +114,7 @@ const ISOLDE: readonly TreeNode[] = [
     id: 'kg3a', who: 'knightgirl', tier: 3, name: '수호의 결의', kind: 'active', cost: 10,
     rival: 'kg3b', needs: 'kg2a',
     desc: '아군 전체에 최대체력의 12%만큼 보호막. 다 깎이거나 8초가 지나면 사라진다.',
-    art: 'sk_ward',
+    art: 'sk_ward', live: true,
   },
   {
     id: 'kg3b', who: 'knightgirl', tier: 3, name: '파쇄의 태세', kind: 'passive',
@@ -128,7 +128,7 @@ const ISOLDE: readonly TreeNode[] = [
     rival: 'kg4b', needs: 'kg3a',
     desc: '수호의 결의가 두 배가 되고, 보호막이 있는 동안 방어력 +10. '
       + '보호막을 두른 아군이 맞으면 그 피해의 10%를 적에게 되돌린다.',
-    art: 'sk_aegis',
+    art: 'sk_aegis', live: true,
   },
   {
     id: 'kg4b', who: 'knightgirl', tier: 4, name: '성검 발현', kind: 'active', cost: 12,

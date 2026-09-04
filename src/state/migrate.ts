@@ -304,6 +304,8 @@ export function migrateState(persisted: unknown): GameState {
     burst: 0,
     /* 나중에 생긴 칸 — 갈라진 횟수 (`BattleState.rip`) */
     rip: 0,
+    /* 보호막은 판을 이어서 켤 때 안 살린다 — 8초짜리라 살릴 값이 없다 */
+    ward: {},
     patSeq: 0,
     /*
       걸려 있던 것도 안 믿는다.

@@ -25,7 +25,7 @@ import { marksOf } from '@/core/passives';
 import { Bar, Row, Stars, T, Tag } from '@/ui/atoms';
 import { StatusRow } from './StatusRow';
 import { Sprite } from '@/ui/Sprite';
-import { BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
+import { BORDER, FS, LINE, O, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
 
 export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
   const party = useGame((s) => s.party);
@@ -84,6 +84,14 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
     시간이다.
   */
   const fadeMap = useGame((s) => s.battle.fade);
+  /*
+    지금 두르고 있는 보호막 (`core/autoBattle` 의 `Ward`).
+
+    체력 막대 **위에** 얹는다. 옆에 따로 적으면 "체력 120 · 보호막 40" 이
+    두 값이 되는데, 실제로는 40 을 다 깎고 나서 120 이 닳으므로 **한 줄로
+    이어진 것**이 맞다.
+  */
+  const wardMap = useGame((s) => s.battle.ward);
 
   /*
     살아 있는 사람들 — **패시브가 이걸 본다.**
@@ -188,6 +196,41 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                       blocks={8}
                       height={4}
                     />
+                    {/*
+                      ── 보호막 ── 체력 막대 바로 아래 가는 하늘색 줄.
+
+                      하늘색은 이 게임에서 **"저 겹은 체력이 아니다"** 하나만
+                      말한다 (`ui/theme` 의 `SHIELD_C` — 적이 두른 막에 쓰던
+                      색이다). 아군 쪽에도 같은 뜻이라 같은 색이 맞다.
+
+                      막대 안에 섞어 그리지 않는다. 8칸짜리 블록 막대라
+                      (`Bar`) 한 칸이 12.5% 인데, 막은 대개 그보다 작아서
+                      섞으면 아예 안 보이거나 체력 한 칸을 잡아먹는다.
+                    */}
+                    {(() => {
+                      const w = wardMap?.[c.id];
+                      if (!w || w.hp <= 0 || w.ms <= 0) return null;
+                      const max = Math.max(1, statOf(c).hp);
+                      return (
+                        <View
+                          style={{
+                            height: 3,
+                            marginTop: 1,
+                            borderRadius: 1,
+                            backgroundColor: SURF.down,
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: `${Math.min(100, (w.hp / max) * 100)}%`,
+                              height: '100%',
+                              backgroundColor: SHIELD_C,
+                            }}
+                          />
+                        </View>
+                      );
+                    })()}
                     <T
                       size={8}
                       center

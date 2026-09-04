@@ -2519,6 +2519,18 @@ export interface FoeGim {
  * 스킬은 안 나간다 — 정화가 저를 푸는 그림이 되어 버리고, 화살비가 아군을
  * 셋씩 치면 그 한 판으로 전투가 끝난다.
  */
+/** 한 사람이 두른 보호막 하나 */
+export interface Ward {
+  /** 남은 흡수량. 0 이 되면 사라진다 */
+  hp: number;
+  /** 남은 시간 (ms). 0 이 되면 사라진다 */
+  ms: number;
+  /** 걸려 있는 동안 더해지는 방어력 (수호신의 가호 +10) */
+  def: number;
+  /** **막아 낸 만큼**의 몇 할을 때린 놈에게 되돌리나 (가호 0.1) */
+  back: number;
+}
+
 export interface Charm {
   /** 남은 시간 (ms) */
   ms: number;
@@ -2938,6 +2950,16 @@ export interface BattleState {
    */
   charm: Charm | null;
   /**
+   * ── 아군이 두른 보호막 ── 이졸데의 수호의 결의 (`SkillDef.ward`).
+   *
+   * 상태 효과(`hex`)와 갈라 둔다. 저것들은 **시간이 흐르면 풀리는** 것이라
+   * 남은 시간 하나면 되는데, 보호막은 **깎여서 없어지기도** 한다 — 남은
+   * 양이라는 칸이 하나 더 필요하고, 그 칸이 있으면 `Hex` 가 아니다.
+   *
+   * 없는 사람은 키 자체가 없다.
+   */
+  ward: Record<string, Ward>;
+  /**
    * 우두머리가 나온 뒤로 흐른 시간 (ms). 잡몹 구간에서는 0.
    *
    * 20판의 "15초마다 회복" 이 이걸 본다. 시계를 우두머리 슬롯에 두지 않은
@@ -3140,6 +3162,7 @@ export const newBattle = (): BattleState => {
     slain: 0, target: 0, hp: {}, down: 0, spawnIn: 0,
     openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
     called: false, pat: null, patId: null, patSeq: 0, charm: null, burst: 0, rip: 0,
+    ward: {},
     hex: {}, cut: {}, bossMs: 0, swingSeq: 0,
     fade: {}, taunt: null, foeHex: {}, foeHeal: { seq: 0, amt: 0 },
     struck: [], costSeq: 0,
@@ -3216,6 +3239,13 @@ export function enterStage(
     patId: null,
     /* 돌아섰던 아군도 판과 함께 제정신으로 돌아온다 */
     charm: null,
+    /*
+      보호막도 판과 함께 걷힌다.
+
+      `...st` 로 시작하므로 **여기서 안 지우면 넘어간다.** 8초짜리를 다음
+      판까지 들고 가면, 판이 바뀌는 순간에 맞춰 쓰는 것이 늘 최선이 된다.
+    */
+    ward: {},
     /*
       걸려 있던 것도 **판과 함께 걷힌다.**
 
@@ -4046,6 +4076,14 @@ export function battleTick(
     **휘두르기 전에** 돈다. 갈라지는 것도 고치가 되는 것도 이번 틱의 공격에
     곧바로 반영돼야, "갈라졌는데 본체가 한 대 더 쳤다" 가 안 생긴다.
   */
+  /*
+    ── 보호막 ── 이번 틱 동안 깎이고 시간이 흐른다.
+
+    `hp` 와 같은 얼개다: 위에서 베껴 쓰고 아래에서 그대로 내보낸다.
+  */
+  const ward: Record<string, Ward> = { ...(st.ward ?? {}) };
+  /** 막이 되돌린 피해 — 때린 놈에게 나중에 한 번에 넣는다 (`Ward.back`) */
+  const backTo: Record<number, number> = {};
   let charm = st.charm ?? null;
   let burst = Number.isFinite(st.burst) ? st.burst : 0;
   /* 갈라진 횟수 — 화면이 이 번호로 파동을 터뜨린다 (`BattleState.rip`) */
@@ -4088,6 +4126,21 @@ export function battleTick(
   if (charm) {
     const left = charm.ms - TICK_MS;
     charm = left > 0 ? { ...charm, ms: left } : null;
+  }
+
+  /*
+    ── 보호막도 시간이 흐른다 ──
+
+    깎여서 없어지는 것은 위에서 처리했고 (`backTo` 바로 앞), 여기서는
+    **시간이 다 되어** 없어지는 쪽이다. 8초짜리라 열여섯 틱이다.
+
+    쓰러진 사람의 막도 걷는다. 시체가 막을 두르고 있으면 다시 일어설 때
+    (판을 다시 시작할 때) 공짜로 막 하나를 들고 시작한다.
+  */
+  for (const [id, w] of Object.entries(ward)) {
+    const left = w.ms - TICK_MS;
+    if (left > 0 && w.hp > 0 && (hp[id] ?? 0) > 0) ward[id] = { ...w, ms: left };
+    else delete ward[id];
   }
 
   /* 시계가 줄어든 새 목록 — 원본을 안 건드린다 */
@@ -4267,7 +4320,19 @@ export function battleTick(
         쓴다 (`liveArmor`) — 16판이 방어를 40% 깎고 그 다음 대부터 아프게
         하는 기술이라, 원래 값을 쓰면 깎은 뜻이 없어진다.
       */
-      const armor = liveArmor(who2, hex[who2.id] ?? []);
+      /*
+        ── 막이 두르고 있으면 방어가 두꺼워진다 ── (`Ward.def`)
+
+        수호신의 가호가 +10 을 준다. `liveArmor` 안에 넣지 않은 이유: 저
+        함수는 걸린 상태만 보는 순수 계산이라 (`core/passives`) 전투 상태를
+        모른다. 여기서 얹으면 막이 있는 동안만 두꺼워지는 것이 한눈에 보인다.
+      */
+      const wd = ward[who2.id];
+      const wdOn = !!wd && wd.ms > 0 && wd.hp > 0;
+      const armor0 = liveArmor(who2, hex[who2.id] ?? []);
+      const armor = wdOn && wd.def > 0
+        ? { def: armor0.def + wd.def, res: armor0.res }
+        : armor0;
       const base = Math.round(h.atk * (h.pat ? h.pat.mul : 1));
       /*
         배수가 0 인 기술은 **때리지 않는다** — 거는 것만 한다 (3·4·8·12·14·15판).
@@ -4286,10 +4351,33 @@ export function battleTick(
       const bite = rage ? Math.max(1, Math.round(statOf(who2).hp * RAGE_BITE)) : 0;
       const dmg = hit0 + bite;
       if (dmg > 0) {
-        hp[who2.id] = Math.max(0, hp[who2.id] - dmg);
-        taken += dmg;
-        hurtId = who2.id;
-        if (hp[who2.id] <= 0) fell = who2.id;
+        /*
+          ── 막이 먼저 받는다 ──
+
+          남은 양만큼만 먹고 나머지가 체력으로 간다. 막이 다 깎이면 그
+          자리에서 사라진다 — 시간이 남았어도.
+
+          **막아 낸 만큼**의 일부가 때린 놈에게 돌아간다 (`Ward.back`).
+          입은 피해가 아니라 막아 낸 양을 기준으로 하는 이유: 막이 다 깎인
+          뒤로는 반격도 없어야 "막이 하는 일" 이 하나로 읽힌다.
+        */
+        let left = dmg;
+        if (wdOn && wd) {
+          const eat = Math.min(wd.hp, left);
+          left -= eat;
+          const rest = wd.hp - eat;
+          if (rest > 0) ward[who2.id] = { ...wd, hp: rest };
+          else delete ward[who2.id];
+          if (wd.back > 0 && eat > 0) {
+            backTo[h.id] = (backTo[h.id] ?? 0) + Math.round(eat * wd.back);
+          }
+        }
+        if (left > 0) {
+          hp[who2.id] = Math.max(0, hp[who2.id] - left);
+          taken += left;
+          hurtId = who2.id;
+          if (hp[who2.id] <= 0) fell = who2.id;
+        }
       }
 
       /* ── 걸고 가는 것 ── */
@@ -4321,6 +4409,24 @@ export function battleTick(
   if (drained > 0) {
     const got = healBoss(drained);
     if (got > 0) foeHeal = { seq: foeHeal.seq + 1, amt: got };
+  }
+
+  /*
+    ── 막이 되돌린 피해 ── 수호신의 가호 (`Ward.back`).
+
+    **한 번에 몰아서 넣는다.** 맞을 때마다 바로 넣으면, 넷이 한 놈에게
+    맞은 틱에서 그놈이 네 번 나뉘어 깎이고 그 사이에 죽어 버릴 수 있다 —
+    그러면 남은 셋의 반격이 이미 없는 놈을 때린다.
+
+    **방어를 안 지난다.** 되돌리는 것은 막이 흡수한 피해 그 자체이지 새로
+    때리는 것이 아니다. 방어로 또 깎으면 두 번 막는 셈이 된다.
+  */
+  for (const [fid, amt] of Object.entries(backTo)) {
+    if (amt <= 0) continue;
+    const at = foes.findIndex((f) => f.id === Number(fid));
+    /* 그 사이에 죽었으면 되돌릴 데가 없다 */
+    if (at < 0) continue;
+    foes[at] = biteFoe(foes[at], amt);
   }
 
   /*
@@ -4415,7 +4521,7 @@ export function battleTick(
       pat: pattern ?? st.pat ?? null,
       patId: patId ?? st.patId ?? null,
       patSeq: pattern ? (Number.isFinite(st.patSeq) ? st.patSeq : 0) + 1 : (st.patSeq ?? 0),
-      hex, cut, bossMs, swingSeq, charm, burst, rip,
+      hex, cut, bossMs, swingSeq, charm, burst, rip, ward,
       fade, taunt, foeHex, foeHeal,
       /*
         맞은 사람 명단은 **특수기가 나간 틱에만** 채운다. 안 나간 틱에 지난
@@ -5032,6 +5138,35 @@ export function applySkill(
     **쓰러진 사람은 안 건다.** 시체에 붙은 버프는 거짓말이고, 다시 일어서는
     길이 판을 다시 시작하는 것뿐이라 그때는 어차피 다 걷힌다.
   */
+  /*
+    ── 보호막을 씌운다 ── 이졸데의 수호의 결의 (`SkillDef.ward`).
+
+    양은 **쓰는 사람**의 최대 체력에서 나온다. 맞는 사람 기준이면 두꺼운
+    사람이 두꺼운 막을 받는데, 그건 이미 두꺼운 쪽을 더 두껍게 만드는
+    것이라 얇은 사람이 먼저 죽는 것은 그대로다.
+
+    이미 두르고 있으면 **더 두꺼운 쪽으로 새로 고친다** — 남은 시간도 긴
+    쪽이다. 겹쳐 쌓으면 8초 안에 두 번 쓰는 것이 늘 최선이 되고, 얇은 막이
+    두꺼운 막을 덮으면 두 번째로 쓴 것이 손해가 된다.
+  */
+  if (sk.ward) {
+    /* `mine` 은 아래에서 잡는다 — 여기서는 쓰는 사람 몸을 직접 읽는다 */
+    const amount = Math.max(1, Math.round(statOf(me).hp * sk.ward.pct));
+    const ms = Math.round(sk.ward.sec * 1000);
+    const ward: Record<string, Ward> = { ...(st.ward ?? {}) };
+    for (const c of members(party, chars)) {
+      if (hpOf(c, st.hp) <= 0) continue;
+      const was = ward[c.id];
+      ward[c.id] = {
+        hp: Math.max(amount, was?.hp ?? 0),
+        ms: Math.max(ms, was?.ms ?? 0),
+        def: Math.max(sk.ward.def, was?.def ?? 0),
+        back: Math.max(sk.ward.back, was?.back ?? 0),
+      };
+    }
+    return { battle: { ...st, ward }, ev: { ...NOTHING, applied: true } };
+  }
+
   if (sk.party) {
     const ms = Math.round(sk.party.sec * 1000);
     const hex: Record<string, Hex[]> = { ...st.hex };
