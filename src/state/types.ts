@@ -587,6 +587,10 @@ export interface GameActions {
    * ⚠ `FREE_ENHANCE` 가 꺼져 있으면 아무 일도 안 한다.
    */
   setGrowth: (id: CharId, at: { copies?: number; lv?: number }) => void;
+  /** 스킬 트리의 갈래 하나를 찍는다 — 못 찍으면 이유를 돌려준다 */
+  pickSkill: (id: CharId, node: string) => string | null;
+  /** 찍은 것을 전부 되돌린다 (공짜) */
+  resetSkills: (id: CharId) => void;
 
   toast: (text: string, tone?: Toast['tone']) => void;
   dismissToast: (id: number) => void;

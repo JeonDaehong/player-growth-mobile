@@ -14,6 +14,7 @@ import {
 } from '@/core/chars';
 import { FormationId, PARTY_SIZE, Party, cleanParty, seatRows } from '@/core/party';
 import { allOwned, drawChar, poolOf, recruitCost } from '@/core/recruit';
+import { whyLocked } from '@/core/skillTree';
 import { optKey } from '@/core/skillOpt';
 import {
   BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, forceRage,
@@ -123,6 +124,22 @@ export interface RosterActions {
   awaken: (id: CharId) => 'ok' | 'no' | 'short' | 'none';
   /** ⚠ 테스트용 — 조각과 레벨을 그 자리에서 정한다 (`FREE_ENHANCE` 일 때만) */
   setGrowth: (id: CharId, at: { copies?: number; lv?: number }) => void;
+  /**
+   * 스킬 트리의 갈래 하나를 찍는다 (`core/skillTree`).
+   *
+   * 못 찍는 자리면 아무 일도 안 하고 이유를 돌려준다 — 화면이 그 이유를
+   * 그대로 띄운다. 성이 모자란 것과 짝을 이미 찍은 것은 다른 이야기이고,
+   * 사람은 그 둘을 알아야 다음에 무엇을 할지 안다.
+   */
+  pickSkill: (id: CharId, node: string) => string | null;
+  /**
+   * 찍은 것을 전부 되돌린다.
+   *
+   * **공짜다.** 갈래가 되돌릴 수 없으면 찍는 것이 곧 되돌릴 수 없는 선택이
+   * 되고, 그러면 사람은 위키를 찾아보고 나서야 누른다. 이 게임에서 고르는
+   * 재미는 "이번엔 이쪽으로 키워 볼까" 이지 "틀리면 끝" 이 아니다.
+   */
+  resetSkills: (id: CharId) => void;
 }
 
 /**
@@ -346,6 +363,23 @@ export const createRosterSlice = (
     /* 레벨은 지금 성의 상한을 넘길 수 없다 — 시험이라고 규칙을 어기면 안 본다 */
     if (at.lv !== undefined) next.lv = Math.max(1, Math.min(capOf(c), Math.floor(at.lv)));
     set({ chars: { ...st.chars, [id]: next } });
+  },
+
+  pickSkill: (id, node) => {
+    const st = get();
+    const c = st.chars[id];
+    if (!c) return '없는 캐릭터입니다';
+    const why = whyLocked(id, c.star, c.tree, node);
+    if (why) return why;
+    set({ chars: { ...st.chars, [id]: { ...c, tree: [...c.tree, node] } } });
+    return null;
+  },
+
+  resetSkills: (id) => {
+    const st = get();
+    const c = st.chars[id];
+    if (!c || !c.tree.length) return;
+    set({ chars: { ...st.chars, [id]: { ...c, tree: [] } } });
   },
 
   awaken: (id) => {

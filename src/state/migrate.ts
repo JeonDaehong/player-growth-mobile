@@ -223,6 +223,8 @@ export function migrateState(persisted: unknown): GameState {
       awake: c.awake === true,
       lv: num(c.lv, NaN),
       copies: Math.max(0, Math.floor(num(c.copies, 0))),
+      /* `fixChar` 안에서 `fixTree` 가 한 번 더 다듬는다 (`core/skillTree`) */
+      tree: Array.isArray(c.tree) ? (c.tree as string[]) : [],
     });
   }
   /*

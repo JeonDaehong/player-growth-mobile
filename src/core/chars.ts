@@ -45,6 +45,7 @@
  * 다음 사람을 만들면 여기 한 줄, `CHARS` 에 한 덩어리를 더한다.
  */
 import type { StatusId } from './status';
+import { fixTree } from './skillTree';
 import {
   RARITY_GROWTH, Rarity, STAR_CAP,
   canAwaken, lvCap, maxStar, skillSlots,
@@ -1246,6 +1247,15 @@ export interface OwnedChar {
    */
   copies: number;
   /**
+   * **찍어 둔 스킬 트리 자리들** (`core/skillTree` 의 `NodeId`).
+   *
+   * 갈래인 자리만 들어간다. 갈래가 아닌 자리는 성만 되면 저절로 열리므로
+   * 여기 적을 것이 없다 (`activeNodes`).
+   *
+   * 순서는 상관없다 — 읽는 쪽이 늘 단계 순서로 다시 쌓는다 (`fixTree`).
+   */
+  tree: readonly string[];
+  /**
    * 지금 어느 줄에 서 있나 — **저장되지 않는다.**
    *
    * 대형이 정하는 값이라 (`core/party` 의 `seatRows`) 세이브에 넣을 것이
@@ -1265,7 +1275,7 @@ export interface OwnedChar {
 }
 
 export const newChar = (id: CharId): OwnedChar => ({
-  id, gearLv: 0, star: 1, awake: false, lv: 1, copies: 0,
+  id, gearLv: 0, star: 1, awake: false, lv: 1, copies: 0, tree: [],
 });
 
 /**
@@ -1294,6 +1304,8 @@ export function fixChar(c: OwnedChar): OwnedChar {
     awake,
     lv: Number.isFinite(c.lv) ? Math.max(1, Math.min(lvCap(star, awake), Math.floor(c.lv))) : 1,
     copies: Number.isFinite(c.copies) ? Math.max(0, Math.floor(c.copies)) : 0,
+    /* 모르는 이름표와 말이 안 되는 조합을 걷어낸다 (`core/skillTree`) */
+    tree: fixTree(c.id, c.tree),
   };
 }
 

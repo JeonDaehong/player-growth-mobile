@@ -25,6 +25,7 @@ import { Sprite } from '@/ui/Sprite';
 import { Money } from '@/ui/Money';
 import { BORDER, FS, LINE, R, SP, SURF } from '@/ui/theme';
 import { SkillPanel } from './SkillPanel';
+import { SkillTreePopup } from './SkillTreePopup';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
 import { deltaText, liveArmor, liveAtk, liveSpd } from '@/core/passives';
@@ -88,6 +89,8 @@ export function CharPopup({
   const [last, setLast] = useState<'up' | 'fail' | null>(null);
   /** 월페이퍼를 보고 있나 */
   const [paper, setPaper] = useState(false);
+  /** 스킬 트리를 보고 있나 (`SkillTreePopup`) */
+  const [tree, setTree] = useState(false);
 
   if (slot === null) return null;
 
@@ -142,10 +145,12 @@ export function CharPopup({
     }
   };
 
-  const close = () => { setLast(null); setPaper(false); onClose(); };
+  const close = () => { setLast(null); setPaper(false); setTree(false); onClose(); };
 
   return (
     <>
+    {/* 스킬 트리 — 캐릭터 창 위에 겹쳐 뜬다 */}
+    <SkillTreePopup who={tree && c ? c.id : null} onClose={() => setTree(false)} />
     <WallpaperPopup
       charId={paper && c ? c.id : null}
       name={d?.name}
@@ -325,6 +330,21 @@ export function CharPopup({
           </View>
 
           <Sep />
+
+          {/*
+            ── 스킬 트리로 가는 문 ──
+
+            목록(`SkillPanel`)은 "지금 무엇을 쓰나" 를 말하고, 트리는
+            "무엇으로 키울까" 를 말한다. 둘이 다른 질문이라 화면도 나눈다 —
+            한 자리에 다 넣으면 스킬 넷을 보려고 갈래 여덟을 지나야 한다.
+          */}
+          <Btn
+            label="스킬 트리"
+            sub={`${c.star}단계까지 열림`}
+            size="sm"
+            style={{ marginBottom: SP.sm }}
+            onPress={() => setTree(true)}
+          />
 
           <SkillPanel c={c} party={party} chars={chars} />
 
