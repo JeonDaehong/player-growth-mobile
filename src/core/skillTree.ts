@@ -108,7 +108,7 @@ const ISOLDE: readonly TreeNode[] = [
   {
     id: 'kg2b', who: 'knightgirl', tier: 2, name: '함성', kind: 'active', cost: 8,
     rival: 'kg2a',
-    desc: '5초간 자신의 공격력이 1.3배가 된다.', art: 'sk_shout',
+    desc: '5초간 자신의 공격력이 1.3배가 된다.', art: 'sk_shout', live: true,
   },
   {
     id: 'kg3a', who: 'knightgirl', tier: 3, name: '수호의 결의', kind: 'active', cost: 10,
@@ -134,7 +134,7 @@ const ISOLDE: readonly TreeNode[] = [
     id: 'kg4b', who: 'knightgirl', tier: 4, name: '성검 발현', kind: 'active', cost: 12,
     rival: 'kg4a', needs: 'kg3b',
     desc: '적 하나에게 빛과 함께 큰 검을 떨어뜨려 공격력의 300% 물리 피해.',
-    art: 'sk_holysword',
+    art: 'sk_holysword', live: true,
   },
 ];
 
@@ -202,7 +202,7 @@ const RIANNE: readonly TreeNode[] = [
   {
     id: 'ea3b', who: 'elfarcher', tier: 3, name: '정령의 노래', kind: 'active', cost: 10,
     rival: 'ea3a',
-    desc: '아군 전체의 치명타 확률이 5초간 30%p 오른다.', art: 'sk_spiritsong',
+    desc: '아군 전체의 치명타 확률이 5초간 30%p 오른다.', art: 'sk_spiritsong', live: true,
   },
   /*
     ── 아래 둘은 **내가 지어낸 것**이다 ──
@@ -249,7 +249,7 @@ const AGNES: readonly TreeNode[] = [
   {
     id: 'nu3a', who: 'nun', tier: 3, name: '신의 심판', kind: 'active', cost: 10,
     rival: 'nu3b',
-    desc: '적 전체의 공격력을 5초간 20% 깎는다.', art: 'sk_judge',
+    desc: '적 전체의 공격력을 5초간 20% 깎는다.', art: 'sk_judge', live: true,
   },
   {
     id: 'nu3b', who: 'nun', tier: 3, name: '정화의 손길', kind: 'passive',
@@ -259,7 +259,7 @@ const AGNES: readonly TreeNode[] = [
   {
     id: 'nu4a', who: 'nun', tier: 4, name: '신의 천벌', kind: 'passive',
     rival: 'nu4b', needs: 'nu3a',
-    desc: '신의 심판이 적 공격속도도 30% 깎는다.', art: 'sk_wrath',
+    desc: '신의 심판이 적 공격속도도 30% 깎는다.', art: 'sk_wrath', live: true,
   },
   {
     id: 'nu4b', who: 'nun', tier: 4, name: '찬란한 빛', kind: 'passive',

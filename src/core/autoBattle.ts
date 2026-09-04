@@ -59,7 +59,7 @@ import {
 } from './chars';
 import { rollElixir } from './growth';
 import {
-  GOOD, Hex, StatusId, hexOf, mulOf, putHex, tickHex,
+  GOOD, Hex, NO_HEX, StatusId, hexOf, mulOf, putHex, tickHex, upOf,
 } from './status';
 import {
   FADE_MS, allyAtkMul, healMulOf, liveArmor, liveSpd, regenOf,
@@ -4511,7 +4511,7 @@ export function applyHit(
     if (!mates.length) return { battle: st, ev: NOTHING };
     const it = mates[Math.floor(rand() * mates.length) % mates.length];
     const hurt = Math.max(1, strikeFor(
-      mine.atk, rollCrit(mine, rand),
+      mine.atk, rollCrit(mine, rand, hexOf(st.hex, who)),
       liveArmor(it, hexOf(st.hex, it.id)), blowOf(me.id),
     ));
     const left = Math.max(0, hpOf(it, st.hp) - hurt);
@@ -4560,7 +4560,8 @@ export function applyHit(
   const mineHex = hexOf(st.hex, who);
   const kind = foeAt(st, foes[at]);
   const dmg = Math.max(1, Math.round(strikeFor(
-    mine.atk * allyAtkMul(alive) * mulOf(mineHex, 'st_weak'), rollCrit(mine, rand),
+    mine.atk * allyAtkMul(alive) * mulOf(mineHex, 'st_weak'),
+    rollCrit(mine, rand, mineHex),
     /* 20판은 체력이 낮으면 방어가 오른다 (`foeArmor`) */
     foeArmor(kind, foes[at].hp), blowOf(me.id),
   ) * foeTough(kind)));
@@ -4701,8 +4702,21 @@ export const SKILL_EVERY = 4;
  * 10 × 1.4 × 2 = 28 이다. 평타와 스킬을 다르게 두면 "치명타가 터졌는데
  * 큰 기술에는 안 실린다" 가 되어, 제일 보고 싶은 순간이 빠진다.
  */
-export function rollCrit(st: Stat, rand: () => number = Math.random): number {
-  return rand() < st.crit ? st.critDmg : 1;
+export function rollCrit(
+  st: Stat,
+  rand: () => number = Math.random,
+  /**
+   * 이 사람에게 걸려 있는 것들 — 집중(`st_focus`)이 확률을 올린다.
+   *
+   * **더하기다.** 배수로 두면 넷 중 셋이 치명타 확률 0 이라 아무 일도 안
+   * 일어난다 (`upOf` 가 1.30 을 주고 0 × 1.3 은 0 이다). 그래서 여기서는
+   * 1 을 뺀 만큼을 확률에 **더한다** — 0.30 을 올리면 0 이던 사람이 30% 가
+   * 된다.
+   */
+  hex: readonly Hex[] = NO_HEX,
+): number {
+  const up = Math.max(0, upOf(hex, 'st_focus') - 1);
+  return rand() < Math.min(1, st.crit + up) ? st.critDmg : 1;
 }
 
 /**
@@ -5008,6 +5022,28 @@ export function applySkill(
     적이 없어도 나간다. 다음 무리가 걸어 들어오기 직전에 켜 두는 것이
     이상한 일이 아니다.
   */
+  /*
+    ── 파티 전체에 거는 것 ── 리안느의 정령의 노래 하나다 (`SkillDef.party`).
+
+    `self` 바로 앞에 둔다. 한 기술이 둘 다 갖는 일은 없지만, 앞뒤가 갈리면
+    나중에 둘 다 가진 기술이 생겼을 때 어느 쪽이 이기는지가 자리 순서로
+    정해진다 — 그건 표에 안 적혀 있는 규칙이다.
+
+    **쓰러진 사람은 안 건다.** 시체에 붙은 버프는 거짓말이고, 다시 일어서는
+    길이 판을 다시 시작하는 것뿐이라 그때는 어차피 다 걷힌다.
+  */
+  if (sk.party) {
+    const ms = Math.round(sk.party.sec * 1000);
+    const hex: Record<string, Hex[]> = { ...st.hex };
+    for (const c of members(party, chars)) {
+      if (hpOf(c, st.hp) <= 0) continue;
+      hex[c.id] = putHex(hexOf(st.hex, c.id), {
+        id: sk.party.id, ms, dot: 0, dmg: 'magic', mul: sk.party.mul, n: 1,
+      }, 1);
+    }
+    return { battle: { ...st, hex }, ev: { ...NOTHING, applied: true } };
+  }
+
   if (sk.self) {
     const put = putHex(hexOf(st.hex, who), {
       id: sk.self.id,
@@ -5099,18 +5135,31 @@ export function applySkill(
   for (const i of idx) {
     const kind = foeAt(st, foes[i]);
     const dmg = Math.max(1, Math.round(strikeFor(
-      skillBase(mine, sk, sup), rollCrit(mine, rand),
+      /* 스킬에도 집중이 걸린다 — 평타만 오르면 "치명타 확률" 이 반쪽이다 */
+      skillBase(mine, sk, sup), rollCrit(mine, rand, mineHex),
       foeArmor(kind, foes[i].hp), blow,
     ) * foeTough(kind)));
-    if (sk.foeHex) {
-      foeHex[foes[i].id] = putHex(foeHexOf(st.foeHex, foes[i].id), {
-        id: sk.foeHex.id,
-        ms: Math.round(sk.foeHex.sec * 1000),
-        dot: 0,
-        dmg: 'magic',
-        mul: sk.foeHex.mul,
-        n: 1,
-      }, 1);
+    /*
+      맞은 놈에게 거는 것 — 최대 둘 (`SkillDef.foeHex` · `foeHex2`).
+
+      **이미 건 것 위에 쌓는다.** 둘째를 걸 때 원본(`st.foeHex`)을 다시
+      읽으면 첫째가 통째로 사라진다 — 신의 천벌이 둔화만 걸고 약화를
+      지우는 셈이 된다.
+    */
+    for (const spec of [sk.foeHex, sk.foeHex2]) {
+      if (!spec) continue;
+      foeHex[foes[i].id] = putHex(
+        foeHex[foes[i].id] ?? foeHexOf(st.foeHex, foes[i].id),
+        {
+          id: spec.id,
+          ms: Math.round(spec.sec * 1000),
+          dot: 0,
+          dmg: 'magic',
+          mul: spec.mul,
+          n: 1,
+        },
+        1,
+      );
     }
     foes[i] = biteFoe(foes[i], dmg);
     hit += dmg;

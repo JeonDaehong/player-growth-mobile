@@ -45,7 +45,7 @@
  * 다음 사람을 만들면 여기 한 줄, `CHARS` 에 한 덩어리를 더한다.
  */
 import type { StatusId } from './status';
-import { fixTree } from './skillTree';
+import { activeNodes, fixTree } from './skillTree';
 import {
   RARITY_GROWTH, Rarity, STAR_CAP,
   canAwaken, lvCap, maxStar, skillSlots,
@@ -411,6 +411,11 @@ export type SkillKind =
   | 'taunt'    // 도발 (이졸데)
   | 'volcano'  // 화산 (비앙카)
   | 'frenzy'   // 광란 (리안느)
+  /* ── 아래 넷은 스킬 트리가 여는 것들 (`core/skillTree`) ── */
+  | 'shout'     // 함성 — 이졸데 2-2
+  | 'holysword' // 성검 발현 — 이졸데 4-2
+  | 'song'      // 정령의 노래 — 리안느 3-2
+  | 'judge'     // 신의 심판 — 아녜스 3-1
   | 'purify';  // 정화 (아녜스)
 
 export interface SkillDef {
@@ -573,9 +578,29 @@ export interface SkillDef {
   /**
    * 맞은 **적에게** 거는 것.
    *
-   * 비앙카의 화산 하나다 — 5초 동안 그놈이 받는 회복이 절반이 된다.
+   * 비앙카의 화산과 아녜스의 신의 심판. 앞엣것은 때리면서 걸고 뒤엣것은
+   * 때리지 않고 걸기만 한다 (`mul: 0`).
    */
   foeHex?: { id: StatusId; sec: number; mul: number };
+  /**
+   * **아군 전체에게** 거는 것.
+   *
+   * `self` 와 갈라 둔다. 저건 쓰는 사람 하나에게만 걸리는데 (이졸데의 함성 ·
+   * 리안느의 숲의 축복), 이건 넷 다 걸린다 — 리안느의 정령의 노래 하나다.
+   *
+   * 둘을 한 칸으로 합치면 "누구에게 걸리나" 를 다른 칸에서 물어야 하고,
+   * 그 칸을 빠뜨리면 파티 버프가 조용히 혼자만의 버프가 된다.
+   */
+  party?: { id: StatusId; sec: number; mul: number };
+  /**
+   * 맞은 적에게 거는 **둘째 것.**
+   *
+   * 아녜스가 신의 천벌을 찍으면 신의 심판이 약화와 둔화를 같이 건다
+   * (`core/skillTree` 의 `nu4a`). `foeHex` 를 배열로 바꿀 수도 있었지만,
+   * 그러면 그 칸을 읽는 자리 셋을 다 고쳐야 하고 둘을 거는 기술은 지금
+   * 이것 하나뿐이다.
+   */
+  foeHex2?: { id: StatusId; sec: number; mul: number };
   /**
    * 켜고 끄는 것을 사람이 고를 수 있나 (`core/skillOpt`).
    *
@@ -860,6 +885,97 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     침묵도 마찬가지다. 대신 **자기 몸에 걸린 것은 스스로 걷을 수 있다** —
     나쁜 것이 다 CC 는 아니기 때문이다.
   */
+  /*
+    ── 함성 ── 이졸데 2-2. 도발 대신 고르는 쪽.
+
+    도발은 **적을 나에게 끌어오는** 것이고 이건 **내가 세지는** 것이다.
+    그래서 이 갈래를 고른 이졸데는 앞에서 버티는 사람이 아니라 앞에서
+    때리는 사람이 되고, 3-2(파쇄의 태세)가 그걸 끝까지 민다.
+
+    적을 안 때린다 (`pick: 'none'`). 리안느의 숲의 축복과 같은 모양이다 —
+    거는 것만 하는 기술이라 대상이 없다.
+  */
+  shout: {
+    name: '함성', art: 'sk_shout', hits: 1, pick: 'none', targets: 0, dmg: 'phys',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 1, cost: 8, aura: 'ring', leaps: false,
+    /*
+      **코스트는 계속 찬다** (`noCharge` 를 안 켠다).
+
+      숲의 축복은 스스로를 되먹으므로 껐다 — 두 배로 때리니 코스트도 두 배로
+      찬다. 이건 1.3배라 그만큼 안 되먹고, 8 짜리를 5초 안에 다시 채우려면
+      1.3배로는 모자란다.
+    */
+    self: { id: 'st_rage', sec: 5, mul: 1.3 },
+    cast: 'roar',
+    fx: 'holy',
+    desc: '5초간 자신의 공격력이 1.3배가 된다',
+  },
+
+  /*
+    ── 성검 발현 ── 이졸데 4-2. 검 갈래의 끝.
+
+    **한 명에게 300%.** 이 게임에서 한 대로 제일 센 아군 기술이다. 검 갈래는
+    보호막도 반격도 없이 앞에서 맞으며 때리는 길이라, 그 끝에 있는 것이
+    "크게 한 방" 이 아니면 방패 갈래를 고를 이유밖에 안 남는다.
+
+    파쇄의 태세와 겹쳐야 값이 산다 — 저쪽이 검기를 2.1배로 만들고, 이쪽이
+    12 코스트짜리 한 방을 얹는다.
+  */
+  holysword: {
+    name: '성검 발현', art: 'sk_holysword', hits: 1, pick: 'random', targets: 1,
+    dmg: 'phys',
+    mul: 3.0, defMul: 0, heal: 0, healPct: 0,
+    /* 하늘에서 내려온다 — 몸에서 날아가는 것이 아니다 */
+    flies: false, landOn: 3, cost: 12, aura: 'rune', leaps: false,
+    fx: 'holy',
+    desc: '적 하나에게 빛과 함께 큰 검이 떨어진다',
+  },
+
+  /*
+    ── 정령의 노래 ── 리안느 3-2. 혼자 세지는 대신 넷을 올린다.
+
+    치명타 확률을 **30%p** 올린다 (배수가 아니라 더하기다 — `st_focus`).
+    넷 중 셋이 치명타 확률 0 이라 배수로 두면 아무 일도 안 일어난다.
+
+    적을 안 때린다. 리안느가 활을 내리고 노래하는 5초가 이 기술의 값이다.
+  */
+  song: {
+    name: '정령의 노래', art: 'sk_spiritsong', hits: 1, pick: 'none', targets: 0,
+    dmg: 'phys',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 1, cost: 10, aura: 'rune', leaps: false,
+    /*
+      **파티 전체에 걸린다.** `self` 는 쓰는 사람에게만 거는 칸이라 여기서는
+      못 쓴다 — 거는 쪽은 `applySkill` 이 `party` 로 갈래를 튼다.
+    */
+    party: { id: 'st_focus', sec: 5, mul: 1.30 },
+    cast: 'haste',
+    fx: 'star',
+    desc: '아군 전체의 치명타 확률이 5초간 30%p 오른다',
+  },
+
+  /*
+    ── 신의 심판 ── 아녜스 3-1. 적을 깎는 쪽.
+
+    아녜스의 기술 셋이 전부 아군 쪽을 보고 있었다 (기도 · 정화). 이 갈래가
+    처음으로 **적을 향한다** — 때리지는 않고 약하게 만든다.
+
+    전체에 걸린다 (`pick: 'all'`). 피해가 0 이므로 (`mul: 0`) 화면에 숫자는
+    안 뜨고 적 머리 위에 약화 로고만 붙는다.
+  */
+  judge: {
+    name: '신의 심판', art: 'sk_judge', hits: 1, pick: 'all', targets: 0,
+    dmg: 'magic',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 2, cost: 10, aura: 'rune', leaps: false,
+    /* 4-1 신의 천벌을 찍으면 여기에 둔화가 하나 더 붙는다 (`skillsFor`) */
+    foeHex: { id: 'st_weak', sec: 5, mul: 0.8 },
+    cast: 'roar',
+    fx: 'arcane',
+    desc: '적 전체의 공격력을 5초간 20% 깎는다',
+  },
+
   purify: {
     name: '정화', art: 'sk_purify', hits: 1, pick: 'none', targets: 0, dmg: 'magic',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
@@ -929,42 +1045,84 @@ export function skillsOf(id: string): SkillDef[] {
 }
 
 /**
- * ── 스킬 트리가 손본 기술 목록 ──
+ * ── 트리 자리 하나가 여는 **액티브 기술** ──
  *
- * `skillsOf` 는 **표에 적힌 그대로**를 준다. 이건 거기에 찍어 둔 갈래를
- * 얹은 것이다 (`core/skillTree` 의 `OwnedChar.tree`).
+ * 패시브 자리는 여기 없다. 저것들은 기술을 하나 더 주는 것이 아니라 이미
+ * 있는 기술을 손보는 것이라, 코스트 칸을 안 차지한다 (`skillsFor` 의 아래쪽).
  *
- * ## 왜 표를 안 고치고 여기서 얹나
+ * 여기 없는 액티브 자리는 **아직 안 만든 것**이다 (`TreeNode.live`). 있지도
+ * 않은 기술에 코스트 칸을 내주면, 찍은 사람이 영영 안 나가는 칸 하나를
+ * 들고 다니게 된다.
+ */
+const NODE_SKILL: Record<string, SkillKind> = {
+  kg1: 'wave',
+  kg2a: 'taunt',
+  kg2b: 'shout',
+  kg4b: 'holysword',
+  ba1: 'leap',
+  ba2: 'volcano',
+  ea1: 'rain',
+  ea2: 'frenzy',
+  ea3b: 'song',
+  nu1: 'heal',
+  nu2: 'purify',
+  nu3a: 'judge',
+};
+
+/**
+ * ── 이 사람이 지금 쓰는 기술들 ── **트리가 짠다.**
  *
- * 표(`SKILLS`)는 **모두가 함께 쓰는 것**이다. 거기서 정화의 코스트를 15 로
- * 내리면 아녜스를 안 키운 사람의 정화도 같이 싸진다.
+ * `skillsOf` 는 캐릭터 표에 적힌 둘을 준다 (`skill` + `extra`). 그건 트리가
+ * 생기기 전의 목록이라, 3·4단계에서 열리는 기술이 들어갈 자리가 없다.
  *
- * ## 이름으로 찾는다 — 자리 번호가 아니라
+ * 여기서는 **찍은 자리에서** 목록을 짓는다. 순서는 트리 순서, 곧 단계
+ * 순서다 — 그 순서가 곧 코스트 칸 번호이므로 (`Charge`), 단계가 뒤섞이면
+ * 화면의 칸과 나가는 기술이 갈린다.
  *
- * `skillsOf` 의 순서가 곧 자리 번호이지만 (`Charge`), 여기서는 종류로
- * 찾는다. 자리 번호로 짜 두면 나중에 기술을 하나 끼워 넣는 날 갈래가
- * 조용히 엉뚱한 기술에 붙는다 — 그건 화면 어디에도 안 나온다.
+ * ## 성이 모자라면 목록에 없다
  *
- * ## 안 찍은 사람은 같은 배열을 돌려받는다
+ * `activeNodes` 가 성으로 한 번 거른다. 그래서 `openSkills` 가 따로 셀 것이
+ * 없어졌다 — 목록의 길이가 곧 열린 기술 수다.
  *
- * 찍은 것이 없으면 `skillsOf` 의 결과를 그대로 준다. 이 함수는 스윙마다
- * 불리므로 (`Fighter`), 아무것도 안 바꿀 때는 아무것도 안 만들어야 한다.
+ * ## 안 찍으면 없다
+ *
+ * 2성인데 2단계를 안 찍었으면 기술이 하나뿐이다. 예전에는 성만 되면
+ * 저절로 둘이었는데, 갈래가 생긴 이상 **고르지 않으면 안 열리는** 것이
+ * 맞다 — 안 그러면 한쪽이 기본값이 되어 갈래가 뜻을 잃는다.
+ *
+ * 화면이 "찍을 것이 남았다" 를 알린다 (`core/skillTree` 의 `openPicks`).
+ *
+ * ## 옛 저장본이 기술을 잃지 않게
+ *
+ * 아무것도 안 찍은 사람에게는 **표에 적힌 둘**을 그대로 준다. 트리가 생기기
+ * 전에 켜 두던 사람이 창을 열어 보기 전까지 도발을 잃으면, 그건 새 체계가
+ * 아니라 고장으로 보인다.
  */
 export function skillsFor(c: OwnedChar): SkillDef[] {
-  const base = skillsOf(c.id);
-  const on = c.tree;
-  if (!on || !on.length) return base;
-  const has = (id: string) => on.includes(id);
+  const picked = c.tree ?? [];
+  /*
+    한 번도 안 찍었으면 옛 규칙 그대로다. 찍는 순간부터 트리가 짠다 —
+    그 한 번이 "이제 내가 고른다" 의 신호다.
+  */
+  if (!picked.length) return skillsOf(c.id);
 
-  return base.map((sk) => {
+  const on = activeNodes(c.id, c.star, picked);
+  const ids = new Set(on.map((n) => n.id));
+  const has = (id: string) => ids.has(id);
+
+  const out: SkillDef[] = [];
+  for (const n of on) {
+    if (n.kind !== 'active') continue;
+    const kind = NODE_SKILL[n.id];
+    if (!kind) continue;
+    let sk = SKILLS[kind];
+
     /*
-      ── 파쇄의 태세 ── 이졸데가 방패를 버리고 검을 든다.
-
-      검기가 방어를 뚫고, 싸지고, 1.5배가 된다. 대신 불굴의 맹세가 꺼진다 —
-      그 갈래는 `core/passives` 에서 본다.
+      ── 파쇄의 태세 ── 검기가 방어를 뚫고, 싸지고, 1.5배가 된다.
+      대신 불굴의 맹세가 꺼진다 (`core/passives` 의 `regenOf`).
     */
-    if (has('kg3b') && sk.name === '검기') {
-      return {
+    if (has('kg3b') && kind === 'wave') {
+      sk = {
         ...sk,
         cost: Math.max(1, sk.cost - 1),
         mul: sk.mul * 1.5,
@@ -978,8 +1136,8 @@ export function skillsFor(c: OwnedChar): SkillDef[] {
       `hits` 도 같이 올린다. 저건 화면이 화살을 몇 발 그리나이므로
       (`BattleView`), 대상만 넷으로 늘리면 네 놈에게 세 발이 떨어진다.
     */
-    if (has('ea3a') && sk.name === '화살비') {
-      return {
+    if (has('ea3a') && kind === 'rain') {
+      sk = {
         ...sk,
         cost: Math.max(1, sk.cost - 1),
         hits: 4,
@@ -989,11 +1147,22 @@ export function skillsFor(c: OwnedChar): SkillDef[] {
       };
     }
     /* ── 정화의 손길 ── 20 → 15 */
-    if (has('nu3b') && sk.name === '정화') {
-      return { ...sk, cost: Math.max(1, Math.round(sk.cost * 0.75)) };
+    if (has('nu3b') && kind === 'purify') {
+      sk = { ...sk, cost: Math.max(1, Math.round(sk.cost * 0.75)) };
     }
-    return sk;
-  });
+    /*
+      ── 신의 천벌 ── 신의 심판이 공격속도까지 깎는다.
+
+      `foeHex` 는 한 칸뿐이라 둘을 못 담는다. 둘째 것을 `foeHex2` 로 얹는다 —
+      칸을 배열로 바꾸면 그걸 읽는 자리 셋을 다 고쳐야 하고, 지금 둘을 거는
+      기술은 이것 하나다.
+    */
+    if (has('nu4a') && kind === 'judge') {
+      sk = { ...sk, foeHex2: { id: 'st_slow', sec: 5, mul: 0.7 } };
+    }
+    out.push(sk);
+  }
+  return out;
 }
 
 /**
@@ -1411,8 +1580,18 @@ export const rarityOf = (c: OwnedChar): Rarity => CHARS[c.id].rarity;
  * 안 막으면 `readySkill` 이 없는 자리를 고르고, 화면은 이름 없는 기술을
  * 띄운다.
  */
-export const openSkills = (c: OwnedChar): number =>
-  Math.min(skillsOf(c.id).length, skillSlots(c.star, c.awake));
+/*
+  ── 목록의 길이가 곧 열린 기술 수다 ──
+
+  예전에는 성으로 잘랐다 (`skillSlots`). 트리가 생기면서 자를 것이 없어졌다 —
+  `skillsFor` 가 이미 성으로 거른 자리들로만 목록을 짓기 때문이다
+  (`core/skillTree` 의 `activeNodes`).
+
+  두 곳에서 자르면 언젠가 어긋난다. 실제로 그럴 뻔했다: 3성인데 3단계를
+  안 찍은 사람은 기술이 둘인데 `skillSlots` 는 셋을 열어 줘서, 없는 셋째
+  칸이 파티 칸에 그려졌다.
+*/
+export const openSkills = (c: OwnedChar): number => skillsFor(c).length;
 
 /** 그 자리의 기술이 열려 있나 — 화면이 잠긴 칸을 흐리게 그린다 */
 export const skillOpen = (c: OwnedChar, slot: number): boolean => slot < openSkills(c);

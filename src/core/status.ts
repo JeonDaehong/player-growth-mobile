@@ -51,10 +51,21 @@ export type StatusId =
   | 'st_rage'     // 격노 — 공격력 증가
   | 'st_guard'    // 견고 — 방어력 증가
   | 'st_regen'    // 재생 — 지속 회복
-  | 'st_haste';   // 신속 — 공격속도 증가
+  | 'st_haste'    // 신속 — 공격속도 증가
+  | 'st_focus'    // 집중 — 치명타 확률 증가 (리안느의 정령의 노래)
+  /*
+    보호 — **새 디버프에 안 걸린다.**
+
+    다른 것들과 성격이 하나 다르다. 나머지는 무언가를 올리거나 내리는데
+    이것은 **거는 것을 막는다** (`putHex`). 이미 걸린 것을 걷어내지는
+    않는다 — 그건 정화가 하는 일이고, 둘이 같으면 정화가 할 일이 없어진다.
+  */
+  | 'st_ward';    // 보호 — 새 디버프 면역
 
 /** 화면에 적는 이름 */
 export const STATUS_NAME: Record<StatusId, string> = {
+  st_focus: '집중',
+  st_ward: '보호',
   st_bleed: '출혈',
   st_poison: '중독',
   st_stun: '기절',
@@ -128,6 +139,15 @@ export const STATUS_MARK: Partial<Record<StatusId, string>> = {
  */
 export const STATUS_ALT: Partial<Record<StatusId, string>> = {
   st_shock: 'st_numb',
+  /*
+    새로 생긴 둘도 제 그림이 없다. 제일 가까운 것으로 버틴다 —
+    집중은 격노(공격이 세지는 것)로, 보호는 견고(막는 것)로.
+
+    그림이 들어오면 이 두 줄만 지운다 (프롬프트는
+    `docs/STATUS_ICON_PROMPTS.md`).
+  */
+  st_focus: 'st_rage',
+  st_ward: 'st_guard',
 };
 
 /**
@@ -145,6 +165,8 @@ export const STATUS_ALT: Partial<Record<StatusId, string>> = {
  * 창이 맡는다.
  */
 export const STATUS_WHAT: Record<StatusId, string> = {
+  st_focus: '치명타 확률이 오른다',
+  st_ward: '새로 걸리는 나쁜 것을 막는다',
   st_bleed: '지속 피해',
   st_poison: '지속 피해',
   st_stun: '행동 불가',
@@ -179,7 +201,7 @@ export const STATUS_WHAT: Record<StatusId, string> = {
  * 흑백에서 색으로 못 가르니 자리로 가른다.
  */
 export const GOOD: ReadonlySet<StatusId> = new Set<StatusId>([
-  'st_rage', 'st_guard', 'st_regen', 'st_haste',
+  'st_rage', 'st_guard', 'st_regen', 'st_haste', 'st_focus', 'st_ward',
 ]);
 
 /**
@@ -330,6 +352,22 @@ export function putHex(
   list: readonly Hex[], next: Hex, stack = 1,
 ): Hex[] {
   const out = list.filter((h) => h.ms > 0);
+  /*
+    ── 보호가 걸려 있으면 **나쁜 것은 안 붙는다** ── (`st_ward`)
+
+    막는 자리를 여기 하나로 둔다. 거는 쪽마다 물어보게 하면 (우두머리 기술
+    열아홉 · 잡몹 · 지속 피해) 한 곳만 빠뜨려도 그 기술만 면역을 뚫는데,
+    그건 화면에서 안 보이고 표에서도 안 보인다.
+
+    **이미 걸린 것은 안 걷는다.** 걷어내는 것은 정화가 하는 일이고, 둘이
+    같은 일을 하면 정화를 찍을 이유가 없어진다.
+
+    좋은 것은 그대로 걸린다 — 보호가 아군의 버프까지 막으면 켠 순간 파티가
+    약해진다.
+  */
+  if (!GOOD.has(next.id) && out.some((h) => h.id === 'st_ward' && h.ms > 0)) {
+    return out;
+  }
   const at = out.findIndex((h) => h.id === next.id);
   if (at < 0) {
     out.push({ ...next, n: 1 });

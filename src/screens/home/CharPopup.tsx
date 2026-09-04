@@ -26,6 +26,7 @@ import { Money } from '@/ui/Money';
 import { BORDER, FS, LINE, R, SP, SURF } from '@/ui/theme';
 import { SkillPanel } from './SkillPanel';
 import { SkillTreePopup } from './SkillTreePopup';
+import { openPicks } from '@/core/skillTree';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
 import { deltaText, liveArmor, liveAtk, liveSpd } from '@/core/passives';
@@ -126,6 +127,9 @@ export function CharPopup({
     내걸면, 창고에 있는 사람이 실제보다 약해 보인다 — 바꿔 넣는 순간 그쪽도
     같은 배수를 받는데.
   */
+  /* 지금 찍을 수 있는 갈래가 몇 개나 (`core/skillTree`) */
+  const picks = c ? openPicks(c.id, c.star, c.tree) : 0;
+
   const owned = Object.values(raw);
   const cost = c ? gearCost(c.gearLv) : 0;
   const maxed = !!c && c.gearLv >= MAX_GEAR_LV;
@@ -338,10 +342,21 @@ export function CharPopup({
             "무엇으로 키울까" 를 말한다. 둘이 다른 질문이라 화면도 나눈다 —
             한 자리에 다 넣으면 스킬 넷을 보려고 갈래 여덟을 지나야 한다.
           */}
+          {/*
+            ── 찍을 것이 남았으면 **눈에 띄어야 한다** ──
+
+            트리가 생기면서 "성만 되면 저절로 열리던" 것이 "골라야 열리는"
+            것으로 바뀌었다. 그래서 2성인데 아무것도 안 찍은 사람은 기술이
+            하나뿐인데, 그 사실이 화면 어디에도 없으면 기술을 잃은 것으로
+            보인다.
+
+            남은 갈래가 있으면 단추가 채워지고 몇 개인지 적는다.
+          */}
           <Btn
             label="스킬 트리"
-            sub={`${c.star}단계까지 열림`}
+            sub={picks > 0 ? `찍을 것 ${picks}개` : `${c.star}단계까지 열림`}
             size="sm"
+            fill={picks > 0}
             style={{ marginBottom: SP.sm }}
             onPress={() => setTree(true)}
           />
