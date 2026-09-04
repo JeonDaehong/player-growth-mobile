@@ -1154,13 +1154,70 @@ export const STARTING_CHAR: CharId = STARTING_CHARS[0];
 export const isCharId = (v: string): v is CharId =>
   (CHAR_IDS as readonly string[]).includes(v);
 
+/** 어느 줄에 섰나. `null` 은 **줄이 없는 것** (혼자 선 우두머리 · 화면의 도감) */
+export type Row = 'front' | 'back' | null;
+
+/**
+ * ── 줄이 몸을 바꾼다 ──
+ *
+ * 앞에 서면 단단해지고, 뒤에 서면 세진다. 아군만이 아니라 **적도 똑같다**
+ * (`core/autoBattle` 의 `foeAt`).
+ *
+ *   앞줄  방어력 · 마법저항력 ×1.5, 최대체력 ×1.1
+ *   뒷줄  공격력 ×1.15
+ *
+ * ## 왜 필요한가
+ *
+ * 확률만으로는 대형이 **손해 보는 쪽을 고르는 일**이 된다. 앞에 서는 대가가
+ * "더 맞는다" 뿐이면, 앞줄은 그냥 벌칙이고 최적해는 늘 "제일 안 맞게 서기"
+ * 하나다 — 그러면 셋 중 하나가 정답이 되고 나머지 둘은 장식이 된다.
+ *
+ * 앞에 선 사람이 실제로 **더 잘 버티고**, 뒤에 선 사람이 실제로 **더 세게
+ * 치면**, 대형은 "위험을 어디에 둘까" 가 아니라 **"맷집과 화력 중 무엇을
+ * 살까"** 가 된다. 그게 고를 만한 선택이다.
+ *
+ * ## 숫자의 근거
+ *
+ * 방어는 뺄셈으로 들어가므로 (`Armor`) 1.5배가 체감이 크다. 체력은 곱셈이라
+ * 같은 1.5를 주면 앞줄이 통째로 안 죽는 벽이 되므로 1.1 로 눌렀다.
+ *
+ * 공격 1.15 는 앞줄이 지는 위험(20~30%p 더 맞는다)과 맞바꾸는 값이다. 더
+ * 크게 주면 딜러를 뒤에 두는 것이 언제나 정답이 되어, 다시 답이 하나가 된다.
+ */
+export const ROW_MOD = {
+  front: { atk: 1, hp: 1.1, def: 1.5, res: 1.5 },
+  back: { atk: 1.15, hp: 1, def: 1, res: 1 },
+} as const;
+
+/** 그 줄의 배수들. 줄이 없으면 전부 1 이다 */
+export const rowMod = (row: Row | undefined) => (
+  row ? ROW_MOD[row] : { atk: 1, hp: 1, def: 1, res: 1 }
+);
+
 // ── 가지고 있는 캐릭터 한 명 ────────────────────────────
 
 /** 저장되는 것 — 정의(`CHARS`)는 코드에 있으므로 여기 담지 않는다 */
 export interface OwnedChar {
   id: CharId;
-  /** 고유장비 강화 수치 — 이 사람에 대해 저장되는 유일한 값이다 */
+  /** 고유장비 강화 수치 */
   gearLv: number;
+  /**
+   * 지금 어느 줄에 서 있나 — **저장되지 않는다.**
+   *
+   * 대형이 정하는 값이라 (`core/party` 의 `seatRows`) 세이브에 넣을 것이
+   * 아니다. 전투 한 틱이 시작할 때 명부를 통째로 베끼면서 박고, 그 틱이
+   * 끝나면 같이 사라진다.
+   *
+   * `statOf` 가 이 한 칸을 보고 줄 배수를 얹는다 (`core/party` 의 `ROW_MOD`).
+   * 스탯을 읽는 창구가 하나뿐이라, 여기 박아 두면 전투의 열댓 군데가 전부
+   * 따라온다 — 자리마다 줄을 인자로 흘려보내면 한 곳만 빠뜨려도 조용히
+   * 틀린다.
+   *
+   * 없으면 줄이 없는 것으로 본다: 배수가 전부 1 이라 도감과 파티 칸은 **맨
+   * 몸 수치**를 보여 준다. 화면에 적힌 값이 대형에 따라 흔들리면 캐릭터끼리
+   * 견줄 수가 없다.
+   */
+  row?: Row;
 }
 
 export const newChar = (id: CharId): OwnedChar => ({ id, gearLv: 0 });
@@ -1285,15 +1342,26 @@ export interface Stat extends Armor {
 export function statOf(c: OwnedChar): Stat {
   const d = CHARS[c.id];
   const g = GRADE_GROWTH[d.grade] * Math.max(0, c.gearLv);
+  /*
+    ── 서 있는 줄이 몸을 바꾼다 ──
+
+    앞줄은 단단해지고 뒷줄은 세진다 (`ROW_MOD`). `c.row` 는 전투가 한 틱
+    시작할 때 박아 주는 값이고 (`core/party` 의 `seatRows`), 없으면 전부
+    1 이라 도감과 파티 칸은 맨 몸 수치를 본다.
+
+    **맨 끝에 곱한다.** 강화 성장률(`g`) 안에 섞어 넣으면 "앞에 서면 성장이
+    빨라진다" 가 되어, 강화 0 인 사람에게는 아무 일도 안 일어난다.
+  */
+  const m = rowMod(c.row);
   return {
-    atk: Math.round(d.atk * (1 + g)),
-    hp: Math.round(d.hp * (1 + g * 0.6)),
+    atk: Math.round(d.atk * (1 + g) * m.atk),
+    hp: Math.round(d.hp * (1 + g * 0.6) * m.hp),
     /*
       방어도 자란다. 다만 **제일 천천히** — 뺄셈으로 들어가는 값이라 조금만
       올라도 효과가 크고, 공격력과 같은 기울기로 키우면 어느 지점부터 맞는
       피해가 통째로 1 이 된다.
     */
-    def: Math.round(d.def * (1 + g * 0.4)),
+    def: Math.round(d.def * (1 + g * 0.4) * m.def),
     /*
       마법저항력도 방어와 **같은 기울기**로 자란다. 하는 일이 똑같고
       (`Armor`) 막는 것만 다르므로, 기울기를 다르게 둘 이유가 없다.
@@ -1303,7 +1371,7 @@ export function statOf(c: OwnedChar): Stat {
       이 스탯은 **키우는 축이 아니라 갖고 있고 없고**로 두었기 때문이고,
       의도한 것이다.
     */
-    res: Math.round((d.res ?? 0) * (1 + g * 0.4)),
+    res: Math.round((d.res ?? 0) * (1 + g * 0.4) * m.res),
     /* 속도와 치명타는 강화로 안 자란다 — 자라는 축은 하나여야 한다 */
     spd: d.spd,
     crit: d.crit,

@@ -68,7 +68,7 @@ import {
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
-  BOSS_W, EDGE, FOE_W, GROUND_H, Ground, PARTY_W, STAGE_H, ZOOM, depthAt,
+  BOSS_W, DEPTH_LIFT, EDGE, FOE_W, GROUND_H, Ground, PARTY_W, STAGE_H, ZOOM, depthAt,
 } from './Ground';
 import {
   BossCallBtn, StagePicker, StageVeil, useStageStaging, walkInX,
@@ -178,6 +178,26 @@ const FOE_LANE_STEP = 2;
 const foeDepth = (pos: number, cap: number) => (
   cap <= 1 ? 0 : foeCell(pos).lane * FOE_LANE_STEP
 );
+
+/**
+ * 혼자 선 놈(= 우두머리)을 바닥에서 얼마나 더 띄우나.
+ *
+ * "보스가 너무 아래에 있다 — 한 칸만 위로." 우두머리는 `foeDepth` 가 0 이라
+ * 땅의 맨 앞줄, 곧 **`FLOOR` 바로 위**에 선다. 그 자리는 화면 아래 끝에서
+ * 63px 인데 채팅이 그 아래 53px 을 쓰므로 (`Ticker`), 132px 짜리 몸이
+ * 발밑까지 꽉 차 보였다.
+ *
+ * ## 크기는 안 줄인다
+ *
+ * `foeDepth` 를 1 로 올리면 될 것 같지만 그러면 `depthAt` 이 **8% 작게도**
+ * 그린다. 우두머리 크기는 잡몹과의 차이를 만들려고 잰 값이라 (`BOSS_W`),
+ * 뒤로 물러났다고 줄이면 그 차이가 흐려진다.
+ *
+ * 원근을 어기는 셈이지만 어길 것이 없다 — 저쪽 편에 다른 것이 하나도 없어서
+ * 크기를 견줄 대상이 아예 없다. 잡몹 격자에는 그대로 원근이 산다
+ * (`FOE_LANE_STEP`).
+ */
+const BOSS_LIFT = DEPTH_LIFT;
 
 /**
  * 근접끼리 맞붙었을 때 남기는 틈.
@@ -406,12 +426,14 @@ function foeLayout(cap: number, base: number, scale: Scales): {
   const x: number[] = [];
   const lift: number[] = [];
   const size: number[] = [];
+  /* 혼자면 우두머리다 — 한 칸 띄우되 크기는 그대로 둔다 (`BOSS_LIFT`) */
+  const lone = n <= 1 ? BOSS_LIFT : 0;
   for (let p = 0; p < n; p++) {
     const { col } = foeCell(p);
     /* 가로줄은 한 칸이 아니라 두 칸씩 물러난다 (`FOE_LANE_STEP`) */
     const d = depthAt(foeDepth(p, n));
     x.push(Math.round(col * step));
-    lift.push(d.lift);
+    lift.push(d.lift + lone);
     size.push(Math.round(base * d.scale * (scale[p] ?? 1)));
   }
   return { x, lift, size, width: Math.max(1, ...x.map((v, i) => v + size[i])) };

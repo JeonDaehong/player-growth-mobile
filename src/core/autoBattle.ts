@@ -49,12 +49,13 @@
  *   최고 기록(`best`)도 그대로 남는다
  */
 import {
-  DEFAULT_FORMATION, FRONT_SHARE, FormationId, Party,
-  allDown, allyAtk, frontIdsOf, fullHp, hpOf, livingMembers, members, partyStat,
+  DEFAULT_FORMATION, FormationId, Party,
+  aimWeight, allDown, allyAtk, frontIdsOf, fullHp, hpOf, livingMembers, members, partyStat,
+  seatRows,
 } from './party';
 import {
   Armor, Blow, CHARS, DmgType, NO_ARMOR, NO_PIERCE, OwnedChar, PHYS_BLOW, Role,
-  SkillDef, Stat, blowOf, skillOf, skillsOf, statOf, swingMs,
+  SkillDef, Stat, blowOf, rowMod, skillOf, skillsOf, statOf, swingMs,
 } from './chars';
 import {
   GOOD, Hex, StatusId, hexOf, mulOf, putHex, tickHex,
@@ -2532,7 +2533,38 @@ export interface Charm {
  */
 export const foeAt = (
   st: { stage: number; boss: boolean }, f: FoeSlot,
-): Foe => f.own ?? foeOf(st.stage, st.boss, f.k);
+): Foe => foeInRow(f.own ?? foeOf(st.stage, st.boss, f.k), f.pos, st.boss);
+
+/**
+ * 적도 **줄이 몸을 바꾼다** — 아군과 같은 규칙이다 (`core/party` 의 `ROW_MOD`).
+ *
+ * 격자의 **맨 왼쪽 세로줄**(`col` 0)이 앞줄이다. 거기가 아군과 마주 보는
+ * 쪽이고, 실제로 붙어 싸우는 놈들이 서는 자리다 (`meleeSlots`). 나머지 두
+ * 세로줄은 뒷줄이라 공격이 1.15배다.
+ *
+ * ## 우두머리는 줄이 없다
+ *
+ * 혼자 서므로 앞뒤가 없다. 규칙대로 앞줄로 치면 **모든 우두머리가 아무
+ * 대가 없이 방어 1.5배 · 체력 1.1배**가 되는데, 그건 대형이 만드는 선택이
+ * 아니라 그냥 난이도가 오른 것이다. 화면에서도 한 칸 띄워 그리며 줄이 아닌
+ * 것으로 다룬다 (`BattleView` 의 `BOSS_LIFT`).
+ *
+ * ## 체력은 두 군데가 같이 봐야 한다
+ *
+ * 여기서 최대 체력에 1.1 을 곱하면 **갓 선 놈의 남은 체력도** 같은 값으로
+ * 시작해야 한다 (`fresh`). 한쪽만 곱하면 앞줄 잡몹이 90% 체력으로 태어난다.
+ */
+export function foeInRow(f: Foe, pos: number | undefined, boss: boolean): Foe {
+  if (boss) return f;
+  const m = rowMod(foeCell(pos ?? 0).col === 0 ? 'front' : 'back');
+  return {
+    ...f,
+    hp: Math.max(1, Math.round(f.hp * m.hp)),
+    atk: Math.max(1, Math.round(f.atk * m.atk)),
+    def: Math.round((f.def ?? 0) * m.def),
+    res: Math.round((f.res ?? 0) * m.res),
+  };
+}
 
 /**
  * 이 슬롯이 원거리인가.
@@ -3021,7 +3053,8 @@ const startFoes = (stage: number, seq = 0): { foes: FoeSlot[]; seq: number } => 
  * 있는데 아군 체력이 닳는다.
  */
 function fresh(stage: number, k: number, id: number, pos: number): FoeSlot {
-  const kind = foeOf(stage, false, k);
+  /* 서는 자리가 몸을 바꾼다 — 최대 체력이 그만큼 크면 시작 체력도 그만큼이다 */
+  const kind = foeInRow(foeOf(stage, false, k), pos, false);
   return { hp: kind.hp, k, id, cd: swingMs(kind.spd), n: 0, pos };
 }
 
@@ -3250,27 +3283,38 @@ export const AIM = [0.50, 0.25, 0.15, 0.10];
  * 여전히 한 줄로 서고, 앞에 선 놈일수록 많이 맞는다.
  *
  * 아군은 두 줄로 선다 (`core/party` 의 `FORMATIONS`). 그래서 "몇 번째 자리
- * 인가" 가 아니라 **"앞줄인가 뒷줄인가"** 가 확률을 정한다 — 앞줄이 통째로
- * 70% 를 지고, 줄 안에서는 고르게 나눈다 (`FRONT_SHARE`).
+ * 인가" 가 아니라 **"앞줄인가 뒷줄인가"** 가 확률을 정한다.
  *
- * 그 결과가 사양 그대로다.
- *
+ *   3-1  앞 하나 40% · 뒤 셋 20% 씩
  *   2-2  앞 둘 35% 씩 · 뒤 둘 15% 씩
- *   3-1  앞 하나 70%  · 뒤 셋 10% 씩
- *   1-3  앞 셋 23% 씩 · 뒤 하나 30%
+ *   1-3  앞 셋 30% 씩 · 뒤 하나 10%
  *
- * 한쪽 줄이 비면 남은 줄이 전부 가져간다. 앞줄이 전멸했는데 아무도 안 맞는
- * 일이 생기면 안 된다.
+ * ## 무게로 굴린다
+ *
+ * 예전에는 **줄을 먼저 뽑고** 그 안에서 고르게 골랐다 (앞줄 70% 고정). 줄
+ * 몫이 고정이면 앞에 적게 설수록 그 한 명이 더 맞으므로, `3-1` 의 앞 하나가
+ * 70% 를 혼자 졌다.
+ *
+ * 지금은 **사람마다 무게를 매겨** 한 번에 굴린다 (`aimWeight`). 쓰러진 사람은
+ * 목록에서 빠지고 남은 무게로 다시 나뉘므로, 앞줄이 전멸하면 뒷줄 셋이
+ * 자기들끼리 나눠 가진다 — "아무도 안 맞는" 자리가 생기지 않는다.
+ *
+ * @param form 지금 대형. 사람마다 무게가 여기서 나온다
  */
 function pickRow(
-  alive: readonly OwnedChar[], front: ReadonlySet<string>, rand: () => number,
+  alive: readonly OwnedChar[], front: ReadonlySet<string>,
+  form: FormationId, rand: () => number,
 ): OwnedChar {
-  const f = alive.filter((c) => front.has(c.id));
-  const b = alive.filter((c) => !front.has(c.id));
-  const use = (!f.length || !b.length)
-    ? (f.length ? f : b)
-    : (rand() < FRONT_SHARE ? f : b);
-  return use[Math.min(use.length - 1, Math.floor(rand() * use.length))];
+  const w = alive.map((c) => aimWeight(form, front.has(c.id) ? 'front' : 'back'));
+  const total = w.reduce((a, v) => a + v, 0);
+  /* 무게가 다 0 이면(있을 수 없지만) 고르게 — 아무도 안 맞는 것보다 낫다 */
+  if (!(total > 0)) return alive[Math.floor(rand() * alive.length)] ?? alive[0];
+  let r = rand() * total;
+  for (let i = 0; i < alive.length; i++) {
+    r -= w[i];
+    if (r < 0) return alive[i];
+  }
+  return alive[alive.length - 1];
 }
 
 /**
@@ -3449,6 +3493,8 @@ function aimOf(
    * 고른다 — 대형이 없던 시절과 결과가 같아진다.
    */
   front: ReadonlySet<string>,
+  /** 지금 대형 — 사람마다의 무게가 여기서 나온다 (`pickRow`) */
+  form: FormationId,
 ): OwnedChar[] {
   if (!alive.length) return [];
   /*
@@ -3456,7 +3502,7 @@ function aimOf(
     안 걸린 것으로 친다 — 시체를 계속 때리면 나머지 셋이 공짜로 논다.
   */
   const bait = taunt ? alive.find((c) => c.id === taunt) : null;
-  const one = (): OwnedChar[] => [bait ?? pickRow(alive, front, rand)];
+  const one = (): OwnedChar[] => [bait ?? pickRow(alive, front, form, rand)];
   if (!pat || pat.aim === 'one') return one();
   if (pat.aim === 'all') return [...alive];
   /*
@@ -3575,6 +3621,20 @@ export function battleTick(
   form: FormationId = DEFAULT_FORMATION,
   rand: () => number = Math.random,
 ): TickResult {
+  /*
+    ── 여기서 딱 한 번 대형에 앉힌다 ──
+
+    이 아래로는 `chars` 를 읽는 모든 자리가 **줄 배수가 얹힌 몸**을 본다
+    (`core/party` 의 `seatRows` → `core/chars` 의 `statOf`). 앞줄은 방어와
+    마법저항이 1.5배, 체력이 1.1배고, 뒷줄은 공격이 1.15배다.
+
+    복사본이라 원본 명부(`st.chars`)는 안 바뀐다 — 도감과 파티 칸은 계속
+    맨 몸 수치를 보여 준다.
+
+    **`partyStat` 보다 먼저다.** 파티가 비었는지 재는 것도 이 몸으로 재야,
+    "화면에 적힌 총 체력" 과 "실제로 닳는 체력" 이 같은 값이 된다.
+  */
+  chars = seatRows(party, chars, form);
   const ps = partyStat(party, chars);
 
   // 아무도 없으면 아무 일도 안 일어난다 — 빈 파티로 스테이지가 오르면 안 된다
@@ -4080,7 +4140,7 @@ export function battleTick(
 
     /* 도발은 **쓸 때 서 있던 놈**에게만 걸렸다 — 나중에 온 놈은 못 들었다 */
     const baited = taunt && taunt.foes.includes(h.id) ? taunt.who : null;
-    const marks = aimOf(h.pat, alive, hp, rand, baited, frontIds);
+    const marks = aimOf(h.pat, alive, hp, rand, baited, frontIds, form);
     /* 특수기에 맞은 사람은 화면이 표적으로 씌운다 (`BattleState.struck`) */
     if (h.pat) for (const m of marks) if (!struck.includes(m.id)) struck.push(m.id);
 

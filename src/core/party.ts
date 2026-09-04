@@ -24,7 +24,9 @@
  * 둘을 한 숫자로 뭉치면 "레벨을 올렸는데 왜 그대로지" 같은 일이 생긴다.
  * 레벨은 레벨대로, 전투력은 전투력대로 보여 준다 — 화면에 두 줄이면 충분하다.
  */
-import { CharId, MAX_GEAR_LV, OwnedChar, Role, charPower, CHARS, statOf, swingMs } from './chars';
+import {
+  CharId, MAX_GEAR_LV, OwnedChar, Role, Row, charPower, CHARS, statOf, swingMs,
+} from './chars';
 import { allyAtkMul, allySpdAdd } from './passives';
 
 /** 파티 자리 수 */
@@ -222,7 +224,8 @@ export const hpOf = (c: OwnedChar, hp: Record<string, number>): number => {
  *
  * 화면 위아래가 아니다. 아군은 무대 왼쪽에서 오른쪽을 보고 서므로,
  * **앞줄은 오른쪽 · 뒷줄은 왼쪽**이다. 앞에 선다는 것은 적에게 더 가까이
- * 선다는 뜻이고, 그래서 앞줄이 먼저 맞는다 (`FRONT_SHARE`).
+ * 선다는 뜻이고, 그래서 앞줄이 더 자주 맞는다 (`FormationDef.frontAim`).
+ * 대신 앞에 서면 단단해진다 (`ROW_MOD`).
  *
  * 한 번 위아래로 그렸다가 고쳤다. 위아래로 두면 뒷줄이 적과 같은 거리에
  * 서 있게 되어, "앞에 세워 막는다" 는 말이 화면에서 아무 뜻도 갖지 못한다.
@@ -272,10 +275,36 @@ export interface FormationDef {
   backLanes: readonly number[];
   /** 앞줄이 쓰는 가로줄 */
   frontLanes: readonly number[];
+  /** 앞줄에 선 **한 사람**이 맞을 확률 */
+  frontAim: number;
+  /** 뒷줄에 선 **한 사람**이 맞을 확률 */
+  backAim: number;
   /** 화면에 적는 한 줄 */
   text: string;
 }
 
+/*
+  ── 확률은 줄이 아니라 **사람 하나**에 붙는다 ──
+
+  예전에는 앞줄이 통째로 70% 를 지고 그 안에서 고르게 나눴다 (`FRONT_SHARE`).
+  줄 몫이 고정이면 앞에 적게 설수록 그 사람이 더 맞으므로, `3-1` 의 앞 하나가
+  70% 를 혼자 받았다 — 대형을 고르는 일이 "누구 하나를 제물로 세울까" 가 됐고,
+  실제로 그 한 명이 늘 먼저 쓰러졌다.
+
+  이제 **한 사람 몫**을 대형마다 적어 둔다. 앞에 많이 설수록 한 사람이 덜
+  맞는다 (40 → 35 → 30). 뒷줄도 같은 방향이다 (20 → 15 → 10).
+
+    3-1   앞 1 × 40% + 뒤 3 × 20% = 100%
+    2-2   앞 2 × 35% + 뒤 2 × 15% = 100%
+    1-3   앞 3 × 30% + 뒤 1 × 10% = 100%
+
+  그래서 `3-1` 은 "한 명을 버린다" 가 아니라 **위험을 뒤로 넓게 편다**가 되고,
+  `1-3` 은 앞 셋이 고르게 지고 뒤 하나가 거의 안 맞는다. 어느 쪽이든 한 사람이
+  혼자 무너지지 않으므로, 셋 중 무엇을 골라도 판이 성립한다.
+
+  합이 정확히 1 이 되도록 맞춰 뒀지만 **계산은 합에 기대지 않는다** — 누가
+  쓰러지면 남은 사람들의 몫으로 다시 나눈다 (`pickRow`).
+*/
 export const FORMATIONS: Record<FormationId, FormationDef> = {
   '3-1': {
     id: '3-1',
@@ -283,7 +312,9 @@ export const FORMATIONS: Record<FormationId, FormationDef> = {
     front: 1,
     backLanes: [0, 2, 4],
     frontLanes: [2],
-    text: '앞 하나가 70% 를 혼자 받는다',
+    frontAim: 0.40,
+    backAim: 0.20,
+    text: '앞 하나 40% · 뒤 셋 20% 씩',
   },
   '2-2': {
     id: '2-2',
@@ -291,7 +322,9 @@ export const FORMATIONS: Record<FormationId, FormationDef> = {
     front: 2,
     backLanes: [1, 3],
     frontLanes: [1, 3],
-    text: '앞 둘이 35% 씩 나눠 받는다',
+    frontAim: 0.35,
+    backAim: 0.15,
+    text: '앞 둘 35% · 뒤 둘 15% 씩',
   },
   '1-3': {
     id: '1-3',
@@ -299,7 +332,9 @@ export const FORMATIONS: Record<FormationId, FormationDef> = {
     front: 3,
     backLanes: [2],
     frontLanes: [0, 2, 4],
-    text: '앞 셋이 23% 씩 나눠 받는다',
+    frontAim: 0.30,
+    backAim: 0.10,
+    text: '앞 셋 30% · 뒤 하나 10%',
   },
 };
 
@@ -308,22 +343,15 @@ export const DEFAULT_FORMATION: FormationId = '2-2';
 export const isFormationId = (v: unknown): v is FormationId =>
   typeof v === 'string' && (FORMATION_IDS as readonly string[]).includes(v);
 
-/**
- * **앞줄이 통째로 받는 몫.**
- *
- * 나머지 30% 를 뒷줄이 나눠 갖는다. 줄 안에서는 고르게 나눈다 — 2-2 면
- * 앞 둘이 35% 씩, 뒤 둘이 15% 씩이다.
- *
- * ## 왜 70 인가
- *
- * 50 이면 앞뒤가 반반이라 대형을 고를 이유가 없다. 90 이면 앞에 선 사람이
- * 혼자 다 맞고 죽으므로 `3-1` 이 절대 안 나온다.
- *
- * 70 은 `3-1` 에서 앞 하나가 70% 를 지고 뒤 셋이 10% 씩 나눠 갖는 자리다.
- * 그 10% 가 중요하다 — 0 이면 뒷줄이 안전지대가 되어 전열이 무너질 때까지
- * 아무 일도 안 일어난다.
- */
-export const FRONT_SHARE = 0.70;
+/*
+  ── 줄 배수는 `core/chars` 에 산다 ──
+
+  `ROW_MOD` 와 `Row` 는 스탯 규칙이라 `statOf` 옆에 두었다. 여기 두면
+  `chars → party → chars` 로 참조가 돌고, `tools/check-cycles.py` 가 잡는다.
+  대형이 줄을 정하고(여기), 그 줄이 몸을 바꾸는 것은(저기) 다른 일이다.
+*/
+export { ROW_MOD, rowMod } from './chars';
+export type { Row } from './chars';
 
 /** 대형에 따라 자리를 잡은 사람 하나 */
 export interface FormSpot {
@@ -388,6 +416,56 @@ export function frontIdsOf(
       .filter((s) => s.row === 'front')
       .map((s) => s.c.id),
   );
+}
+
+/**
+ * **파티를 대형에 앉힌 명부.**
+ *
+ * `chars` 를 그대로 베끼되, 파티에 선 넷에게만 `row` 를 박아 준다. 그 뒤로는
+ * `statOf` 가 알아서 줄 배수를 얹는다 (`core/chars`).
+ *
+ * ## 왜 명부를 통째로 바꾸나
+ *
+ * 줄 배수를 쓰려면 스탯을 읽는 **모든 자리**가 "이 사람이 어느 줄이냐" 를
+ * 알아야 한다. 전투 한 틱이 스탯을 읽는 자리는 열댓 곳이고 (`passives` ·
+ * `aimOf` · `hpOf` · `fullHp` · 아군 공격 넷), 거기에 줄을 인자로 하나씩
+ * 흘려보내면 **한 곳만 빠뜨려도 조용히 틀린다** — 화면에는 아무 표시가 없고
+ * 숫자만 안 맞는다.
+ *
+ * 대신 명부를 한 번 갈아 끼운다. 스탯을 읽는 창구가 `statOf` 하나뿐이므로
+ * (`OwnedChar` 를 받는다) 여기서 한 번 박아 두면 그 뒤는 전부 따라온다.
+ *
+ * ## 저장되지 않는다
+ *
+ * 이건 **틱 안에서만 사는 복사본**이다 (`battleTick`). 원본 `st.chars` 는
+ * 안 건드리므로 `row` 가 세이브로 새어 나가지 않는다 — 새어 나가도 다음 틱에
+ * 덮이지만, 화면이 도감에서 줄 배수가 붙은 스탯을 읽게 되면 곤란하다.
+ *
+ * @param hp 안 준다 — 죽어도 자리는 그대로다 (`frontIdsOf` 와 같은 태도)
+ */
+export function seatRows(
+  party: Party,
+  chars: Record<string, OwnedChar>,
+  form: FormationId,
+): Record<string, OwnedChar> {
+  const out: Record<string, OwnedChar> = { ...chars };
+  for (const sp of formationSpots(party, chars, form)) {
+    out[sp.c.id] = { ...sp.c, row: sp.row };
+  }
+  return out;
+}
+
+/**
+ * 이 사람이 맞을 **무게** — 확률이 아니라 무게다.
+ *
+ * 합이 1 이 아니어도 된다. 고르는 쪽이 남은 사람들의 무게 합으로 다시
+ * 나누므로 (`core/autoBattle` 의 `pickRow`), 누가 쓰러지면 남은 사람들끼리
+ * 원래 비율 그대로 나눠 갖는다.
+ */
+export function aimWeight(form: FormationId, row: Row): number {
+  const def = FORMATIONS[form] ?? FORMATIONS[DEFAULT_FORMATION];
+  /* 줄이 없으면 뒷줄로 친다 — 대형이 안 잡힌 파티도 고르게 맞아야 한다 */
+  return row === 'front' ? def.frontAim : def.backAim;
 }
 
 /** 파티가 전멸했나 — 아무도 안 남았으면 */

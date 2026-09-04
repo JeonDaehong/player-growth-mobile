@@ -12,7 +12,7 @@ import {
   CHARS, CharId, FREE_ENHANCE, MAX_GEAR_LV, OwnedChar,
   gearCost, gearOdds, isCharId, newChar,
 } from '@/core/chars';
-import { FormationId, PARTY_SIZE, Party, cleanParty } from '@/core/party';
+import { FormationId, PARTY_SIZE, Party, cleanParty, seatRows } from '@/core/party';
 import { drawChar, poolOf, recruitCost } from '@/core/recruit';
 import { optKey } from '@/core/skillOpt';
 import {
@@ -107,6 +107,17 @@ export interface RosterActions {
    */
   recruitDraw: () => { id: CharId } | 'poor' | 'full';
 }
+
+/**
+ * 대형에 앉힌 명부 — **전투 계산에 들어가는 몸.**
+ *
+ * 앞줄은 방어가 1.5배, 뒷줄은 공격이 1.15배다 (`core/party` 의 `ROW_MOD`).
+ * 한 틱짜리 계산(`battleTick`)은 제 안에서 알아서 앉히지만, 화면이 휘두름
+ * 하나마다 부르는 `applyHit`·`applySkill` 은 여기서 앉혀 넣어야 한다 —
+ * 안 그러면 **틱은 줄 배수로 계산하고 평타는 맨 몸으로 계산한다.**
+ */
+const seated = (st: { party: Party; chars: Record<string, OwnedChar>; formation: FormationId }) =>
+  seatRows(st.party, st.chars, st.formation);
 
 export const createRosterSlice = (
   set: SliceSet,
@@ -219,7 +230,7 @@ export const createRosterSlice = (
     const st = get();
     /* 판 연출 중에는 안 때린다 — 막 뒤에서 적이 녹아 있으면 안 된다 */
     if (fightHeld(st.battle)) return;
-    const { battle, ev } = applyHit(st.battle, who, st.party, st.chars, Math.random, aim);
+    const { battle, ev } = applyHit(st.battle, who, st.party, seated(st), Math.random, aim);
     if (ev.hit <= 0) return;
 
     if (!ev.killed) {
@@ -248,7 +259,7 @@ export const createRosterSlice = (
     const st = get();
     if (fightHeld(st.battle)) return;
     const { battle, ev } = applySkill(
-      st.battle, who, st.party, st.chars, Math.random, at, slot ?? 0, st.skillOpts,
+      st.battle, who, st.party, seated(st), Math.random, at, slot ?? 0, st.skillOpts,
     );
     /*
       ── 아무 일도 안 일어났나 ──

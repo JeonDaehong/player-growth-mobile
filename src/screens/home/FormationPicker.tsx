@@ -1,8 +1,13 @@
 /**
  * ── 대형 고르기 ── 세 칸.
  *
- * `3-1` · `2-2` · `1-3` (뒷줄-앞줄). 고르는 것으로 정하는 것은 **몇 명이 맞을
- * 자리에 서나**다 — 앞줄이 통째로 70% 를 진다 (`core/party` 의 `FRONT_SHARE`).
+ * `3-1` · `2-2` · `1-3` (뒷줄-앞줄). 고르는 것으로 정하는 것이 둘이다.
+ *
+ *   **누가 얼마나 맞나** — 앞에 많이 설수록 한 사람 몫이 준다 (40 → 35 → 30)
+ *   **몸이 어떻게 바뀌나** — 앞줄은 방어 1.5배 · 체력 1.1배, 뒷줄은 공격 1.15배
+ *
+ * 그래서 대형은 "누구를 제물로 세울까" 가 아니라 **맷집과 화력 중 무엇을
+ * 살까**가 된다 (`core/party` 의 `FORMATIONS` · `ROW_MOD`).
  *
  * ## 왜 파티 칸 바로 위인가
  *
@@ -23,7 +28,7 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { FORMATIONS, FORMATION_IDS, FORM_LANES, FRONT_SHARE } from '@/core/party';
+import { FORMATIONS, FORMATION_IDS, FORM_LANES } from '@/core/party';
 import { Row, T } from '@/ui/atoms';
 import { sfx } from '@/ui/sfx';
 import { BORDER, C, O, SP, WHITE } from '@/ui/theme';
@@ -92,11 +97,9 @@ export function FormationPicker() {
         <T size={12} bold>대형</T>
         {/*
           지금 고른 대형이 실제로 무엇을 뜻하는지 한 줄. 이름(`2-2`)은 모양을
-          말하지 실제 확률을 말하지 않는다.
+          말하지 확률을 말하지 않는다 (`FormationDef.text`).
         */}
-        <T size={9} dim="sub">
-          {`앞줄이 ${Math.round(FRONT_SHARE * 100)}% 를 받는다 — ${FORMATIONS[form].text}`}
-        </T>
+        <T size={9} dim="sub">{FORMATIONS[form].text}</T>
       </Row>
 
       <Row gap={SP.xs}>
