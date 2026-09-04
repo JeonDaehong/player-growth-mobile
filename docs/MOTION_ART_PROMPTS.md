@@ -29,6 +29,17 @@
 투사체는 기본 화살로 떨어집니다 (`Sprite` 의 `fallbackSet`). 들어오는 순간
 저절로 갈립니다 — 코드는 안 고칩니다.
 
+## 잘리지 않게 — 특히 이졸데
+
+한 번 "칼날이 셀 맨 위 끝까지 닿아야 한다" 고 썼다가 물렸습니다. 바로 아래
+규칙이 "가장자리에서 8px 띄워라" 라 앞뒤가 안 맞았고, 실제로 칼끝이 계속
+잘려 나왔습니다.
+
+**뾰족하게 위로 뻗는 것은 반드시 안쪽에서 끝나야 합니다.** 게임은 이 그림을
+정사각 상자에 비율을 지켜 넣으므로 (`contain`), 조금 작게 그려서 다 들어가는
+쪽이 언제나 맞습니다 — 잘린 칼은 되살릴 방법이 없지만 작은 칼은 그냥 작을
+뿐입니다.
+
 ## 셋이 **또 다른 축으로** 움직여야 합니다
 
 54px 에서 남는 것은 몸의 방향뿐입니다. 첫 기술 · 둘째 기술과 같은 방향으로
@@ -74,7 +85,8 @@ She is a white-armoured knight girl with long pale hair and a greatsword. Same p
 The 3 cells, in this exact order:
 
 Cell 1 — dropping to one knee. Her front knee is planted on the ground, her back leg folded under her, and the greatsword is held ACROSS her body low, point down and to the left, both hands on the grip. Her head is BOWED. This is the LOWEST and most compact cell of the sheet.
-Cell 2 — raising the sword as a beacon. Still on one knee, she has thrust the greatsword STRAIGHT UP above her head, arms fully extended, blade dead vertical, both hands on the grip. Her head is tipped BACK and up, following the point. Her back is arched. The blade must reach the very top edge of the cell — it is the tallest single line in this character's whole sheet set.
+Cell 2 — raising the sword as a beacon. Still on one knee, she has thrust the greatsword STRAIGHT UP above her head, arms fully extended, blade dead vertical, both hands on the grip. Her head is tipped BACK and up, following the point. Her back is arched.
+  THE WHOLE SWORD IS INSIDE THE CELL, TIP INCLUDED. Compose the cell so the point stops with a clear band of empty black above it — roughly a tenth of the cell height. Kneeling frees that room: she is low, so the blade has somewhere to go. If the tip touches or crosses the top edge, the cell is a failure.
 Cell 3 — holding. Identical stance to cell 2 — still kneeling, sword still straight up — but her arms have locked and her shoulders have dropped: she is braced against something pressing down. Her hair and the hem of her surcoat are lifted straight UP as if by a wind coming from below. The pose barely differs from cell 2 and that is deliberate: the change is in the hair and the tension, not the limbs.
 
 STYLE (strict, non-negotiable):
@@ -160,6 +172,7 @@ READABILITY — this is displayed at about 54 pixels tall in game.
 NOTHING MAY BE CUT OFF.
 - The sword stays VERTICAL in cells 2 and 3 — it never tilts.
 - She is KNEELING in all three cells. She never stands up.
+- THE SWORD POINT IS THE THING MOST LIKELY TO GET CUT OFF. Plan the composition around it: place the tip first, leave a clear band of black above it, and build her body downward from there. Shrinking her a little so the whole blade fits is CORRECT; cropping the blade is not.
 - Draw NO falling sword, NO beam, NO light. The game draws what comes down; this sheet is only her body.
 - Her feet sit at the same HEIGHT in all three cells — an alignment, not a drawn line.
 - Leave at least 8px of empty black between the outermost pixel and every magenta line.
