@@ -4603,6 +4603,33 @@ export function battleTick(
  * @param who 휘두른 사람. 파티에 없거나 쓰러졌으면 아무 일도 안 일어난다
  */
 /**
+ * ── 요정의 화살 ── 때릴 때마다 확률로 한 번 더 (`st_fey`).
+ *
+ * 걸려 있지 않으면 0 이다. 리안느의 요정의 축제 하나가 이걸 건다.
+ *
+ * ## 방어를 지난다
+ *
+ * 이건 **한 번 더 때리는 것**이지 흡수한 피해를 되돌리는 것이 아니다
+ * (`Ward.back` 과 갈리는 지점이다). 그래서 맞는 놈의 방어 두 겹을 그대로
+ * 지나야 하고, 아무리 깎여도 최소 1 은 들어간다.
+ *
+ * 물리로 굳혀 둔다 — 화살이다. 때리는 사람이 아녜스(마법)여도 날아가는
+ * 것은 리안느의 화살이므로 그쪽 종류를 따른다.
+ *
+ * @param armor 맞는 놈이 지금 두르고 있는 두 겹
+ */
+function feyShot(
+  hex: readonly Hex[], armor: Armor, rand: () => number,
+): number {
+  for (const h of hex) {
+    if (h.id !== 'st_fey' || h.ms <= 0 || !h.proc) continue;
+    if (rand() >= h.proc.odds) return 0;
+    return Math.max(1, strikeFor(h.proc.hit, 1, armor, PHYS_BLOW));
+  }
+  return 0;
+}
+
+/**
  * ── 흡혈 ── 입힌 만큼 제 체력이 찬다 (`st_leech`).
  *
  * 비앙카의 불굴의 의지 하나다. 걸려 있지 않으면 `hp` 를 **그대로 돌려준다** —
@@ -4734,7 +4761,14 @@ export function applyHit(
     /* 20판은 체력이 낮으면 방어가 오른다 (`foeArmor`) */
     foeArmor(kind, foes[at].hp), blowOf(me.id),
   ) * foeTough(kind)));
-  foes[at] = biteFoe(foes[at], dmg);
+  /*
+    ── 요정의 화살 ── 40% 로 한 번 더 (`feyShot`).
+
+    같은 놈에게 간다. 다른 놈을 노리면 "때릴 때마다 한 번 더" 가 아니라
+    별개의 공격이 되고, 화면에서는 아무도 안 쏜 화살이 엉뚱한 데 꽂힌다.
+  */
+  const fey = feyShot(mineHex, foeArmor(kind, foes[at].hp), rand);
+  foes[at] = biteFoe(foes[at], dmg + fey);
 
   /*
     ── 반사 ──
@@ -4758,7 +4792,8 @@ export function applyHit(
   if (foes[at].hp > 0) {
     return {
       battle: { ...st, foes, hp, target: at },
-      ev: { ...NOTHING, hit: dmg },
+      /* 요정의 화살까지 합쳐서 한 숫자로 뜬다 — 두 줄로 뜨면 뭐가 뭔지 모른다 */
+      ev: { ...NOTHING, hit: dmg + fey },
     };
   }
 
@@ -5231,14 +5266,45 @@ export function applySkill(
     return { battle: { ...st, ward }, ev: { ...NOTHING, applied: true } };
   }
 
-  if (sk.party) {
-    const ms = Math.round(sk.party.sec * 1000);
+  if (sk.party || sk.partyProc) {
     const hex: Record<string, Hex[]> = { ...st.hex };
+    /*
+      ── 미니 화살의 세기는 **거는 순간** 숫자로 굳는다 ──
+
+      `Hex.dot` 과 같은 이유다. 리안느가 아닌 사람이 때릴 때도 이 값이어야
+      하고, 리안느가 그 사이에 쓰러져도 5초는 남는다 — 계수만 들고 있으면
+      그때 누구의 공격력을 읽을지가 없어진다.
+    */
+    const procHit = sk.partyProc
+      ? Math.max(1, Math.round(statOf(me).atk * sk.partyProc.pct))
+      : 0;
     for (const c of members(party, chars)) {
       if (hpOf(c, st.hp) <= 0) continue;
-      hex[c.id] = putHex(hexOf(st.hex, c.id), {
-        id: sk.party.id, ms, dot: 0, dmg: 'magic', mul: sk.party.mul, n: 1,
-      }, 1);
+      let put: Hex[] = [...hexOf(st.hex, c.id)];
+      if (sk.party) {
+        put = putHex(put, {
+          id: sk.party.id,
+          ms: Math.round(sk.party.sec * 1000),
+          dot: 0, dmg: 'magic', mul: sk.party.mul, n: 1,
+        }, 1);
+      }
+      /* 앞엣것 위에 쌓는다 — 원본을 다시 읽으면 `party` 로 건 것이 사라진다 */
+      for (const more of sk.partyAlso ?? []) {
+        put = putHex(put, {
+          id: more.id,
+          ms: Math.round(more.sec * 1000),
+          dot: 0, dmg: 'magic', mul: more.mul, n: 1,
+        }, 1);
+      }
+      if (sk.partyProc) {
+        put = putHex(put, {
+          id: sk.partyProc.id,
+          ms: Math.round(sk.partyProc.sec * 1000),
+          dot: 0, dmg: 'magic', mul: 1, n: 1,
+          proc: { odds: sk.partyProc.odds, hit: procHit },
+        }, 1);
+      }
+      hex[c.id] = put;
     }
     return { battle: { ...st, hex }, ev: { ...NOTHING, applied: true } };
   }
@@ -5287,6 +5353,28 @@ export function applySkill(
     const opt = cleanseOptOf(opts, who, slot);
     const hex: Record<string, Hex[]> = { ...st.hex };
     let any = false;
+    /*
+      ── 찬란한 빛 ── 아군 전체에 걸리고 축복을 남긴다 (`SkillDef.cleanseAll`).
+
+      평소 정화는 **걷을 것이 있는 사람만** 고른다. 이 갈래는 걷는 것이
+      아니라 덮는 것이라, 아무도 안 걸려 있어도 나가야 한다 — 그래야
+      "다음 3초 동안 안 걸린다" 를 미리 쓸 수 있다.
+    */
+    if (sk.cleanseAll && sk.cleanseGift) {
+      const gift = sk.cleanseGift;
+      for (const c of members(party, chars)) {
+        if (hpOf(c, st.hp) <= 0) continue;
+        /* 먼저 걷고, 그 위에 축복을 얹는다 — 순서가 반대면 축복이 같이 걷힌다 */
+        const swept = cleansed(opt, hexOf(st.hex, c.id));
+        hex[c.id] = putHex([...swept], {
+          id: gift.id,
+          ms: Math.round(gift.sec * 1000),
+          dot: 0, dmg: 'magic', mul: gift.mul, n: 1,
+        }, 1);
+        any = true;
+      }
+      return { battle: { ...st, hex }, ev: { ...NOTHING, applied: any } };
+    }
     for (const c of members(party, chars)) {
       if (hpOf(c, st.hp) <= 0) continue;
       const was = hexOf(st.hex, c.id);
@@ -5402,8 +5490,10 @@ export function applySkill(
         1,
       );
     }
-    foes[i] = biteFoe(foes[i], dmg);
-    hit += dmg;
+    /* 기술 한 대에도 요정의 화살이 붙는다 — 맞은 놈마다 따로 굴린다 */
+    const fey = feyShot(mineHex, foeArmor(kind, foes[i].hp), rand);
+    foes[i] = biteFoe(foes[i], dmg + fey);
+    hit += dmg + fey;
     /* 여러 마리를 치는 기술은 **친 만큼** 되돌아온다 (`applyHit` 과 같은 규칙) */
     const back = kind.passive?.reflect ?? 0;
     if (back > 0) {

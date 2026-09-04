@@ -782,6 +782,15 @@ export function BattleView({ top, corner }: Props = {}) {
     const sk = me ? skillsFor(me)[slot] : undefined;
     if (!sk) return false;
     if (sk.cleanse) {
+      /*
+        ── 찬란한 빛은 걷을 것이 없어도 나간다 ── (`SkillDef.cleanseAll`)
+
+        평소 정화는 걷을 것이 있어야 나간다 — 없으면 스무 칸 모은 것을 아무
+        일 없이 버리기 때문이다. 그런데 저 갈래는 걷는 것이 아니라 **3초짜리
+        면역을 덮는 것**이라, 아무도 안 걸려 있을 때 미리 쓰는 것이 오히려
+        제대로 쓰는 것이다.
+      */
+      if (sk.cleanseAll) return true;
       return cleanseTargets(cleanseOptOf(op, id, slot), pt, ch, b.hp, b.hex).length > 0;
     }
     if (sk.taunt) return b.foes.length > 0 && !(b.taunt && b.taunt.ms > 0);

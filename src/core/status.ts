@@ -62,7 +62,8 @@ export type StatusId =
     않는다 — 그건 정화가 하는 일이고, 둘이 같으면 정화가 할 일이 없어진다.
   */
   | 'st_ward'     // 보호 — 새 디버프 면역
-  | 'st_leech';   // 흡혈 — 입힌 피해의 일부를 제 체력으로
+  | 'st_leech'    // 흡혈 — 입힌 피해의 일부를 제 체력으로
+  | 'st_fey';     // 요정 — 때릴 때마다 미니 화살이 한 번 더 날아간다
 
 /** 화면에 적는 이름 */
 export const STATUS_NAME: Record<StatusId, string> = {
@@ -70,6 +71,7 @@ export const STATUS_NAME: Record<StatusId, string> = {
   st_ward: '보호',
   st_burn: '지옥불',
   st_leech: '흡혈',
+  st_fey: '요정',
   st_bleed: '출혈',
   st_poison: '중독',
   st_stun: '기절',
@@ -155,6 +157,8 @@ export const STATUS_ALT: Partial<Record<StatusId, string>> = {
   /* 지옥불은 출혈(붉은 지속 피해)로, 흡혈은 재생(차오르는 것)으로 버틴다 */
   st_burn: 'st_bleed',
   st_leech: 'st_regen',
+  /* 요정은 신속(빨라지는 것)으로 버틴다 — 같이 걸리는 것이 신속이라 결이 맞다 */
+  st_fey: 'st_haste',
 };
 
 /**
@@ -176,6 +180,7 @@ export const STATUS_WHAT: Record<StatusId, string> = {
   st_ward: '새로 걸리는 나쁜 것을 막는다',
   st_burn: '0.5초마다 불타는 피해를 입는다',
   st_leech: '입힌 피해의 일부만큼 회복한다',
+  st_fey: '때릴 때마다 미니 화살이 한 번 더 날아간다',
   st_bleed: '지속 피해',
   st_poison: '지속 피해',
   st_stun: '행동 불가',
@@ -210,7 +215,7 @@ export const STATUS_WHAT: Record<StatusId, string> = {
  * 흑백에서 색으로 못 가르니 자리로 가른다.
  */
 export const GOOD: ReadonlySet<StatusId> = new Set<StatusId>([
-  'st_rage', 'st_guard', 'st_regen', 'st_haste', 'st_focus', 'st_ward', 'st_leech',
+  'st_rage', 'st_guard', 'st_regen', 'st_haste', 'st_focus', 'st_ward', 'st_leech', 'st_fey',
 ]);
 
 /**
@@ -281,6 +286,18 @@ export interface Hex {
   mul: number;
   /** 몇 겹인가. 겹치지 않는 것은 늘 1 */
   n: number;
+  /**
+   * **때릴 때마다 확률로 한 번 더** — 리안느의 요정의 축제 하나다 (`st_fey`).
+   *
+   * `dot` 과 갈라 둔다. 저건 **시간이** 흐르면 저절로 들어가는 것이고 이건
+   * **때려야** 들어가는 것이라, 같은 칸에 담으면 아무도 안 때리는 동안에도
+   * 미니 화살이 날아간다.
+   *
+   * `hit` 은 계수가 아니라 **이미 계산된 숫자**다 (`dot` 과 같은 이유) —
+   * 리안느 공격력의 25% 인데, 리안느가 아닌 사람이 때릴 때도 그 값이어야
+   * 하고 리안느가 죽은 뒤에도 5초는 남는다.
+   */
+  proc?: { odds: number; hit: number };
 }
 
 /** 아무것도 안 걸린 상태 — 매번 새 배열을 만들면 화면이 계속 다시 그려진다 */

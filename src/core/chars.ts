@@ -419,6 +419,8 @@ export type SkillKind =
   | 'ward'      // 수호의 결의 — 이졸데 3-1
   | 'lava'      // 용암 지대 — 비앙카 3-1
   | 'resolve'   // 불굴의 의지 — 비앙카 3-2
+  | 'bigshot'   // 거대 화살 — 리안느 4-1
+  | 'fey'       // 요정의 축제 — 리안느 4-2
   | 'purify';  // 정화 (아녜스)
 
 export interface SkillDef {
@@ -627,6 +629,38 @@ export interface SkillDef {
    * 들어가면 "둘째 것만 코스트를 막는다" 같은 말이 안 되는 상태가 생긴다.
    */
   selfAlso?: readonly { id: StatusId; sec: number; mul: number }[];
+  /**
+   * `party` 말고 **더 거는 것들** — `selfAlso` 와 같은 얼개다.
+   *
+   * 리안느의 요정의 축제 하나다: 공격속도와 요정 표시가 같이 걸린다.
+   */
+  partyAlso?: readonly { id: StatusId; sec: number; mul: number }[];
+  /**
+   * 아군 전체에게 **때릴 때마다 터지는 것**을 건다 — 요정의 축제 하나다.
+   *
+   * `party` 와 갈라 둔 이유: 저건 배수를 거는 것이고 이건 **확률과 피해량**
+   * 두 값을 담아야 한다 (`Hex.proc`).
+   *
+   * `pct` 는 **쓰는 사람** 공격력의 몇 할인가. 거는 순간 실제 숫자로 바꿔
+   * 담으므로, 리안느가 아닌 사람이 때릴 때도 · 리안느가 죽은 뒤에도 같은
+   * 값이 나간다.
+   */
+  partyProc?: { id: StatusId; sec: number; pct: number; odds: number };
+  /**
+   * 정화가 **걷을 것이 없는 사람에게도** 걸리나 — 아녜스의 찬란한 빛.
+   *
+   * 평소 정화는 걷을 것이 있는 사람만 고른다 (`core/skillOpt` 의
+   * `cleanseTargets`). 그러면 아무도 안 걸려 있을 때 아예 안 나가는데,
+   * 이 갈래는 **걷는 것이 아니라 덮는 것**이라 그때도 나가야 한다.
+   */
+  cleanseAll?: boolean;
+  /**
+   * 정화가 걷은 사람에게 **남기는 것** — 찬란한 빛의 [정화의 축복].
+   *
+   * `party` 와 자리가 다르다. 저건 기술이 통째로 버프인 경우고, 이건
+   * **걷어낸 다음에** 얹히는 것이라 걷는 갈래 안에서 걸려야 한다.
+   */
+  cleanseGift?: { id: StatusId; sec: number; mul: number };
   /**
    * **아군 전체에 보호막을 씌우나** — 이졸데의 수호의 결의 하나다.
    *
@@ -1120,6 +1154,61 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     desc: '5초간 공격력이 두 배가 되고, 디버프에 안 걸리며, 때린 만큼 회복한다',
   },
 
+  /*
+    ── 거대 화살 ── 리안느 4-1. 화살비 갈래의 끝.
+
+    아주 큰 화살 하나를 **직선으로** 쏜다. 길에 선 적이 전부 맞는다
+    (`pick: 'all'` — 이졸데의 검기와 같은 모양이다).
+
+    ## 왜 전체인가
+
+    3-1(강화된 화살)이 이미 "여럿에게 흩뿌린다" 를 키우는 쪽이다. 그 끝이
+    한 놈을 크게 치는 것이면 갈래의 방향이 마지막에 꺾인다 — 4단계는 3단계가
+    가던 길을 한 걸음 더 가는 자리다.
+
+    130% 는 화살비 한 발(150%)보다 낮다. 대신 **빗나가지 않는다** — 화살비는
+    무작위라 아홉 마리 판에서도 다섯 발뿐이지만, 이건 서 있는 전부다.
+  */
+  bigshot: {
+    name: '거대 화살', art: 'sk_bigshot', hits: 1, pick: 'all', targets: 0,
+    dmg: 'phys',
+    mul: 1.3, defMul: 0, heal: 0, healPct: 0,
+    /* 직선으로 날아간다 — 검기와 같은 길을 지난다 */
+    flies: true, landOn: 2, cost: 12, aura: 'rune', leaps: false,
+    fx: 'thrust',
+    desc: '아주 큰 화살을 직선으로 쏘아 길의 적을 모두 꿴다',
+  },
+
+  /*
+    ── 요정의 축제 ── 리안느 4-2. 파티를 올리는 갈래의 끝.
+
+    5초 동안 둘이 걸린다.
+
+      아군 전체 공격속도 +30%       `st_haste`
+      때릴 때마다 40% 로 미니 화살   `st_fey` (`Hex.proc`)
+
+    미니 화살은 **리안느 공격력의 25%** 다. 때리는 사람이 누구든 그 값이고,
+    리안느가 그 사이에 쓰러져도 5초는 간다 — 거는 순간 숫자로 바꿔 담기
+    때문이다.
+
+    ## 코스트가 15 인 이유
+
+    이 게임에서 제일 비싼 기술이다. 파티 넷이 5초 동안 30% 빨라지고 그
+    빨라진 만큼 40% 확률로 한 번 더 때리므로, 실제로는 **파티 전체 화력의
+    한 판짜리 두 배**에 가깝다. 자주 나가면 그 5초가 기본값이 된다.
+  */
+  fey: {
+    name: '요정의 축제', art: 'sk_fey', hits: 1, pick: 'none', targets: 0,
+    dmg: 'phys',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 1, cost: 15, aura: 'rune', leaps: false,
+    party: { id: 'st_haste', sec: 5, mul: 1.3 },
+    partyProc: { id: 'st_fey', sec: 5, pct: 0.25, odds: 0.4 },
+    cast: 'haste',
+    fx: 'star',
+    desc: '5초간 아군이 빨라지고, 때릴 때마다 요정의 화살이 한 번 더 날아간다',
+  },
+
   purify: {
     name: '정화', art: 'sk_purify', hits: 1, pick: 'none', targets: 0, dmg: 'magic',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
@@ -1211,6 +1300,8 @@ const NODE_SKILL: Record<string, SkillKind> = {
   ea1: 'rain',
   ea2: 'frenzy',
   ea3b: 'song',
+  ea4a: 'bigshot',
+  ea4b: 'fey',
   nu1: 'heal',
   nu2: 'purify',
   nu3a: 'judge',
@@ -1284,12 +1375,22 @@ export function skillsFor(c: OwnedChar): SkillDef[] {
       (`BattleView`), 대상만 넷으로 늘리면 네 놈에게 세 발이 떨어진다.
     */
     if (has('ea3a') && kind === 'rain') {
+      /*
+        **코스트는 안 줄인다.** 한 번 줄였다가 뺐다 — 화살이 셋에서 다섯이
+        되는 것만으로 이미 1.7배인데, 거기에 더 자주 나가기까지 하면 이
+        갈래가 3-2 를 볼 것도 없이 이긴다.
+      */
       sk = {
         ...sk,
-        cost: Math.max(1, sk.cost - 1),
-        hits: 4,
-        targets: 4,
-        /* 적이 하나면 네 발이 다 그 하나에게 (`SkillDef.stack`) */
+        hits: 5,
+        targets: 5,
+        /*
+          ── 남는 화살이 도로 꽂힌다 ── (`SkillDef.stack`)
+
+          적이 다섯보다 적으면 뽑을 놈이 떨어지는데, 그때 목록을 다시 채운다
+          (`skillTargets`). 그래서 둘이면 셋·둘로, 하나면 다섯 발이 다 그
+          하나에게 간다 — "여분의 화살이 그 대상에게 추가로 박힌다".
+        */
         stack: true,
       };
     }
@@ -1308,6 +1409,20 @@ export function skillsFor(c: OwnedChar): SkillDef[] {
     /* ── 정화의 손길 ── 20 → 15 */
     if (has('nu3b') && kind === 'purify') {
       sk = { ...sk, cost: Math.max(1, Math.round(sk.cost * 0.75)) };
+    }
+    /*
+      ── 찬란한 빛 ── 정화가 아군 전체에 걸리고 축복을 남긴다.
+
+      3초 동안 **새 디버프에 안 걸린다** (`st_ward` — 비앙카의 불굴의 의지가
+      쓰는 것과 같은 것이다). 걷어낸 직후가 제일 위험한 순간이라 — 우두머리는
+      같은 것을 몇 초 만에 다시 걸므로, 걷기만 하면 다음 틱에 도로 걸린다.
+    */
+    if (has('nu4b') && kind === 'purify') {
+      sk = {
+        ...sk,
+        cleanseAll: true,
+        cleanseGift: { id: 'st_ward', sec: 3, mul: 1 },
+      };
     }
     /*
       ── 신의 천벌 ── 신의 심판이 공격속도까지 깎는다.

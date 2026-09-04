@@ -185,8 +185,8 @@ export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: 
       </View>
 
       <T size={FS.tiny} dim="dim" style={{ marginTop: SP.md }}>
-        ⚠ 지금은 **찍는 것까지** 됩니다. &ldquo;준비중&rdquo; 이 붙은 자리는 아직 전투에
-        안 들어갔습니다 — 새 효과를 하나씩 붙이는 중입니다.
+        스물네 자리가 전부 전투에 들어가 있습니다. 찍으면 그 자리에서 수치가
+        바뀌고, 되돌리기는 공짜입니다.
       </T>
     </Popup>
   );

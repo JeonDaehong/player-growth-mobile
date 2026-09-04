@@ -196,7 +196,7 @@ const RIANNE: readonly TreeNode[] = [
   {
     id: 'ea3a', who: 'elfarcher', tier: 3, name: '강화된 화살', kind: 'passive',
     rival: 'ea3b',
-    desc: '화살비 코스트가 1 줄고 화살이 넷이 된다. 적이 하나면 넷 다 그 하나에게.',
+    desc: '화살비의 화살이 셋에서 다섯이 된다. 적이 화살보다 적으면 남는 화살이 도로 꽂힌다.',
     art: 'sk_sharparrow', live: true,
   },
   {
@@ -205,28 +205,24 @@ const RIANNE: readonly TreeNode[] = [
     desc: '아군 전체의 치명타 확률이 5초간 30%p 오른다.', art: 'sk_spiritsong', live: true,
   },
   /*
-    ── 아래 둘은 **내가 지어낸 것**이다 ──
+    ── 4단계 둘 다 액티브다 ── 넷 중 이 사람만 그렇다.
 
-    사양에 자리만 있고 내용이 비어 있었다. 자리를 비워 두면 3단계를 찍은
-    사람이 4단계에서 아무것도 못 찍는데, 그건 트리가 고장난 것으로 보인다.
-
-    각자 제 갈래를 한 번 더 미는 쪽으로 지었다 — 이졸데의 수호신의 가호와
-    아녜스의 넷이 다 그 모양이라 결이 맞는다. 바꾸실 것이 있으면 이 두
-    덩이만 갈아 끼우면 된다.
+    그래서 이 갈래를 끝까지 간 리안느는 코스트 칸이 **셋**이 된다 (화살비 ·
+    숲의 축복 · 그것). 파티 칸이 좁아 셋이 한계지만, 셋 다 성격이 갈리므로
+    (흩뿌림 · 자기 강화 · 마무리) 무엇이 차고 있는지는 읽힌다.
   */
   {
-    id: 'ea4a', who: 'elfarcher', tier: 4, name: '폭풍의 화살', kind: 'passive',
+    id: 'ea4a', who: 'elfarcher', tier: 4, name: '거대 화살', kind: 'active', cost: 12,
     rival: 'ea4b', needs: 'ea3a',
-    desc: '화살비의 마지막 한 발이 터진다 — 맞은 적 주위 전체에 공격력의 80% 피해. '
-      + '(제안: 사양이 비어 있어 지어냈습니다)',
-    art: 'sk_stormarrow',
+    desc: '아주 큰 화살을 직선으로 쏘아 적 전체에게 공격력의 130% 물리 피해.',
+    art: 'sk_bigshot', live: true,
   },
   {
-    id: 'ea4b', who: 'elfarcher', tier: 4, name: '숲의 합창', kind: 'passive',
+    id: 'ea4b', who: 'elfarcher', tier: 4, name: '요정의 축제', kind: 'active', cost: 15,
     rival: 'ea4a', needs: 'ea3b',
-    desc: '정령의 노래가 치명타 피해도 50%p 올리고 8초까지 간다. '
-      + '(제안: 사양이 비어 있어 지어냈습니다)',
-    art: 'sk_chorus',
+    desc: '5초간 아군 전체 공격속도 +30%. 그동안 아군이 때릴 때마다 40% 확률로 '
+      + '미니 화살이 날아가 공격력의 25%를 한 번 더 넣는다.',
+    art: 'sk_fey', live: true,
   },
 ];
 
@@ -266,7 +262,7 @@ const AGNES: readonly TreeNode[] = [
     rival: 'nu4a', needs: 'nu3b',
     desc: '정화가 아군 전체에 걸린다. 걷힌 사람은 3초간 새 디버프에 안 걸린다 '
       + '([정화의 축복]).',
-    art: 'sk_radiance',
+    art: 'sk_radiance', live: true,
   },
 ];
 
