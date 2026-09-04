@@ -500,6 +500,19 @@ export interface SkillDef {
    */
   healPct: number;
   /**
+   * 무작위로 고를 때 **같은 놈을 두 번 이상 맞혀도 되나.**
+   *
+   * 평소에는 안 된다 — 화살 셋이 한 놈에게 몰리면 세 대가 한 대가 된다
+   * (`skillTargets`). 그런데 적이 하나뿐이면 그 규칙 때문에 셋 중 둘이
+   * 허공으로 사라진다.
+   *
+   * 켜 두면 뽑을 놈이 떨어졌을 때 목록을 다시 채운다. 적이 하나면 네 발이
+   * 다 그 하나에게 가고, 넷이면 넷에게 하나씩 간다.
+   *
+   * 리안느의 강화된 화살이 이걸 켠다 (`core/skillTree` 의 `ea3a`).
+   */
+  stack?: boolean;
+  /**
    * 몸을 떠나 날아가는 것이 있나.
    *
    * 검기와 화살은 날아간다 — 별도 이펙트 시트(`<id>_wave`)를 받아 화면이
@@ -673,7 +686,12 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
       한 지점에 떨어진다. 그래서 **거기 모여 있는 무리**만 휩쓴다 —
       앞줄로 뛰어들면 근접만, 뒷줄로 뛰어들면 원거리만.
     */
-    name: '강타', art: 'sk_leap', hits: 1, pick: 'kind', targets: 2, dmg: 'phys',
+    /*
+      **둘에서 셋으로.** 앞줄이든 뒷줄이든 한쪽 무리를 통째로 휩쓰는
+      기술인데 (`pick: 'kind'`), 둘까지만 맞으면 셋이 선 줄에서 하나가
+      늘 남는다 — 휩쓴다는 말이 화면에서 안 맞는다.
+    */
+    name: '강타', art: 'sk_leap', hits: 1, pick: 'kind', targets: 3, dmg: 'phys',
     mul: 1.5, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 3, cost: 5, aura: 'none', leaps: true,
     /* 솟음 · 낙하 · 착지. 떠 있는 시간이 곧 높이다 */
@@ -911,6 +929,74 @@ export function skillsOf(id: string): SkillDef[] {
 }
 
 /**
+ * ── 스킬 트리가 손본 기술 목록 ──
+ *
+ * `skillsOf` 는 **표에 적힌 그대로**를 준다. 이건 거기에 찍어 둔 갈래를
+ * 얹은 것이다 (`core/skillTree` 의 `OwnedChar.tree`).
+ *
+ * ## 왜 표를 안 고치고 여기서 얹나
+ *
+ * 표(`SKILLS`)는 **모두가 함께 쓰는 것**이다. 거기서 정화의 코스트를 15 로
+ * 내리면 아녜스를 안 키운 사람의 정화도 같이 싸진다.
+ *
+ * ## 이름으로 찾는다 — 자리 번호가 아니라
+ *
+ * `skillsOf` 의 순서가 곧 자리 번호이지만 (`Charge`), 여기서는 종류로
+ * 찾는다. 자리 번호로 짜 두면 나중에 기술을 하나 끼워 넣는 날 갈래가
+ * 조용히 엉뚱한 기술에 붙는다 — 그건 화면 어디에도 안 나온다.
+ *
+ * ## 안 찍은 사람은 같은 배열을 돌려받는다
+ *
+ * 찍은 것이 없으면 `skillsOf` 의 결과를 그대로 준다. 이 함수는 스윙마다
+ * 불리므로 (`Fighter`), 아무것도 안 바꿀 때는 아무것도 안 만들어야 한다.
+ */
+export function skillsFor(c: OwnedChar): SkillDef[] {
+  const base = skillsOf(c.id);
+  const on = c.tree;
+  if (!on || !on.length) return base;
+  const has = (id: string) => on.includes(id);
+
+  return base.map((sk) => {
+    /*
+      ── 파쇄의 태세 ── 이졸데가 방패를 버리고 검을 든다.
+
+      검기가 방어를 뚫고, 싸지고, 1.5배가 된다. 대신 불굴의 맹세가 꺼진다 —
+      그 갈래는 `core/passives` 에서 본다.
+    */
+    if (has('kg3b') && sk.name === '검기') {
+      return {
+        ...sk,
+        cost: Math.max(1, sk.cost - 1),
+        mul: sk.mul * 1.5,
+        /* 물리 관통 — 검기는 베는 것이라 마법 쪽은 건드릴 것이 없다 */
+        pierce: { phys: true, magic: false },
+      };
+    }
+    /*
+      ── 강화된 화살 ── 셋에서 넷으로, 그리고 싸게.
+
+      `hits` 도 같이 올린다. 저건 화면이 화살을 몇 발 그리나이므로
+      (`BattleView`), 대상만 넷으로 늘리면 네 놈에게 세 발이 떨어진다.
+    */
+    if (has('ea3a') && sk.name === '화살비') {
+      return {
+        ...sk,
+        cost: Math.max(1, sk.cost - 1),
+        hits: 4,
+        targets: 4,
+        /* 적이 하나면 네 발이 다 그 하나에게 (`SkillDef.stack`) */
+        stack: true,
+      };
+    }
+    /* ── 정화의 손길 ── 20 → 15 */
+    if (has('nu3b') && sk.name === '정화') {
+      return { ...sk, cost: Math.max(1, Math.round(sk.cost * 0.75)) };
+    }
+    return sk;
+  });
+}
+
+/**
  * ── 스킬 코스트 ──
  *
  * 사람마다 **기술 수만큼의 칸**을 들고 있다. 평타를 한 번 칠 때마다 모든
@@ -933,7 +1019,7 @@ export function skillsOf(id: string): SkillDef[] {
 export type Charge = readonly number[];
 
 /** 갓 시작한 사람의 칸들 — 전부 0 */
-export const newCharge = (id: string): number[] => skillsOf(id).map(() => 0);
+export const newCharge = (c: OwnedChar): number[] => skillsFor(c).map(() => 0);
 
 /**
  * 저장된(또는 파티가 바뀌어 길이가 안 맞는) 칸을 다듬는다.
@@ -941,8 +1027,8 @@ export const newCharge = (id: string): number[] => skillsOf(id).map(() => 0);
  * 기술 수가 바뀌면 길이가 안 맞는다. 짧으면 0 으로 채우고, 길면 자른다 —
  * 없는 자리를 읽어 `undefined` 로 비교하면 그 기술이 영영 안 나간다.
  */
-export function fitCharge(id: string, on: Charge | undefined): number[] {
-  const list = skillsOf(id);
+export function fitCharge(c: OwnedChar, on: Charge | undefined): number[] {
+  const list = skillsFor(c);
   return list.map((sk, i) => {
     const v = on?.[i];
     return Number.isFinite(v) ? Math.max(0, Math.min(sk.cost, v as number)) : 0;
@@ -955,8 +1041,8 @@ export function fitCharge(id: string, on: Charge | undefined): number[] {
  * **제 값에서 멈춘다.** 넘치게 두면 못 쓰는 동안 쌓였다가 조건이 맞는
  * 순간에 두세 번이 연달아 나간다 — 코스트가 20 인 뜻이 사라진다.
  */
-export function chargeUp(id: string, on: Charge, by = 1): number[] {
-  const list = skillsOf(id);
+export function chargeUp(c: OwnedChar, on: Charge, by = 1): number[] {
+  const list = skillsFor(c);
   return list.map((sk, i) => Math.min(sk.cost, (on[i] ?? 0) + by));
 }
 
@@ -971,9 +1057,9 @@ export function chargeUp(id: string, on: Charge, by = 1): number[] {
  *              정화가 이걸로 "걷을 것이 없으면 안 쓴다" 를 말한다
  */
 export function readySkill(
-  id: string, on: Charge, allow?: (slot: number) => boolean,
+  c: OwnedChar, on: Charge, allow?: (slot: number) => boolean,
 ): number {
-  const list = skillsOf(id);
+  const list = skillsFor(c);
   let best = -1;
   let bestCost = -1;
   for (let i = 0; i < list.length; i++) {
@@ -988,8 +1074,8 @@ export function readySkill(
 }
 
 /** 그 기술을 썼다 — **그 칸에서만** 값을 뺀다 */
-export function spendCharge(id: string, on: Charge, slot: number): number[] {
-  const list = skillsOf(id);
+export function spendCharge(c: OwnedChar, on: Charge, slot: number): number[] {
+  const list = skillsFor(c);
   return list.map((sk, i) => (
     i === slot ? Math.max(0, (on[i] ?? 0) - sk.cost) : Math.min(sk.cost, on[i] ?? 0)
   ));
@@ -1001,13 +1087,13 @@ export function spendCharge(id: string, on: Charge, slot: number): number[] {
  * **절반으로 되돌린다.** 0 으로 만들면 기술이 갓 나간 직후에 맞았을 때
  * 아무 일도 안 일어난 것과 같아서, 맞은 사람은 뭘 잃었는지 모른다.
  */
-export function cutCharge(id: string, on: Charge, ratio = 0.5): number[] {
-  return skillsOf(id).map((_sk, i) => Math.floor((on[i] ?? 0) * ratio));
+export function cutCharge(c: OwnedChar, on: Charge, ratio = 0.5): number[] {
+  return skillsFor(c).map((_sk, i) => Math.floor((on[i] ?? 0) * ratio));
 }
 
 /** 그 자리 기술의 코스트 (없는 자리는 0) */
-export const costOf = (id: string, slot: number): number =>
-  skillsOf(id)[slot]?.cost ?? 0;
+export const costOf = (c: OwnedChar, slot: number): number =>
+  skillsFor(c)[slot]?.cost ?? 0;
 
 export type HitFx =
   | 'slash'    // 한 번 베기 — 검

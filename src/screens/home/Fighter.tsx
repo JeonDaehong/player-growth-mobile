@@ -32,7 +32,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { Row } from '@/ui/atoms';
 import {
-  CHARS, HitFx, OwnedChar, chargeUp, cutCharge, newCharge, readySkill, skillOf, skillOpen,
+  CHARS, HitFx, OwnedChar, chargeUp, cutCharge, newCharge, readySkill, skillOf, skillOpen, skillsFor,
   skillsOf, spendCharge, statOf, swingMs,
 } from '@/core/chars';
 
@@ -540,7 +540,7 @@ function FighterView({
    * 시각을 따로 흉내 내야 하는데, 그러면 화면이 실제로 휘두르는 순간과
    * 어긋난다 — 예전에 피해 계산에서 똑같이 겪었다 (`applyHit` 머리말).
    */
-  const chargeRef = useRef<number[]>(newCharge(ch.id));
+  const chargeRef = useRef<number[]>(newCharge(ch));
   /** 바뀐 칸을 파티 칸으로 밀어 넣는다 (`state/battleUi`) */
   const pushCharge = () => onChargeRef.current(ch.id, chargeRef.current);
 
@@ -554,7 +554,7 @@ function FighterView({
   useEffect(() => {
     if (cut === cutRef.current) return;
     cutRef.current = cut;
-    chargeRef.current = cutCharge(ch.id, chargeRef.current);
+    chargeRef.current = cutCharge(ch, chargeRef.current);
     pushCharge();
     /* `pushCharge` 는 ref 만 읽으므로 의존성이 아니다 */
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -570,7 +570,7 @@ function FighterView({
   useEffect(() => {
     if (costSeq === costSeqRef.current) return;
     costSeqRef.current = costSeq;
-    chargeRef.current = newCharge(ch.id);
+    chargeRef.current = newCharge(ch);
     pushCharge();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [costSeq, ch.id]);
@@ -723,14 +723,14 @@ function FighterView({
 
     const cycle = () => {
       if (!alive) return;
-      const list = skillsOf(ch.id);
+      const list = skillsFor(ch);
 
       /*
         ── 코스트가 찬다 ──
 
         평타 한 번에 모든 칸이 1 씩. 광란이 켜져 있으면 안 찬다 (`noCharge`).
       */
-      if (!noChargeRef.current) chargeRef.current = chargeUp(ch.id, chargeRef.current);
+      if (!noChargeRef.current) chargeRef.current = chargeUp(ch, chargeRef.current);
 
       /**
        * 이번 스윙에 나갈 기술의 자리. -1 이면 평타다.
@@ -744,11 +744,11 @@ function FighterView({
        */
       const slot = silentRef.current
         ? -1
-        : readySkill(ch.id, chargeRef.current, (i) => (
+        : readySkill(ch, chargeRef.current, (i) => (
           skillOpen(openRef.current, i) && canCastRef.current(ch.id, i)
         ));
       const skill = slot >= 0;
-      if (skill) chargeRef.current = spendCharge(ch.id, chargeRef.current, slot);
+      if (skill) chargeRef.current = spendCharge(ch, chargeRef.current, slot);
       pushCharge();
       const sk = list[Math.max(0, slot)] ?? skillOf(ch.id);
       setCasting(slot);
@@ -994,7 +994,7 @@ function FighterView({
   */
   if (hidden && fallen) return null;
   /** 지금 나가는 중인 기술 — 평타 중이면 null */
-  const castSk = casting >= 0 ? (skillsOf(ch.id)[casting] ?? null) : null;
+  const castSk = casting >= 0 ? (skillsFor(ch)[casting] ?? null) : null;
   const max = st.hp;
   const ratio = Math.max(0, Math.min(1, hp / Math.max(1, max)));
 
@@ -1352,7 +1352,7 @@ function FighterView({
         증발한다. 달아 두는 값은 가볍고(`castNo` 가 0 이면 아무것도 안 그린다)
         사라지는 쪽은 눈에 띄므로, 켜 두는 편이 맞다.
       */}
-      {(skillsOf(ch.id).some((sk) => sk.flies) || d.range === 'ranged') && (
+      {(skillsFor(ch).some((sk) => sk.flies) || d.range === 'ranged') && (
         <SwordWave charId={ch.id} nonce={castNo} size={size} dist={fly} />
       )}
 

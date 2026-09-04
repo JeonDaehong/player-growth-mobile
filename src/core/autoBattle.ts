@@ -55,7 +55,7 @@ import {
 } from './party';
 import {
   Armor, Blow, CHARS, DmgType, NO_ARMOR, NO_PIERCE, OwnedChar, PHYS_BLOW, Role,
-  SkillDef, Stat, blowOf, rowMod, skillOf, skillsOf, statOf, swingMs,
+  SkillDef, Stat, blowOf, rowMod, skillOf, skillsFor, statOf, swingMs,
 } from './chars';
 import { rollElixir } from './growth';
 import {
@@ -4767,7 +4767,7 @@ export function skillDamage(
   /** 기술이 여럿이면 몇 번째 것인가 (`core/chars` 의 `skillsOf` 순서) */
   slot = 0,
 ): number {
-  const sk = skillsOf(me.id)[slot] ?? skillOf(me.id);
+  const sk = skillsFor(me)[slot] ?? skillOf(me.id);
   const mine = statOf(me);
   /*
     치명타는 안 셈한다 — 화면에 미리 적는 값이라 늘 같아야 한다.
@@ -4840,10 +4840,22 @@ export function skillTargets(
     남은 놈들 안에서 다시 고르므로, 한 대가 1번을 맞히면 다음 대에게는 2번이
     1번 자리가 된다. 앞쪽에 몰리되 셋이 한 놈에 겹치지는 않는다.
   */
-  const pool = [...all];
+  let pool = [...all];
   const out: number[] = [];
-  const n = Math.min(sk.targets, pool.length);
+  /*
+    ── 겹쳐도 되는 기술이 하나 있다 ── (`SkillDef.stack`)
+
+    리안느가 강화된 화살을 찍으면 화살이 넷이 되는데, 적이 하나뿐이면
+    겹치기 금지 때문에 셋이 허공으로 사라진다. 그때는 뽑을 놈이 떨어질
+    때마다 목록을 **다시 채운다** — 적이 하나면 네 발이 다 그 하나에게,
+    넷이면 넷에게 하나씩이다.
+
+    그래서 상한도 달라진다: 평소에는 서 있는 마릿수까지지만, 겹쳐도 되면
+    `targets` 만큼 끝까지 뽑는다.
+  */
+  const n = sk.stack ? sk.targets : Math.min(sk.targets, pool.length);
   for (let i = 0; i < n; i++) {
+    if (!pool.length) pool = [...all];
     out.push(...pool.splice(pickAim(pool.length, rand), 1));
   }
   /* 앞에서부터 정렬한다 — 화면이 이 순서로 줄을 매긴다 */
@@ -4911,7 +4923,16 @@ function healerOf(
     **가진 기술 전부를 본다.** `skillOf` 하나만 보면, 기술이 여럿인 사람의
     두 번째 기술이 회복형일 때 시전자를 못 찾아 회복이 통째로 사라진다.
   */
-  for (const c of members(party, chars)) if (skillsOf(c.id).includes(sk)) return c.id;
+  /*
+    **이름으로 찾는다** — 참조가 아니라.
+
+    `skillsFor` 는 트리가 손본 기술을 **새 객체**로 돌려주므로 (`core/chars`),
+    참조로 비교하면 갈래를 찍은 사람의 회복 기술만 시전자를 못 찾아 회복이
+    통째로 사라진다. 이름은 표에서 오는 값이라 손봐도 안 바뀐다.
+  */
+  for (const c of members(party, chars)) {
+    if (skillsFor(c).some((x) => x.name === sk.name)) return c.id;
+  }
   return null;
 }
 
@@ -4949,7 +4970,7 @@ export function applySkill(
   }
   if (hpOf(me, st.hp) <= 0) return { battle: st, ev: NOTHING };
 
-  const sk = skillsOf(me.id)[slot] ?? skillOf(me.id);
+  const sk = skillsFor(me)[slot] ?? skillOf(me.id);
 
   /*
     ── 도발 — 적 전부를 자기 쪽으로 ──

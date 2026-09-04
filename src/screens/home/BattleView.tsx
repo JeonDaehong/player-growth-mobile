@@ -43,7 +43,7 @@ import {
   RAGE_MS, rageIn, raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
 } from '@/core/autoBattle';
-import { CHARS, projFrame, projSet, skillOf, skillsOf, statOf } from '@/core/chars';
+import { CHARS, projFrame, projSet, skillOf, skillsFor, statOf } from '@/core/chars';
 import {
   FORMATIONS, FormSpot, formationSpots, hpOf, livingMembers, members, partyStat, seatRows,
 } from '@/core/party';
@@ -777,7 +777,9 @@ export function BattleView({ top, corner }: Props = {}) {
    */
   const canCast = React.useCallback((id: string, slot: number) => {
     const { battle: b, party: pt, chars: ch, skillOpts: op } = now.current;
-    const sk = skillsOf(id)[slot];
+    /* 트리가 손본 것으로 본다 — 코스트가 달라지면 쓸 수 있는 때도 달라진다 */
+    const me = ch[id];
+    const sk = me ? skillsFor(me)[slot] : undefined;
     if (!sk) return false;
     if (sk.cleanse) {
       return cleanseTargets(cleanseOptOf(op, id, slot), pt, ch, b.hp, b.hex).length > 0;
@@ -1473,7 +1475,7 @@ export function BattleView({ top, corner }: Props = {}) {
       자리(`at`)를 화면이 골라 넘기는 것과 똑같은 이유다. 지금은 한 명당
       기술이 하나뿐이라 늘 0 이지만, 규칙은 지금 세워 둔다.
     */
-    const sk = skillsOf(me.id)[slot] ?? skillOf(me.id);
+    const sk = skillsFor(me)[slot] ?? skillOf(me.id);
 
     /*
       회복형은 적 쪽에 그릴 게 없다. 대신 **아군 쪽에** 그린다.
@@ -2502,7 +2504,7 @@ export function BattleView({ top, corner }: Props = {}) {
                     */
                     held={held}
                     /* 광란이 켜져 있는 동안은 코스트가 안 찬다 */
-                    noCharge={skillsOf(c.id).some(
+                    noCharge={skillsFor(c).some(
                       (sk) => !!sk.self?.noCharge
                         && hasHex(hexOf(battle.hex, c.id), sk.self.id),
                     )}

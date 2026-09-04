@@ -14,7 +14,7 @@ import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
   BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, battleTypeOf, capOf, maxStar,
-  skillOpen, skillsOf, statOf,
+  skillOpen, skillsFor, statOf,
 } from '@/core/chars';
 import {
   MAX_PARTY_GEAR, PARTY_SIZE, hpOf, livingMembers, partyGear, partyPower, seatRows,
@@ -230,7 +230,7 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     칸으로 나눠 비율로 채운다 — 4 짜리는 여전히 한 번에 두
                     칸씩 차므로 "네 번" 이 그대로 보인다.
                   */}
-                  {skillsOf(c.id).map((sk, si) => {
+                  {skillsFor(c).map((sk, si) => {
                     /*
                       ── 기술 한 칸이 말하는 것은 셋 중 하나다 ──
 
@@ -247,7 +247,7 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                       "몇 성이 되면 이게 열린다" 가 안 보인다.
                     */
                     const open = skillOpen(c, si);
-                    const on = fitCharge(c.id, charge[c.id])[si] ?? 0;
+                    const on = fitCharge(c, charge[c.id])[si] ?? 0;
                     const full = open && on >= sk.cost;
                     /* 스무 칸은 1px 이 되어 뭉갠다 — 여덟 칸에 비율로 채운다 */
                     const cells = Math.min(8, Math.max(1, sk.cost));

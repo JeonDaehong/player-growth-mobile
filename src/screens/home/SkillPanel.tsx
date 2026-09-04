@@ -31,7 +31,7 @@ import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import {
   CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillNeeds, skillOpen,
-  skillsOf, statOf, swingMs,
+  skillsFor, statOf, swingMs,
 } from '@/core/chars';
 import { passiveOf } from '@/core/passives';
 import { Party, allyAtk, members } from '@/core/party';
@@ -151,7 +151,14 @@ export function SkillPanel({
   /** 펴 놓은 기술. 하나만 편다 — 둘을 나란히 펴면 비교가 아니라 벽이 된다 */
   const [open, setOpen] = useState<string | null>(null);
 
-  const list = skillsOf(c.id);
+  /* 트리가 손본 것을 보여 준다 — 창에 적힌 코스트와 실제 코스트가 같아야 한다 */
+  const list = skillsFor(c);
+  /*
+    파쇄의 태세를 찍으면 불굴의 맹세가 꺼진다 (`core/passives` 의 `regenOf`).
+    목록에서 지우지 않고 흐리게 남긴다 — 무엇을 잃었는지가 안 보이면 그
+    갈래를 고른 값도 안 보인다.
+  */
+  const passiveOff = c.tree?.includes('kg3b') ?? false;
   /* 지금 몇 개가 열려 있나 — 머리말이 이걸 적는다 (`core/chars` 의 `openSkills`) */
   const openCount = list.filter((_sk, i) => skillOpen(c, i)).length;
   const st = statOf(c);
@@ -173,10 +180,12 @@ export function SkillPanel({
         접지 않는다. 한 줄이면 다 적히므로 접을 것이 없다.
       */}
       {!!pv && (
-        <>
+        <View style={passiveOff ? { opacity: O.dim } : undefined}>
           <Row between style={{ marginBottom: SP.xs }}>
             <T size={11} bold>패시브</T>
-            <T size={9} dim="dim">늘 켜져 있습니다</T>
+            <T size={9} dim="dim">
+              {passiveOff ? '파쇄의 태세가 껐습니다' : '늘 켜져 있습니다'}
+            </T>
           </Row>
           <ListItem
             title={pv.name}
@@ -189,12 +198,14 @@ export function SkillPanel({
               아직 그림이 없으면 빈 자리로 남고, 도착하는 순간 저절로 붙는다.
             */
             left={<Sprite set="passive_icon" name={pv.art} size={22} />}
-            right={<Tag label="항상" />}
+            right={<Tag label={passiveOff ? '꺼짐' : '항상'} />}
           />
           <T size={9} dim="dim" style={{ marginTop: 2, marginBottom: SP.sm }}>
-            파티에 서 있고 살아 있는 동안만 걸립니다 — 쓰러지면 그 자리에서 꺼집니다.
+            {passiveOff
+              ? '파쇄의 태세를 찍어서 꺼졌습니다. 되돌리면 다시 걸립니다.'
+              : '파티에 서 있고 살아 있는 동안만 걸립니다 — 쓰러지면 그 자리에서 꺼집니다.'}
           </T>
-        </>
+        </View>
       )}
 
       {/*

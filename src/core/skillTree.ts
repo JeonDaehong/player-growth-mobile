@@ -32,8 +32,15 @@
  * ## 이 파일은 규칙만 안다
  *
  * 무엇을 찍었는지는 세이브에 있고 (`OwnedChar.tree`), 그 결과가 전투에서
- * 어떻게 움직이는지는 아직 여기 없다 — 기술 수치를 손보는 것과 새 효과를
- * 만드는 것은 다음 단계다. 지금은 **찍는 것까지**가 이 파일의 일이다.
+ * 어떻게 움직이는지는 여기 없다.
+ *
+ *   기술 **수치**를 손보는 갈래  →  `core/chars` 의 `skillsFor`
+ *   패시브를 끄는 갈래           →  `core/passives`
+ *   새 효과를 만드는 갈래        →  아직 없다 (`TreeNode.live` 가 `false`)
+ *
+ * `live` 가 붙은 자리만 실제로 전투에 들어가 있다. 화면이 그 칸을 보고
+ * "준비중" 을 붙인다 — 찍었는데 아무 일도 안 일어나는 것을 말 안 해 주면
+ * 고장으로 읽힌다.
  */
 import type { CharId } from './chars';
 
@@ -114,7 +121,7 @@ const ISOLDE: readonly TreeNode[] = [
     rival: 'kg3a', needs: 'kg2b',
     desc: '검기가 방어를 관통하고, 코스트가 1 줄고, 피해가 1.5배가 된다. '
       + '대신 불굴의 맹세가 꺼진다.',
-    art: 'sk_breaker',
+    art: 'sk_breaker', live: true,
   },
   {
     id: 'kg4a', who: 'knightgirl', tier: 4, name: '수호신의 가호', kind: 'passive',
@@ -190,7 +197,7 @@ const RIANNE: readonly TreeNode[] = [
     id: 'ea3a', who: 'elfarcher', tier: 3, name: '강화된 화살', kind: 'passive',
     rival: 'ea3b',
     desc: '화살비 코스트가 1 줄고 화살이 넷이 된다. 적이 하나면 넷 다 그 하나에게.',
-    art: 'sk_sharparrow',
+    art: 'sk_sharparrow', live: true,
   },
   {
     id: 'ea3b', who: 'elfarcher', tier: 3, name: '정령의 노래', kind: 'active', cost: 10,
@@ -247,7 +254,7 @@ const AGNES: readonly TreeNode[] = [
   {
     id: 'nu3b', who: 'nun', tier: 3, name: '정화의 손길', kind: 'passive',
     rival: 'nu3a',
-    desc: '정화 코스트가 25% 줄어든다 (20 → 15).', art: 'sk_gentle',
+    desc: '정화 코스트가 25% 줄어든다 (20 → 15).', art: 'sk_gentle', live: true,
   },
   {
     id: 'nu4a', who: 'nun', tier: 4, name: '신의 천벌', kind: 'passive',

@@ -209,6 +209,17 @@ export const regenPctOf = (id: string): number => passiveOf(id)?.regenPct ?? 0;
  * 켜져 있는데 아무 일도 안 일어난다.
  */
 export function regenOf(c: OwnedChar): number {
+  /*
+    ── 파쇄의 태세를 찍으면 불굴의 맹세가 꺼진다 ──
+
+    이졸데가 방패를 버리고 검을 드는 갈래다 (`core/skillTree` 의 `kg3b`).
+    검기가 방어를 뚫고 1.5배가 되는 대신, 초당 1% 회복이 사라진다.
+
+    **여기 한 곳에서만 끈다.** 패시브 표(`PASSIVES`)에서 지우거나 `passiveOf`
+    를 비우면 캐릭터 창의 패시브 줄도 같이 사라지는데, 그러면 무엇을 잃었는지
+    화면에 안 남는다 — 잃은 것이 안 보이면 갈래를 고른 값도 안 보인다.
+  */
+  if (c.tree?.includes('kg3b')) return 0;
   const pct = regenPctOf(c.id);
   return pct > 0 ? Math.max(1, statOf(c).hp * pct) : 0;
 }
