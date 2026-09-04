@@ -591,7 +591,28 @@ export function BattleView({ top, corner }: Props = {}) {
     파티에 없는 사람은 `row` 가 안 붙으므로 (`seatRows`) 창고 목록은 그대로
     맨 몸 수치다 — 캐릭터끼리 견주는 자리에서 대형이 끼어들면 안 된다.
   */
-  const chars = seatRows(party, rawChars, form);
+  /*
+    ── `useMemo` 가 **반드시** 있어야 한다 ──
+
+    `seatRows` 는 명부를 베껴서 돌려준다 (`{...chars}`). 그냥 부르면 렌더마다
+    새 객체이고, 이 값은 아래 갈래의 딸림값에 들어 있다.
+
+    그러면 **갈래가 매 렌더 다시 돈다.** 그 갈래는 정리 함수에서 예약해 둔
+    시계를 전부 지우므로 (`late.forEach(clearTimeout)`), 실제로 이런 일이
+    일어났다.
+
+      · 피해 숫자와 붉은 깜빡임이 `lead` 만큼 미뤄져 있다가 **취소된다** —
+        "맞았는데 데미지가 안 닳거나 타이밍이 이상하게 닳는다"
+      · 200ms 뒤에 휘두름을 끄는 시계도 취소된다 — 적이 **공격 자세로
+        굳는다** ("몹들이 Idle 상태가 아니라 공격모션 상태다")
+
+    딸림값이 원본 셋(`party` · `rawChars` · `form`)이므로, 저 셋이 안 바뀌면
+    같은 객체가 그대로 나온다.
+  */
+  const chars = React.useMemo(
+    () => seatRows(party, rawChars, form),
+    [party, rawChars, form],
+  );
   /* ⚠ 테스트용 — 아래 TEST 단추가 부른다. 출시 전에 같이 지운다 */
   const rageNow = useGame((s) => s.rageNow);
 

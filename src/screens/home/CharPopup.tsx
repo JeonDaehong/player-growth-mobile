@@ -8,7 +8,7 @@
  * 어떻게 할까" 하나고, 그 답이 사람을 바꾸는 것일 수도 키우는 것일 수도 있다.
  * 창을 둘로 나누면 누를 때마다 어느 창을 열지 먼저 정해 줘야 한다.
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useGame } from '@/state/store';
@@ -51,7 +51,8 @@ export function CharPopup({
     파티에 없는 사람은 `row` 가 안 붙으므로 (`seatRows`) 창고 목록은 그대로
     맨 몸 수치다 — 캐릭터끼리 견주는 자리에서 대형이 끼어들면 안 된다.
   */
-  const chars = seatRows(party, raw, form);
+  /* 렌더마다 새 객체를 만들면 이 값을 보는 갈래가 다 헛돈다 (`BattleView` 참고) */
+  const chars = useMemo(() => seatRows(party, raw, form), [party, raw, form]);
   const money = useGame((s) => s.money);
   const setPartySlot = useGame((s) => s.setPartySlot);
   const enhanceGear = useGame((s) => s.enhanceGear);

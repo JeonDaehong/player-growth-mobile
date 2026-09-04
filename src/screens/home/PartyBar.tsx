@@ -8,7 +8,7 @@
  * 여기서 스탯까지 보여 주면 네 칸이 표가 되고, 표는 위쪽 전투에서 시선을 뺏는다.
  * 자세한 건 눌러서 여는 창(`CharPopup`)이 맡는다.
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
@@ -45,7 +45,8 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
     파티에 없는 사람은 `row` 가 안 붙으므로 (`seatRows`) 창고 목록은 그대로
     맨 몸 수치다 — 캐릭터끼리 견주는 자리에서 대형이 끼어들면 안 된다.
   */
-  const chars = seatRows(party, raw, form);
+  /* 렌더마다 새 객체를 만들면 이 값을 보는 갈래가 다 헛돈다 (`BattleView` 참고) */
+  const chars = useMemo(() => seatRows(party, raw, form), [party, raw, form]);
   /*
     지금 남은 체력.
 
