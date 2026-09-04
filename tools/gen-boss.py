@@ -2422,14 +2422,42 @@ BOSSES += [
     boss(
         'b30_baal', '침식을 완료한 군체의 절대자, 바알', '바알', 30, 'swarm', 84,
         'The last one. It is not one insect — it is what happens when the whole '
-        'brood finishes becoming a single thing.' + NL
+        'brood finishes becoming a single thing, and then crowns itself.' + NL
+        + 'THIS ONE IS A MONARCH, NOT A PILE. Every other creature in this game '
+        'is drawn as a thing that hunts. This one is drawn as a thing that '
+        'RULES, and the difference has to survive being shrunk to 84 pixels:' + NL
+        + '  - SILHOUETTE FIRST. Squinted at, it is one tall broad-shouldered '
+        'TRIANGLE — wide braced base, mass carried high, narrowing to a crowned '
+        'point. No other creature in the game has that outline. If the shape '
+        'reads as a lumpy mound or a spiky ball, the drawing has failed no '
+        'matter how good the detail is.' + NL
+        + '  - IT DOES NOT LUNGE. The pose is held, weight square, absolutely '
+        'still. Everything else in the game leans and reaches; stillness is what '
+        'makes this one read as above them.' + NL
+        + '  - SYMMETRY IS THE AUTHORITY. Left and right match — deliberately, '
+        'formally, like a heraldic device. Exactly ONE thing breaks it, named '
+        'below, and that single break is what makes the symmetry look chosen '
+        'rather than accidental.' + NL
+        + '  - IT IS THE TALLEST THING IN THE GAME and it must be drawn to fill '
+        'its cell top to bottom.' + NL
         + 'BODY: an upright TOWERING mass, TALLER THAN WIDE, built of segmented '
         'plates that do not all belong to the same animal. Read from the ground '
-        'up: a broad braced base of SIX legs, none of them a matching pair — one '
-        'is a beetle\'s thick hook, one a mantis blade, one a spider\'s long '
-        'joint, one a centipede\'s row of small hooks fused into a single limb. '
-        'Above them a barrel thorax of NINE overlapping plates. Above that, a head '
-        'that is too small for it.' + NL
+        'up: a broad braced base of SIX legs planted like the feet of a throne, '
+        'none of them a matching pair — one is a beetle\'s thick hook, one a '
+        'mantis blade, one a spider\'s long joint, one a centipede\'s row of '
+        'small hooks fused into a single limb. Above them a barrel thorax of NINE '
+        'overlapping plates, the lowest ones flaring outward into broad shoulder '
+        'pauldrons so the mass sits high and wide.' + NL
+        + 'THE MANTLE — this is what makes it a monarch. Four long dead WING '
+        'CASES hang from behind the shoulders, spread and held stiff, falling '
+        'past the thorax like a heavy cloak. They are ragged along their lower '
+        'edges and they do not move. They must be clearly BEHIND the arms and '
+        'clearly NOT usable — this thing has not flown in a long time.' + NL
+        + 'THE CROWN: the head carries a fan of SEVEN hard spines rising from the '
+        'skull plate, the middle one tallest, the outer ones stepping down evenly '
+        'to each side. Straight tapered spikes, evenly spaced, unmistakably '
+        'arranged rather than grown. This is the top of the silhouette and the '
+        'single most important shape on the creature.' + NL
         + 'IT IS MADE OF THE OTHERS — this one only, and it is the whole point: '
         'set into the plates of the thorax and the base, half absorbed and still '
         'recognisable, are parts of the creatures from earlier in the region: '
@@ -2448,13 +2476,19 @@ BOSSES += [
         'left in. It is attached at nothing. It is standing there because it never '
         'fell over.' + NL
         + 'SCARS: three plates are punched through and healed from beneath.',
-        'standing upright and braced, six mismatched legs planted, both blades '
-        'raised and held apart, head lowered. The empty shell stands behind it. '
-        'It is the TALLEST silhouette in the game and it is completely still.',
+        'enthroned. Standing upright and braced, six mismatched legs planted '
+        'square, both blades raised and held wide and LEVEL like a proclamation, '
+        'the crowned head UP and facing out rather than lowered at prey, the '
+        'mantle of dead wing cases spread behind. The empty shell stands behind '
+        'that. It is the TALLEST silhouette in the game, it is perfectly '
+        'symmetrical apart from the replaced blade, and it is completely still. '
+        'Nothing about this pose is mid-motion.',
         'the cut. ONE blade has come down and across in a single diagonal, the '
-        'body turned into it, the other blade still raised and untouched. The legs '
-        'have not moved at all — six planted points and one arm. It attacks '
-        'without shifting its weight, and that is what makes it look final.',
+        'other blade still raised and untouched, the crowned head STILL FACING '
+        'FORWARD — it does not turn to look at what it is cutting. The legs have '
+        'not moved at all and the mantle has not swung: six planted points and '
+        'one arm. It attacks without shifting its weight, and that is what makes '
+        'it look final.',
         [('skill1', '군체의 대염쇄',
           '체력 50% 이하가 되면 허물을 벗고 본체와 같은 능력치의 환영 분신을 '
           '하나 만든다 (분신은 체력 25% · 스킬 2를 같이 쓴다)',

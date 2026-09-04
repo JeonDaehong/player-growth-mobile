@@ -1654,14 +1654,18 @@ export function Bound({ size, web }: { size: number; web?: boolean }) {
     <View pointerEvents="none" style={bodyBox(size)}>
       <Animated.View style={{ position: 'absolute', transform: [{ scale: squeeze }] }}>
         {/*
-          ── 네 번째 칸이다. 다섯 번째가 아니다 ──
+          ── 세 번째 칸이다. 다섯 번째가 아니었다 ──
 
-          마지막 칸을 "고리가 닫힌 그림" 으로 알고 썼는데, 실제 시트에서는
-          그게 **풀려 나가는 칸**이었다 (다섯 칸이 감기고 → 조이고 → 풀린다).
-          그래서 2~5초 동안 세워 두는 그림이 하필 제일 헐렁한 칸이었고,
-          화면에서는 묶였다기보다 덩굴이 옆에 널려 있는 것으로 보였다.
+          마지막 칸을 "고리가 닫힌 그림" 으로 알고 썼다. 시트 사양을 보면
+          아니다 (`tools/gen-bossfx.py` 의 `bfx_bind`) — 다섯 칸은
 
-          네 번째가 제일 빈틈없이 감긴 칸이다.
+            1 늘어진 덩굴  2 고리 하나  3 **완전히 감김**  4 느슨해짐  5 흩어짐
+
+          이다. 그러니까 2~5초 동안 세워 두는 그림이 하필 **풀려 나가는
+          칸**이었고, 화면에서는 묶였다기보다 덩굴이 옆에 널려 있는 것으로
+          보였다.
+
+          3번이 "THE FULL BINDING" — 세 겹이 팽팽하게 감긴 칸이다.
         */}
         {/*
           ── 25판만 거미줄 고치다 ──
@@ -1674,11 +1678,11 @@ export function Bound({ size, web }: { size: number; web?: boolean }) {
         */}
         <Sprite
           set={web ? 'bfx_cocoon' : 'bfx_bind'}
-          name="4"
+          name="3"
           size={Math.round(size * 1.15)}
           opacity={0.9}
           fallbackSet="bfx_bind"
-          fallbackName="4"
+          fallbackName="3"
         />
       </Animated.View>
     </View>

@@ -235,6 +235,33 @@ FX = [
      'three separate lengths of vine.',
      'Two short curled fragments of vine left, far apart, drifting down and away '
      'from where the coils were. No loop closed.'),
+
+    # 덩굴과 **다른 것**이어야 한다. 25판은 거미줄로 번데기를 만드는 기술이라
+    # (`cocoon`) 덩굴이 감기면 13판 속박을 다시 하는 것으로 보인다.
+    ('bfx_cocoon', '몸을 감는 거미줄 고치', 'playout', [25],
+     'A few loose STRANDS of silk drifting in from the RIGHT edge — four or five '
+     'straight thin lines, not parallel, crossing each other at shallow angles '
+     'near the right side of the cell. They enclose nothing yet. Straight lines '
+     'only: silk does not hang in curves the way a vine does.',
+     'The strands have been thrown across the whole cell and caught on each '
+     'other, forming an open irregular MESH of straight segments with wide gaps. '
+     'A rough vertical oval is beginning to show in the middle where the strands '
+     'are densest, but you can still see straight through it everywhere.',
+     'THE FULL COCOON. One tall VERTICAL OVAL filling most of the cell, built '
+     'entirely from straight silk segments crossing at angles — never a smooth '
+     'outline, never a curve: the oval is described by dozens of short chords, so '
+     'its edge is faceted and slightly ragged. The mesh is DENSE at the top and '
+     'bottom ends of the oval and OPEN across the middle third. '
+     'THE CENTRE OF THE OVAL IS EMPTY: this effect is drawn over a character, so '
+     'a filled middle hides the person inside it. Anchor lines run from the four '
+     'corners of the cell to the oval and are pulled taut. '
+     'It must not look like the vine effect: no coils, no rings, no barbs, no '
+     'wrapping bands going around — this is a net pulled tight into a shape.',
+     'The mesh has torn. A ragged split runs down the middle of the oval, the two '
+     'halves sagging outward, and half the anchor lines have snapped and hang '
+     'loose. The oval no longer closes at the top.',
+     'Four or five broken strands left, drifting apart and downward, each still '
+     'straight. Nothing encloses anything.'),
 ]
 
 KIND = {

@@ -44,6 +44,7 @@
 | `bfx_miasma` | 피어오르는 부패 | 5칸 | 15판 카다베라 |
 | `bfx_bolt` | 내리치는 벼락 | 5칸 | 20판 실바누스 |
 | `bfx_bind` | 몸을 감는 덩굴 | 5칸 | 2판 플로라투스 · 13판 마트로나 |
+| `bfx_cocoon` | 몸을 감는 거미줄 고치 | 5칸 | 25판 아라크네스 |
 
 ## 두 종류뿐입니다
 
@@ -1039,6 +1040,128 @@ SHEET LAYOUT:
 
 ```json
 { "file": "<파일명>", "name": "bfx_bind", "expect": [5, 1],
+  "labels": ["1", "2", "3", "4", "5"] }
+```
+
+---
+
+## 몸을 감는 거미줄 고치 — `bfx_cocoon`
+
+| | |
+|---|---|
+| 스프라이트 폴더 | `assets/sprites/bfx_cocoon/` |
+| 종류 | 터지는 것 (5칸) |
+| 쓰는 보스 | 25판 아라크네스 |
+
+### 셀 순서
+
+| 셀 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| | 시작 | 커짐 | 절정 | 옅어짐 | 끝 |
+| id | `1` | `2` | `3` | `4` | `5` |
+
+### 프롬프트
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a 5-frame effect sheet in one row, left to right. It is ONE effect shown at 5 moments in time, not 5 different pictures.
+
+The 5 cells, in this exact order:
+
+Cell 1 — A few loose STRANDS of silk drifting in from the RIGHT edge — four or five straight thin lines, not parallel, crossing each other at shallow angles near the right side of the cell. They enclose nothing yet. Straight lines only: silk does not hang in curves the way a vine does.
+Cell 2 — The strands have been thrown across the whole cell and caught on each other, forming an open irregular MESH of straight segments with wide gaps. A rough vertical oval is beginning to show in the middle where the strands are densest, but you can still see straight through it everywhere.
+Cell 3 — THE FULL COCOON. One tall VERTICAL OVAL filling most of the cell, built entirely from straight silk segments crossing at angles — never a smooth outline, never a curve: the oval is described by dozens of short chords, so its edge is faceted and slightly ragged. The mesh is DENSE at the top and bottom ends of the oval and OPEN across the middle third. THE CENTRE OF THE OVAL IS EMPTY: this effect is drawn over a character, so a filled middle hides the person inside it. Anchor lines run from the four corners of the cell to the oval and are pulled taut. It must not look like the vine effect: no coils, no rings, no barbs, no wrapping bands going around — this is a net pulled tight into a shape.
+Cell 4 — The mesh has torn. A ragged split runs down the middle of the oval, the two halves sagging outward, and half the anchor lines have snapped and hang loose. The oval no longer closes at the top.
+Cell 5 — Four or five broken strands left, drifting apart and downward, each still straight. Nothing encloses anything.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+NEVER DRAW THE GROUND.
+
+The game draws its own floor under these sprites (a receding quarter-view plane) and
+composites the artwork on top of it. Anything floor-like inside a cell lands on the
+screen as a white slab sitting in mid-air.
+
+So there is NO ground line, NO horizon, NO floor plane, NO paving, NO grass, NO dirt,
+NO rubble, NO cracks, NO drop shadow, and NO dust lying on a surface. Not even a thin
+line under the feet.
+
+THE GROUND IS IMPLIED BY THE POSE, NOT DRAWN. Where a description says a weapon is
+"planted in the ground", or a knee is "on the floor", or something "bursts out of the
+ground", it means: draw the figure and the effect at that height, standing on nothing.
+The bottom of the boots, the point of the blade, the base of the burst — they simply
+stop, with pure black beneath them.
+
+Contact is sold by the POSE (a bent knee, a braced arm, a low burst opening upward),
+never by drawing what is being touched.
+
+IT IS NOT A CREATURE. IT IS A THING THAT HAPPENS.
+
+Everything else drawn for this game is alive. This is not — it has no eyes, no
+mouth, no face, and nothing that could be read as one. If any cell could be
+mistaken for a small monster, it is wrong.
+
+- WHITE ON PURE BLACK, 1-bit, no greys. The game composites this over the stage
+  and the black becomes transparent.
+- IT IS SEEN FOR ABOUT A THIRD OF A SECOND at roughly 40 to 60 pixels. Detail
+  below that size is not merely wasted, it turns into grain that flickers.
+- ONE SHAPE PER CELL, or a few clearly separated pieces. Not a spray of dots.
+- NO GROUND, NO SHADOW, NO IMPACT RING, NO SPEED ARCS DRAWN AS SWOOSHES. If it
+  is travelling, say so with the SHAPE — leaning, stretched, with two or three
+  straight trailing lines at most.
+- NO TEXT, NO FRAME, NO BORDER.
+
+THE 5 CELLS ARE ONE EVENT PLAYING OUT IN ONE PLACE.
+
+This does not travel. It appears where the party is standing, does its work, and
+goes. The five cells are the whole of it, in order, and they are drawn at the same
+scale from the same viewpoint.
+
+- Cell 1 — the start. SMALL and tight. Whatever is coming has only just begun.
+- Cell 2 — growing fast, still dense.
+- Cell 3 — the largest and heaviest cell. This is the one the player actually
+  sees, so it carries the whole read.
+- Cell 4 — spreading and thinning, wider than cell 3 but far less solid.
+- Cell 5 — nearly gone. Two or three faint remnants, well spread.
+
+The centre of the event stays in the same place in all five cells. If it drifts,
+the effect looks like it is sliding off the character it is supposed to be on.
+
+SHEET LAYOUT:
+- Arrange the cells in an exact uniform grid: 5 columns x 1 row.
+- Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a magenta
+  border around the outer edge of the whole sheet.
+- Magenta appears ONLY on these separator lines, never inside a cell.
+- Every cell is exactly the same size. Reading order is left to right, then top to
+  bottom.
+- Do not add extra rows of variants. Exactly 1 row, exactly 5 cells.
+- EVERY CELL MUST BE SQUARE. With a 5x1 grid that means the whole sheet is
+  5:1 — output it at 2560x512.
+  A square cell is required. A tall narrow cell cannot hold a weapon swung forward,
+  and a short wide cell cannot hold one raised. Both have been tried and both
+  clipped.
+```
+
+### 슬라이서 설정
+
+```json
+{ "file": "<파일명>", "name": "bfx_cocoon", "expect": [5, 1],
   "labels": ["1", "2", "3", "4", "5"] }
 ```
 

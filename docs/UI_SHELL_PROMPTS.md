@@ -47,17 +47,21 @@
 
 | | 가르는 것 |
 |---|---|
-| 랭킹 | 높이가 다른 세 기둥 — 유일하게 **여러 덩어리가 나란히** |
-| 이벤트 | 별 하나 — 유일하게 **뾰족한 갈래 다섯** |
+| 랭킹 | 트로피 — 유일하게 **옆으로 뻗은 손잡이 둘** |
+| 이벤트 | 달력 — 유일하게 **위로 솟은 고리 둘** |
 | 우편 | 가로로 누운 봉투 — 유일하게 **가로로 긴 사각** |
-| 선물 | 리본 묶인 상자 — 유일하게 **정사각을 십자가 가른다** |
-| 미션 | 체크 표시 — 유일하게 **한 획으로 꺾인 선** |
+| 선물 | 리본 묶인 상자 — 유일하게 **위로 솟은 리본 귀 둘** |
+| 미션 | 문서 — 유일하게 **안쪽에 가로 글줄 셋** |
 | 설정 | 톱니바퀴 — 유일하게 **테두리가 오돌토돌** |
-| 영웅 | 사람 흉상 — 유일하게 **동그라미 위 · 사다리꼴 아래** |
-| 아이템 | 배낭 — 유일하게 **위에 손잡이가 달린 덩어리** |
-| 메인 | 집 — 유일하게 **삼각 지붕 + 사각 몸통** |
-| 길드 | 깃발 — 유일하게 **한쪽으로만 뻗은 천** |
-| 컨텐츠 | 사각 넷 (2x2) — 유일하게 **똑같은 덩어리 넷** |
+| 영웅 | 투구 — 유일하게 **가로로 뚫린 눈구멍** |
+| 아이템 | 가방 — 유일하게 **위에 손잡이 아치** |
+| 메인 | 성 — 유일하게 **위가 성가퀴로 들쭉날쭉** |
+| 길드 | 깃발 — 유일하게 **한쪽으로만 쏠린 것** |
+| 컨텐츠 | 네모 넷 (2x2) — 유일하게 **똑같은 덩어리 넷** |
+
+별 · 체크 · 흉상 · 집 · 배낭이었던 다섯을 갈아 끼웠습니다. 이유는 아래
+"속을 비웁니다" 에 있습니다 — 윤곽선으로 그리기로 하고 나니, 별과 체크처럼
+**안쪽이 없는 모양**은 속을 비울 것이 없어서 이 벌에서 혼자 겉돌았습니다.
 
 ---
 
@@ -86,38 +90,39 @@ and do not add variants of one.
 
 The 6 cells, in this exact order:
 
-Cell 1 — THREE UPRIGHT BARS of different heights standing side by side on the
-bottom edge, each a quarter of the cell wide with a gap between them. The MIDDLE
-bar is tallest and reaches the top edge; the left is medium; the right is shortest.
-Flat square tops. It is the only icon in the set made of several separate masses
-standing in a row. Squint test: three bars, tall one in the middle.
+Cell 1 — A TROPHY CUP, outlined. A wide bowl with a flat straight top rim,
+narrowing downward to a short stem that sits on a wide flat base bar. From each
+side of the bowl a HANDLE loops outward — a small squared-off C shape standing
+clear of the body with black between it and the bowl. It is the only icon with
+parts sticking out to the left and right. Squint test: a cup with two ears.
 
-Cell 2 — A FIVE-POINTED STAR, solid, filling the cell, one point straight up and
-the other four spread evenly. The arms are thick — a third of the star's radius at
-their base — so nothing tapers to a hair. It is the only icon with radiating
-points. Squint test: a star.
+Cell 2 — A CALENDAR, outlined. An upright rounded-square frame filling the cell,
+with TWO SHORT POSTS standing up from its top edge (the rings), and one horizontal
+rule across the frame a quarter of the way down separating the header from the
+body. Inside the body, TWO rows of two short dashes each — the dates. It is the
+only icon with two small posts standing on top of it. Squint test: a box with two
+little legs on its head.
 
-Cell 3 — A WIDE ENVELOPE lying on its side. One solid rectangle spanning the full
-width of the cell and about two thirds of its height, with a single V-shaped notch
-cut down from the TOP edge to the middle — the flap. Nothing else. It is the only
-icon that is clearly wider than it is tall. Squint test: a flat rectangle with a V
-in its top.
+Cell 3 — A WIDE ENVELOPE lying on its side, outlined. A rectangle spanning the
+full width of the cell and about two thirds of its height, with a V-shaped fold
+line drawn INSIDE it running from the two top corners down to the middle of the
+body — the flap, drawn as a line, not as a cut. It is the only icon clearly wider
+than it is tall. Squint test: a flat rectangle with a V inside its top.
 
-Cell 4 — A GIFT BOX. One solid square filling the cell, CUT by a vertical band and
-a horizontal band of empty black, each a fifth of the cell wide, crossing at the
-centre — the ribbon, drawn as gaps rather than lines. No bow, no loops. It is the
-only icon that is a square divided into four equal parts. Squint test: a square
-split by a cross.
+Cell 4 — A GIFT BOX, outlined. A square box, one horizontal rule across it a third
+of the way down (the lid seam), and one vertical rule from that seam to the bottom
+edge (the ribbon). Standing up from the top edge are TWO short angled ears — the
+bow, drawn as two small open triangles, not loops. It is the only icon with two
+ears leaning apart at the top. Squint test: a box with a cross on it and two ears.
 
-Cell 5 — A CHECK MARK. One thick stroke, a fifth of the cell wide, going down and
-right from the upper left to the low centre, then sharply up and right to the upper
-right corner, ending well above where it started. Flat cut ends. Nothing around it,
-no box, no circle. It is the only icon that is a single bent line. Squint test: a
-tick.
+Cell 5 — A DOCUMENT, outlined. An upright rounded-rectangle frame filling the
+cell, with THREE horizontal rules inside it, evenly spaced, each running most of
+the width — except the LAST one, which is only half as long. It is the only icon
+whose inside is nothing but horizontal lines. Squint test: a page of writing.
 
-Cell 6 — A GEAR. One thick ring filling the cell with an EMPTY BLACK hole in the
-middle a third of the cell wide, and SIX square teeth standing out from its rim,
-evenly spaced, each a sixth of the cell wide and sticking out a tenth of the cell.
+Cell 6 — A GEAR, outlined. A thick RING with an EMPTY BLACK hole in the middle a
+third of the cell wide, and EIGHT square teeth standing out from its rim, evenly
+spaced, each a seventh of the cell wide and sticking out a twelfth of the cell.
 The teeth are chunky blocks, not spikes. It is the only icon with a bumpy outer
 edge. Squint test: a lumpy ring with a hole.
 
@@ -132,22 +137,33 @@ STYLE (strict, non-negotiable):
 
 ICON RULES — this is a symbol, not a picture.
 
-IT WILL BE SHOWN AT 12 TO 16 PIXELS. Everything below follows from that one fact.
+IT WILL BE SHOWN AT 18 TO 24 PIXELS. Everything below follows from that one fact.
 
 - ONE SHAPE. The whole icon reads as a single silhouette at a glance.
-- FILL THE CELL. The shape touches or nearly touches all four sides.
-- SOLID, NOT OUTLINED. A hollow outline at 14px becomes a grey smudge.
-- NO INTERIOR DETAIL. No rivets, no facets, no shading, no highlights.
-- ONE NOTCH OR CUT-OUT AT MOST, and it must be at least a fifth of the width.
-- STRAIGHT AND CHUNKY. Thick strokes, hard angles, flat ends.
+- FILL THE CELL. The shape nearly touches all four sides, with a margin of about
+  one twelfth of the cell left empty all the way around.
+- OUTLINED, NOT SOLID. Draw the shape as a BAND of solid white about one eighth
+  of the cell wide, with EMPTY BLACK inside it. This is the rule that makes the
+  eleven look like one set. A filled shape at this size is a black-and-white blob;
+  an outline keeps its form.
+- THE STROKE IS THE SAME WIDTH EVERYWHERE, on every icon in the sheet. Do not
+  taper, do not thin a line to fit — if a shape needs a thinner line to work,
+  simplify the shape instead.
+- INTERIOR MARKS ONLY WHERE THEY MEAN SOMETHING. The helmet's eye slit, the
+  castle's gate, the envelope's fold, the document's three text rules. At most
+  three, each at least a sixth of the cell long. No rivets, no shading, no
+  highlights, no texture.
+- STRAIGHT AND CHUNKY. Hard angles, flat ends. Curves only where the object is
+  genuinely round.
 - NO PERSPECTIVE. Flat and front-on, like a road sign.
 - CENTRED and upright. These sit in a row of six and a tilted one looks broken.
 
 NO DITHERING. NO CHECKERBOARD. NO STIPPLING. Every edge is a HARD STEP between
 solid white and solid black.
 
-THEY ALL WEIGH THE SAME. Same stroke weight, same solid fill. Nothing in the
-drawing says which is important.
+THEY ALL WEIGH THE SAME. Same stroke width, same amount of white on screen.
+Nothing in the drawing says which is important — the interface says that with
+brightness and size, not with the artwork.
 
 THEY MUST NOT BE CONFUSABLE. Put the 6 finished icons side by side and squint until
 they blur. If any two have a similar outline, redraw the weaker one.
@@ -186,40 +202,47 @@ SUBJECT: a single sheet of EXACTLY 5 ICONS in ONE row, left to right. Five cells
 
 The 5 cells, in this exact order:
 
-Cell 1 — A BUST. One solid CIRCLE in the upper half of the cell (the head, a third
-of the cell wide) with a wide solid TRAPEZOID below it (the shoulders), flat on the
-bottom edge, narrow at the top, spanning most of the cell's width. A gap of empty
-black separates head from shoulders. It is the only icon made of a round mass above
-a flat mass. Squint test: a person's head and shoulders.
+Cell 1 — A HELMET, outlined. A tall dome closed at the bottom into a chin guard,
+its outline running: round over the top, straight down both sides, then curving
+inward at the bottom to a narrow flat chin. Across the middle, ONE horizontal bar
+of SOLID WHITE — the eye slit, the only filled mass in this cell and the thing
+that turns the dome into a face. It is the only icon with a solid bar across its
+middle. Squint test: a dome with a stripe.
 
-Cell 2 — A BACKPACK. One solid rounded rectangle filling most of the cell, with a
-thin ARCH standing on top of it — a strap, an upside-down U a quarter of the cell
-tall, open at the bottom, its two feet planted on the top edge of the body. No
-buckles, no pockets. It is the only icon with a small handle standing on a big
-mass. Squint test: a bag with a handle.
+Cell 2 — A BAG, outlined. A rounded rectangle occupying the lower three quarters
+of the cell, with a thin ARCH standing on top of it — the handle, an upside-down U
+a quarter of the cell tall, open at the bottom, its two feet planted on the top
+edge of the body, with black visible through the arch. Inside the body, one short
+horizontal dash in the centre — the clasp. No buckles, no pockets, no straps. It
+is the only icon with a small open arch standing on a big shape. Squint test: a
+bag with a handle.
 
-Cell 3 — A HOUSE. One solid TRIANGLE roof across the top of the cell, wider than
-the body below it, sitting on a solid SQUARE that reaches the bottom edge. No door,
-no windows, no chimney. It is the only icon that is a triangle stacked on a square.
-Squint test: a house.
+Cell 3 — A CASTLE, outlined. A wide rectangular wall filling most of the cell,
+its TOP EDGE cut into THREE square merlons with two square gaps between them —
+battlements. Set into the bottom of the wall, centred, an ARCHED GATE drawn as an
+outline: two straight jambs rising to a round top, open to the bottom edge. No
+roof, no windows, no flag. It is the only icon whose top edge is a square-toothed
+line. Squint test: a wall with three teeth and a doorway.
 
-Cell 4 — A FLAG. One thick UPRIGHT POLE running the full height of the cell along
-the LEFT third, and a solid mass of cloth attached to it reaching RIGHT to the cell
-edge and occupying the upper half, its right side cut with one V notch. Everything
-hangs to one side. It is the only icon that is heavy on one side and empty on the
-other. Squint test: a flag on a pole.
+Cell 4 — A FLAG, outlined. One thick UPRIGHT POLE of SOLID WHITE running the full
+height of the cell along the LEFT sixth — the only solid mass in this cell. From
+the top of the pole, a banner drawn as an outline reaches RIGHT to the cell edge
+and occupies the upper third, its bottom edge stepping back to the pole. The lower
+two thirds of the cell hold nothing but the pole. It is the only icon that is
+heavy on one side and empty on the other. Squint test: a flag on a pole.
 
-Cell 5 — FOUR SQUARES. Four identical solid squares in a 2x2 arrangement filling
-the cell, each a two-fifths of the cell wide, with a gap of empty black between
-them a fifth of the cell wide. All four exactly the same. It is the only icon made
-of repeated identical parts. Squint test: four blocks.
+Cell 5 — FOUR SQUARES, outlined. Four identical small square frames in a 2x2
+arrangement filling the cell, each about two fifths of the cell wide, hollow, with
+a gap of empty black between them a fifth of the cell wide. All four exactly the
+same. It is the only icon made of repeated identical parts. Squint test: four
+little boxes.
 
 STYLE / ICON RULES / NO DITHERING / THEY ALL WEIGH THE SAME:
 (위 A장과 같습니다. 그대로 옮겨 붙이세요.)
 
-THEY MUST NOT BE CONFUSABLE — and they must also not resemble the six top-bar icons
-(three bars / star / envelope / gift box / check / gear), which appear on the same
-screen.
+THEY MUST NOT BE CONFUSABLE — and they must also not resemble the six top-bar
+icons (trophy / calendar / envelope / gift box / document / gear), which appear on
+the same screen.
 
 SHEET LAYOUT:
 - Arrange the cells in an exact uniform grid: 5 columns x 1 row.
@@ -273,9 +296,11 @@ sharp-bottomed stone.
 STYLE / ICON RULES / NO DITHERING:
 (위 A장과 같습니다.)
 
-Note on size: these two are shown LARGER than the other eleven (up to 32 pixels),
-so ONE interior gap each is allowed — the chest's seam and lock. Everything else
-still follows the icon rules.
+Note on size: these two are shown LARGER than the other eleven (the chest up to
+24 pixels, the gem at 10) and they sit next to NUMBERS rather than next to each
+other. So these two are the **exception to the outline rule** — draw them SOLID.
+A hollow gem beside a gold figure reads as an empty slot; a solid one reads as a
+coin. Everything else still follows the icon rules.
 
 SHEET LAYOUT:
 - Arrange the cells in an exact uniform grid: 2 columns x 1 row.
