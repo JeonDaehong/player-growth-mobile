@@ -40,7 +40,7 @@ import {
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
 import type { Mark } from '@/core/passives';
-import { BodyKind, Bound, BossBodyFx, Charmed, Shocked } from './BossFx';
+import { BodyKind, Bound, BossBodyFx, Charmed, Shocked, Veil } from './BossFx';
 import { BAD_C, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import {
@@ -211,7 +211,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
-  live, hitNo, hitKind, cc, bound, boundWeb, charmed, shock, turn,
+  live, hitNo, hitKind, cc, bound, boundWeb, charmed, warded, shock, turn,
   x, width, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -371,6 +371,14 @@ function FighterView({
   boundWeb?: boolean;
   /** 지금 돌아서 있나 (24 · 29판) — 몸이 붉게 일렁인다 */
   charmed?: boolean;
+  /**
+   * 지금 보호막을 두르고 있나 (`BattleState.ward` — 이졸데의 수호의 결의).
+   *
+   * 파티 칸에 하늘색 줄로도 뜨지만 (`PartyBar`), 저건 **얼마나 남았나**를
+   * 말한다. 무대에서 필요한 것은 **누가 덮여 있나**라서 몸에 한 겹 얹는다 —
+   * 넷 중 누가 막을 받았는지는 막대를 세 번 읽어야 알 수 있다.
+   */
+  warded?: boolean;
   /**
    * **감전됐나** (`core/status` 의 `st_shock`).
    *
@@ -1293,6 +1301,8 @@ function FighterView({
         맞을 때 몸이 붉게 깜빡이는 것은 이미 다른 뜻으로 쓰고 있다.
       */}
       {charmed && <Charmed size={size} />}
+      {/* 보호막이 서 있는 동안 몸을 옅게 감싼다 (`BossFx` 의 `Veil`) */}
+      {warded && <Veil size={size} />}
       {shock && <Shocked size={size} />}
 
       {/* 못 움직이는 동안 계속 붙어 있는 딱지 — `💫기절` */}
@@ -1481,6 +1491,7 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.bound === b.bound
   && a.boundWeb === b.boundWeb
   && a.charmed === b.charmed
+  && a.warded === b.warded
   && a.shock === b.shock
   && a.turn === b.turn
   && a.purify === b.purify

@@ -60,7 +60,7 @@ import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
   BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, Burst, Charging, Fuse, FxPlan,
-  Ping,
+  Ping, Veil,
   ShotKind, Tide, blowFx, castFx, useLeap,
 } from './BossFx';
 import {
@@ -2526,6 +2526,13 @@ export function BattleView({ top, corner }: Props = {}) {
                     boundWeb={battle.stage === 25}
                     /* 돌아서 있는 동안 몸이 붉게 일렁인다 (`BossFx` 의 `Charmed`) */
                     charmed={!!battle.charm?.who.includes(c.id)}
+                    /*
+                      보호막이 서 있는 동안 몸을 옅게 감싼다 (`BossFx` 의 `Veil`).
+
+                      남은 양이 0 이면 안 감싼다 — 시간이 남아도 다 깎였으면
+                      막은 없는 것이다 (`core/autoBattle` 의 `Ward`).
+                    */
+                    warded={(battle.ward?.[c.id]?.hp ?? 0) > 0}
                     shock={hasHex(hexOf(battle.hex, c.id), 'st_shock')}
                     /*
                       ── 돌아섰나 ──
@@ -2945,6 +2952,16 @@ export function BattleView({ top, corner }: Props = {}) {
                     {((f.gim?.shield ?? 0) > 0 || !!f.gim?.still) && (
                       <Charging size={foeSize} />
                     )}
+                    {/*
+                      ── 막이 서 있는 동안 몸을 옅게 감싼다 ──
+
+                      `Charging` 과 같이 뜬다. 저건 **모으는 중**이라 급하다는
+                      말이고 (붉은 고리가 조여든다), 이건 **덮여 있다**는
+                      상태다 — 22·29판은 둘 다 참이므로 둘 다 맞다.
+
+                      기 모으기(`still`)만 하고 막이 없는 국면에는 안 뜬다.
+                    */}
+                    {(f.gim?.shield ?? 0) > 0 && <Veil size={foeSize} />}
 
                     <FoeMarks status={fMarks} />
 

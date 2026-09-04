@@ -1663,6 +1663,85 @@ export function Ping({ size }: { size: number }) {
   );
 }
 
+/**
+ * ── 막 ── 보호막이 서 있는 **동안** 몸을 옅게 감싸는 것.
+ *
+ * 아군의 수호의 결의(`BattleState.ward`)와 우두머리의 장막(`FoeGim.shield`)이
+ * 같이 쓴다. 둘 다 "지금 이 몸은 한 겹 덮여 있다" 하나만 말하므로 같은
+ * 그림이 맞다.
+ *
+ * ## 감싸되, 덮지 않는다
+ *
+ * 몸보다 조금 큰 타원 하나다. 몸에 딱 붙이면 **윤곽선**이 되어 그 사람이
+ * 두꺼워진 것으로 보이고, 속을 채우면 그 아래 인물이 안 보인다 — 아군은
+ * 계속 싸우는 중이고 우두머리는 계속 때려야 하는 대상이다.
+ *
+ * 그래서 셋을 지킨다.
+ *
+ *   1. **크다** — 몸의 1.15배. 사이의 빈틈이 "이건 몸이 아니다" 를 말한다
+ *   2. **연하다** — 테두리 0.18~0.34, 속은 0.05 남짓. 인물이 그대로 비친다
+ *   3. **느리다** — 1.6초에 한 번 숨쉰다. 빠르면 깜빡이는 경고로 읽힌다
+ *
+ * ## 왜 하늘색인가
+ *
+ * 이 게임에서 하늘색은 **"저 겹은 체력이 아니다"** 하나만 말한다
+ * (`ui/theme` 의 `SHIELD_C` — 적 체력 막대 위의 막, 그리고 막에 튕기는
+ * `Ping`). 보호막이 정확히 그것이다.
+ *
+ * `Charging`(붉은 고리가 조여든다)과 뜻이 다르다. 저건 **모으는 중**이라
+ * 급하다는 말이고, 이건 **덮여 있다**는 상태다. 22·29판은 둘이 같이 뜬다 —
+ * 모으면서 덮여 있으므로 둘 다 맞다.
+ */
+export function Veil({ size }: { size: number }) {
+  const t = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(t, {
+        toValue: 1, duration: 800, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+      }),
+      Animated.timing(t, {
+        toValue: 0, duration: 800, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+      }),
+    ]));
+    loop.start();
+    return () => { loop.stop(); t.setValue(0); };
+  }, [t]);
+
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [0.18, 0.34],
+  }), [t]);
+  /* 아주 조금 부푼다 — 멈춰 있으면 배경에 그려 넣은 무늬로 보인다 */
+  const swell = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [1, 1.04],
+  }), [t]);
+
+  const w = size * 1.15;
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: size / 2 - w / 2,
+          top: size / 2 - w / 2,
+          width: w,
+          height: w,
+          /* 타원이다 — 네모난 막은 상자로 보인다 */
+          borderRadius: w / 2,
+          borderWidth: 1,
+          borderColor: SHIELD_C,
+          /*
+            속은 **거의 안 채운다.** 8% 만 얹어도 "안이 다르다" 가 읽히고,
+            그 위로 인물이 그대로 비친다.
+          */
+          backgroundColor: `${SHIELD_C}14`,
+          opacity: fade,
+          transform: [{ scale: swell }],
+        }}
+      />
+    </View>
+  );
+}
+
 export function Charging({ size }: { size: number }) {
   const t = useRef(new Animated.Value(0)).current;
   useEffect(() => {
