@@ -478,9 +478,15 @@ SHEET LAYOUT:
 
 리안느의 거대 화살이 날리는 것입니다 (`core/chars` 의 `SkillDef.proj`).
 
-**용처럼 생긴 화살이지, 날아가는 용이 아닙니다.** 몸이 곧고 뻣뻣해야 하고,
-날개도 다리도 없어야 합니다 — 화살촉 자리에 용 머리가 있고 화살깃 자리에
-꼬리 지느러미가 있는 **하나의 단단한 물건**입니다.
+**화살이 먼저고 용이 나중입니다.** 실루엣은 그냥 화살이어야 합니다 —
+왼쪽 끝에 뾰족한 촉, 가운데에 **가늘고 곧은** 대, 오른쪽 끝에 V 자 깃.
+용은 그 화살이 **무엇으로 만들어졌는가**일 뿐입니다: 촉이 용 머리 모양이고,
+대에 비늘 마디가 나 있고, 깃이 지느러미입니다.
+
+한 번 "용 모양" 을 앞세워 요청했다가 물렸습니다. 그러면 몸통이 굵어지고
+휘어져서 뱀이나 장어가 나옵니다 — 화살대는 **처음부터 끝까지 같은 굵기로
+가늘어야** 합니다. 눈을 가늘게 떴을 때 제일 먼저 떠오르는 낱말이 "용" 이면
+실패입니다.
 
 ### 셀 순서
 
@@ -506,9 +512,14 @@ SUBJECT: a single sheet of EXACTLY 3 CELLS in ONE row, left to right — the sam
 
 The 3 cells, in this exact order:
 
-Cell 1 — THE WHOLE ARROW, flying LEFT. One enormous arrow seen from the side, filling the full width of the cell. From the front: a DRAGON'S HEAD forms the arrowhead — a long narrow wedge-shaped skull with a closed jaw, one visible eye socket, and TWO horns swept back along the shaft. Behind the head the shaft is a segmented BODY of eight or nine plates, thickest just behind the skull and tapering toward the tail. Along its back runs a low ridge of short spines. At the tail, THREE stiff fins spread out as fletching. It reads as one solid object, not a creature in flight: the body is straight and rigid, never coiled or S-curved.
-Cell 2 — THE SAME ARROW, SPLITTING. Identical shape and position, but hard black cracks now run between the body plates — three or four of them, each a clean straight break across the shaft. The plates have shifted slightly out of line with each other. The head and the fins are still whole and still in place.
-Cell 3 — THE ARROW COMING APART. The shaft has broken into four or five separate chunks still roughly in line but with wide black gaps between them, drifting apart. The dragon head is still recognisable and still leads. The tail fins have separated and trail behind. Nothing has turned to dust or smoke — these are hard-edged broken pieces.
+Cell 1 — AN ARROW, flying LEFT, filling the full width of the cell. Read it as an arrow first and a dragon second — the outline is a classic arrow and the dragon is what that arrow is MADE OF.
+  THE ARROW SHAPE, in three parts along one straight horizontal line:
+  (a) HEAD — a sharp triangular arrowhead at the LEFT end, clearly wider than the shaft, coming to a single hard POINT. Its barbs sweep back. This wedge is also a dragon skull seen from the side: one eye socket sits in it and two small horns sweep back from its top, following the barbs rather than sticking out past them.
+  (b) SHAFT — one long STRAIGHT bar joining head to tail, taking about two thirds of the width and staying THIN AND EVEN the whole way: no more than a seventh of the cell height, the same thickness at both ends. It is segmented into eight or nine short plates with a hairline of black between them, and a row of very small spines runs along its top edge. The spines are tiny — they must not make the shaft look lumpy or thick.
+  (c) FLETCHING — at the RIGHT end, TWO stiff fins angled back and out, one up and one down, forming a shallow V. They are the widest thing after the head.
+  SQUINT TEST: an arrow. If the first word that comes to mind is "dragon", "snake", "eel" or "fish", the drawing has failed.
+Cell 2 — THE SAME ARROW, SPLITTING. Identical outline, identical position, identical thickness — nothing has moved. Hard black cracks now run across the shaft between the plates, three or four of them, each a clean straight break. The plates have shifted only very slightly out of line, so the arrow is still obviously one straight arrow. The head and the fins are untouched.
+Cell 3 — THE ARROW COMING APART. The shaft has broken into four or five separate chunks, still in a straight line along the same axis but with wide black gaps between them. The arrowhead still leads at the LEFT and is still whole. The two fins have separated and trail at the RIGHT. Nothing has turned to dust or smoke — these are hard-edged broken pieces, and the line they sit on is still perfectly straight.
 
 STYLE (strict, non-negotiable):
 - 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
@@ -522,11 +533,13 @@ STYLE (strict, non-negotiable):
 - No watermarks, no signatures, no sparkle marks in the corners.
 - No borders or frames around the whole image.
 
-IT FLIES TO THE LEFT AND IT IS DRAWN POINTING LEFT.
-- The game does not mirror this sheet. An arrow drawn pointing right will fly backwards on screen.
-- HORIZONTAL. The long axis runs across the cell, not diagonally. It is the widest, flattest thing in this project.
-- It is NOT alive. No wings, no legs, no coiling, no open roaring mouth. A dragon SHAPED like an arrow, not a dragon flying.
-- It must read at 60 pixels wide. That means: one long mass, a clearly different head end, a clearly different tail end, and nothing else.
+IT IS AN ARROW. THAT IS THE ONE THING THAT MUST SURVIVE.
+- The read is HEAD / THIN STRAIGHT SHAFT / FLETCHING, in that order along one horizontal line. The dragon is a texture on that shape, never a replacement for it.
+- THE SHAFT IS THIN AND EVEN. Do not swell it behind the head, do not taper it toward the tail, do not curve it. A shaft that bulges reads as a body and the arrow is gone.
+- IT FLIES TO THE LEFT AND IS DRAWN POINTING LEFT. The game does not mirror this sheet — an arrow drawn pointing right will fly backwards.
+- DEAD STRAIGHT AND HORIZONTAL. No S-curve, no coil, no diagonal, no undulation. The long axis runs flat across the cell.
+- IT IS NOT ALIVE. No wings, no legs, no open roaring jaw, no tongue, no whiskers. The jaw is CLOSED and the horns lie back flat.
+- It must read at 60 pixels wide: one sharp point at the left, one thin line, one V at the right. Everything else is decoration and must not thicken the silhouette.
 
 NO DITHERING. NO CHECKERBOARD. Every edge is a HARD STEP between solid white and solid black.
 

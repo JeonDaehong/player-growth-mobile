@@ -792,8 +792,15 @@ The last one. It is not one insect — it is what happens when the whole brood f
 THIS ONE IS A MONARCH, NOT A PILE. Every other creature in this game is drawn as a thing that hunts. This one is drawn as a thing that RULES, and the difference has to survive being shrunk to 84 pixels:
   - SILHOUETTE FIRST. Squinted at, it is one tall broad-shouldered TRIANGLE — wide braced base, mass carried high, narrowing to a crowned point. No other creature in the game has that outline. If the shape reads as a lumpy mound or a spiky ball, the drawing has failed no matter how good the detail is.
   - IT DOES NOT LUNGE. The pose is held, weight square, absolutely still. Everything else in the game leans and reaches; stillness is what makes this one read as above them.
-  - SYMMETRY IS THE AUTHORITY. Left and right match — deliberately, formally, like a heraldic device. Exactly ONE thing breaks it, named below, and that single break is what makes the symmetry look chosen rather than accidental.
+  - IT IS BUILT SYMMETRICALLY, BUT IT IS NOT DRAWN FACING YOU. The creature is made of matched pairs — the arms match, the wing cases match, the crown fans evenly. You are seeing that matched body FROM THE SIDE, so on the page the near half overlaps and hides part of the far half. Draw the symmetry as a fact about the animal, never as a pose toward the camera. Exactly ONE thing genuinely breaks the pairing, named below.
   - IT IS THE TALLEST THING IN THE GAME and it must be drawn to fill its cell top to bottom.
+  - NOT A FRONT VIEW. THIS IS THE EASIEST WAY TO GET THIS CREATURE WRONG. A formal, symmetrical, crowned thing invites a head-on heraldic portrait, and that is exactly what must not happen — it stands on the right side of a side-scrolling battlefield and has to face the party. The tells, in every cell:
+      · The head points RIGHT. You see the SIDE of the skull — one eye bank in view, the far one hidden or barely edged.
+      · The six legs are staggered in DEPTH, not spread in a row: the near three overlap and partly hide the far three.
+      · The two forelimbs are at DIFFERENT distances from the viewer — the near one crosses in front of the thorax, the far one is partly behind it. They are the same limb seen from two depths, not two limbs laid out flat.
+      · The mantle of wing cases is seen edge-on and swept back to the LEFT, trailing behind the body.
+      · The crown of spines fans across the head from the viewer, so the spines are seen at an angle and overlap each other.
+      If the creature is drawn chest-on with both arms mirrored to the left and right of the page, the cell is a failure no matter how good it looks.
 BODY: an upright TOWERING mass, TALLER THAN WIDE, built of segmented plates that do not all belong to the same animal. Read from the ground up: a broad braced base of SIX legs planted like the feet of a throne, none of them a matching pair — one is a beetle's thick hook, one a mantis blade, one a spider's long joint, one a centipede's row of small hooks fused into a single limb. Above them a barrel thorax of NINE overlapping plates, the lowest ones flaring outward into broad shoulder pauldrons so the mass sits high and wide.
 THE MANTLE — this is what makes it a monarch. Four long dead WING CASES hang from behind the shoulders, spread and held stiff, falling past the thorax like a heavy cloak. They are ragged along their lower edges and they do not move. They must be clearly BEHIND the arms and clearly NOT usable — this thing has not flown in a long time.
 THE CROWN: the head carries a fan of SEVEN hard spines rising from the skull plate, the middle one tallest, the outer ones stepping down evenly to each side. Straight tapered spikes, evenly spaced, unmistakably arranged rather than grown. This is the top of the silhouette and the single most important shape on the creature.
@@ -807,8 +814,8 @@ SCARS: three plates are punched through and healed from beneath.
 
 The 5 cells, in this exact order:
 
-Cell 1 — enthroned. Standing upright and braced, six mismatched legs planted square, both blades raised and held wide and LEVEL like a proclamation, the crowned head UP and facing out rather than lowered at prey, the mantle of dead wing cases spread behind. The empty shell stands behind that. It is the TALLEST silhouette in the game, it is perfectly symmetrical apart from the replaced blade, and it is completely still. Nothing about this pose is mid-motion.
-Cell 2 — the cut. ONE blade has come down and across in a single diagonal, the other blade still raised and untouched, the crowned head STILL FACING FORWARD — it does not turn to look at what it is cutting. The legs have not moved at all and the mantle has not swung: six planted points and one arm. It attacks without shifting its weight, and that is what makes it look final.
+Cell 1 — enthroned, SEEN FROM THE SIDE AND FACING RIGHT. Standing upright and braced, six mismatched legs planted and staggered in depth, both blades raised and held LEVEL like a proclamation — the near blade crossing in front of the thorax, the far one behind it. The crowned head is UP and turned to the RIGHT, looking out along the ground rather than down at prey; you see the side of the skull. The mantle of dead wing cases is swept back to the LEFT. The empty shell stands behind that. It is the TALLEST silhouette in the game and it is completely still. Nothing about this pose is mid-motion, and nothing about it is chest-on to the viewer.
+Cell 2 — the cut. ONE blade has come down and across in a single diagonal, the other blade still raised and untouched, the crowned head STILL LEVEL AND STILL POINTED RIGHT — it does not turn or dip to look at what it is cutting. The legs have not moved at all and the mantle has not swung: six planted points and one arm. It attacks without shifting its weight, and that is what makes it look final.
 Cell 3 — THE SHEDDING — this is the moment it makes the copy. The body has ARCHED backwards and the thorax has SPLIT OPEN down the middle seam, the nine plates peeling apart to both sides, and out of that split the new body is emerging — draw it as a SECOND, PALER outline rising up and forward out of the old one, head and one blade already clear, still joined at the waist. Both bodies are in this cell. The old shell that was standing behind has TOPPLED and lies across the base. It is the only cell containing two of the creature.
 Cell 4 — THE COLLAPSE WAVE — everyone at once. BOTH blades have been driven DOWN and INWARD to meet at a single point in front of the base, and the whole body has folded over that point — head down, thorax hunched, the six legs splayed out and skidding. From the meeting point, a broad flat RING of separate hard shards is thrown outward at ground level, strongest near the point and thinning outward, stopping well inside the cell. It is the LOWEST and WIDEST cell of the sheet: everything that was upright has come down.
 Cell 5 — struck. One blade is severed at the elbow and falling; three of the six mismatched legs have buckled and the tower has begun to lean. Four thorax plates are lifted off their neighbours and the absorbed parts — the comb hexagon, the eye-spot wing — are cracked through. The head is turned away and half the eyes are dulled.
@@ -2008,9 +2015,14 @@ SUBJECT: a single sheet of EXACTLY 3 CELLS in ONE row, left to right — the sam
 
 The 3 cells, in this exact order:
 
-Cell 1 — THE WHOLE ARROW, flying LEFT. One enormous arrow seen from the side, filling the full width of the cell. From the front: a DRAGON'S HEAD forms the arrowhead — a long narrow wedge-shaped skull with a closed jaw, one visible eye socket, and TWO horns swept back along the shaft. Behind the head the shaft is a segmented BODY of eight or nine plates, thickest just behind the skull and tapering toward the tail. Along its back runs a low ridge of short spines. At the tail, THREE stiff fins spread out as fletching. It reads as one solid object, not a creature in flight: the body is straight and rigid, never coiled or S-curved.
-Cell 2 — THE SAME ARROW, SPLITTING. Identical shape and position, but hard black cracks now run between the body plates — three or four of them, each a clean straight break across the shaft. The plates have shifted slightly out of line with each other. The head and the fins are still whole and still in place.
-Cell 3 — THE ARROW COMING APART. The shaft has broken into four or five separate chunks still roughly in line but with wide black gaps between them, drifting apart. The dragon head is still recognisable and still leads. The tail fins have separated and trail behind. Nothing has turned to dust or smoke — these are hard-edged broken pieces.
+Cell 1 — AN ARROW, flying LEFT, filling the full width of the cell. Read it as an arrow first and a dragon second — the outline is a classic arrow and the dragon is what that arrow is MADE OF.
+  THE ARROW SHAPE, in three parts along one straight horizontal line:
+  (a) HEAD — a sharp triangular arrowhead at the LEFT end, clearly wider than the shaft, coming to a single hard POINT. Its barbs sweep back. This wedge is also a dragon skull seen from the side: one eye socket sits in it and two small horns sweep back from its top, following the barbs rather than sticking out past them.
+  (b) SHAFT — one long STRAIGHT bar joining head to tail, taking about two thirds of the width and staying THIN AND EVEN the whole way: no more than a seventh of the cell height, the same thickness at both ends. It is segmented into eight or nine short plates with a hairline of black between them, and a row of very small spines runs along its top edge. The spines are tiny — they must not make the shaft look lumpy or thick.
+  (c) FLETCHING — at the RIGHT end, TWO stiff fins angled back and out, one up and one down, forming a shallow V. They are the widest thing after the head.
+  SQUINT TEST: an arrow. If the first word that comes to mind is "dragon", "snake", "eel" or "fish", the drawing has failed.
+Cell 2 — THE SAME ARROW, SPLITTING. Identical outline, identical position, identical thickness — nothing has moved. Hard black cracks now run across the shaft between the plates, three or four of them, each a clean straight break. The plates have shifted only very slightly out of line, so the arrow is still obviously one straight arrow. The head and the fins are untouched.
+Cell 3 — THE ARROW COMING APART. The shaft has broken into four or five separate chunks, still in a straight line along the same axis but with wide black gaps between them. The arrowhead still leads at the LEFT and is still whole. The two fins have separated and trail at the RIGHT. Nothing has turned to dust or smoke — these are hard-edged broken pieces, and the line they sit on is still perfectly straight.
 
 STYLE (strict, non-negotiable):
 - 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
@@ -2024,11 +2036,13 @@ STYLE (strict, non-negotiable):
 - No watermarks, no signatures, no sparkle marks in the corners.
 - No borders or frames around the whole image.
 
-IT FLIES TO THE LEFT AND IT IS DRAWN POINTING LEFT.
-- The game does not mirror this sheet. An arrow drawn pointing right will fly backwards on screen.
-- HORIZONTAL. The long axis runs across the cell, not diagonally. It is the widest, flattest thing in this project.
-- It is NOT alive. No wings, no legs, no coiling, no open roaring mouth. A dragon SHAPED like an arrow, not a dragon flying.
-- It must read at 60 pixels wide. That means: one long mass, a clearly different head end, a clearly different tail end, and nothing else.
+IT IS AN ARROW. THAT IS THE ONE THING THAT MUST SURVIVE.
+- The read is HEAD / THIN STRAIGHT SHAFT / FLETCHING, in that order along one horizontal line. The dragon is a texture on that shape, never a replacement for it.
+- THE SHAFT IS THIN AND EVEN. Do not swell it behind the head, do not taper it toward the tail, do not curve it. A shaft that bulges reads as a body and the arrow is gone.
+- IT FLIES TO THE LEFT AND IS DRAWN POINTING LEFT. The game does not mirror this sheet — an arrow drawn pointing right will fly backwards.
+- DEAD STRAIGHT AND HORIZONTAL. No S-curve, no coil, no diagonal, no undulation. The long axis runs flat across the cell.
+- IT IS NOT ALIVE. No wings, no legs, no open roaring jaw, no tongue, no whiskers. The jaw is CLOSED and the horns lie back flat.
+- It must read at 60 pixels wide: one sharp point at the left, one thin line, one V at the right. Everything else is decoration and must not thicken the silhouette.
 
 NO DITHERING. NO CHECKERBOARD. Every edge is a HARD STEP between solid white and solid black.
 

@@ -2434,12 +2434,34 @@ BOSSES += [
         + '  - IT DOES NOT LUNGE. The pose is held, weight square, absolutely '
         'still. Everything else in the game leans and reaches; stillness is what '
         'makes this one read as above them.' + NL
-        + '  - SYMMETRY IS THE AUTHORITY. Left and right match — deliberately, '
-        'formally, like a heraldic device. Exactly ONE thing breaks it, named '
-        'below, and that single break is what makes the symmetry look chosen '
-        'rather than accidental.' + NL
+        + '  - IT IS BUILT SYMMETRICALLY, BUT IT IS NOT DRAWN FACING YOU. The '
+        'creature is made of matched pairs — the arms match, the wing cases match, '
+        'the crown fans evenly. You are seeing that matched body FROM THE SIDE, so '
+        'on the page the near half overlaps and hides part of the far half. Draw '
+        'the symmetry as a fact about the animal, never as a pose toward the '
+        'camera. Exactly ONE thing genuinely breaks the pairing, named below.' + NL
         + '  - IT IS THE TALLEST THING IN THE GAME and it must be drawn to fill '
         'its cell top to bottom.' + NL
+        + '  - NOT A FRONT VIEW. THIS IS THE EASIEST WAY TO GET THIS CREATURE '
+        'WRONG. A formal, symmetrical, crowned thing invites a head-on heraldic '
+        'portrait, and that is exactly what must not happen — it stands on the '
+        'right side of a side-scrolling battlefield and has to face the party. '
+        'The tells, in every cell:' + NL
+        + '      · The head points RIGHT. You see the SIDE of the skull — one eye '
+        'bank in view, the far one hidden or barely edged.' + NL
+        + '      · The six legs are staggered in DEPTH, not spread in a row: the '
+        'near three overlap and partly hide the far three.' + NL
+        + '      · The two forelimbs are at DIFFERENT distances from the viewer — '
+        'the near one crosses in front of the thorax, the far one is partly '
+        'behind it. They are the same limb seen from two depths, not two limbs '
+        'laid out flat.' + NL
+        + '      · The mantle of wing cases is seen edge-on and swept back to the '
+        'LEFT, trailing behind the body.' + NL
+        + '      · The crown of spines fans across the head from the viewer, so '
+        'the spines are seen at an angle and overlap each other.' + NL
+        + '      If the creature is drawn chest-on with both arms mirrored to the '
+        'left and right of the page, the cell is a failure no matter how good '
+        'it looks.' + NL
         + 'BODY: an upright TOWERING mass, TALLER THAN WIDE, built of segmented '
         'plates that do not all belong to the same animal. Read from the ground '
         'up: a broad braced base of SIX legs planted like the feet of a throne, '
@@ -2476,19 +2498,21 @@ BOSSES += [
         'left in. It is attached at nothing. It is standing there because it never '
         'fell over.' + NL
         + 'SCARS: three plates are punched through and healed from beneath.',
-        'enthroned. Standing upright and braced, six mismatched legs planted '
-        'square, both blades raised and held wide and LEVEL like a proclamation, '
-        'the crowned head UP and facing out rather than lowered at prey, the '
-        'mantle of dead wing cases spread behind. The empty shell stands behind '
-        'that. It is the TALLEST silhouette in the game, it is perfectly '
-        'symmetrical apart from the replaced blade, and it is completely still. '
-        'Nothing about this pose is mid-motion.',
+        'enthroned, SEEN FROM THE SIDE AND FACING RIGHT. Standing upright and '
+        'braced, six mismatched legs planted and staggered in depth, both blades '
+        'raised and held LEVEL like a proclamation — the near blade crossing in '
+        'front of the thorax, the far one behind it. The crowned head is UP and '
+        'turned to the RIGHT, looking out along the ground rather than down at '
+        'prey; you see the side of the skull. The mantle of dead wing cases is '
+        'swept back to the LEFT. The empty shell stands behind that. It is the '
+        'TALLEST silhouette in the game and it is completely still. Nothing about '
+        'this pose is mid-motion, and nothing about it is chest-on to the viewer.',
         'the cut. ONE blade has come down and across in a single diagonal, the '
-        'other blade still raised and untouched, the crowned head STILL FACING '
-        'FORWARD — it does not turn to look at what it is cutting. The legs have '
-        'not moved at all and the mantle has not swung: six planted points and '
-        'one arm. It attacks without shifting its weight, and that is what makes '
-        'it look final.',
+        'other blade still raised and untouched, the crowned head STILL LEVEL AND '
+        'STILL POINTED RIGHT — it does not turn or dip to look at what it is '
+        'cutting. The legs have not moved at all and the mantle has not swung: '
+        'six planted points and one arm. It attacks without shifting its weight, '
+        'and that is what makes it look final.',
         [('skill1', '군체의 대염쇄',
           '체력 50% 이하가 되면 허물을 벗고 본체와 같은 능력치의 환영 분신을 '
           '하나 만든다 (분신은 체력 25% · 스킬 2를 같이 쓴다)',
