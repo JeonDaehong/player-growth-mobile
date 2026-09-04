@@ -34,7 +34,17 @@ import { hpOf, livingMembers, seatRows } from '@/core/party';
 export function CharPopup({
   slot, onClose,
 }: { slot: number | null; onClose: () => void }) {
-  const party = useGame((s) => s.party);
+  /*
+    ── 짜 둔 편성을 고친다 ──
+
+    자리를 바꾸는 것은 **다음 판부터** 들어가므로 (`state/types` 의
+    `pendingParty`), 이 창이 다루는 것은 짜 둔 쪽이다. 들어간 쪽을 보여
+    주면 방금 넣은 사람이 칸에서 사라진다.
+
+    바꾼 것이 없으면 둘이 같은 배열이라 (`?? s.party`) 평소에는 아무 차이가
+    없다.
+  */
+  const party = useGame((s) => s.pendingParty ?? s.party);
   const raw = useGame((s) => s.chars);
   const form = useGame((s) => s.formation);
   /*

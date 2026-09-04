@@ -7,8 +7,8 @@
  *     ├ 위 띠    로고 · 닉네임 · 재화, 그리고 문 여섯 (`TopBar`)
  *     ├ 판 줄    몇 판 · 어디 · 최고 기록
  *     └ 채팅     왼쪽 아래에 작게 (`Ticker`)
- *   보물 상자  쌓이는 재화 게이지 (`RewardBar`) ── 여기부터 스크롤
- *   대형       앞뒤 배치 (`FormationPicker`)
+ *   보물 상자  쌓이는 재화 게이지 (`RewardBar`) — **붙박이**
+ *   ──────── 여기부터 스크롤 ────────
  *   파티       넷의 상태 (`PartyBar`)
  *   아래 띠    다섯 칸 (`BottomNav`) — 붙박이
  *
@@ -18,7 +18,9 @@
  * 파티를 보려고 내리는 순간 싸움이 화면 밖으로 나간다. 자동 전투 게임에서
  * 그건 **게임이 안 보이는 것**이다.
  *
- * 그래서 붙박이가 셋이다: 무대(위) · 아래 띠(아래) · 그 사이의 스크롤.
+ * 그래서 붙박이가 넷이다: 무대 · 상자 줄 · 아래 띠 · 그 사이의 스크롤.
+ * 상자 줄이 붙박이인 이유는 아래 그 자리에 적어 두었다 — 저것이 가득 차는
+ * 것이 이 게임에서 화면을 다시 보는 유일한 이유다.
  * 위 띠와 채팅은 스크롤 밖에 따로 두지 않고 **무대 위에 얹었다** — 그래야
  * 배경 그림이 그 뒤로 비치고, 화면이 "게임 창 + 정보 창"으로 안 갈린다.
  *
@@ -48,7 +50,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGame } from '@/state/store';
 import { T } from '@/ui/atoms';
 import { TICK_MS } from '@/core/autoBattle';
-import { C, LINE, SP } from '@/ui/theme';
+import { C, SP } from '@/ui/theme';
 import { BattleView } from './home/BattleView';
 import { PartyBar } from './home/PartyBar';
 import { CharPopup } from './home/CharPopup';
@@ -56,7 +58,6 @@ import { RewardBar } from './home/RewardBar';
 import { Ticker } from './home/Ticker';
 import { TopBar } from './home/TopBar';
 import { BottomNav } from './home/BottomNav';
-import { FormationPicker } from './home/FormationPicker';
 
 export default function HomeScreen() {
   const tickOnce = useGame((s) => s.battleTickOnce);
@@ -84,6 +85,19 @@ export default function HomeScreen() {
       {/* ── 붙박이 무대 ── 위 띠와 채팅을 안에 얹는다 */}
       <BattleView top={<TopBar />} corner={<Ticker />} />
 
+      {/*
+        ── 상자 줄도 붙박이다 ──
+
+        스크롤 안에 있었다. 그러면 파티를 보려고 내리는 순간 게이지가 위로
+        사라지는데, 이 게임에서 **화면을 다시 보는 유일한 이유**가 저것이
+        가득 차는 것이다 (`core/idle`). 가득 찬 줄 모르면 안 누르고, 안
+        누르면 더 안 찬다.
+
+        무대 바로 아래에 붙여 둔다 — 무대와 한 덩어리로 읽히고, 굴려도
+        따라가지 않는다.
+      */}
+      <RewardBar />
+
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: SP.md }}
@@ -94,27 +108,18 @@ export default function HomeScreen() {
           하다 — 채팅이 무대 안으로 들어가면서 이 자리가 비었고, 게이지는
           "무대에서 눈을 떼면 제일 먼저 보이는 것" 이어야 하므로 여기가 맞다.
         */}
-        <RewardBar />
-
         {/*
-          대형은 파티 바로 위다 — "누가 서나" 와 "어떻게 서나" 는 같은 종류의
-          결정이라 붙어 있어야 한다 (`FormationPicker`).
+          ── 대형은 여기 없다 ──
 
-          둘 다 **띠**다. 좌우 여백은 제 안에서 주고, 사이는 가는 가로줄
-          하나로만 갈린다 — 카드로 띄우면 화면이 다시 조각난다.
+          영웅 창으로 갔다 (`home/HeroPopup`). 여기는 **지금 벌어지는 일을
+          보는 자리**인데 대형은 보는 것이 아니라 정하는 것이라, 볼 때마다
+          눈에 걸리고 정할 때는 무대 아래로 굴려 내려가야 했다.
+
+          파티 칸은 남는다. 저건 편성표가 아니라 **넷의 지금 상태**다 —
+          남은 체력 · 걸린 것 · 스킬이 몇 칸 찼나. 칸을 누르면 그때 편성
+          창이 열린다 (`CharPopup`).
         */}
         <View style={{ paddingHorizontal: SP.sm, paddingVertical: SP.sm }}>
-          <FormationPicker />
-        </View>
-
-        <View
-          style={{
-            paddingHorizontal: SP.sm,
-            paddingVertical: SP.sm,
-            borderTopWidth: 1,
-            borderTopColor: LINE.low,
-          }}
-        >
           <PartyBar onPick={setSlot} />
         </View>
 

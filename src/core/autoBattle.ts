@@ -1168,6 +1168,8 @@ interface GimCtx {
    * 판마다 다른 연출을 들고 다녀야 한다.
    */
   burst: number;
+  /** 이번 틱에 **갈라진** 횟수 — 허물을 벗거나 몸이 쪼개진 것 (`fork`) */
+  rip: number;
   rand: () => number;
 }
 
@@ -1317,6 +1319,8 @@ export function onFoeDown(
     foes: [...rest], seq,
   } as GimCtx;
   const born = forkInto(cx, dead, foeAt(st, dead), gm);
+  /* 죽으면서 갈라지는 것도 갈라지는 것이다 (21 · 26판) */
+  cx.rip += 1;
   return { born, seq: cx.seq };
 }
 
@@ -1468,6 +1472,8 @@ function runGim(cx: GimCtx): void {
 
         if (gm.kind === 'fork') {
           born = forkInto(cx, f, kind, gm);
+          /* 갈라지는 그 순간 몸에서 파동이 한 번 터진다 (`BattleState.rip`) */
+          cx.rip += 1;
           if (!gm.keep) dead = true;
         } else if (gm.kind === 'cocoon') {
           gim = { ...gim, form: gm.pose, formHit: gm.hits, formMs: gm.cap, still: true };
@@ -2908,6 +2914,23 @@ export interface BattleState {
    */
   burst: number;
   /**
+   * **갈라진 횟수** — 계속 올라가기만 한다.
+   *
+   * 허물을 벗어 분신을 만들거나(30판), 몸이 쪼개지거나(21판), 애벌레 넷으로
+   * 흩어지는(26판) 그 순간이다. 화면이 이 번호가 오르면 갈라진 몸에서
+   * 파동을 한 번 터뜨린다 (`BattleView` 의 `Burst`).
+   *
+   * ## 왜 `burst` 를 안 쓰나
+   *
+   * 저건 **아군 전원이 실제로 맞는** 일이다 (막이 안 깨졌거나 자폭했을 때).
+   * 그래서 화면이 저 번호를 보고 살아 있는 사람 몸마다 폭발을 하나씩
+   * 터뜨리고 무대를 크게 흔든다.
+   *
+   * 갈라지는 것은 아무도 안 아프다. 같은 번호를 쓰면 분신이 나올 때마다
+   * 파티가 얻어맞는 것처럼 보인다.
+   */
+  rip: number;
+  /**
    * 아군끼리 싸우는 중인가 (`Charm`). 아니면 `null`.
    *
    * 24판 정신 착란과 29판 포자 감염이 건다. 걸린 사람은 평타로 **다른
@@ -3116,7 +3139,7 @@ export const newBattle = (): BattleState => {
     foes: first.foes, seq: first.seq,
     slain: 0, target: 0, hp: {}, down: 0, spawnIn: 0,
     openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
-    called: false, pat: null, patId: null, patSeq: 0, charm: null, burst: 0,
+    called: false, pat: null, patId: null, patSeq: 0, charm: null, burst: 0, rip: 0,
     hex: {}, cut: {}, bossMs: 0, swingSeq: 0,
     fade: {}, taunt: null, foeHex: {}, foeHeal: { seq: 0, amt: 0 },
     struck: [], costSeq: 0,
@@ -4025,6 +4048,8 @@ export function battleTick(
   */
   let charm = st.charm ?? null;
   let burst = Number.isFinite(st.burst) ? st.burst : 0;
+  /* 갈라진 횟수 — 화면이 이 번호로 파동을 터뜨린다 (`BattleState.rip`) */
+  let rip = Number.isFinite(st.rip) ? st.rip : 0;
   if (isBoss) {
     const cx: GimCtx = {
       stage: st.stage,
@@ -4036,6 +4061,7 @@ export function battleTick(
       line,
       bossMs,
       charm,
+      rip: st.rip ?? 0,
       foeHeal,
       taken,
       hurtId,
@@ -4051,6 +4077,7 @@ export function battleTick(
     hurtId = cx.hurtId;
     fell = cx.fell;
     burst = cx.burst;
+    rip = cx.rip;
   }
   /*
     돌아선 아군도 시간이 지나면 제정신으로 돌아온다.
@@ -4388,7 +4415,7 @@ export function battleTick(
       pat: pattern ?? st.pat ?? null,
       patId: patId ?? st.patId ?? null,
       patSeq: pattern ? (Number.isFinite(st.patSeq) ? st.patSeq : 0) + 1 : (st.patSeq ?? 0),
-      hex, cut, bossMs, swingSeq, charm, burst,
+      hex, cut, bossMs, swingSeq, charm, burst, rip,
       fade, taunt, foeHex, foeHeal,
       /*
         맞은 사람 명단은 **특수기가 나간 틱에만** 채운다. 안 나간 틱에 지난

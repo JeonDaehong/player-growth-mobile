@@ -300,6 +300,8 @@ export function migrateState(persisted: unknown): GameState {
     patId: null,
     charm: null,
     burst: 0,
+    /* 나중에 생긴 칸 — 갈라진 횟수 (`BattleState.rip`) */
+    rip: 0,
     patSeq: 0,
     /*
       걸려 있던 것도 안 믿는다.
@@ -351,6 +353,18 @@ export function migrateState(persisted: unknown): GameState {
     elixir: Math.max(0, Math.floor(num(p.elixir, 0))),
     /* 대형이 없던 저장본은 기본 대형으로 — 모르는 이름이 들어와도 마찬가지다 */
     formation: isFormationId(p.formation) ? p.formation : DEFAULT_FORMATION,
+    /*
+      짜 두었지만 아직 안 들어간 편성 (`pendingParty`).
+
+      **살려 둔다.** 앱을 껐다 켜면 사라지게 두면, 편성을 짜 놓고 판이
+      끝나기를 기다리는 동안 켜 둘 수가 없다 — 미루는 것이 규칙인데 미룬
+      것이 안 남으면 규칙이 벌칙이 된다.
+
+      `party` 와 같은 문으로 다듬는다 (`cleanParty`) — 그 사이에 없어진
+      캐릭터가 편성표에 남아 있으면 안 된다.
+    */
+    pendingParty: p.pendingParty == null ? null : cleanParty(p.pendingParty, Object.keys(chars) as CharId[]),
+    pendingFormation: isFormationId(p.pendingFormation) ? p.pendingFormation : null,
     /*
       게이지 시각이 없는 저장본(이 칸이 생기기 전)은 **지금부터** 센다.
       0 으로 두면 1970년부터 흐른 것이 되어 켜자마자 가득 차 있다.

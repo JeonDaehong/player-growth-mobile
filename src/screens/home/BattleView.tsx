@@ -1233,6 +1233,40 @@ export function BattleView({ top, corner }: Props = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battle.burst, shake]);
 
+  /*
+    ── 갈라졌다 ── 허물을 벗거나 몸이 쪼개진 그 순간 (`BattleState.rip`).
+
+    21판이 머리와 꼬리로 갈리고, 26판이 애벌레 넷으로 흩어지고, 30판이
+    허물을 벗어 분신을 만든다. 여태 **아무 소리 없이** 한 마리가 둘이 되어
+    있었다 — "분열 할 때 펑! 하고 터지면서 분열되게 해줘. 지금 뭔가 밋밋해."
+
+    ## `burst` 와 왜 따로인가
+
+    저 번호는 **아군 전원이 실제로 맞는** 일이다. 그래서 화면이 살아 있는
+    사람 몸마다 폭발을 하나씩 얹고 무대를 1.6 으로 흔든다.
+
+    갈라지는 것은 아무도 안 아프다. 같은 번호를 쓰면 분신이 나올 때마다
+    파티가 얻어맞는 것처럼 보이고, 26판은 갈라진 직후에 자폭까지 하므로
+    두 연출이 서로를 덮는다.
+
+    자리도 따로 담는다 (`ripAt`). 하나에 담으면 몇 초 사이에 둘 다 일어나는
+    26판에서 나중 것이 앞엣것의 자리를 지운다.
+  */
+  const [ripAt, setRipAt] = useState({ x: 0, y: 0 });
+  const lastRip = useRef(battle.rip ?? 0);
+  useEffect(() => {
+    const at = battle.rip ?? 0;
+    if (at <= lastRip.current) { lastRip.current = at; return; }
+    lastRip.current = at;
+    /* 갈라진 몸 한가운데 — 파동이 여기서 나간다 */
+    const sp = spotOf(0);
+    setRipAt({ x: sp.x + sp.size / 2, y: sp.y + sp.size / 2 });
+    /* 작게 흔든다. 크게 터지는 것(1.6)과 같은 세기면 맞은 줄 안다 */
+    shake.fire(0.9);
+    /* `spotOf` 는 딸림값에 안 넣는다 — 위 `burst` 갈래와 같은 이유다 */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [battle.rip, shake]);
+
   const [heals, setHeals] = useState<{ key: number; amt: number }[]>([]);
   const lastHeal = useRef(battle.foeHeal?.seq ?? 0);
   useEffect(() => {
@@ -3214,6 +3248,23 @@ export function BattleView({ top, corner }: Props = {}) {
           넷은 전부 저쪽 편에서 벌어지는 일이라 한가운데서 퍼지면 원인이
           화면에서 사라진다 ("이상하게 화면 한 가운데에서 파동이 퍼지네").
         */}
+        {/*
+          ── 갈라졌다 ── 21 · 26 · 30판.
+
+          몸이 쪼개지는 그 순간에 갈라진 자리에서 파동이 한 번 나간다.
+          `burst` 와 **다른 번호를 쓴다** — 저건 아군이 실제로 맞는 일이라
+          몸마다 폭발이 하나씩 더 붙고 무대가 크게 흔들린다.
+        */}
+        {!down && (battle.rip ?? 0) > 0 && stageW > 0 && (
+          <Burst
+            key={`rip-${battle.rip}`}
+            w={stageW}
+            h={STAGE_H}
+            cx={ripAt.x}
+            cy={ripAt.y}
+          />
+        )}
+
         {!down && (battle.burst ?? 0) > 0 && stageW > 0 && (
           <Burst
             key={battle.burst}

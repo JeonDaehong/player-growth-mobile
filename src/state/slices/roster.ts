@@ -30,11 +30,12 @@ export interface RosterActions {
   /**
    * 대형을 바꾼다 (`core/party` 의 `FORMATIONS`).
    *
-   * 판 중간에 바꿔도 된다. 다음 틱부터 맞을 확률이 달라지고, 화면에서는
-   * 그 자리에서 줄이 다시 선다 — 되돌릴 수 없는 선택이 아니라 **지금 이
-   * 판을 어떻게 버틸까**의 선택이라 그게 맞다.
+   * **다음 판부터 들어간다** (`pendingFormation`). 판 중간에 바뀌던 것을
+   * 미루기로 했다 — 이유는 `state/types` 의 `pendingParty` 에 적어 두었다.
    */
   setFormation: (f: FormationId) => void;
+  /** 짜 둔 편성을 버린다 — 아직 안 들어간 것만 사라진다 */
+  clearPending: () => void;
   /** 고유장비를 한 번 두들긴다 */
   enhanceGear: (id: CharId) => 'up' | 'fail' | 'max' | 'poor' | 'none';
   /**
@@ -135,6 +136,32 @@ export interface RosterActions {
 const seated = (st: { party: Party; chars: Record<string, OwnedChar>; formation: FormationId }) =>
   seatRows(st.party, st.chars, st.formation);
 
+/**
+ * 짜 둔 편성을 **실제로 들여보낸다** — 판이 바뀌는 그 순간에 한 번.
+ *
+ * 부르는 자리가 둘이다: 판이 저절로 넘어갈 때(`battleTickOnce`)와 사람이
+ * 골라 갈 때(`goStage`). 둘 다 "판 번호가 바뀌었다" 가 방아쇠이므로, 그
+ * 판단은 부르는 쪽이 하고 여기서는 옮기기만 한다.
+ *
+ * 파티는 한 번 더 다듬는다 (`cleanParty`) — 짜 두고 판이 끝나기를 기다리는
+ * 동안 그 캐릭터가 없어졌을 수 있다.
+ *
+ * 예약이 없으면 아무 일도 안 한다. `set` 조차 안 부른다 — 판이 넘어갈
+ * 때마다 상태를 건드리면 저장이 그만큼 더 돈다.
+ */
+const commitPending = (set: SliceSet, get: SliceGet) => {
+  const st = get();
+  if (st.pendingParty == null && st.pendingFormation == null) return;
+  set({
+    ...(st.pendingParty == null ? null : {
+      party: cleanParty(st.pendingParty, Object.keys(st.chars) as CharId[]),
+    }),
+    ...(st.pendingFormation == null ? null : { formation: st.pendingFormation }),
+    pendingParty: null,
+    pendingFormation: null,
+  });
+};
+
 export const createRosterSlice = (
   set: SliceSet,
   get: SliceGet,
@@ -160,13 +187,29 @@ export const createRosterSlice = (
     return true;
   },
 
-  setFormation: (f) => set({ formation: f }),
+  /*
+    ── 편성은 **예약**이다 ──
+
+    바꾼 것이 그 자리에서 안 들어간다. `pendingParty`·`pendingFormation` 에
+    적어 두었다가 다음 판이 열릴 때 옮겨 간다 (`commitPending`).
+
+    이유는 `state/types` 의 `pendingParty` 에 적어 두었다 — 요약하면, 판
+    중간에 바뀌면 "위험할 때마다 대형을 바꾸는 것" 이 늘 최선이 되어
+    자동 전투인데 손이 제일 바쁜 순간이 전투 중이 된다.
+
+    **같은 값을 골라도 예약으로 남긴다.** 지우면 "안 바꿈" 과 "원래대로
+    되돌림" 이 구분이 안 되는데, 뒤엣것은 사람이 방금 한 일이다.
+  */
+  setFormation: (f) => set({ pendingFormation: f }),
+
+  clearPending: () => set({ pendingParty: null, pendingFormation: null }),
 
   setPartySlot: (slot, id) => {
     if (slot < 0 || slot >= PARTY_SIZE) return;
     const st = get();
     if (id !== null && !st.chars[id]) return;
-    const party = [...st.party];
+    /* 이미 짜 둔 것이 있으면 그 위에, 없으면 지금 서 있는 넷에서 시작한다 */
+    const party = [...(st.pendingParty ?? st.party)];
     /*
       이미 다른 자리에 서 있으면 **자리를 맞바꾼다.**
 
@@ -179,7 +222,7 @@ export const createRosterSlice = (
       if (at >= 0) party[at] = party[slot];
     }
     party[slot] = id;
-    set({ party });
+    set({ pendingParty: party });
   },
 
   enhanceGear: (id) => {
@@ -406,6 +449,8 @@ export const createRosterSlice = (
     const next = leaveFor(st.battle, stage);
     if (next === st.battle) return false;
     set({ battle: next });
+    /* 판을 옮겼으니 짜 둔 편성이 여기서 들어간다 (`commitPending`) */
+    commitPending(set, get);
     return true;
   },
 
@@ -460,6 +505,17 @@ export const createRosterSlice = (
       틀리는 것(안 바뀐 걸로 보고 버리는 것)이 방금 그 버그였다.
     */
     if (JSON.stringify(battle) === JSON.stringify(st.battle)) return;
+
+    /*
+      ── 판이 넘어갔으면 짜 둔 편성이 들어간다 ──
+
+      `battle.stage` 가 바뀌는 순간이 유일한 방아쇠다. 우두머리를 잡아
+      저절로 넘어가는 것도, 전멸해서 되돌아가는 것도 여기를 지난다.
+
+      `set({ battle })` **앞에** 부른다. 뒤에 부르면 새 판의 첫 틱이 옛
+      파티로 한 번 돌고, 그 한 틱에 맞은 사람은 편성표에 없는 사람이다.
+    */
+    if (battle.stage !== st.battle.stage) commitPending(set, get);
 
     if (!ev.killed) {
       set({ battle });

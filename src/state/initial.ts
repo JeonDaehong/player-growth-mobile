@@ -110,6 +110,8 @@ export const initial = (): GameState => {
     ],
     /* 넷이 가운데로 모이는 대형 — 셋 중 제일 평평하다 (`core/party` 의 `FORMATIONS`) */
     formation: DEFAULT_FORMATION,
+    pendingParty: null,
+    pendingFormation: null,
     battle: newBattle(),
     /* 아무도 안 건드린 상태 — 읽을 때 기본값으로 떨어진다 (`cleanseOptOf`) */
     skillOpts: {},

@@ -99,7 +99,17 @@ function Grid({ back, front, inv }: {
 }
 
 export function FormationPicker() {
-  const form = useGame((s) => s.formation);
+  /*
+    ── 고른 것과 싸우는 것이 다를 수 있다 ──
+
+    대형은 **다음 판부터** 들어간다 (`state/types` 의 `pendingFormation`).
+    여기서는 짜 둔 쪽을 고른 것으로 그린다 — 들어간 쪽을 그리면 방금 누른
+    것이 화면에서 튕겨 나가서 안 눌린 것으로 보인다.
+
+    아래에 지금 싸우는 대형을 따로 한 줄 적는다. 둘이 다를 때만 뜬다.
+  */
+  const form = useGame((s) => s.pendingFormation ?? s.formation);
+  const live = useGame((s) => s.formation);
   const setFormation = useGame((s) => s.setFormation);
 
   return (
@@ -157,6 +167,12 @@ export function FormationPicker() {
         세 칸 아래 한 줄로 둔다 — 칸마다 적으면 세 번 같은 말이 되고, 이건
         대형에 따라 안 바뀌는 규칙이다.
       */}
+      {form !== live && (
+        <T size={FS.tiny} dim="dim">
+          {`지금 판은 ${live} 로 싸우는 중입니다 — 다음 판부터 ${form} 이 들어갑니다`}
+        </T>
+      )}
+
       <Row gap={SP.xs}>
         <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
           <View style={{ width: 3, height: 3, borderRadius: R.round, backgroundColor: WHITE }} />

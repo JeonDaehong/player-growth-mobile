@@ -127,6 +127,27 @@ export interface GameState {
   */
   /** 가지고 있는 캐릭터. 키는 CharId */
   chars: Record<string, OwnedChar>;
+  /**
+   * ── 짜 두었지만 아직 안 들어간 편성 ── 없으면 `null`.
+   *
+   * 파티와 대형을 바꾸면 **그 자리에서 안 바뀐다.** 지금 판이 끝나고 다음
+   * 판이 열릴 때 `party`·`formation` 으로 옮겨 간다 (`commitPending`).
+   *
+   * ## 왜 미루나
+   *
+   * 여태 그 자리에서 바뀌었다. 그러면 위험할 때마다 방어를 앞으로 끌어오고
+   * 우두머리가 나오면 대형을 바꾸는 것이 늘 최선이 되어, **판을 어떻게
+   * 짤까**가 아니라 **지금 뭘 눌러야 하나**의 문제가 된다. 자동 전투인데
+   * 손이 제일 바쁜 순간이 전투 중인 것은 앞뒤가 안 맞는다.
+   *
+   * 미루면 편성이 판에 들어가기 **전에** 정하는 것이 되고, 그러면 대형과
+   * 파티가 같은 성격의 결정이 된다 (`core/party` 의 `FORMATIONS`).
+   *
+   * `null` 은 "바꾼 것이 없다" 이지 "빈 파티" 가 아니다 — 빈 파티는
+   * `[null,null,null,null]` 이다.
+   */
+  pendingParty: Party | null;
+  pendingFormation: FormationId | null;
   /** 파티 네 자리. 빈 자리는 null */
   party: Party;
   /**
@@ -493,6 +514,13 @@ export interface GameActions {
   recruit: (id: CharId) => boolean;
   /** 파티 자리에 넣는다. null 이면 비운다. 이미 선 사람은 자리를 맞바꾼다 */
   setPartySlot: (slot: number, id: CharId | null) => void;
+  /**
+   * 짜 둔 편성을 **지금 당장** 되돌린다 — 아직 안 들어간 것만 버린다.
+   *
+   * 편성은 다음 판부터 들어가므로 (`pendingParty`), 잘못 짰을 때 판이
+   * 끝나기를 기다렸다가 다시 고칠 수는 없어야 한다.
+   */
+  clearPending: () => void;
   /** 고유장비를 한 번 두들긴다. 부서지지도 내려가지도 않는다 */
   enhanceGear: (id: CharId) => 'up' | 'fail' | 'max' | 'poor' | 'none';
   /** 강화 수치를 바로 정한다 — 테스트용 (`FREE_ENHANCE` 가 꺼지면 아무 일도 안 한다) */

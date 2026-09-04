@@ -30,7 +30,7 @@
  * 칸마다 두르던 테두리는 지웠다. 다섯이 각자 네모를 두르면 띠 하나가 아니라
  * 작은 상자 다섯이 된다.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '@/ui/atoms';
@@ -38,6 +38,7 @@ import { Sprite } from '@/ui/Sprite';
 import { NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
+import { HeroPopup } from './HeroPopup';
 import { C, FS, LINE, O, R, SP, SURF } from '@/ui/theme';
 
 const TABS: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
@@ -50,8 +51,16 @@ const TABS: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
 
 export function BottomNav() {
   const insets = useSafeAreaInsets();
+  /*
+    ── 영웅만 실제로 열린다 ──
+
+    편성(누가 서나 · 어떻게 서나)이 여기로 왔다 (`HeroPopup`). 나머지 넷은
+    아직 화면이 없어 준비중이다.
+  */
+  const [hero, setHero] = useState(false);
 
   return (
+    <>
     <View
       style={{
         flexDirection: 'row',
@@ -74,7 +83,11 @@ export function BottomNav() {
           <Pressable
             key={t.id}
             disabled={here}
-            onPress={() => { sfx('tap'); soon(t.label); }}
+            onPress={() => {
+              sfx('tap');
+              if (t.id === 'hero') { setHero(true); return; }
+              soon(t.label);
+            }}
             style={({ pressed }) => ({
               /* 다섯이 **정확히 같은 폭**이다 — 라벨 길이가 자리를 못 바꾼다 */
               flex: 1,
@@ -110,6 +123,9 @@ export function BottomNav() {
           </Pressable>
         );
       })}
-    </View>
+      </View>
+
+      <HeroPopup visible={hero} onClose={() => setHero(false)} />
+    </>
   );
 }
