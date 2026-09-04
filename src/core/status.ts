@@ -146,20 +146,22 @@ export const STATUS_MARK: Partial<Record<StatusId, string>> = {
 export const STATUS_ALT: Partial<Record<StatusId, string>> = {
   st_shock: 'st_numb',
   /*
-    새로 생긴 둘도 제 그림이 없다. 제일 가까운 것으로 버틴다 —
-    집중은 격노(공격이 세지는 것)로, 보호는 견고(막는 것)로.
+    ── 스킬 트리가 거는 넷 중 셋 ──
 
-    그림이 들어오면 이 두 줄만 지운다 (프롬프트는
-    `docs/STATUS_ICON_PROMPTS.md`).
+    집중은 격노(세지는 것)로, 보호는 견고(막는 것)로, 흡혈과 요정은 재생과
+    신속으로 버틴다. 그림이 들어오면 이 줄들만 지운다 (프롬프트는
+    `docs/STATUS_ICON_PROMPTS.md` 의 G장).
+
+    **지옥불은 여기 없다.** 21~30판 프롬프트에서 이미 받아 뒀는데 그때는
+    거는 것이 없었다 — 비앙카의 용암 지대가 생기면서 처음으로 쓰인다
+    (`assets/sprites/status_icon/st_burn.png`).
   */
   st_focus: 'st_rage',
   st_ward: 'st_guard',
-  /* 지옥불은 출혈(붉은 지속 피해)로, 흡혈은 재생(차오르는 것)으로 버틴다 */
-  st_burn: 'st_bleed',
   st_leech: 'st_regen',
-  /* 요정은 신속(빨라지는 것)으로 버틴다 — 같이 걸리는 것이 신속이라 결이 맞다 */
   st_fey: 'st_haste',
 };
+
 
 /**
  * **무슨 일이 일어나는가** — 이름 말고 효과.

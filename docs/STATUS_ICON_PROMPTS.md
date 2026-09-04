@@ -2,7 +2,7 @@
 
 **이 파일은 자동 생성됩니다** — `python tools/gen-status.py`.
 
-걸린 사람의 파티 칸에 붙는 작은 로고 **18개**입니다. 출혈처럼 한동안
+걸린 사람의 파티 칸에 붙는 작은 로고 **22개**입니다. 출혈처럼 한동안
 걸려 있다가 풀리는 것들입니다. 몇은 **적에게** 걸립니다 (도발 · 보호막 ·
 시듦) — 그때는 적 머리 위에 뜹니다.
 
@@ -42,6 +42,10 @@
 | `st_guard` | 견고 | 좋은 | 방어력 증가 | 20판 우두머리 |
 | `st_regen` | 재생 | 좋은 | 지속 회복 | 20판 우두머리 |
 | `st_haste` | 신속 | 좋은 | 공격속도 증가 | 리안느의 광란 (`core/chars` 의 `SKILLS.frenzy`) |
+| `st_focus` | 집중 | 좋은 | 치명타 확률 증가 | — |
+| `st_ward` | 보호 | 좋은 | 새로 걸리는 나쁜 것을 막는다 | — |
+| `st_leech` | 흡혈 | 좋은 | 입힌 피해의 일부만큼 회복한다 | — |
+| `st_fey` | 요정 | 좋은 | 때릴 때마다 미니 화살이 한 번 더 날아간다 | — |
 
 ## 안 만든 것
 
@@ -88,6 +92,10 @@
 | `st_break` | 귀퉁이 떨어진 사각 |
 | `st_regen` | 십자 |
 | `st_wither` | ㅜ 자 |
+| `st_focus` | 겹친 네모 둘 + 가운데 점 |
+| `st_ward` | 아치 + 아래 가로선 |
+| `st_leech` | 거꾸로 선 물방울 |
+| `st_fey` | 작은 화살 셋 (제각각 방향) |
 | `bp_thorn` | 여섯 갈래 별 (보스 패시브) |
 | `bp_viscous` | 물방울 (보스 패시브) |
 | `bp_rot` | 세 갈래로 솟은 덩이 (보스 패시브) |
@@ -101,6 +109,9 @@
 - **st_slow ↔ st_haste** — 둘 다 갈매기다. 방향이 반대이고, **개수도 다르다** (하나 / 둘). 방향만으로 갈랐다가 뒤집힌 채로 그려져 오면 알 방법이 없다
 - **st_poison ↔ st_break** — 둘 다 한쪽이 크게 떨어져 나간 모양이다. 중독은 **원**이고 파쇄는 **사각**이다 — 그것 하나로 갈린다
 - **st_silence ↔ st_bleed** — 둘 다 막대다. 침묵은 **가로 하나**, 출혈은 **사선 둘**이다
+- **st_ward ↔ bp_ward** — 둘 다 막는 것이다. 보스 패시브는 **방패**(아래가 뾰족한 덩어리)이고 이건 **아치와 바닥선**(속이 빈 둘)이다 — 채워졌는가로 갈린다
+- **st_leech ↔ st_regen** — 둘 다 좋은 것이고 회복을 말한다. 재생은 **십자**, 흡혈은 **거꾸로 선 물방울**이다 — 모양 자체가 다르다
+- **st_fey ↔ st_bleed** — 둘 다 여러 개의 비스듬한 조각이다. 출혈은 **나란한 사선 둘**이고 요정은 **제각각 방향을 보는 화살 셋**이다 — 나란한가로 갈린다
 
 ## 넷씩 세 장으로 나눕니다
 
@@ -671,6 +682,103 @@ SHEET LAYOUT:
   clipped.
 ```
 
+## G장 — 스킬 트리가 거는 것들
+
+**캐릭터 스킬 트리에서 생긴 넷입니다** (`core/skillTree`). 앞의 것들과 다른 점이 하나 있습니다 — 저것들은 대부분 **적이 아군에게** 거는 것이고 이 넷은 전부 **아군이 아군에게** 거는 것입니다. 그래서 넷 다 좋은 것이고, 파티 칸에 초록 테두리로 뜹니다.
+
+리안느의 정령의 노래(집중) · 이졸데의 수호의 결의와 아녜스의 찬란한 빛(보호) · 비앙카의 불굴의 의지(흡혈) · 리안느의 요정의 축제(요정)가 겁니다.
+
+그림이 들어오기 전까지는 제일 가까운 것으로 버팁니다 (`core/status` 의 `STATUS_ALT` — 집중은 격노, 보호는 견고, 흡혈은 재생, 요정은 신속).
+
+### 셀 순서
+
+| 셀 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| | 집중 | 보호 | 흡혈 | 요정 |
+| id | `st_focus` | `st_ward` | `st_leech` | `st_fey` |
+
+### 프롬프트
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+
+The 4 cells, in this exact order:
+
+Cell 1 — A NARROWING TARGET. TWO concentric SQUARE frames, one inside the other, both hollow, each frame a sixth of the cell wide, with a clear black gap between them — and at the exact centre one small SOLID square, a fifth of the cell. Nothing touches anything. It is the only icon made of nested frames. Squint test: a square target with a dot in it.
+Cell 2 — A DOME OVER A LINE. One thick ARC spanning the full width of the cell, bulging UPWARD, its ends coming down to the left and right edges at mid-height — and beneath it, one straight horizontal BAR running the full width along the bottom third, not touching the arc. Empty black between them. It is the only icon that is a curve resting over a straight line. Squint test: an arch over a floor.
+Cell 3 — A DROP GOING UP. One solid TEARDROP shape — round and fat at the BOTTOM, tapering to a point at the TOP — filling most of the cell, and above its point TWO short straight rays angled up and outward, not touching it. It is upside down compared to any normal droplet, and that is the whole read: something is being drawn upward. Squint test: an upward teardrop.
+Cell 4 — THREE TINY DARTS. THREE very small arrows, each a short thick shaft with a solid triangular head, arranged around the cell pointing in three DIFFERENT directions — one up-right, one down-right, one left — none touching, each about a third of the cell long. It is the only status icon whose parts point different ways. Squint test: three little darts scattering.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+- No borders or frames around the whole image.
+
+ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 12 TO 16 PIXELS. That is smaller than the text next to it.
+Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon must read as a single silhouette at a glance. Not a
+  scene, not an object sitting on a background, not two things next to each other.
+- FILL THE CELL. The shape touches or nearly touches all four sides of its cell.
+  An icon drawn small inside its cell disappears entirely when scaled down.
+- SOLID, NOT OUTLINED. Draw it as a filled white mass. A hollow outline at 14px
+  becomes a grey smudge, because the outline and the hole merge.
+- NO INTERIOR DETAIL. No rivets, no wood grain, no gem facets, no shading, no
+  highlights. If you can only see it at full size, it is noise.
+- ONE NOTCH OR CUT-OUT AT MOST, and it must be at least a fifth of the width.
+  Anything finer closes up.
+- STRAIGHT AND CHUNKY. Thick strokes, hard angles, flat ends. Thin tapering lines
+  vanish; a 1px point at full size is nothing at icon size.
+- NO PERSPECTIVE. Flat and front-on, like a road sign. These are the only images
+  in this game that are NOT drawn in three-quarter view.
+- CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
+  text and a tilted icon looks like a mistake.
+
+TEST: squint until the image is a blur. If you can still name it, it is right.
+If it becomes a grey blob, the shape is too busy.
+
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING.
+- Every edge is a HARD STEP between solid white and solid black. Do not soften, feather or anti-alias anything, and do not fake a grey by alternating black and white pixels along an edge.
+- A checkerboard border turns into grey fuzz at 14 pixels and the shape loses its outline, which is the only thing that identifies it. An earlier attempt came back with dithered edges and half the icons were unreadable.
+- Two colours exist in this image: pure white and pure black. Nothing in between, anywhere.
+
+THEY ALL WEIGH THE SAME.
+- Some of these are bad things and some are good, but NOTHING in the drawing may say which is which. No icon is darker, thinner, spikier or gloomier than another. The game says good or bad by where it puts them on screen; the icon only says WHAT.
+- Every icon uses the same stroke weight and the same solid fill.
+
+THEY MUST NOT BE CONFUSABLE. Put the 4 finished icons side by side and squint until they blur. If any two have a similar outline, redraw the weaker one — the outline is the only thing that survives at 14 pixels.
+
+SHEET LAYOUT:
+- Arrange the cells in an exact uniform grid: 4 columns x 1 row.
+- Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a magenta
+  border around the outer edge of the whole sheet.
+- Magenta appears ONLY on these separator lines, never inside a cell.
+- Every cell is exactly the same size. Reading order is left to right, then top to
+  bottom.
+- Do not add extra rows of variants. Exactly 1 row, exactly 4 cells.
+- EVERY CELL MUST BE SQUARE. With a 4x1 grid that means the whole sheet is
+  4:1 — output it at 2048x512.
+  A square cell is required. A tall narrow cell cannot hold a weapon swung forward,
+  and a short wide cell cannot hold one raised. Both have been tried and both
+  clipped.
+```
+
 ## 슬라이서 설정
 
 세 장을 **한 세트로 이어 붙입니다** (`append`). 그래야
@@ -688,7 +796,9 @@ SHEET LAYOUT:
 { "file": "status-5.jpg", "name": "status_icon", "expect": [4, 1], "append": true,
   "labels": ["st_shield", "st_confuse", "st_burn", "st_numb"] },
 { "file": "status-6.jpg", "name": "status_icon", "expect": [1, 1], "append": true,
-  "labels": ["st_shock"] }
+  "labels": ["st_shock"] },
+{ "file": "status-7.jpg", "name": "status_icon", "expect": [4, 1], "append": true,
+  "labels": ["st_focus", "st_ward", "st_leech", "st_fey"] }
 ```
 
 ## 다시 뽑을 때

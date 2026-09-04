@@ -134,7 +134,7 @@ SKILLS2 = [
 TPL = """# 아이콘 프롬프트
 
 **이 파일은 자동 생성됩니다** — `python tools/gen-icon.py`.
-고치려면 생성기의 `ROLES` · `SKILLS` 를 고치세요.
+고치려면 생성기의 `ROLES` · `SKILLS` · `TREE_*` 를 고치세요.
 
 두 벌이 들어 있습니다. 둘 다 **한 장짜리 시트**이고 셀 크기가 같아서, 같은
 설정으로 자릅니다.
@@ -144,6 +144,7 @@ TPL = """# 아이콘 프롬프트
 | 전투 타입 4종 | `assets/sprites/role_icon/` | 파티 칸 · 캐릭터 창의 이름 옆 |
 | 스킬 4종 (첫 기술) | `assets/sprites/skill_icon/` | 캐릭터 창의 스킬 목록 (`SkillPanel`) |
 | 스킬 4종 (두 번째 기술) | `assets/sprites/skill_icon/` | 같은 목록의 아래쪽 |
+| 스킬 트리 16종 (넷씩 네 장) | `assets/sprites/skill_icon/` | 스킬 트리 화면 (`SkillTreePopup`) |
 
 ## 12px 에서는 윤곽뿐입니다
 
@@ -267,6 +268,134 @@ perspective, no motion. These sit next to text.
 """
 
 
+# ══ 스킬 트리가 여는 것들 ═════════════════════════════════════
+#
+# 열여섯이다 (`core/skillTree`). 넷씩 네 장으로 끊는다 — 한 장에 열여섯을
+# 넣으면 셀이 좁아져서 안쪽 무늬가 다 뭉개지고, 한 칸만 잘못 나와도 열여섯을
+# 통째로 다시 뽑아야 한다.
+#
+# **캐릭터별로 묶는다.** 같은 사람의 넷은 한 화면(캐릭터 창)에 같이 뜨므로,
+# 그 넷끼리 안 닮는 것이 제일 중요하다. 다른 사람 것과 겹치는 것은 그다음이다.
+
+TREE_KG = [
+    ('sk_shout', '함성', '이졸데 2-2',
+     'A SHOUT GOING OUT. TWO thick open ARCS opening to the RIGHT, sharing a centre '
+     'just off the left edge, with a wide black gap between them — and a short '
+     'straight BAR standing at that centre. Fewer arcs than the taunt icon and it '
+     'has that bar; taunt has three arcs and nothing at the centre. Squint test: '
+     'two curves leaving a post.'),
+    ('sk_ward', '수호의 결의', '이졸데 3-1',
+     'A DOME OVER SOMETHING. One thick ARC spanning the full width of the cell, '
+     'bulging UPWARD, its two ends reaching down to the bottom corners — a shield '
+     'bubble seen from the side. Underneath it, centred, ONE small solid square '
+     'sitting on the bottom edge, not touching the arc. It is the only icon that is '
+     'a big curve sheltering a small mass. Squint test: an umbrella over a block.'),
+    ('sk_breaker', '파쇄의 태세', '이졸데 3-2',
+     'A CRACKED BLOCK. One solid RECTANGLE filling the middle of the cell, wider '
+     'than tall, BROKEN by a single jagged black split running from its top edge to '
+     'its bottom edge — three or four hard right-angle turns, no curves. The two '
+     'halves are pushed slightly apart. It is the only icon that is one mass cut in '
+     'two. Squint test: a brick split down the middle.'),
+    ('sk_aegis', '수호신의 가호', '이졸데 4-1',
+     'A DOME WITH A THORN RING. The same wide upward-bulging ARC as the ward icon, '
+     'spanning the cell — but ABOVE it, following its curve, FIVE short straight '
+     'spikes stand outward, evenly spaced, separated from the arc by a thin black '
+     'gap. Under the arc, nothing. It is the ward icon plus spikes and minus the '
+     'block: the pair must read as "the same dome, now armed". Squint test: a '
+     'spiked dome.'),
+    ('sk_holysword', '성검 발현', '이졸데 4-2',
+     'A SWORD COMING DOWN. One long straight BLADE pointing DOWN, filling the '
+     'height of the cell, with a short straight crossguard near the top and a stubby '
+     'grip above it. Behind the grip, THREE short straight rays fan upward and '
+     'outward. It is the only icon that is a long vertical bar with rays at its '
+     'top. Squint test: a downward sword with light behind the hilt.'),
+]
+
+TREE_BA = [
+    ('sk_lava', '용암 지대', '비앙카 3-1',
+     'GROUND SPLIT AND BURNING. A wide flat BAND across the lower third of the cell '
+     '— the ground — broken into three chunks by two jagged black cracks. Rising '
+     'from each crack, one short thick TONGUE of flame reaching a third of the way '
+     'up, each a different height. Nothing above them. It is the only icon whose '
+     'mass is a broken horizontal band. Squint test: a cracked floor with flames.'),
+    ('sk_resolve', '불굴의 의지', '비앙카 3-2',
+     'A FIST HELD UP. One solid BLOCK in the upper half, roughly square with one '
+     'corner notched — the fist — and below it a thick straight BAR going down to '
+     'the bottom edge, narrower than the block: the forearm. Around the block, '
+     'THREE short straight marks standing off it at the top and both sides, not '
+     'touching. It is the only icon that is a heavy top on a narrow stem. Squint '
+     'test: a raised fist.'),
+    ('sk_overheat', '과열', '비앙카 4',
+     'TWO STRIKES, THE SECOND BIGGER. TWO crescent slashes side by side, both '
+     'opening to the LEFT, parallel, at the same angle — the left one small and '
+     'thin, the right one clearly LONGER AND THICKER, reaching further past the '
+     'cell centre. A black gap separates them. It is the only icon made of the same '
+     'shape twice at two sizes. Squint test: two slashes, one much bigger.'),
+]
+
+TREE_EA = [
+    ('sk_sharparrow', '강화된 화살', '리안느 3-1',
+     'ONE ARROW, HEAVILY BARBED. A single thick straight SHAFT running corner to '
+     'corner diagonally, pointing DOWN AND RIGHT, with a large solid triangular '
+     'head — and along the shaft, THREE pairs of short barbs angled backward. It '
+     'is one arrow, not three: the arrow-rain icon is three thin parallel arrows '
+     'with plain shafts, this is one fat arrow with spikes on it. Squint test: a '
+     'single barbed arrow.'),
+    ('sk_spiritsong', '정령의 노래', '리안느 3-2',
+     'NOTES RISING. THREE small solid DIAMONDS in a rising line from the lower left '
+     'to the upper right, each a fifth of the cell wide, evenly spaced with clear '
+     'black between them — and from the highest one, TWO short straight rays going '
+     'up and out. It is the only icon made of separate small shapes climbing a '
+     'diagonal. Squint test: three dots going up, sparkling at the top.'),
+    ('sk_bigshot', '거대 화살', '리안느 4-1',
+     'ONE HUGE ARROW, HORIZONTAL. A very thick straight SHAFT lying across the full '
+     'width of the cell pointing LEFT, with a big solid triangular head taking a '
+     'third of the length, and a wide double wedge of fletching at the tail. It is '
+     'the FATTEST, most horizontal icon in the whole set — it must look heavy. '
+     'Squint test: one big arrow lying flat.'),
+    ('sk_fey', '요정의 축제', '리안느 4-2',
+     'SMALL ARROWS SCATTERING. FOUR tiny arrows, each a short shaft with a small '
+     'triangular head, pointing in FOUR different directions and spread to the four '
+     'quarters of the cell, none touching. They are small — each about a third of '
+     'the cell. It is the only icon whose parts point different ways. Squint test: '
+     'four little darts going everywhere.'),
+]
+
+TREE_NU = [
+    ('sk_judge', '신의 심판', '아녜스 3-1',
+     'A WEIGHT COMING DOWN. A wide flat solid BAR across the upper third of the '
+     'cell, and from its underside THREE thick straight BEAMS reaching down to the '
+     'bottom edge, evenly spaced, the middle one longest. It is the only icon that '
+     'is a heavy lid with legs hanging from it. Squint test: a bar with three beams '
+     'under it.'),
+    ('sk_gentle', '정화의 손길', '아녜스 3-2',
+     'AN OPEN HAND. One solid rounded BLOCK in the lower half — the palm — with '
+     'THREE short thick FINGERS standing up from its top edge, evenly spaced, the '
+     'middle one longest, and a stubby thumb angled off the left side. It is the '
+     'only icon that is a mass with short stubs standing on it. Squint test: a '
+     'simple hand, palm up.'),
+    ('sk_wrath', '신의 천벌', '아녜스 4-1',
+     'A BOLT STRIKING DOWN. One thick zigzag running the FULL HEIGHT of the cell '
+     'from top edge to bottom edge, with THREE hard right-angle bends — every '
+     'segment straight, square-cut ends, no taper and no curve. Nothing else in the '
+     'cell. It is the only icon that is a single bent line crossing the whole cell. '
+     'Squint test: a lightning bolt.'),
+    ('sk_radiance', '찬란한 빛', '아녜스 4-2',
+     'A SUN OF STRAIGHT RAYS. One solid CIRCLE at the centre taking a third of the '
+     'cell, and EIGHT straight rays radiating from it, evenly spaced all the way '
+     'around, each separated from the circle by a thin black gap. All rays the same '
+     'length. It is the only icon that is symmetrical in every direction. Squint '
+     'test: a sun.'),
+]
+
+TREE_SHEETS = [
+    ('kg', '이졸데', TREE_KG),
+    ('ba', '비앙카', TREE_BA),
+    ('ea', '리안느', TREE_EA),
+    ('nu', '아녜스', TREE_NU),
+]
+
+
 def sheet(items):
     """(id, 이름, 곁들임, 설명) 넷을 프롬프트 한 덩어리로."""
     cells = [(i[0], i[1], i[3]) for i in items]
@@ -285,6 +414,24 @@ def sheet(items):
     )
 
 
+def tree_section(key, who, items):
+    return (
+        '---' + NL + NL
+        + '## %s 의 트리 (`skill_icon`)' % who + NL + NL
+        + '스킬 트리가 여는 것들입니다 (`core/skillTree`). 넷이 **한 화면에 같이 '
+        '뜨므로**(캐릭터 창) 그 넷끼리 안 닮는 것이 제일 중요합니다.' + NL + NL
+        + '### 셀 순서' + NL + NL
+        + table_of([(i[0], i[1], i[2]) for i in items]) + NL
+        + '### 프롬프트' + NL + NL
+        + sheet(items) + NL
+        + '### 슬라이서 설정' + NL + NL
+        + '```json' + NL
+        + '{ "file": "<%s 파일명>", "name": "skill_icon", "expect": [%d, 1],' % (key, len(items)) + NL
+        + '  "labels": [%s] }' % labels_of([(i[0], '', '') for i in items]) + NL
+        + '```' + NL
+    )
+
+
 page = TPL % {
     'role_table': table_of([(i[0], i[1], i[2]) for i in ROLES]),
     'role_prompt': sheet(ROLES),
@@ -297,13 +444,22 @@ page = TPL % {
     'skill2_labels': labels_of([(i[0], '', '') for i in SKILLS2]),
 }
 
+page += NL + NL.join(tree_section(k, w, it) for k, w, it in TREE_SHEETS)
+
 open('docs/ICON_PROMPTS.md', 'w', encoding='utf-8').write(page)
 print('아이콘 %d + 스킬 %d + 두 번째 기술 %d → docs/ICON_PROMPTS.md'
       % (len(ROLES), len(SKILLS), len(SKILLS2)))
 
 # 코드와 어긋나지 않는지 본다 — 여기 없는 기술이 코드에 있으면 로고가 빈다
 _want = {i[0] for i in SKILLS} | {i[0] for i in SKILLS2}
-_src = io.open('src/core/chars.ts', encoding='utf-8').read()
+for _k, _w, _it in TREE_SHEETS:
+    _want |= {i[0] for i in _it}
+# 스킬 표(`chars`)와 트리(`skillTree`) **둘 다** 본다 — 패시브 자리는 기술이
+# 아니라 트리에만 있으므로, 한 파일만 보면 그 여섯이 "문서에만 있는 것" 으로 잡힌다.
+_src = ''.join(
+    io.open(f, encoding='utf-8').read()
+    for f in ('src/core/chars.ts', 'src/core/skillTree.ts')
+)
 _have = set(re.findall(r"art: '(sk_[a-z_]+)'", _src))
 assert _have <= _want, '코드에만 있는 스킬 로고: %s' % (_have - _want)
 assert _want <= _have, '문서에만 있는 스킬 로고: %s' % (_want - _have)

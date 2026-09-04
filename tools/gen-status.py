@@ -214,6 +214,36 @@ STATUS = [
      'reaches both side edges; the upper one is narrower and sits above it. TWO of '
      'them, and that count is what separates this from the slow icon as much as '
      'the direction does. Squint test: two up arrowheads.'),
+
+    # ── 스킬 트리가 거는 것들 (`core/skillTree`) ────────────
+    ('st_focus', '집중', '좋은', '치명타 확률 증가', None,
+     'A NARROWING TARGET. TWO concentric SQUARE frames, one inside the other, '
+     'both hollow, each frame a sixth of the cell wide, with a clear black gap '
+     'between them — and at the exact centre one small SOLID square, a fifth of '
+     'the cell. Nothing touches anything. It is the only icon made of nested '
+     'frames. Squint test: a square target with a dot in it.'),
+
+    ('st_ward', '보호', '좋은', '새로 걸리는 나쁜 것을 막는다', None,
+     'A DOME OVER A LINE. One thick ARC spanning the full width of the cell, '
+     'bulging UPWARD, its ends coming down to the left and right edges at '
+     'mid-height — and beneath it, one straight horizontal BAR running the full '
+     'width along the bottom third, not touching the arc. Empty black between '
+     'them. It is the only icon that is a curve resting over a straight line. '
+     'Squint test: an arch over a floor.'),
+
+    ('st_leech', '흡혈', '좋은', '입힌 피해의 일부만큼 회복한다', None,
+     'A DROP GOING UP. One solid TEARDROP shape — round and fat at the BOTTOM, '
+     'tapering to a point at the TOP — filling most of the cell, and above its '
+     'point TWO short straight rays angled up and outward, not touching it. It is '
+     'upside down compared to any normal droplet, and that is the whole read: '
+     'something is being drawn upward. Squint test: an upward teardrop.'),
+
+    ('st_fey', '요정', '좋은', '때릴 때마다 미니 화살이 한 번 더 날아간다', None,
+     'THREE TINY DARTS. THREE very small arrows, each a short thick shaft with a '
+     'solid triangular head, arranged around the cell pointing in three DIFFERENT '
+     'directions — one up-right, one down-right, one left — none touching, each '
+     'about a third of the cell long. It is the only status icon whose parts point '
+     'different ways. Squint test: three little darts scattering.'),
 ]
 
 
@@ -261,6 +291,18 @@ SHEETS = [
      '뜬 둘을 아무도 못 가릅니다. 뒤집힌 U 자(플러그의 두 다리)로 갑니다.\n\n'
      '그림이 들어오기 전까지는 신경 마비(`st_numb`)로 버팁니다 '
      '(`core/status` 의 `STATUS_ALT`).'),
+    ('G', '스킬 트리가 거는 것들',
+     ['st_focus', 'st_ward', 'st_leech', 'st_fey'],
+     '**캐릭터 스킬 트리에서 생긴 넷입니다** (`core/skillTree`). 앞의 것들과 '
+     '다른 점이 하나 있습니다 — 저것들은 대부분 **적이 아군에게** 거는 것이고 '
+     '이 넷은 전부 **아군이 아군에게** 거는 것입니다. 그래서 넷 다 좋은 것이고, '
+     '파티 칸에 초록 테두리로 뜹니다.\n\n'
+     '리안느의 정령의 노래(집중) · 이졸데의 수호의 결의와 아녜스의 찬란한 '
+     '빛(보호) · 비앙카의 불굴의 의지(흡혈) · 리안느의 요정의 축제(요정)가 '
+     '겁니다.\n\n'
+     '그림이 들어오기 전까지는 제일 가까운 것으로 버팁니다 '
+     '(`core/status` 의 `STATUS_ALT` — 집중은 격노, 보호는 견고, 흡혈은 재생, '
+     '요정은 신속).'),
 ]
 
 
@@ -283,6 +325,8 @@ SHAPES = [
     ('st_shock', '뒤집힌 U 자 (다리 둘)'),
     ('st_guard', '꽉 찬 사각'), ('st_break', '귀퉁이 떨어진 사각'),
     ('st_regen', '십자'), ('st_wither', 'ㅜ 자'),
+    ('st_focus', '겹친 네모 둘 + 가운데 점'), ('st_ward', '아치 + 아래 가로선'),
+    ('st_leech', '거꾸로 선 물방울'), ('st_fey', '작은 화살 셋 (제각각 방향)'),
     ('bp_thorn', '여섯 갈래 별 (보스 패시브)'),
     ('bp_viscous', '물방울 (보스 패시브)'),
     ('bp_rot', '세 갈래로 솟은 덩이 (보스 패시브)'),
@@ -303,6 +347,14 @@ CLASH = [
      '**원**이고 파쇄는 **사각**이다 — 그것 하나로 갈린다'),
     ('st_silence', 'st_bleed', '둘 다 막대다. 침묵은 **가로 하나**, 출혈은 '
      '**사선 둘**이다'),
+    ('st_ward', 'bp_ward', '둘 다 막는 것이다. 보스 패시브는 **방패**(아래가 '
+     '뾰족한 덩어리)이고 이건 **아치와 바닥선**(속이 빈 둘)이다 — 채워졌는가로 '
+     '갈린다'),
+    ('st_leech', 'st_regen', '둘 다 좋은 것이고 회복을 말한다. 재생은 **십자**, '
+     '흡혈은 **거꾸로 선 물방울**이다 — 모양 자체가 다르다'),
+    ('st_fey', 'st_bleed', '둘 다 여러 개의 비스듬한 조각이다. 출혈은 **나란한 '
+     '사선 둘**이고 요정은 **제각각 방향을 보는 화살 셋**이다 — 나란한가로 '
+     '갈린다'),
 ]
 
 

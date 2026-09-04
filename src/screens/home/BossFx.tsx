@@ -53,7 +53,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { Sprite } from '@/ui/Sprite';
-import { BAD_C, WHITE } from '@/ui/theme';
+import { BAD_C, SHIELD_C, WHITE } from '@/ui/theme';
 
 /** 우두머리 쪽에서 나는 것 */
 export type BossKind = 'swing' | 'ripple' | 'spikes' | 'stench';
@@ -1436,9 +1436,33 @@ function Ripple({ size }: { size: number }) {
   })), [t]);
 
   if (!on) return null;
+  /*
+    ── 몸도 옅게 물든다 ──
+
+    고리만 돌 때는 "무언가 지나간다" 로만 보이고, 5초 내내 봐도 **저 놈이
+    지금 뭘 하고 있는지**가 안 읽혔다. 몸 위에 아주 옅은 판을 하나 깔고
+    천천히 숨쉬게 하면 "모으는 중" 이 된다.
+
+    0.08~0.20 이다. 더 진하면 우두머리 몸이 통째로 물들어서, 정작 깨야 하는
+    막(체력 막대 위의 하늘색 겹)과 그 아래 몸이 안 보인다.
+  */
+  const body = useMemo(() => t.interpolate({
+    inputRange: [0, 0.5, 1], outputRange: [0.08, 0.20, 0.08],
+  }), [t]);
+
   const w = size * 1.1;
   return (
     <View pointerEvents="none" style={sideBox(size)}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: size / 5,
+          backgroundColor: BAD_C,
+          opacity: body,
+        }}
+      />
       {rings.map((r, i) => (
         <Animated.View
           key={i}
@@ -1571,6 +1595,74 @@ function Stench({ size }: { size: number }) {
  * 깨야 하는 막(체력 막대 위의 하늘색 겹)과 그 아래 몸이 안 보였다. 0.35 로
  * 내린다 — "지금 모으는 중" 만 말하면 되고, 얼마나 남았나는 막대가 말한다.
  */
+/**
+ * ── 막에 튕겼다 ── 22 · 29판, 보호막을 두르고 있는 동안 맞았을 때.
+ *
+ * 평소 피격 이펙트(`HitBurst`)를 안 쓴다. 저건 **살에 들어갔다**를 말하는
+ * 그림인데, 막이 서 있는 동안은 아무것도 안 들어간다 — 같은 그림을 쓰면
+ * 막이 있으나 없으나 화면이 똑같아서, 왜 체력이 안 주는지가 설명되지 않는다.
+ *
+ * "팅!" 하는 느낌은 셋이 만든다.
+ *
+ *   1. **얇고 빠른 고리**가 한 번 튀어나갔다 사라진다 (180ms). 두껍거나
+ *      느리면 폭발로 보인다
+ *   2. **짧은 빗금 넷**이 사방으로 튄다 — 부딪혀 튕겨 나간 조각이다
+ *   3. 하늘색 (`SHIELD_C`). 이 게임에서 저 색은 "저 겹은 체력이 아니다"
+ *      하나만 말한다 — 막을 때리고 있다는 뜻이 정확히 그것이다
+ *
+ * 짧은 것이 중요하다. 연달아 맞으면 팅·팅·팅 으로 겹쳐 들려야 한다.
+ */
+export function Ping({ size }: { size: number }) {
+  const MS = 220;
+  const { t, on } = useRun(MS);
+  const grow = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [0.25, 1.15],
+  }), [t]);
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.18, 1], outputRange: [0, 0.95, 0],
+  }), [t]);
+  /* 조각은 고리보다 조금 늦게, 더 멀리 */
+  const fly = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [size * 0.12, size * 0.5],
+  }), [t, size]);
+
+  if (!on) return null;
+  const w = size * 0.9;
+  const tick = Math.max(3, Math.round(size / 9));
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: w,
+          height: w,
+          borderRadius: w,
+          borderWidth: 2,
+          borderColor: SHIELD_C,
+          opacity: fade,
+          transform: [{ scale: grow }],
+        }}
+      />
+      {[45, 135, 225, 315].map((deg) => (
+        <Animated.View
+          key={deg}
+          style={{
+            position: 'absolute',
+            width: tick,
+            height: 2,
+            backgroundColor: SHIELD_C,
+            opacity: fade,
+            transform: [
+              { rotate: `${deg}deg` },
+              { translateX: fly },
+            ],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function Charging({ size }: { size: number }) {
   const t = useRef(new Animated.Value(0)).current;
   useEffect(() => {

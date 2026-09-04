@@ -60,6 +60,7 @@ import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
   BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, Burst, Charging, Fuse, FxPlan,
+  Ping,
   ShotKind, Tide, blowFx, castFx, useLeap,
 } from './BossFx';
 import {
@@ -737,6 +738,17 @@ export function BattleView({ top, corner }: Props = {}) {
        * 이미 그 자리에 떠 있는 숫자만큼 위로 올린다.
        */
       row: number;
+      /**
+       * **막에 튕겼나** — 22 · 29판, 보호막이 서 있는 동안 때렸을 때.
+       *
+       * 켜져 있으면 평소 피격 이펙트 대신 "팅!" 이 뜬다 (`BossFx` 의 `Ping`).
+       * 저건 살에 들어갔다를 말하는 그림이라, 아무것도 안 들어가는 순간에
+       * 쓰면 막이 있으나 없으나 화면이 똑같아진다.
+       *
+       * **때리기 전에** 재서 담는다 — 때리고 나면 막이 0 이 될 수 있고,
+       * 그러면 막을 깨뜨린 그 한 대만 살에 들어간 것으로 그려진다.
+       */
+      ping?: boolean;
       dx: number; dy: number;
     })[]
   >([]);
@@ -1438,6 +1450,14 @@ export function BattleView({ top, corner }: Props = {}) {
     const to = foeAt.current.pos[at] ?? 0;
     /* 자리는 **때리기 전에** 잡는다 — 죽으면 목록이 줄어 번호가 밀린다 */
     const spot = spotOf(to);
+    /*
+      ── 막에 튕겼나 ──
+
+      **때리기 전에** 본다. 때리고 나면 막이 깎여 0 이 될 수 있고, 그러면
+      마지막 한 대만 살에 들어간 것으로 그려진다 — 실제로는 그 한 대도
+      막이 받았다.
+    */
+    const shielded = (now.current.battle.foes[at]?.gim?.shield ?? 0) > 0;
     /* 이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 (`Swing.mul`) */
     strikeFoe(sw.id, at, sw.mul);
 
@@ -1447,7 +1467,7 @@ export function BattleView({ top, corner }: Props = {}) {
       const live = old.slice(-7);
       return [...live, {
         /* 과열의 둘째 대는 크게 터진다 — 같은 그림이면 넷 중 어느 것이 150% 인지 모른다 */
-        ...sw, key, ...spot, blast: !!sw.blast, arrow: '', erupt: false,
+        ...sw, key, ...spot, blast: !!sw.blast, arrow: '', erupt: false, ping: shielded,
         row: rowFor(live, spot.x), born: Date.now(),
         dx: -14 + Math.random() * 24, dy: -6 + Math.random() * 20,
       }];
@@ -1571,6 +1591,17 @@ export function BattleView({ top, corner }: Props = {}) {
       const live = old.slice(-6);
       /* 여럿을 한꺼번에 넣으므로 **서로도** 세어 가며 줄을 매긴다 */
       const add: typeof live = [];
+      /*
+        그 자리에 선 놈이 막을 두르고 있나 — 자리(`x`)로 되짚는다.
+
+        `spots` 는 무대 좌표라 목록 자리 번호가 없다. 때린 목록(`idx`)과
+        나란히 만들어졌으므로 그 순서로 되짚으면 된다.
+      */
+      const shieldAt = (spot: typeof spots[number]): boolean => {
+        const at = spots.indexOf(spot);
+        const f = at >= 0 ? now.current.battle.foes[idx[at]] : undefined;
+        return (f?.gim?.shield ?? 0) > 0;
+      };
       const put = (spot: typeof spots[number], amount: number, big: boolean) => {
         add.push({
           /* 발밑에서 솟는 기술인가 — 지금은 화산 하나다 */
@@ -1582,6 +1613,13 @@ export function BattleView({ top, corner }: Props = {}) {
           /* 화살비는 맞는 자리마다 화살이 한 대 꽂힌다 */
           arrow: CHARS[me.id].range === 'ranged' ? projSet(me.id) : '',
           row: rowFor([...live, ...add], spot.x), born: Date.now(),
+          /*
+            막이 서 있는 놈에게 들어간 것은 튕긴다 (`Ping`).
+
+            기술은 여럿을 한꺼번에 치므로 **맞는 놈마다 따로** 본다 — 22판은
+            우두머리 하나뿐이지만, 29판은 막을 두른 채 잡몹이 같이 설 수 있다.
+          */
+          ping: shieldAt(spot),
           /* 불꽃만 흩는다 — 숫자는 제 놈 머리 한가운데에 뜬다 */
           dx: -10 + Math.random() * 20, dy: -6 + Math.random() * 20,
         });
@@ -3178,7 +3216,17 @@ export function BattleView({ top, corner }: Props = {}) {
                 zIndex: 60,
               }}
             >
-              <HitBurst kind={h.fx} size={h.size * (h.blast ? 1.4 : 0.75)} nonce={1} />
+              {/*
+                ── 막이 서 있으면 **튕긴다** ──
+
+                평소 피격 이펙트는 "살에 들어갔다" 를 말하는 그림이라
+                (`HitBurst`), 아무것도 안 들어가는 순간에 쓰면 막이 있으나
+                없으나 화면이 똑같아진다 — 그러면 왜 체력이 안 주는지가
+                설명되지 않는다.
+              */}
+              {h.ping
+                ? <Ping size={h.size} />
+                : <HitBurst kind={h.fx} size={h.size * (h.blast ? 1.4 : 0.75)} nonce={1} />}
             </View>
             {/*
               떨어지는 화살은 **흩지 않는다.**
