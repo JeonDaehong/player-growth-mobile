@@ -138,7 +138,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
     빨라지면 마지막 한 칸에서 갑자기 딴 게임이 된다.
   */
   bunnyaxe: {
-    name: '최후의 한 곡',
+    name: '최후의 저항',
     text: '체력이 낮을수록 공격속도 증가 (체력 10%에서 1.5배)',
     short: '공격속도 증가',
     frenzy: { at: 0.10, mul: 1.5 },
@@ -154,7 +154,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
     비율로는 많이 받는다 — 아녜스(0.5)는 20% 가 오르고 리안느 본인은 9% 다.
   */
   elfarcher: {
-    name: '숲의 박자',
+    name: '숲의 노래',
     text: '아군 전체 공격속도 +0.1',
     short: '공격속도 증가',
     allySpd: 0.1,
@@ -169,7 +169,7 @@ export const PASSIVES: Partial<Record<CharId, PassiveDef>> = {
     (10) 기술은 적을 아예 안 때리는데, 이 한 줄 때문에 한 자리를 쓴다.
   */
   nun: {
-    name: '재의 축복',
+    name: '헌신',
     text: '아군 전체 공격력 +10%',
     short: '공격력 증가',
     allyAtk: 0.10,

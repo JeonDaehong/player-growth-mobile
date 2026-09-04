@@ -241,7 +241,18 @@ export function SkillPanel({
               right={unlocked ? (
                 <Row gap={3}>
                   {sk.pick !== 'none' && <Tag label={DMG_NAME[sk.dmg]} />}
-                  <Tag label={`${sec.toFixed(1)}초`} />
+                  {/*
+                    ── 초가 아니라 **평타 몇 대**다 ──
+
+                    쿨타임이라는 것이 이 게임에 없다. 기술은 평타를 쳐서
+                    코스트를 모아 나가므로 (`SkillDef.cost`), 실제 간격은
+                    그 사람이 얼마나 빨리 치느냐에 걸려 있다.
+
+                    초로 적으면 "5.4초" 같은 숫자가 뜨는데, 둔화에 걸리거나
+                    신속이 붙는 순간 그 숫자가 거짓말이 된다. 평타 대수는
+                    무엇이 걸리든 안 변한다.
+                  */}
+                  <Tag label={`평타 ${sk.cost}대`} />
                 </Row>
               ) : (
                 /* 잠긴 것에는 쿨타임 대신 **열리는 조건**을 적는다 */
@@ -255,7 +266,7 @@ export function SkillPanel({
                   k="스킬 코스트"
                   v={`${sk.cost} (평타 한 번에 1 씩 찹니다)`}
                 />
-                <KV k="빨라야" v={`${sec.toFixed(1)}초마다`} />
+                <KV k="빨라야" v={`평타 ${sk.cost}대마다 (지금 ${sec.toFixed(1)}초)`} />
                 <KV k="대상" v={targetText(sk)} />
                 {/*
                   ── 때리지도 채우지도 않는 기술들 ──

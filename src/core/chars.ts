@@ -46,7 +46,7 @@
  */
 import type { StatusId } from './status';
 import {
-  LV_GROWTH, LV_HP_RATIO, RARITY_GROWTH, Rarity, STAR_CAP,
+  RARITY_GROWTH, Rarity, STAR_CAP,
   canAwaken, lvCap, maxStar, skillSlots,
 } from './growth';
 
@@ -266,6 +266,30 @@ export interface CharDef {
    * 10 × 1.4 × 2 = 28 이다.
    */
   critDmg: number;
+  /**
+   * ── 레벨 한 칸이 올려 주는 것 ── **사람마다 다르다.**
+   *
+   * 한동안 누구나 공격 +2% · 체력 +1.6% 였다 (`core/growth` 의 `LV_GROWTH`).
+   * 비율이라 기본치가 큰 쪽이 더 많이 올랐고, 그래서 레벨을 올리는 일이
+   * 넷 모두에게 **같은 일**이었다 — 누구를 키울지가 곧 누가 원래 센가였다.
+   *
+   * 고정값으로 바꾸면 사람마다 자라는 방향이 갈린다.
+   *
+   *   이졸데  공 2.5  체 41   3레벨마다 방어 +1   ← 앞에서 버틴다
+   *   비앙카  공 3.75 체 23   7레벨마다 방어 +1   ← 크게 때리고 잘 죽는다
+   *   리안느  공 3.25 체 21   8레벨마다 방어 +1   ← 제일 얇다
+   *   아녜스  공 1.25 체 34   5레벨마다 방어 +1   ← 오래 산다
+   *
+   * 방어를 **칸으로 끊는** 이유: 뺄셈으로 들어가는 값이라 (`Armor`) 매
+   * 레벨 올리면 금세 모든 공격이 1 이 된다. 몇 레벨마다 한 칸씩이라야
+   * "언제 한 칸 오르나" 를 세는 값이 된다.
+   */
+  perLv: {
+    atk: number;
+    hp: number;
+    /** 방어력과 마법저항력이 **몇 레벨마다** +1 오르나 */
+    armorEvery: number;
+  };
   /** 어떻게 얻는가 — 도감에 그대로 적는다 */
   from: string;
   /** 지금 빌려 쓰는 그림 (`assets/sprites/avatar/`) */
@@ -794,7 +818,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     그래서 실제로는 "화살비를 잠깐 포기하고 평타를 두 배로 쏟는다" 가 된다.
   */
   frenzy: {
-    name: '광란', art: 'sk_frenzy', hits: 1, pick: 'none', targets: 0, dmg: 'phys',
+    name: '숲의 축복', art: 'sk_frenzy', hits: 1, pick: 'none', targets: 0, dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 2, cost: 10, aura: 'ash', leaps: false,
     self: { id: 'st_haste', sec: 5, mul: 2, noCharge: true },
@@ -1021,7 +1045,7 @@ export const CHARS: Record<CharId, CharDef> = {
   */
   knightgirl: {
     id: 'knightgirl', name: '이졸데', title: '서약의 백기사',
-    rarity: 'mythic', role: 'guard',
+    rarity: 'epic', role: 'guard',
     quote: '맹세를 지키느라 한 번도 뒤로 물러선 적이 없다.',
     gear: '서약검 여명', gearKind: 'sword',
     gearNote: '무릎 꿇고 받은 검. 날에 새긴 맹세가 아직 지워지지 않았다.',
@@ -1034,6 +1058,7 @@ export const CHARS: Record<CharId, CharDef> = {
       없으므로 실제로는 아직 아무 일도 안 한다 (`docs/FOE_TABLE.md`).
     */
     atk: 15, hp: 300, def: 5, res: 1, spd: 0.8, crit: 0, critDmg: 1.5,
+    perLv: { atk: 2.5, hp: 41, armorEvery: 3 },
     /* 검으로 벤다 */
     dmg: 'phys',
     from: '업적 · 파티 강화 합계 60 달성', fx: 'holy', range: 'melee', skill: 'wave',
@@ -1059,6 +1084,7 @@ export const CHARS: Record<CharId, CharDef> = {
     gear: '축배의 도끼', gearKind: 'axe',
     gearNote: '연회장에서 집어 온 것. 무엇을 자르려고 만든 물건인지는 안 물었다.',
     atk: 25, hp: 200, def: 2, res: 0, spd: 0.7, crit: 0, critDmg: 2.0,
+    perLv: { atk: 3.75, hp: 23, armorEvery: 7 },
     /* 도끼로 찍는다 */
     dmg: 'phys',
     from: '모집', fx: 'smash', range: 'melee', skill: 'leap',
@@ -1083,6 +1109,7 @@ export const CHARS: Record<CharId, CharDef> = {
     gear: '마른가지 곡궁', gearKind: 'bow',
     gearNote: '베어 나간 숲에서 하나 남은 가지로 깎았다. 아직 마르는 중이다.',
     atk: 20, hp: 150, def: 1, res: 0, spd: 1.1, crit: 0, critDmg: 2.0,
+    perLv: { atk: 3.25, hp: 21, armorEvery: 8 },
     /* 화살이다 */
     dmg: 'phys',
     from: '모집', fx: 'thrust', range: 'ranged', skill: 'rain',
@@ -1102,11 +1129,12 @@ export const CHARS: Record<CharId, CharDef> = {
   */
   nun: {
     id: 'nun', name: '아녜스', title: '재를 뿌리는 사제',
-    rarity: 'legendary', role: 'support',
+    rarity: 'epic', role: 'support',
     quote: '다치는 건 상관없어요. 혼자 다치지만 않으면.',
     gear: '잿빛 종 향로', gearKind: 'censer',
     gearNote: '불타는 예배당에서 하나 건져 나왔다. 아직 재 냄새가 난다.',
     atk: 10, hp: 150, def: 1, res: 0, spd: 0.5, crit: 0, critDmg: 1.5,
+    perLv: { atk: 1.25, hp: 34, armorEvery: 5 },
     /*
       **넷 중 유일하게 평타가 마법이다.**
 
@@ -1434,16 +1462,27 @@ export function statOf(c: OwnedChar): Stat {
     한 번 새면 스탯이 통째로 사라진다.
   */
   const lv = Math.max(0, (Number.isFinite(c.lv) ? c.lv : 1) - 1);
-  const lg = 1 + LV_GROWTH * lv;
+  /*
+    ── 레벨은 **더하고**, 강화는 **곱한다** ──
+
+    레벨 성장이 사람마다 다른 고정값이 되면서 (`CharDef.perLv`) 순서가
+    중요해졌다. 더한 뒤에 곱한다 — 그래야 레벨을 올린 만큼도 강화 배수를
+    같이 받는다. 반대로 하면 레벨이 강화를 안 타서, 만렙에 가까울수록
+    강화가 무의미해진다.
+  */
+  const lvAtk = d.atk + d.perLv.atk * lv;
+  const lvHp = d.hp + d.perLv.hp * lv;
+  /* 방어는 몇 레벨마다 한 칸씩 — 뺄셈이라 매 레벨 올리면 금세 다 막힌다 */
+  const lvArmor = Math.floor(lv / Math.max(1, d.perLv.armorEvery));
   return {
-    atk: Math.round(d.atk * (1 + g) * lg * m.atk),
-    hp: Math.round(d.hp * (1 + g * 0.6) * (1 + LV_GROWTH * LV_HP_RATIO * lv) * m.hp),
+    atk: Math.round(lvAtk * (1 + g) * m.atk),
+    hp: Math.round(lvHp * (1 + g * 0.6) * m.hp),
     /*
       방어도 자란다. 다만 **제일 천천히** — 뺄셈으로 들어가는 값이라 조금만
       올라도 효과가 크고, 공격력과 같은 기울기로 키우면 어느 지점부터 맞는
       피해가 통째로 1 이 된다.
     */
-    def: Math.round(d.def * (1 + g * 0.4) * m.def),
+    def: Math.round((d.def + lvArmor) * (1 + g * 0.4) * m.def),
     /*
       마법저항력도 방어와 **같은 기울기**로 자란다. 하는 일이 똑같고
       (`Armor`) 막는 것만 다르므로, 기울기를 다르게 둘 이유가 없다.
@@ -1453,7 +1492,7 @@ export function statOf(c: OwnedChar): Stat {
       이 스탯은 **키우는 축이 아니라 갖고 있고 없고**로 두었기 때문이고,
       의도한 것이다.
     */
-    res: Math.round((d.res ?? 0) * (1 + g * 0.4) * m.res),
+    res: Math.round(((d.res ?? 0) + lvArmor) * (1 + g * 0.4) * m.res),
     /* 속도와 치명타는 강화로 안 자란다 — 자라는 축은 하나여야 한다 */
     spd: d.spd,
     crit: d.crit,
