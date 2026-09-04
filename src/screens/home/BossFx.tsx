@@ -64,7 +64,9 @@ export type ShotKind = 'bolt' | 'lob' | 'bomb' | 'blob';
 /** 맞은 아군 몸 위에서 나는 것 */
 export type BodyKind =
   | 'slashV' | 'slashD' | 'slashX' | 'lance' | 'spore' | 'coil'
-  | 'rock' | 'crush' | 'spike' | 'thunder' | 'drip' | 'whip' | 'boom';
+  | 'rock' | 'crush' | 'spike' | 'thunder' | 'drip' | 'whip' | 'boom'
+  /* 아래 넷은 "티가 안 난다" 는 말을 들은 기술들을 위해 나중에 더했다 */
+  | 'cleave' | 'claw' | 'bite' | 'drain';
 
 /**
  * 한 번의 공격이 화면에서 어떻게 보이나.
@@ -143,6 +145,14 @@ export const BODY_HIT: Record<BodyKind, number> = {
   thunder: 104,
   drip: 248,
   whip: 90,
+  /* 머리 위에서 내려와 갈라지는 것 — 날이 바닥까지 닿는 때가 닿는 때다 */
+  cleave: 190,
+  /* 세 줄이 잇달아 그어진다 — 마지막 줄이 그어질 때 */
+  claw: 130,
+  /* 위아래 턱이 맞물리는 순간 */
+  bite: 150,
+  /* 침이 박히는 순간. 빨려 나가는 것은 그 뒤에 이어진다 */
+  drain: 120,
 };
 
 /**
@@ -193,13 +203,48 @@ export const BOSS_BLOW: Record<number, FxPlan> = {
   3: { shot: 'blob', lead: 300 },
   /* 무슨 동작인지 알 수 없다는 말을 들었다 — 날리는 것으로 바꾼다 */
   4: { shot: 'bolt', lead: 300 },
-  /* 공격처럼 안 보인다 — 크게 한 번 휘두른다 */
-  5: { boss: 'swing', lead: 160 },
+  /*
+    5판 가시 두꺼비 — **가시를 날린다.**
+
+    크게 한 번 휘두르고 있었다 (`swing`). 그런데 저 호는 우두머리 몸 앞을
+    쓸고 지나가기만 할 뿐 아군에게 닿지 않아서, "휙 하고 뭔가 지나갔는데
+    저쪽 체력이 줄었다" 로 보였다. 이 놈은 가시로 덮인 놈이므로 (`STAGES`)
+    날리는 것이 몸과도 맞는다.
+  */
+  5: { shot: 'bolt', lead: 300 },
+  /*
+    6판 바위 골렘 — **돌멩이를 던진다.**
+
+    아무것도 안 적혀 있어서 그냥 쳤다 (`PLAIN`). 붙어서 치는 그림이 없는
+    놈이라 화면에서는 가만히 서 있는 것과 구분이 안 됐다 ("일반 공격이
+    티가 안남").
+
+    던지는 것이라 포물선이다 (`lob`) — 곧게 가면 쏜 것이고, 돌은 던지는
+    것이다. 그림은 암석 시트를 그대로 쓴다 (`bfx_rock`).
+  */
+  6: { shot: 'lob', lead: 340 },
+  /*
+    12판 시체 먹는 벌레 — **산성액을 포물선으로 뱉는다.**
+
+    소화액을 흘리는 놈인데 (`digest`) 평타는 붙어서 치고 있었다. 뱉는
+    것으로 바꾸면 특수기(몸을 타고 흘러내리는 것)와 한 놈의 두 동작으로
+    이어진다.
+  */
+  12: { shot: 'lob', lead: 340 },
   14: { shot: 'bolt', lead: 300 },
   /* 포물선으로 던진다. 실제로 닿을 때 아프다 (`lead`) */
   15: { shot: 'lob', lead: 340 },
-  /* 휘두르고, 맞은 쪽이 찍힌다 */
-  16: { boss: 'swing', body: 'crush', lead: 200 },
+  /*
+    16판 — **할퀸다.**
+
+    휘두르고 찍혔다 (`swing` + `crush`). 5판과 같은 문제였다: 호가 우두머리
+    앞을 지나갈 뿐이라 맞은 쪽과 이어지지 않았고, 찍힌 자국은 16판 도끼
+    특수기와 똑같이 생겼다 — 평타와 특수기가 화면에서 같아 보였다.
+
+    맞은 사람 몸에 **세 줄이 잇달아 그어진다** (`Claw`). 몸에서 나므로
+    누가 맞았는지가 분명하고, 도끼(`cleave`)와도 안 겹친다.
+  */
+  16: { body: 'claw', lead: 200 },
   /* 버섯 폭탄 — 날아가서 터진다 */
   17: { shot: 'bomb', lead: 340 },
   /* 가시 한 발 */
@@ -258,13 +303,29 @@ export const BOSS_CAST: Record<string, FxPlan> = {
   barb: { boss: 'spikes', lead: 260 },
   /* 6판 암석 낙하 — 암석이 없었다 */
   rock: { body: 'rock', lead: 420 },
-  /* 7판 양단 직격 — 세로로 샥 */
-  cleave: { body: 'slashV', lead: 160 },
+  /*
+    7판 양단 직격 — **머리 위에서 내려와 갈라진다.**
+
+    몸 위를 스치는 짧은 세로선이었다 (`slashV`). 이름이 양단(兩斷)이고 이
+    판에서 제일 아픈 한 대인데, 화면에서는 다른 판의 베기와 같은 굵기의
+    선 하나였다.
+
+    이제 **상자 밖 머리 위에서** 시작해 발밑까지 자라고, 다 내려온 뒤
+    좌우로 벌어진다 (`Cleave`). 세 단계가 겹쳐야 "쪼개졌다" 로 읽힌다.
+  */
+  cleave: { body: 'cleave', lead: 200 },
   /* 8판 강산성 융해 액 */
   /* 몸에 부어 내리는 것이다 — 날아가는 것이 아니라 (`bfx_drip`) */
   melt: { body: 'drip', lead: 320 },
-  /* 9판 백골 가시 찌르기 — 가로로 팍 */
-  bone: { body: 'lance', lead: 140 },
+  /*
+    9판 백골 가시 찌르기 — **박히고 빨린다.**
+
+    가로로 지나가는 선 하나였다 (`lance`). 0.2초 만에 지나가는 가는 선이라
+    "티가 안 난다" 는 말을 들었다. 28판 흡혈 침과 같은 연출을 쓴다
+    (`Drain`) — 침이 박혀 **머물렀다가** 뽑히므로 눈이 따라갈 시간이 있고,
+    붉은 방울이 딸려 나가 뼈가 무엇을 하는 놈인지도 같이 말한다.
+  */
+  bone: { body: 'drain', lead: 140 },
   /* 10판 해일 — 무대를 빠르게 휩쓸고 지나간다. 가리지는 않는다 */
   tide: { tide: true, lead: 380 },
   /* 10판 포식의 점액 */
@@ -292,8 +353,14 @@ export const BOSS_CAST: Record<string, FxPlan> = {
   burst: { body: 'spore', lead: 300 },
   /* 15판 부패의 악취 — 스멀스멀 퍼지다 사라진다 */
   stench: { boss: 'stench', lead: 340 },
-  /* 16판 녹슨 도끼 — 크게 휘두르고 크게 찍힌다 */
-  axe: { boss: 'swing', body: 'crush', lead: 200 },
+  /*
+    16판 녹슨 도끼 — 크게 휘두르고 **머리 위에서 쪼갠다.**
+
+    찍힌 자국이었다 (`crush`). 도끼는 내리치는 물건이라 7판 양단 직격과
+    같은 연출이 맞다 (`Cleave`) — 다만 이쪽은 우두머리가 실제로 휘두르는
+    동작까지 같이 보인다 (`swing`).
+  */
+  axe: { boss: 'swing', body: 'cleave', lead: 220 },
   /* 17판 공허한 울림 — 파동이 퍼진다 */
   hollow: { boss: 'ripple', lead: 300 },
   /* 18판 가시 가지 후려치기 — 가시가 사방으로 */
@@ -332,10 +399,28 @@ export const BOSS_CAST: Record<string, FxPlan> = {
   ignite: { boss: 'stench', lead: 340 },
   /* 26판 날카로운 찌르기 — 두 대마다 나오는 짧은 것이라 몸에서 끝낸다 */
   jab: { body: 'lance', lead: 140 },
-  /* 27판 포식 — 물어뜯는다 */
-  devour: { body: 'crush', lead: 200 },
-  /* 28판 치명적 흡혈 침 — 긴 침이 밖에서 들어와 박힌다 */
-  siphon: { body: 'lance', lead: 140 },
+  /*
+    27판 포식 — **붉은 이빨이 콱 문다.**
+
+    찍힌 자국이었다 (`crush`). 이 기술은 맞은 사람의 공격력을 우두머리가
+    가져가는 것인데 (`BOSS_GIMMICK` 의 `devour`), 찍힌 자국으로는 "아팠다"
+    까지만 보이고 **빼앗겼다**가 안 보였다.
+
+    위아래 턱이 맞물린다 (`Bite`). 붉은 이유는 저기 적어 두었다 — 이 게임의
+    붉은색은 "나에게 나쁜 것" 하나만 말한다.
+  */
+  devour: { body: 'bite', lead: 200 },
+  /*
+    28판 치명적 흡혈 침 — 박히고 **빨려 나간다.**
+
+    침이 들어왔다 나가는 것까지만 있었다 (`lance`). 이 기술은 입힌 피해의
+    절반을 우두머리가 제 체력으로 가져가는데 (`BossPattern.drain`), 그
+    절반이 화면 어디에도 없었다.
+
+    이제 침이 박힌 뒤 붉은 방울 셋이 침을 타고 **우두머리 쪽으로** 흘러
+    나간다 (`Drain`). 방향이 곧 뜻이다.
+  */
+  siphon: { body: 'drain', lead: 160 },
   /* 29판 신경 마비 포자 */
   numb: { body: 'spore', lead: 300 },
   /* 30판 군체의 대염쇄 — 허물이 사방으로 흩어진다 */
@@ -973,6 +1058,262 @@ function GroundSpike({ size }: { size: number }) {
  * 여기서는 "번호가 올랐나" 를 볼 필요가 없다. 도는 중에 또 맞으면 앞엣것이
  * 끝까지 돌고 새것이 따로 돈다.
  */
+/**
+ * ── 머리 위에서 내려찍는 갈라짐 ── 7판 양단 직격 · 16판 녹슨 도끼.
+ *
+ * `Slash` 와 다르다. 저건 몸 위를 스치는 짧은 선이라 "베였다" 는 말하지만
+ * **"쪼개졌다"** 는 못 말한다 — 7판의 이름이 양단(兩斷)이고 16판은 도끼다.
+ *
+ * 셋이 겹쳐야 그렇게 보인다.
+ *
+ *   1. **머리 위에서 시작한다.** 상자 밖 위쪽에서 내려온다 — 몸 안에서
+ *      시작하면 어디서 온 것인지가 없다
+ *   2. **아래로 자란다.** 위에서 아래로 순식간에 길어진다. 통째로 나타나면
+ *      선이 그려진 것이 아니라 그냥 켜진 것이다
+ *   3. **다 내려온 뒤 좌우로 갈라진다.** 이 마지막이 "양단" 이다
+ *
+ * 굵다 (몸 폭의 1/7). 가늘면 내려오는 동안 안 보이고, 이 기술은 그 판에서
+ * 제일 아픈 한 대다.
+ */
+function Cleave({ size }: { size: number }) {
+  const MS = 420;
+  const { t, on } = useRun(MS);
+  /* 위에서 아래로 자란다 — 0.45 지점에 바닥까지 닿는다 (`BODY_HIT.cleave`) */
+  const grow = useMemo(() => t.interpolate({
+    inputRange: [0, 0.45, 1], outputRange: [0, 1, 1], extrapolate: 'clamp',
+  }), [t]);
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.08, 0.6, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+  /* 다 내려온 뒤에 벌어진다 — 두 쪽이 서로 반대로 밀린다 */
+  const split = useMemo(() => t.interpolate({
+    inputRange: [0, 0.45, 1], outputRange: [0, 0, size * 0.16], extrapolate: 'clamp',
+  }), [t, size]);
+
+  if (!on) return null;
+  const w = Math.max(3, Math.round(size / 7));
+  /* 머리 위에서 시작해 발밑까지 — 상자보다 길다 */
+  const h = size * 1.5;
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      {([-1, 1] as const).map((side) => (
+        <Animated.View
+          key={side}
+          style={{
+            position: 'absolute',
+            top: -size * 0.35,
+            left: size / 2 - w / 2,
+            width: w,
+            height: h,
+            backgroundColor: WHITE,
+            opacity: fade,
+            transform: [
+              /* 위 끝을 축으로 자란다 — 가운데를 축으로 두면 위아래로 벌어진다 */
+              { translateY: -h / 2 },
+              { scaleY: grow },
+              { translateY: h / 2 },
+              { translateX: Animated.multiply(split, side) },
+            ],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * ── 할퀴기 ── 16판 평타.
+ *
+ * 나란한 세 줄이 **비스듬히 잇달아** 그어진다. 한 줄이면 베인 것이고
+ * (`Slash`), 세 줄이라야 발톱이다.
+ *
+ * 셋이 동시에 뜨면 빗금 무늬가 된다. 시차를 조금 두면 손이 지나간 것으로
+ * 보인다 — 순서가 위에서 아래다.
+ */
+function Claw({ size }: { size: number }) {
+  const MS = 380;
+  const { t, on } = useRun(MS);
+  const lines = useMemo(() => [0, 0.12, 0.24].map((d) => ({
+    grow: t.interpolate({
+      inputRange: [0, d, Math.min(1, d + 0.3), 1],
+      outputRange: [0, 0, 1, 1],
+      extrapolate: 'clamp',
+    }),
+    fade: t.interpolate({
+      inputRange: [0, d, Math.min(1, d + 0.1), 0.72, 1],
+      outputRange: [0, 0, 1, 1, 0],
+      extrapolate: 'clamp',
+    }),
+  })), [t]);
+
+  if (!on) return null;
+  const w = Math.max(2, Math.round(size / 12));
+  const len = size * 1.05;
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      {lines.map((l, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            /* 셋이 나란히 — 몸 폭의 1/5 씩 벌린다 */
+            left: size / 2 - w / 2 + (i - 1) * (size / 5),
+            top: size / 2 - len / 2,
+            width: w,
+            height: len,
+            backgroundColor: WHITE,
+            opacity: l.fade,
+            transform: [
+              { rotate: '24deg' },
+              { translateY: -len / 2 },
+              { scaleY: l.grow },
+              { translateY: len / 2 },
+            ],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * ── 물어뜯기 ── 27판 포식.
+ *
+ * 위아래 턱이 몸을 **콱 물었다 놓는다.** 이빨은 삼각형 넷씩이고, 맞물리는
+ * 순간 제일 깊다.
+ *
+ * **붉다** (`BAD_C`). 이 게임에서 붉은색은 "나에게 나쁜 것" 하나만 말하는데
+ * (`ui/theme`), 포식은 맞은 사람의 공격력을 우두머리가 가져가는 기술이라
+ * 정확히 그것이다. 흰 이빨로 두면 27판 평타와 구분이 안 됐다.
+ */
+function Bite({ size }: { size: number }) {
+  const MS = 460;
+  const { t, on } = useRun(MS);
+  /* 벌렸다가 → 맞물렸다가 → 놓는다 */
+  const gap = useMemo(() => t.interpolate({
+    inputRange: [0, 0.16, 0.36, 0.62, 1],
+    outputRange: [size * 0.55, size * 0.42, 0, 0, size * 0.5],
+  }), [t, size]);
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.1, 0.7, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+
+  if (!on) return null;
+  const tooth = Math.max(4, Math.round(size / 7));
+  const row = (up: boolean) => (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: 0,
+        width: size,
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        opacity: fade,
+        [up ? 'top' : 'bottom']: 0,
+        transform: [{ translateY: up ? Animated.multiply(gap, -0.5) : Animated.multiply(gap, 0.5) }],
+      }}
+    >
+      {[0, 1, 2, 3].map((i) => (
+        <View
+          key={i}
+          style={{
+            width: 0,
+            height: 0,
+            borderLeftWidth: tooth / 2,
+            borderRightWidth: tooth / 2,
+            borderLeftColor: 'transparent',
+            borderRightColor: 'transparent',
+            /* 위 이빨은 아래를 향해, 아래 이빨은 위를 향해 뾰족하다 */
+            ...(up
+              ? { borderTopWidth: tooth, borderTopColor: BAD_C }
+              : { borderBottomWidth: tooth, borderBottomColor: BAD_C }),
+          }}
+        />
+      ))}
+    </Animated.View>
+  );
+
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      {row(true)}
+      {row(false)}
+    </View>
+  );
+}
+
+/**
+ * ── 박아서 빨아들이기 ── 28판 치명적 흡혈 침.
+ *
+ * `Lance` 는 침이 들어왔다 나가는 것까지만 그린다. 이 기술은 거기서 끝이
+ * 아니라 **빨아 간다** (`BossPattern.drain`) — 그 부분이 화면에 없었다.
+ *
+ * 침이 박힌 뒤, 붉은 점 셋이 몸에서 침을 타고 **우두머리 쪽으로** 흘러
+ * 나간다. 방향이 중요하다: 나가는 방향이라야 빼앗기는 것으로 보이고,
+ * 들어오는 방향이면 독을 넣는 것으로 보인다.
+ */
+function Drain({ size }: { size: number }) {
+  const MS = 620;
+  const { t, on } = useRun(MS);
+  /* 침 — 오른쪽 밖에서 들어와 박혔다가 뽑힌다 */
+  const stab = useMemo(() => t.interpolate({
+    inputRange: [0, 0.2, 0.75, 1],
+    outputRange: [size * 0.9, 0, 0, size * 0.9],
+  }), [t, size]);
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.08, 0.88, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+  /* 붉은 방울 셋 — 박힌 뒤에 오른쪽으로 흘러 나간다 */
+  const drops = useMemo(() => [0.28, 0.42, 0.56].map((d) => ({
+    go: t.interpolate({
+      inputRange: [0, d, Math.min(1, d + 0.34), 1],
+      outputRange: [0, 0, size * 0.85, size * 0.85],
+      extrapolate: 'clamp',
+    }),
+    fade: t.interpolate({
+      inputRange: [0, d, Math.min(1, d + 0.06), Math.min(1, d + 0.3), 1],
+      outputRange: [0, 0, 1, 0, 0],
+      extrapolate: 'clamp',
+    }),
+  })), [t, size]);
+
+  if (!on) return null;
+  const len = size * 0.95;
+  const th = Math.max(3, Math.round(size / 11));
+  const dot = Math.max(3, Math.round(size / 12));
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: size / 2 - len / 2,
+          top: size / 2 - th / 2,
+          width: len,
+          height: th,
+          backgroundColor: WHITE,
+          opacity: fade,
+          transform: [{ translateX: stab }],
+        }}
+      />
+      {drops.map((d, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: size / 2 - dot / 2,
+            top: size / 2 - dot / 2 - (i - 1) * dot,
+            width: dot,
+            height: dot,
+            borderRadius: dot,
+            backgroundColor: BAD_C,
+            opacity: d.fade,
+            transform: [{ translateX: d.go }],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function BossBodyFx({ kind, size }: { kind: BodyKind; size: number }) {
   switch (kind) {
     case 'slashV': return <Slash size={size} deg={4} />;
@@ -983,6 +1324,10 @@ export function BossBodyFx({ kind, size }: { kind: BodyKind; size: number }) {
     case 'spike': return <GroundSpike size={size} />;
     case 'whip': return <Whip size={size} />;
     case 'boom': return <Boom size={size} />;
+    case 'cleave': return <Cleave size={size} />;
+    case 'claw': return <Claw size={size} />;
+    case 'bite': return <Bite size={size} />;
+    case 'drain': return <Drain size={size} />;
     /* 벼락만 시트 앞에 하늘에서 내려오는 줄기가 붙는다 (`Thunder`) */
     case 'thunder': return <Thunder size={size} />;
     /* 넷은 받아 둔 시트를 그대로 튼다 (`SHEET`) */
@@ -1285,7 +1630,7 @@ export function Charging({ size }: { size: number }) {
  * 연출과 달리 `nonce` 를 안 받는 이유가 그것이다 — 켜고 끄는 것은 부르는
  * 쪽이 상태로 정한다.
  */
-export function Bound({ size }: { size: number }) {
+export function Bound({ size, web }: { size: number; web?: boolean }) {
   const t = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(Animated.sequence([
@@ -1308,9 +1653,85 @@ export function Bound({ size }: { size: number }) {
   return (
     <View pointerEvents="none" style={bodyBox(size)}>
       <Animated.View style={{ position: 'absolute', transform: [{ scale: squeeze }] }}>
-        {/* 고리가 닫힌 마지막 칸 — 앞 칸들은 아직 안 감긴 덩굴이다 (`Whip`) */}
-        <Sprite set="bfx_bind" name="5" size={Math.round(size * 1.15)} opacity={0.9} />
+        {/*
+          ── 네 번째 칸이다. 다섯 번째가 아니다 ──
+
+          마지막 칸을 "고리가 닫힌 그림" 으로 알고 썼는데, 실제 시트에서는
+          그게 **풀려 나가는 칸**이었다 (다섯 칸이 감기고 → 조이고 → 풀린다).
+          그래서 2~5초 동안 세워 두는 그림이 하필 제일 헐렁한 칸이었고,
+          화면에서는 묶였다기보다 덩굴이 옆에 널려 있는 것으로 보였다.
+
+          네 번째가 제일 빈틈없이 감긴 칸이다.
+        */}
+        {/*
+          ── 25판만 거미줄 고치다 ──
+
+          덩굴과 거미줄은 다른 것이다. 25판은 번데기로 만드는 기술인데
+          (`cocoon`) 덩굴이 감기면 13판 속박과 같은 일로 보인다.
+
+          `bfx_cocoon` 이 아직 없으면 덩굴로 떨어진다 (`fallbackSet`) —
+          프롬프트는 `docs/BOSS_FX_PROMPTS.md` 의 §X4 에 있다.
+        */}
+        <Sprite
+          set={web ? 'bfx_cocoon' : 'bfx_bind'}
+          name="4"
+          size={Math.round(size * 1.15)}
+          opacity={0.9}
+          fallbackSet="bfx_bind"
+          fallbackName="4"
+        />
       </Animated.View>
+    </View>
+  );
+}
+
+/**
+ * ── 돌아선 동안 ── 24판 정신 착란 · 29판 광란.
+ *
+ * `Bound` · `Charging` 과 성격이 같다: **끝날 때까지 돈다.** 한 번 터지고
+ * 마는 나머지 연출과 달리 번호를 안 받는 이유가 그것이다.
+ *
+ * 몸을 덮는 붉은 판이 아주 느리게 밝아졌다 어두워진다. 두 가지를 피해야
+ * 한다.
+ *
+ *   **빠르면** 맞고 있는 것으로 보인다 — 맞을 때 몸이 붉게 깜빡이는 것은
+ *   이미 다른 뜻으로 쓰고 있다 (`Fighter` 의 피격 깜빡임)
+ *   **진하면** 아군이 안 보인다. 이 사람은 여전히 싸우는 중이고, 누구를
+ *   치는지가 보여야 한다
+ *
+ * 그래서 0.10~0.30 사이를 1.5초에 한 번 오간다. "몸에서 연하게 일렁인다."
+ */
+export function Charmed({ size }: { size: number }) {
+  const t = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(t, {
+        toValue: 1, duration: 750, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+      }),
+      Animated.timing(t, {
+        toValue: 0, duration: 750, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+      }),
+    ]));
+    loop.start();
+    return () => { loop.stop(); t.setValue(0); };
+  }, [t]);
+
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [0.10, 0.30],
+  }), [t]);
+
+  return (
+    <View pointerEvents="none" style={bodyBox(size)}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: size / 4,
+          backgroundColor: BAD_C,
+          opacity: fade,
+        }}
+      />
     </View>
   );
 }
@@ -1541,17 +1962,33 @@ export function Tide({ w, h }: { w: number; h: number }) {
 export const BURST_MS = 620;
 
 /**
- * ── 터짐 ── 무대 한가운데에서 고리 셋이 크게 퍼진다.
+ * ── 터짐 ── 한 점에서 고리 셋이 크게 퍼진다.
  *
- * 막을 못 깼을 때(22·29판)와 우화가 터질 때(25판). 셋 다 **전원이 한꺼번에
- * 당하는 일**이라 어느 한 사람 위에서는 그릴 수가 없다.
+ * 막을 못 깼을 때(22·29판)와 우화가 터질 때(25판), 폭탄 애벌레가 자폭할
+ * 때(26판). 넷 다 **전원이 한꺼번에 당하는 일**이라 맞은 사람 하나 위에서는
+ * 그릴 수가 없다.
  *
- * 해일(`Tide`)과 같은 자리를 쓰는데 규칙이 다르다. 저건 한쪽에서 다른 쪽으로
+ * ## 어디서 퍼지나 — 무대 한가운데가 아니다
+ *
+ * 여태 무대 정중앙이었다. 그런데 이 넷은 전부 **저쪽 편에서 벌어지는 일**
+ * 이다 — 여왕이 장막을 못 지켰고, 번데기가 터졌고, 애벌레가 자폭했다.
+ * 한가운데서 퍼지면 그 원인이 화면에서 사라지고, 아무 데서나 파동이 일고
+ * 그와 별개로 체력이 주는 것으로 보인다.
+ *
+ * 이제 부르는 쪽이 **터진 몸의 자리**를 준다 (`cx`·`cy`). 안 주면 예전처럼
+ * 한가운데다 — 자리를 모르는 자리에서도 부를 수 있어야 한다.
+ *
+ * 해일(`Tide`)과 같은 층을 쓰는데 규칙이 다르다. 저건 한쪽에서 다른 쪽으로
  * 지나가는 것이라 아래 절반만 쓰지만, 이건 **한 점에서 퍼지는 것**이라 무대를
  * 다 쓴다. 대신 **테두리뿐**이라 (속을 안 채운다) 뒤가 다 보인다 — 화면을
  * 덮는 연출은 안 쓴다는 규칙이 여기서도 산다.
+ *
+ * @param cx 퍼지기 시작하는 가로 자리 (무대 왼쪽 끝 기준). 없으면 한가운데
+ * @param cy 세로 자리. 없으면 한가운데
  */
-export function Burst({ w, h }: { w: number; h: number }) {
+export function Burst({ w, h, cx, cy }: {
+  w: number; h: number; cx?: number; cy?: number;
+}) {
   const { t, on } = useRun(BURST_MS);
   const rings = useMemo(() => [0, 0.18, 0.36].map((d) => ({
     scale: t.interpolate({
@@ -1566,6 +2003,13 @@ export function Burst({ w, h }: { w: number; h: number }) {
 
   if (!on) return null;
   const size = Math.max(w, h);
+  /*
+    고리를 **자리에 못 박는다.** `alignItems` 로 가운데 정렬하던 것을
+    좌표로 바꿨다 — 정렬은 상자 한가운데밖에 못 가리키는데, 여기서
+    가리켜야 하는 것은 터진 몸이다.
+  */
+  const ox = cx ?? w / 2;
+  const oy = cy ?? h / 2;
   return (
     <View
       pointerEvents="none"
@@ -1575,8 +2019,6 @@ export function Burst({ w, h }: { w: number; h: number }) {
         top: 0,
         width: w,
         height: h,
-        alignItems: 'center',
-        justifyContent: 'center',
         zIndex: 44,
       }}
     >
@@ -1585,6 +2027,8 @@ export function Burst({ w, h }: { w: number; h: number }) {
           key={i}
           style={{
             position: 'absolute',
+            left: ox - size / 2,
+            top: oy - size * 0.25,
             width: size,
             height: size * 0.5,
             borderRadius: size,

@@ -944,8 +944,39 @@ export function BattleView({ top, corner }: Props = {}) {
     명단에 이름이 남아 있어도 아무 일이 없다.
   */
   const [bindIds, setBindIds] = useState<readonly string[]>([]);
-  /** 우두머리 몸 자리에서 나는 것 */
-  const [bossFx, setBossFx] = useState<{ no: number; kind: BossKind } | null>(null);
+  /*
+    ── 돌아선 아군에게 맞았다 ──
+
+    맞은 사람 몸에 할퀸 자국을 낸다 (`Claw`). 여태 숫자만 떴으므로 "우리 편
+    체력이 왜 줄지" 가 화면에 없었다 — 우두머리는 저 멀리 서 있는데.
+
+    할퀴기를 쓰는 이유: 아군의 평타는 저마다 다르지만 (검 · 도끼 · 활 · 향로)
+    여기서 말해야 하는 것은 **누가 맞았나** 하나다. 무기별로 갈래를 만들면
+    갈래만 넷이 늘고 화면에서 달라지는 것은 없다.
+  */
+  const charmHit = useBattleUi((s) => s.charmHit);
+  const lastCharmHit = useRef(0);
+  useEffect(() => {
+    const no = charmHit?.no ?? 0;
+    if (!charmHit || no <= lastCharmHit.current) { lastCharmHit.current = no; return; }
+    lastCharmHit.current = no;
+    const id = charmHit.id;
+    setBodyFx((old) => ({
+      ...old,
+      [id]: { no: (old[id]?.no ?? 0) + 1, kind: 'claw' as const },
+    }));
+  }, [charmHit]);
+
+  /**
+   * 우두머리 몸 자리에서 나는 것.
+   *
+   * **어느 판에서 붙인 불인지**를 같이 들고 다닌다 (`stage`). 이유는 아래
+   * `useEffect` 에 적어 두었다 — 이 한 칸이 없어서 15판의 연기가 16판
+   * 우두머리 등장에 피어올랐다.
+   */
+  const [bossFx, setBossFx] = useState<
+    { no: number; kind: BossKind; stage: number } | null
+  >(null);
   /** 무대를 쓸고 지나가는 해일 (10판 하나뿐이다) */
   const [tideNo, setTideNo] = useState(0);
   /** 아군 진영으로 뛰어들어 찍기 (1판 하나뿐이다) — 번호와 건너갈 거리 */
@@ -966,6 +997,45 @@ export function BattleView({ top, corner }: Props = {}) {
     () => ({ span: 0, rise: 0 }),
   );
   const fxSeq = useRef(0);
+  /* 지금 판 — `fireRef` 안에서 읽는다 (저 함수는 렌더 밖에서도 불린다) */
+  const stageRef = useRef(battle.stage);
+  stageRef.current = battle.stage;
+
+  /*
+    ── 판이 바뀌면 켜져 있던 연출을 **전부 쓸어낸다** ──
+
+    ## 무엇이 잘못됐었나
+
+    "15판 첫 스킬때 연기가 안 나오고, 16판 우두머리가 등장할 때 연기가
+    나온다." "17판 울림이 18판 등장에 보인다." "29판 가스가 30판 시작할 때
+    보인다." 셋 다 같은 한 가지다.
+
+    우두머리 연출은 `bossOne && !!bossFx` 일 때만 그려진다. 그런데 `bossFx` 는
+    **불을 붙일 때만 갈아 끼우고 아무도 안 지웠다.** 그래서 우두머리가 쓰러져
+    `bossOne` 이 거짓이 되는 순간 그리기가 멈추고, 그 값은 그대로 남는다.
+    다음 판 우두머리가 걸어 들어와 `bossOne` 이 다시 참이 되면 — 새 `key` 로
+    새로 마운트되면서 **한 판 늦게** 그 연출이 돈다.
+
+    묶인 사람 명단(`bindIds`)도 같은 병이다. 안 지우므로 13판에서 덩굴에
+    감겼던 사람이 23판에서 무쇠 뿔에 기절하면 덩굴이 다시 감긴다 — 그 판에는
+    덩굴이라는 것 자체가 없는데.
+
+    ## 왜 판이 바뀔 때인가
+
+    "우두머리가 죽을 때" 로 두면 안 된다. 우두머리가 안 나오는 잡몹 구간에도
+    `bossFx` 는 남아 있어야 뜻이 없고, 무엇보다 **판을 되돌아갈 때**
+    (`goStage`) 도 같이 쓸려야 한다.
+
+    `leap` 과 `tideNo` 는 번호가 0 이면 안 그리므로 같이 0 으로 되돌린다.
+    `bodyFx` 는 아군 몸 위 것이라 판이 바뀌면 남아 있을 이유가 없다.
+  */
+  useEffect(() => {
+    setBossFx(null);
+    setBindIds([]);
+    setBodyFx({});
+    setTideNo(0);
+    setLeap({ no: 0, span: 0, rise: 0 });
+  }, [battle.stage]);
   /*
     치우는 시계들.
 
@@ -1108,11 +1178,22 @@ export function BattleView({ top, corner }: Props = {}) {
     통째로 깎였다. 이제 살아 있는 사람 몸마다 폭발이 하나씩 터진다
     (`BossFx` 의 `Boom`).
   */
+  /**
+   * 마지막으로 터진 자리 — 고리가 여기서 퍼진다 (`Burst`).
+   *
+   * 터지는 그 순간에 재서 담아 둔다. 그릴 때 다시 재면 안 된다 — 터뜨린
+   * 놈은 그 자리에서 사라지므로 (26판 애벌레), 한 프레임 뒤에는 이미
+   * 다른 놈의 자리이거나 아무도 없는 자리다.
+   */
+  const [burstAt, setBurstAt] = useState({ x: 0, y: 0 });
   const lastBurst = useRef(battle.burst ?? 0);
   useEffect(() => {
     const at = battle.burst ?? 0;
     if (at <= lastBurst.current) { lastBurst.current = at; return; }
     lastBurst.current = at;
+    /* 맨 앞에 선 놈의 몸 한가운데 (`spotOf` 는 왼쪽 위 모서리를 준다) */
+    const sp = spotOf(0);
+    setBurstAt({ x: sp.x + sp.size / 2, y: sp.y + sp.size / 2 });
     const who = members(party, chars)
       .filter((c) => hpOf(c, battle.hp) > 0)
       .map((c) => c.id);
@@ -1700,7 +1781,7 @@ export function BattleView({ top, corner }: Props = {}) {
     /* 우두머리가 선 자리 — 날리는 것도 뛰는 것도 여기서 출발한다 */
     const from = spotOf(0);
 
-    if (plan.boss) setBossFx({ no, kind: plan.boss });
+    if (plan.boss) setBossFx({ no, kind: plan.boss, stage: stageRef.current });
     if (plan.tide) setTideNo(no);
     if (plan.leap) {
       /*
@@ -2334,6 +2415,10 @@ export function BattleView({ top, corner }: Props = {}) {
                     bound={
                       bindIds.includes(c.id) && stunned(hexOf(battle.hex, c.id))
                     }
+                    /* 25판만 거미줄 고치다 — 나머지는 덩굴 (`BossFx` 의 `Bound`) */
+                    boundWeb={battle.stage === 25}
+                    /* 돌아서 있는 동안 몸이 붉게 일렁인다 (`BossFx` 의 `Charmed`) */
+                    charmed={!!battle.charm?.who.includes(c.id)}
                     shock={hasHex(hexOf(battle.hex, c.id), 'st_shock')}
                     /*
                       ── 돌아섰나 ──
@@ -2540,7 +2625,20 @@ export function BattleView({ top, corner }: Props = {}) {
                   일시적이고 `pose` 는 그 놈의 평소 모습이라, 고치가 풀리면
                   제 모습으로 돌아와야 한다.
                 */
-                const rest = f.gim?.form ?? kf.pose ?? 'idle';
+                /*
+                  ── 기를 모으는 동안은 **기 모으는 그림**이다 ──
+
+                  `idle` 로 떨어지고 있었다. 22판 여왕과 29판 여왕개미는 막을
+                  두르고 5초를 버티는데 (`FoeGim.still`), 그 5초 동안 화면에
+                  서 있는 것은 평소 자세였다 — 시트에 `skill1` 로 기를 모으는
+                  칸이 멀쩡히 들어와 있는데도.
+
+                  국면 그림(`gim.form`)이 있으면 그쪽이 먼저다. 23판이 몸을
+                  둥글게 만 것과 25판이 우화한 것은 자세가 아니라 **다른 몸**
+                  이라, 기를 모으는 중이어도 그 몸이어야 한다.
+                */
+                const rest = f.gim?.form
+                  ?? (f.gim?.still ? bossSkillFrame : (kf.pose ?? 'idle'));
                 /*
                   ── 기술 칸도 **몇 번째 기술이냐**를 따라간다 ──
 
@@ -2552,7 +2650,17 @@ export function BattleView({ top, corner }: Props = {}) {
                   기술만 옛 몸으로 나가면 그 순간 딴 놈이 된다.
                 */
                 const swingFrame = f.gim?.form === 'imago' ? 'imago_skill' : bossSkillFrame;
-                const foeFrame = flinch.includes(back) && !down ? 'down'
+                /*
+                  ── 국면 중에는 **맞아도 자세가 안 바뀐다** ──
+
+                  23판이 몸을 둥글게 말면 `cocoon` 칸이 되는데, 그때 맞으면
+                  `down` 칸으로 갈아 끼워져서 말았던 몸이 한 프레임 펴졌다
+                  다시 말렸다. "원래 피격 이미지가 보이니까 이상하네."
+
+                  말고 있는 동안은 그 그림 그대로 두고 흔들림만 준다 —
+                  튕겨 나가는 느낌은 흔들림이 이미 맡고 있다 (`flinch`).
+                */
+                const foeFrame = flinch.includes(back) && !down && !f.gim?.form ? 'down'
                   /* 고치 · 기 모으기 · 막 두르기 중에는 안 휘두른다 */
                   : (foeSwing && !f.gim?.still)
                     ? (battle.boss && patShown ? swingFrame : 'attack')
@@ -2694,7 +2802,13 @@ export function BattleView({ top, corner }: Props = {}) {
                       그림의 `attack` 칸은 자세만 바뀌므로, **무언가가 지나갔다**를
                       따로 그려야 때리는 것으로 보인다.
                     */}
-                    {bossOne && !!bossFx && (
+                    {/*
+                      **이 판에서 붙인 불만** 그린다. 위의 쓸어내기가 이미
+                      막아 주지만, 갈래가 도는 순서에 기대지 않는 편이 낫다 —
+                      판이 바뀐 프레임과 쓸어내기가 도는 프레임 사이에 한 번
+                      그려질 자리가 있다.
+                    */}
+                    {bossOne && bossFx?.stage === battle.stage && (
                       <BossSideFx
                         key={bossFx.no}
                         kind={bossFx.kind}
@@ -2711,7 +2825,19 @@ export function BattleView({ top, corner }: Props = {}) {
                       터지고 마는 것이라 번호에 맞춰 한 판 돌면 되는데, 이건
                       "지금 이러고 있다" 라 그동안 계속 보여야 한다.
                     */}
-                    {(f.gim?.shield ?? 0) > 0 && <Charging size={foeSize} />}
+                    {/*
+                      막을 두르고 있거나(22 · 29판) 몸을 말고 있을 때(23판).
+
+                      `shield` 만 봤었다. 23판은 막이 아니라 몸을 마는 것이라
+                      (`FoeGim.form`) 아무 표시도 없었고, 그래서 갑자기 안
+                      맞는 것으로 보였다 — "약간의 파동이 보이게 해줘."
+
+                      고리는 **몸 자리에서** 조여든다 (`sideBox`). 29판의
+                      "기 모으는 파동이 보스가 중심이 되야 해" 가 그것이다.
+                    */}
+                    {((f.gim?.shield ?? 0) > 0 || !!f.gim?.still) && (
+                      <Charging size={foeSize} />
+                    )}
 
                     <FoeMarks status={fMarks} />
 
@@ -3057,14 +3183,24 @@ export function BattleView({ top, corner }: Props = {}) {
         )}
 
         {/*
-          ── 크게 터졌다 ── 막을 못 깼거나(22 · 29판) 우화했을 때(25판).
+          ── 크게 터졌다 ── 막을 못 깼거나(22 · 29판), 우화했거나(25판),
+          폭탄 애벌레가 자폭했을 때(26판).
 
-          셋 다 **전원이 한꺼번에 당하는 일**이라 어느 한 사람 위에서는 못
-          그린다. 무대 한가운데에서 고리가 퍼진다 — 속이 빈 테두리뿐이라
-          화면을 덮지 않는다.
+          넷 다 **전원이 한꺼번에 당하는 일**이라 어느 한 사람 위에서는 못
+          그린다. 속이 빈 테두리뿐이라 화면을 덮지 않는다.
+
+          **터진 몸에서 퍼진다** (`burstAt`). 여태 무대 한가운데였는데, 저
+          넷은 전부 저쪽 편에서 벌어지는 일이라 한가운데서 퍼지면 원인이
+          화면에서 사라진다 ("이상하게 화면 한 가운데에서 파동이 퍼지네").
         */}
         {!down && (battle.burst ?? 0) > 0 && stageW > 0 && (
-          <Burst key={battle.burst} w={stageW} h={STAGE_H} />
+          <Burst
+            key={battle.burst}
+            w={stageW}
+            h={STAGE_H}
+            cx={burstAt.x}
+            cy={burstAt.y}
+          />
         )}
 
         {/* 우두머리 등장 — 무대 한가운데. 전멸 안내보다 아래에 둔다 */}

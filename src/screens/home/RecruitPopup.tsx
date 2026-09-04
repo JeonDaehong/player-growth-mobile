@@ -199,7 +199,7 @@ export function RecruitPopup({ visible, onClose }: { visible: boolean; onClose: 
                 가진 사람에게 궁금한 것은 등급이 아니라 얼마나 키웠나다.
               */}
               {mine
-                ? <Stars star={mine.star} max={maxStarOf(d.rarity)} awake={mine.awake} scale={1.2} />
+                ? <Stars star={mine.star} max={maxStarOf(d.rarity)} awake={mine.awake} size={9} />
                 : <T size={8} dim="dim">{RARITY_NAME[d.rarity]}</T>}
             </View>
           );

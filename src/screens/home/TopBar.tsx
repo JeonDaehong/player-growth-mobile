@@ -49,7 +49,6 @@ import { AVATAR_NAME } from '@/core/avatars';
 import { fmtShort } from '@/core/currency';
 import { Row, T } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
-import { Pixel } from '@/ui/Pixel';
 import { ICONS, NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
@@ -96,6 +95,12 @@ const GATES: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
  *
  * 그림은 흐리게(`O.sub`), 글자는 진하게 둔다. 여기는 **읽고 가는 곳**이라
  * 그림이 앞설 이유가 없다 — 그림이 앞서야 하는 곳은 늘 누르는 아래 띠다.
+ *
+ * ## 그림은 아트가 오면 저절로 갈린다
+ *
+ * `assets/sprites/nav_top/` 을 먼저 보고, 없으면 코드 도트로 떨어진다
+ * (`Sprite` 의 `fallback`). `NAV` 는 **아트가 올 때까지 버티는 자리표**지
+ * 최종 그림이 아니다 — 프롬프트는 `docs/UI_SHELL_PROMPTS.md` 에 있다.
  */
 function Gate({ label, art, onPress }: {
   label: string; art: keyof typeof NAV; onPress: () => void;
@@ -113,7 +118,7 @@ function Gate({ label, art, onPress }: {
         backgroundColor: pressed ? '#FFFFFF2E' : 'transparent',
       })}
     >
-      <Pixel sprite={NAV[art]} scale={1.5} color={WHITE} opacity={O.sub} />
+      <Sprite set="nav_top" name={art} size={18} fallback={NAV[art]} opacity={O.sub} />
       <T size={8} bold>{label}</T>
     </Pressable>
   );
@@ -128,10 +133,13 @@ function Gate({ label, art, onPress }: {
  * 그림은 흐리고 숫자는 진하다. 여기서 읽는 것은 숫자이고 그림은 그 숫자가
  * 무엇인지 말할 뿐이라, 둘이 같은 밝기면 눈이 그림에서 한 번 멈춘다.
  */
-function Coin({ icon, text }: { icon: typeof ICONS.coin; text: string }) {
+function Coin({ art, icon, text }: {
+  /** `assets/sprites/coin_ui/` 안의 이름. 없으면 아래 코드 도트로 떨어진다 */
+  art: string; icon: typeof ICONS.coin; text: string;
+}) {
   return (
     <Row gap={3}>
-      <Pixel sprite={icon} scale={1.3} opacity={O.sub} />
+      <Sprite set="coin_ui" name={art} size={11} fallback={icon} opacity={O.sub} />
       <T size={FS.label} bold>{text}</T>
     </Row>
   );
@@ -270,15 +278,15 @@ export function TopBar() {
               backgroundColor: SURF.veil,
             }}
           >
-            <Coin icon={ICONS.coin} text={fmtShort(money).replace(' 골드', '')} />
+            <Coin art="coin" icon={ICONS.coin} text={fmtShort(money).replace(' 골드', '')} />
             <VBar />
-            <Coin icon={ICONS.gem} text={String(dia)} />
+            <Coin art="gem" icon={ICONS.gem} text={String(dia)} />
             <VBar />
             {/*
               체력은 숫자만. 막대로 두면 재화 옆에서 폭을 다투고, 이 자리에서
               알아야 하는 것은 "얼마나 남았나" 하나다.
             */}
-            <Coin icon={ICONS.heart} text={`${stamina}/${maxSta}`} />
+            <Coin art="heart" icon={ICONS.heart} text={`${stamina}/${maxSta}`} />
           </Row>
         </Row>
 

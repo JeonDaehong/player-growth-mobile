@@ -33,7 +33,7 @@ import { killGold } from '@/core/autoBattle';
 import { gaugeAt, instantDia, maxValue } from '@/core/idle';
 import { fmtShort } from '@/core/currency';
 import { T } from '@/ui/atoms';
-import { Pixel } from '@/ui/Pixel';
+import { Sprite } from '@/ui/Sprite';
 import { ICONS } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
@@ -148,10 +148,13 @@ export function RewardBar() {
       >
         {({ pressed }: { pressed: boolean }) => (
           <Animated.View style={{ transform: [{ rotate: tilt }] }}>
-            <Pixel
-              sprite={ICONS.chest}
-              scale={3}
-              color={pressed && full ? C.fgInv : WHITE}
+            {/* 아트가 오면 저절로 갈린다 — 프롬프트는 `docs/UI_SHELL_PROMPTS.md` 의 §C */}
+            <Sprite
+              set="coin_ui"
+              name="chest"
+              size={24}
+              fallback={ICONS.chest}
+              tint={pressed && full ? C.fgInv : WHITE}
               opacity={full ? 1 : 0.35}
             />
           </Animated.View>
@@ -225,7 +228,13 @@ export function RewardBar() {
           {({ pressed }: { pressed: boolean }) => (
             <>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                <Pixel sprite={ICONS.gem} scale={1.2} color={pressed ? C.fgInv : WHITE} />
+                <Sprite
+                  set="coin_ui"
+                  name="gem"
+                  size={10}
+                  fallback={ICONS.gem}
+                  tint={pressed ? C.fgInv : WHITE}
+                />
                 <T size={FS.label} bold style={{ color: pressed ? C.fgInv : WHITE }}>
                   {price === null ? '—' : String(price)}
                 </T>

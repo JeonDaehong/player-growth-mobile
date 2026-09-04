@@ -34,11 +34,11 @@ import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '@/ui/atoms';
-import { Pixel } from '@/ui/Pixel';
+import { Sprite } from '@/ui/Sprite';
 import { NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
-import { C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
+import { C, FS, LINE, O, R, SP, SURF } from '@/ui/theme';
 
 const TABS: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
   { id: 'hero', label: '영웅', art: 'hero' },
@@ -86,11 +86,17 @@ export function BottomNav() {
               backgroundColor: here ? SURF.up : (pressed ? SURF.up : 'transparent'),
             })}
           >
-            <Pixel
-              sprite={NAV[t.art]}
+            {/*
+              `assets/sprites/nav_bot/` 이 있으면 그것을, 없으면 코드 도트를
+              그린다 (`Sprite` 의 `fallback`). `NAV` 는 아트가 올 때까지
+              버티는 자리표다 — 프롬프트는 `docs/UI_SHELL_PROMPTS.md`.
+            */}
+            <Sprite
+              set="nav_bot"
+              name={t.art}
               /* 고른 칸만 한 단계 크다 — 크기가 곧 "여기가 본거리" 다 */
-              scale={here ? 2 : 1.7}
-              color={WHITE}
+              size={here ? 24 : 20}
+              fallback={NAV[t.art]}
               opacity={here ? 1 : O.dim}
             />
             <T

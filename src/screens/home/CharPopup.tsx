@@ -170,7 +170,7 @@ export function CharPopup({
                 </Row>
               </Row>
               <Row gap={SP.xs} style={{ marginTop: 2 }}>
-                <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} scale={2} />
+                <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={14} />
                 <T size={FS.label} bold>Lv {c.lv}</T>
                 <T size={FS.tiny} dim="dim">/ {capOf(c)}</T>
               </Row>

@@ -39,7 +39,7 @@ import {
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
 import type { Mark } from '@/core/passives';
-import { BodyKind, Bound, BossBodyFx, Shocked } from './BossFx';
+import { BodyKind, Bound, BossBodyFx, Charmed, Shocked } from './BossFx';
 import { BAD_C, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import {
@@ -183,7 +183,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
-  live, hitNo, hitKind, cc, bound, shock, turn,
+  live, hitNo, hitKind, cc, bound, boundWeb, charmed, shock, turn,
   x, width, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -333,6 +333,16 @@ function FighterView({
    * (`BossFx` 의 `FxPlan.bind`).
    */
   bound: boolean;
+  /**
+   * 묶은 것이 **거미줄인가** (25판 포식의 거미줄).
+   *
+   * 덩굴(13판)과 갈라 두는 이유: 둘은 같은 "못 움직인다" 지만 서로 다른
+   * 놈이 거는 다른 것이다. 같은 그림이면 25판이 13판을 다시 하는 것으로
+   * 보인다.
+   */
+  boundWeb?: boolean;
+  /** 지금 돌아서 있나 (24 · 29판) — 몸이 붉게 일렁인다 */
+  charmed?: boolean;
   /**
    * **감전됐나** (`core/status` 의 `st_shock`).
    *
@@ -1204,7 +1214,20 @@ function FighterView({
         (13·25판과 20판은 다른 판이다), 순서를 정해 두지 않으면 나중에
         겹치는 날 어느 쪽이 위인지가 우연히 정해진다.
       */}
-      {bound && <Bound size={size} />}
+      {bound && <Bound size={size} web={boundWeb} />}
+      {/*
+        ── 돌아섰다 ── 24판 정신 착란 · 29판 광란 (`BattleState.charm`).
+
+        여태 머리 위 딱지 하나뿐이었다 (`cc`). 그런데 이 상태의 결과는
+        **아군을 친다**는 것이라, 딱지를 안 읽은 사람에게는 "왜 우리 편
+        체력이 줄지" 만 남는다.
+
+        몸에서 붉은빛이 천천히 일렁인다. 붉은색은 이 게임에서 "나에게 나쁜
+        것" 하나만 말하고 (`ui/theme` 의 `BAD_C`), 돌아선 아군이 정확히
+        그것이다. 느리게 도는 이유: 빠르면 맞고 있는 것으로 보인다 —
+        맞을 때 몸이 붉게 깜빡이는 것은 이미 다른 뜻으로 쓰고 있다.
+      */}
+      {charmed && <Charmed size={size} />}
       {shock && <Shocked size={size} />}
 
       {/* 못 움직이는 동안 계속 붙어 있는 딱지 — `💫기절` */}
@@ -1391,6 +1414,8 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.hitKind === b.hitKind
   && a.cc === b.cc
   && a.bound === b.bound
+  && a.boundWeb === b.boundWeb
+  && a.charmed === b.charmed
   && a.shock === b.shock
   && a.turn === b.turn
   && a.purify === b.purify

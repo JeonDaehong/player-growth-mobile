@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AWAKE_C, BORDER, BORDER_HI, C, FS, LINE, O, PILL, R, SP, SURF, WHITE, font,
 } from './theme';
-import { Pixel } from './Pixel';
+import { Sprite } from './Sprite';
 import { STARS } from './sprites';
 import { sfx, type SfxId } from './sfx';
 
@@ -251,19 +251,28 @@ export function Tag({ label, fill }: { label: string; fill?: boolean }) {
  * 않는다 — 사양이 "별 다섯이 푸른빛을 띈다" 이고, 여섯 개면 5성과 셈이
  * 헷갈린다.
  */
-export function Stars({ star, max, awake, scale = 1.6 }: {
-  star: number; max: number; awake?: boolean; scale?: number;
+export function Stars({ star, max, awake, size = 11 }: {
+  star: number; max: number; awake?: boolean; size?: number;
 }) {
   const ink = awake ? AWAKE_C : WHITE;
   return (
     <Row gap={1}>
       {Array.from({ length: Math.max(1, max) }, (_v, i) => (
-        <Pixel
+        /*
+          `assets/sprites/growth/` 를 먼저 보고, 없으면 코드 도트로 떨어진다.
+          `STARS` 는 아트가 올 때까지 버티는 자리표다 — 프롬프트는
+          `docs/GROWTH_ART_PROMPTS.md` 의 §G1.
+
+          찬 별과 빈 별이 **다른 그림**이다 (같은 그림을 흐리게 하지 않는다).
+          투명도만 다르면 다섯 개가 한 덩어리로 보여서 몇 개인지 안 세어진다.
+        */
+        <Sprite
           key={i}
-          sprite={i < star ? STARS.on : STARS.off}
-          scale={scale}
-          color={ink}
-          /* 안 찬 별은 흐리다 — 지우면 앞으로 몇 칸 남았는지가 안 보인다 */
+          set="growth"
+          name={i < star ? 'star_on' : 'star_off'}
+          size={size}
+          fallback={i < star ? STARS.on : STARS.off}
+          tint={ink}
           opacity={i < star ? 1 : O.dim}
         />
       ))}

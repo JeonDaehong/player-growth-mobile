@@ -39,10 +39,31 @@ interface BattleUi {
   charge: Record<string, readonly number[]>;
   /** `Fighter` 가 제 칸을 밀어 넣는다. 같은 값이면 아무 일도 안 한다 */
   setCharge: (who: string, on: readonly number[]) => void;
+
+  /**
+   * **돌아선 아군이 방금 친 사람** (24 · 29판 — `BattleState.charm`).
+   *
+   * 무대는 이걸 못 알아낸다. 누구를 칠지는 계산이 그 자리에서 무작위로
+   * 고르고 (`core/autoBattle` 의 `applyHit`), 무대가 보는 것은 그 결과인
+   * 체력 기록뿐이라 "줄었다" 까지만 안다 — 우두머리가 친 것인지 우리 편이
+   * 친 것인지가 안 갈린다.
+   *
+   * 그래서 **계산을 부른 쪽이** 넣어 준다 (`slices/roster` 의 `strikeFoe`).
+   * 저장되는 값이 아니고 그 순간의 신호라, 코스트 칸과 같은 자리가 맞다.
+   *
+   * `no` 는 같은 사람이 연달아 맞아도 무대가 알아보게 하는 번호다.
+   */
+  charmHit: { id: string; no: number } | null;
+  hitByAlly: (id: string) => void;
 }
 
 export const useBattleUi = create<BattleUi>((set) => ({
   charge: {},
+  charmHit: null,
+
+  hitByAlly: (id) => set((st) => ({
+    charmHit: { id, no: (st.charmHit?.no ?? 0) + 1 },
+  })),
 
   setCharge: (who, on) => set((st) => {
     /*

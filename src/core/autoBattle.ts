@@ -3601,7 +3601,18 @@ export const foeTough = (f: Foe): number => f.passive?.tough ?? 1;
  * 갈래를 두 군데에 나눠 뒀다가 한쪽만 고친 적이 있다 (`ticked` 의 `t.atk`).
  */
 export function foeNow(f: Foe, rage: boolean): { atk: number; spd: number } {
-  const on = rage && f.boss;
+  /*
+    ── 우두머리 것만 걸리던 것을 **서 있는 전부**로 넓혔다 ──
+
+    `rage && f.boss` 였다. 26판이 그 갈래를 드러냈다 — 발광충을 잡으면 애벌레
+    넷으로 갈라지는데 (`BOSS_GIMMICK` 의 `split`), 그 넷은 `boss` 가 아니므로
+    본체가 광폭화해도 넷은 평소 박자로 쳤다. 화면에서는 "광폭화" 라고 외쳐
+    놓고 실제로 서 있는 것들은 아무 변화가 없었다.
+
+    `rage` 는 우두머리와 싸우는 동안에만 참이므로 (`bossMs`), 지금 서 있는
+    것은 우두머리이거나 그가 남긴 것뿐이다. 둘 다 걸리는 것이 맞다.
+  */
+  const on = rage;
   return {
     atk: on ? Math.round(f.atk * RAGE_MUL) : f.atk,
     spd: on ? f.spd * RAGE_MUL : f.spd,

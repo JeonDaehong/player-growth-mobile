@@ -19,6 +19,7 @@ import {
   BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, forceRage,
   leaveFor, TICK_MS,
 } from '@/core/autoBattle';
+import { useBattleUi } from '../battleUi';
 import type { SliceGet, SliceSet } from './kit';
 
 export interface RosterActions {
@@ -326,6 +327,22 @@ export const createRosterSlice = (
     /* 판 연출 중에는 안 때린다 — 막 뒤에서 적이 녹아 있으면 안 된다 */
     if (fightHeld(st.battle)) return;
     const { battle, ev } = applyHit(st.battle, who, st.party, seated(st), Math.random, aim);
+    /*
+      ── 돌아서서 아군을 쳤나 ──
+
+      혼란에 걸린 사람은 적이 아니라 아군을 친다 (`core/autoBattle` 의
+      `applyHit`). 그때는 `ev.hit` 이 0 이고 `ev.taken` 에 값이 들어간다 —
+      **적에게 들어간 피해가 아니기 때문**이다.
+
+      무대는 체력 기록만 보므로 그 한 대가 우두머리 것인지 우리 편 것인지
+      못 가른다. 여기서 알려 준다 (`state/battleUi`) — 계산을 부른 쪽만
+      "누가 쳐서 누가 맞았나" 를 둘 다 안다.
+    */
+    if (ev.taken > 0 && ev.hurt) {
+      useBattleUi.getState().hitByAlly(ev.hurt);
+      set({ battle });
+      return;
+    }
     if (ev.hit <= 0) return;
 
     if (!ev.killed) {

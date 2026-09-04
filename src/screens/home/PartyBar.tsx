@@ -154,7 +154,7 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     그리면 화면에서 똑같아 보인다.
                   */}
                   <View style={{ marginTop: 2 }}>
-                    <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} scale={1.4} />
+                    <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={10} />
                   </View>
                   {/*
                     ── 레벨과 강화 ──
