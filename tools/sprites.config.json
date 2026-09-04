@@ -4236,6 +4236,235 @@
         5,
         1
       ]
+    },
+    {
+      "file": "logo1.jpg",
+      "name": "nav_top",
+      "expect": [
+        6,
+        1
+      ],
+      "labels": [
+        "rank",
+        "event",
+        "mail",
+        "gift",
+        "mission",
+        "config"
+      ]
+    },
+    {
+      "file": "logo2.jpg",
+      "name": "nav_bot",
+      "expect": [
+        5,
+        1
+      ],
+      "labels": [
+        "hero",
+        "item",
+        "main",
+        "guild",
+        "content"
+      ]
+    },
+    {
+      "file": "logo3.jpg",
+      "name": "coin_ui",
+      "expect": [
+        2,
+        1
+      ],
+      "labels": [
+        "chest",
+        "gem"
+      ]
+    },
+    {
+      "file": "star1.jpg",
+      "name": "growth",
+      "expect": [
+        3,
+        1
+      ],
+      "labels": [
+        "star_off",
+        "star_on",
+        "star_awake"
+      ]
+    },
+    {
+      "file": "tier1.jpg",
+      "name": "rarity",
+      "expect": [
+        5,
+        1
+      ],
+      "labels": [
+        "common",
+        "rare",
+        "epic",
+        "legendary",
+        "mythic"
+      ]
+    },
+    {
+      "file": "item.jpg",
+      "name": "growth",
+      "expect": [
+        2,
+        1
+      ],
+      "labels": [
+        "shard",
+        "elixir"
+      ],
+      "append": true
+    },
+    {
+      "file": "spider-cc.jpg",
+      "name": "bfx_cocoon",
+      "expect": [
+        5,
+        1
+      ],
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "file": "logo4.jpg",
+      "name": "skill_icon",
+      "expect": [
+        5,
+        1
+      ],
+      "labels": [
+        "sk_shout",
+        "sk_ward",
+        "sk_breaker",
+        "sk_aegis",
+        "sk_holysword"
+      ],
+      "append": true
+    },
+    {
+      "file": "logo5.jpg",
+      "name": "skill_icon",
+      "expect": [
+        3,
+        1
+      ],
+      "labels": [
+        "sk_lava",
+        "sk_resolve",
+        "sk_overheat"
+      ],
+      "append": true
+    },
+    {
+      "file": "logo6.jpg",
+      "name": "skill_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "labels": [
+        "sk_sharparrow",
+        "sk_spiritsong",
+        "sk_bigshot",
+        "sk_fey"
+      ],
+      "append": true
+    },
+    {
+      "file": "logo7.jpg",
+      "name": "skill_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "labels": [
+        "sk_judge",
+        "sk_gentle",
+        "sk_wrath",
+        "sk_radiance"
+      ],
+      "append": true
+    },
+    {
+      "file": "logo8.jpg",
+      "name": "status_icon",
+      "expect": [
+        4,
+        1
+      ],
+      "labels": [
+        "st_focus",
+        "st_ward",
+        "st_leech",
+        "st_fey"
+      ],
+      "append": true
+    },
+    {
+      "file": "izolde-skill.jpg",
+      "name": "knightgirl",
+      "expect": [
+        3,
+        1
+      ],
+      "labels": [
+        "sk3_1",
+        "sk3_2",
+        "sk3_3"
+      ],
+      "append": true
+    },
+    {
+      "file": "viangka-skill.jpg",
+      "name": "bunnyaxe",
+      "expect": [
+        3,
+        1
+      ],
+      "labels": [
+        "sk3_1",
+        "sk3_2",
+        "sk3_3"
+      ],
+      "append": true
+    },
+    {
+      "file": "rianr-skill.jpg",
+      "name": "elfarcher",
+      "expect": [
+        3,
+        1
+      ],
+      "labels": [
+        "sk3_1",
+        "sk3_2",
+        "sk3_3"
+      ],
+      "append": true
+    },
+    {
+      "file": "arrow.jpg",
+      "name": "elfarcher_dragon",
+      "expect": [
+        3,
+        1
+      ],
+      "labels": [
+        "shot_1",
+        "shot_2",
+        "shot_3"
+      ]
     }
   ],
   "_srcDirs": [
@@ -4243,6 +4472,8 @@
     "assets/2026-08-30-001",
     "assets/2026-08-31-001",
     "assets/2026-09-01-001",
-    "assets/2026-09-02-001"
+    "assets/2026-09-02-001",
+    "assets/2026-09-03-001",
+    "assets/2026-09-04"
   ]
 }

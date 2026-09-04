@@ -144,23 +144,17 @@ export const STATUS_MARK: Partial<Record<StatusId, string>> = {
  * (프롬프트는 `docs/STATUS_ICON_PROMPTS.md`).
  */
 export const STATUS_ALT: Partial<Record<StatusId, string>> = {
-  st_shock: 'st_numb',
   /*
-    ── 스킬 트리가 거는 넷 중 셋 ──
+    감전은 아직 제 그림이 없다 — 신경 마비(끊어진 세로 막대)가 전기가 튀는
+    모양에 제일 가깝다. 그림이 들어오면 이 줄을 지운다
+    (프롬프트는 `docs/STATUS_ICON_PROMPTS.md`).
 
-    집중은 격노(세지는 것)로, 보호는 견고(막는 것)로, 흡혈과 요정은 재생과
-    신속으로 버틴다. 그림이 들어오면 이 줄들만 지운다 (프롬프트는
-    `docs/STATUS_ICON_PROMPTS.md` 의 G장).
-
-    **지옥불은 여기 없다.** 21~30판 프롬프트에서 이미 받아 뒀는데 그때는
-    거는 것이 없었다 — 비앙카의 용암 지대가 생기면서 처음으로 쓰인다
-    (`assets/sprites/status_icon/st_burn.png`).
+    스킬 트리가 거는 넷(집중 · 보호 · 흡혈 · 요정)은 **제 그림이 들어왔다.**
+    한동안 격노 · 견고 · 재생 · 신속을 빌려 쓰고 있었다.
   */
-  st_focus: 'st_rage',
-  st_ward: 'st_guard',
-  st_leech: 'st_regen',
-  st_fey: 'st_haste',
+  st_shock: 'st_numb',
 };
+
 
 
 /**
