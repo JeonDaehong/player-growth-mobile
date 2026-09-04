@@ -91,9 +91,11 @@ const TIP_X = 0.98;
 const TIP_Y = 0.33;
 
 export function SwordWave({
-  charId, nonce, size, dist,
+  charId, nonce, size, dist, proj,
 }: {
   charId: string;
+  /** 이 기술이 지목한 투사체 시트 — 없으면 그 사람의 기본 것 (`SkillDef.proj`) */
+  proj?: string;
   nonce: number;
   size: number;
   /**
@@ -212,9 +214,18 @@ export function SwordWave({
         안 바뀌는 일이 생긴다. 이 줄은 고치는 즉시 반영된다.
       */}
       <Sprite
-        set={projSet(charId)}
+        /*
+          기술이 제 시트를 지목하면 그것을, 아니면 그 사람의 기본 투사체를
+          쓴다 (`SkillDef.proj`). 리안느의 거대 화살 하나가 지목한다 —
+          평소 화살로 그리면 길에 선 적을 모두 꿰는 것이 손가락만 하게
+          지나간다.
+
+          아직 그 시트가 없으면 기본 화살로 떨어진다 (`fallbackSet`).
+        */
+        set={proj || projSet(charId)}
         name={projFrame(charId)}
-        size={size * 0.85}
+        size={size * (proj ? 1.25 : 0.85)}
+        fallbackSet={projSet(charId)}
         flip={!ranged}
       />
     </Animated.View>

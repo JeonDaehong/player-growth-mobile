@@ -32,7 +32,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { Row } from '@/ui/atoms';
 import {
-  CHARS, HitFx, OwnedChar, chargeUp, cutCharge, newCharge, readySkill, skillOf, skillOpen, skillsFor,
+  CHARS, HitFx, OwnedChar, SkillDef,
+  chargeUp, cutCharge, newCharge, readySkill, skillOf, skillOpen, skillsFor,
   skillsOf, spendCharge, statOf, swingMs,
 } from '@/core/chars';
 
@@ -129,10 +130,25 @@ const SK_FRAMES = ['sk_1', 'sk_2', 'sk_3'] as const;
  */
 const SK2_FRAMES = ['sk2_1', 'sk2_2', 'sk2_3'] as const;
 
-/** 이 사람의 이 기술이 쓸 동작 칸 셋 */
-function skFramesOf(id: string, slot: number): readonly string[] {
-  if (slot <= 0) return SK_FRAMES;
-  return SK2_FRAMES.every((f) => spriteLoose(id, f)) ? SK2_FRAMES : SK_FRAMES;
+/** 셋째 동작 — 스킬 트리가 여는 큰 기술 셋이 쓴다 (`SkillDef.pose`) */
+const SK3_FRAMES = ['sk3_1', 'sk3_2', 'sk3_3'] as const;
+
+/**
+ * 이 **기술**이 쓸 동작 칸 셋.
+ *
+ * 여태 **자리 번호**로 골랐다 (0번이면 `sk`, 그 위면 `sk2`). 기술이 한 명당
+ * 둘일 때는 같은 말이었는데, 스킬 트리가 생기면서 갈렸다 — 자리 번호가
+ * 트리를 어떻게 찍었느냐에 따라 밀리기 때문이다 (`core/chars` 의
+ * `SkillDef.pose` 에 그 이야기를 적어 두었다).
+ *
+ * 시트가 아직 없으면 **한 단계씩 물러난다**: `sk3` → `sk2` → `sk`.
+ * `Sprite` 의 `fallbackSet` 으로는 안 된다 — 저건 한 단계뿐이다.
+ */
+function skFramesOf(id: string, sk: SkillDef): readonly string[] {
+  const want = sk.pose ?? 'sk';
+  if (want === 'sk3' && SK3_FRAMES.every((f) => spriteLoose(id, f))) return SK3_FRAMES;
+  if (want !== 'sk' && SK2_FRAMES.every((f) => spriteLoose(id, f))) return SK2_FRAMES;
+  return SK_FRAMES;
 }
 
 /**
@@ -161,6 +177,7 @@ const SK_FALLBACK: Record<string, string> = {
   sk_1: 'cut_1', sk_2: 'cut_2', sk_3: 'cut_3',
   /* §F 를 아직 안 받았으면 여기까지 안 온다 (`skFramesOf`) — 그래도 적어 둔다 */
   sk2_1: 'cut_1', sk2_2: 'cut_2', sk2_3: 'cut_3',
+  sk3_1: 'cut_1', sk3_2: 'cut_2', sk3_3: 'cut_3',
 };
 
 export interface Swing {
@@ -793,7 +810,7 @@ function FighterView({
       const leaping = skill && sk.leaps;
 
       /* 기술마다 제 동작 칸을 쓴다 — 없으면 첫 기술 것으로 떨어진다 */
-      const frames: readonly string[] = skill ? skFramesOf(ch.id, slot) : CUT_FRAMES;
+      const frames: readonly string[] = skill ? skFramesOf(ch.id, sk) : CUT_FRAMES;
       const spans = skill ? (sk.beat ?? SK_MS) : CUT_MS;
       const span = spans.reduce((a, b) => a + b, 0);
       /* 평타는 검이 몸 앞을 지날 때, 스킬은 그 기술이 닿는 칸에서 */
@@ -1401,7 +1418,7 @@ function FighterView({
         사라지는 쪽은 눈에 띄므로, 켜 두는 편이 맞다.
       */}
       {(skillsFor(ch).some((sk) => sk.flies) || d.range === 'ranged') && (
-        <SwordWave charId={ch.id} nonce={castNo} size={size} dist={fly} />
+        <SwordWave charId={ch.id} nonce={castNo} size={size} dist={fly} proj={castSk?.proj} />
       )}
 
       <Sprite

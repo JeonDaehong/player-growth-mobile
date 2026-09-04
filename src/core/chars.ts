@@ -529,6 +529,33 @@ export interface SkillDef {
    * 따로 움직인다. 도약과 기도는 안 날아간다. 비앙카의 폭발은 `sk_3` 그림
    * 안에 이미 그려져 있어서, 날려 보낼 것이 아예 없다.
    */
+  /**
+   * ── 이 기술을 쓸 때의 **몸 동작** ──
+   *
+   * 캐릭터마다 동작 시트가 여럿이다 (`sk_1..3` · `sk2_1..3` · `sk3_1..3`).
+   * 여기 안 적으면 첫째 것(`sk`)이다.
+   *
+   * ## 왜 자리 번호가 아니라 기술이 지목하나
+   *
+   * 여태 **자리 번호**로 골랐다 — 0번이면 `sk`, 그 위면 `sk2`. 기술이 한
+   * 명당 둘일 때는 같은 말이었다.
+   *
+   * 스킬 트리가 생기면서 갈렸다 (`core/skillTree`). 자리 번호가 트리를
+   * 어떻게 찍었느냐에 따라 밀리기 때문이다 — 이졸데가 함성 갈래로 가면
+   * 2번 자리가 성검 발현이고, 도발 갈래로 가면 수호의 결의다. 같은 번호에
+   * 전혀 다른 기술이 온다.
+   *
+   * 기술이 제 동작을 지목하면 자리가 밀려도 안 어긋나고, 새 동작 시트가
+   * 들어오는 날 이 한 줄만 바꾸면 된다.
+   */
+  pose?: 'sk' | 'sk2' | 'sk3';
+  /**
+   * 날아가는 것의 **제 시트** (`flies` 가 켜져 있을 때만).
+   *
+   * 안 적으면 그 사람의 기본 투사체다 (`projSet` — 검기나 화살). 리안느의
+   * 거대 화살처럼 **평소 쏘는 것과 생김새가 다른** 기술만 여기를 채운다.
+   */
+  proj?: string;
   flies: boolean;
   /**
    * 한 번 쓰는 데 드는 **스킬 코스트.**
@@ -766,7 +793,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
   */
   wave: {
     /* 줄을 가로질러 지나가므로 **길에 있는 전부**가 맞는다 */
-    name: '검기', art: 'sk_wave', hits: 1, pick: 'all', targets: 0,
+    pose: 'sk', name: '검기', art: 'sk_wave', hits: 1, pick: 'all', targets: 0,
     /* 검으로 벤다 — 날아가도 베는 것이다 */
     dmg: 'phys',
     mul: 1.4, defMul: 1.0, heal: 0, healPct: 0,
@@ -793,7 +820,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
       기술인데 (`pick: 'kind'`), 둘까지만 맞으면 셋이 선 줄에서 하나가
       늘 남는다 — 휩쓴다는 말이 화면에서 안 맞는다.
     */
-    name: '강타', art: 'sk_leap', hits: 1, pick: 'kind', targets: 3, dmg: 'phys',
+    pose: 'sk', name: '강타', art: 'sk_leap', hits: 1, pick: 'kind', targets: 3, dmg: 'phys',
     mul: 1.5, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 3, cost: 5, aura: 'none', leaps: true,
     /* 솟음 · 낙하 · 착지. 떠 있는 시간이 곧 높이다 */
@@ -820,7 +847,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
   */
   rain: {
     /* 하늘에서 흩어져 떨어진다 — 아무나 셋 */
-    name: '화살비', art: 'sk_rain', hits: 3, pick: 'random', targets: 3, dmg: 'phys',
+    pose: 'sk', name: '화살비', art: 'sk_rain', hits: 3, pick: 'random', targets: 3, dmg: 'phys',
     mul: 1.5, defMul: 0, heal: 0, healPct: 0,
     /* 무릎 꿇고 자리를 잡는 기술이라 발밑에 마법진이 어울린다 */
     flies: false, landOn: 3, cost: 4, aura: 'rune', leaps: false,
@@ -844,7 +871,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     회복이 전멸을 취소해 버리면 아무도 안 죽는다.
   */
   heal: {
-    name: '기도', art: 'sk_heal', hits: 1, pick: 'none', targets: 0,
+    pose: 'sk', name: '기도', art: 'sk_heal', hits: 1, pick: 'none', targets: 0,
     /* 아무도 안 때리므로 안 쓰이는 값이다. 쓰는 사람을 따라 마법으로 적는다 */
     dmg: 'magic',
     mul: 0, defMul: 0,
@@ -889,7 +916,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     10초 동안 그 확률이 **통째로 사라진다.** 이졸데가 다 받는다.
   */
   taunt: {
-    name: '도발', art: 'sk_taunt', hits: 1, pick: 'none', targets: 0,
+    pose: 'sk2', name: '도발', art: 'sk_taunt', hits: 1, pick: 'none', targets: 0,
     /* 아무도 안 때린다. 쓰는 사람을 따라 물리로 적는다 */
     dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
@@ -913,7 +940,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     같은 사람이 쓰는 두 기술이 화면에서 확실히 갈린다.
   */
   volcano: {
-    name: '화산', art: 'sk_volcano', hits: 1, pick: 'random', targets: 1,
+    pose: 'sk2', name: '화산격', art: 'sk_volcano', hits: 1, pick: 'random', targets: 1,
     /* 도끼로 때리는 사람인데 이건 **불**이다 — 마법저항력이 막는다 */
     dmg: 'magic',
     mul: 2.4, defMul: 0, heal: 0, healPct: 0,
@@ -939,7 +966,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     그래서 실제로는 "화살비를 잠깐 포기하고 평타를 두 배로 쏟는다" 가 된다.
   */
   frenzy: {
-    name: '숲의 축복', art: 'sk_frenzy', hits: 1, pick: 'none', targets: 0, dmg: 'phys',
+    pose: 'sk2', name: '숲의 축복', art: 'sk_frenzy', hits: 1, pick: 'none', targets: 0, dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 2, cost: 10, aura: 'ash', leaps: false,
     self: { id: 'st_haste', sec: 5, mul: 2, noCharge: true },
@@ -973,7 +1000,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     거는 것만 하는 기술이라 대상이 없다.
   */
   shout: {
-    name: '함성', art: 'sk_shout', hits: 1, pick: 'none', targets: 0, dmg: 'phys',
+    pose: 'sk2', name: '함성', art: 'sk_shout', hits: 1, pick: 'none', targets: 0, dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 1, cost: 8, aura: 'ring', leaps: false,
     /*
@@ -1000,7 +1027,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     12 코스트짜리 한 방을 얹는다.
   */
   holysword: {
-    name: '성검 발현', art: 'sk_holysword', hits: 1, pick: 'random', targets: 1,
+    pose: 'sk3', name: '성검 발현', art: 'sk_holysword', hits: 1, pick: 'random', targets: 1,
     dmg: 'phys',
     mul: 3.0, defMul: 0, heal: 0, healPct: 0,
     /* 하늘에서 내려온다 — 몸에서 날아가는 것이 아니다 */
@@ -1018,7 +1045,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     적을 안 때린다. 리안느가 활을 내리고 노래하는 5초가 이 기술의 값이다.
   */
   song: {
-    name: '정령의 노래', art: 'sk_spiritsong', hits: 1, pick: 'none', targets: 0,
+    pose: 'sk2', name: '정령의 노래', art: 'sk_spiritsong', hits: 1, pick: 'none', targets: 0,
     dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 1, cost: 10, aura: 'rune', leaps: false,
@@ -1042,7 +1069,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     안 뜨고 적 머리 위에 약화 로고만 붙는다.
   */
   judge: {
-    name: '신의 심판', art: 'sk_judge', hits: 1, pick: 'all', targets: 0,
+    pose: 'sk2', name: '신의 심판', art: 'sk_judge', hits: 1, pick: 'all', targets: 0,
     dmg: 'magic',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 2, cost: 10, aura: 'rune', leaps: false,
@@ -1071,7 +1098,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     적을 안 때린다 (`pick: 'none'`).
   */
   ward: {
-    name: '수호의 결의', art: 'sk_ward', hits: 1, pick: 'none', targets: 0,
+    pose: 'sk2', name: '수호의 결의', art: 'sk_ward', hits: 1, pick: 'none', targets: 0,
     dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 1, cost: 10, aura: 'ring', leaps: false,
@@ -1107,7 +1134,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     3-2(불굴의 의지)가 정확히 그 반대라, 둘이 고를 만한 갈래가 된다.
   */
   lava: {
-    name: '용암 지대', art: 'sk_lava', hits: 1, pick: 'all', targets: 0,
+    pose: 'sk2', name: '용암 지대', art: 'sk_lava', hits: 1, pick: 'all', targets: 0,
     dmg: 'phys',
     mul: 1.3, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 3, cost: 10, aura: 'ash', leaps: false,
@@ -1139,7 +1166,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     동안 멈출 수 있으면 그건 밀어붙이는 것이 아니다.
   */
   resolve: {
-    name: '불굴의 의지', art: 'sk_resolve', hits: 1, pick: 'none', targets: 0,
+    pose: 'sk3', name: '불굴의 의지', art: 'sk_resolve', hits: 1, pick: 'none', targets: 0,
     dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 1, cost: 13, aura: 'ash', leaps: false,
@@ -1170,11 +1197,20 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     무작위라 아홉 마리 판에서도 다섯 발뿐이지만, 이건 서 있는 전부다.
   */
   bigshot: {
-    name: '거대 화살', art: 'sk_bigshot', hits: 1, pick: 'all', targets: 0,
+    pose: 'sk3', name: '거대 화살', art: 'sk_bigshot', hits: 1, pick: 'all', targets: 0,
     dmg: 'phys',
     mul: 1.3, defMul: 0, heal: 0, healPct: 0,
     /* 직선으로 날아간다 — 검기와 같은 길을 지난다 */
     flies: true, landOn: 2, cost: 12, aura: 'rune', leaps: false,
+    /*
+      **평소 화살이 아니다.** 리안느의 기본 투사체(`elfarcher_shot`)는 손가락
+      만한 화살인데, 이건 길에 선 적을 모두 꿰는 것이라 그 그림으로는 무엇이
+      지나갔는지가 안 보인다. 제 시트를 따로 받는다.
+
+      아직 없으면 기본 화살로 떨어진다 (`Sprite` 의 `fallbackSet`).
+      프롬프트는 `docs/ICON_PROMPTS.md` 옆의 §P4.
+    */
+    proj: 'elfarcher_dragon',
     fx: 'thrust',
     desc: '아주 큰 화살을 직선으로 쏘아 길의 적을 모두 꿴다',
   },
@@ -1198,7 +1234,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     한 판짜리 두 배**에 가깝다. 자주 나가면 그 5초가 기본값이 된다.
   */
   fey: {
-    name: '요정의 축제', art: 'sk_fey', hits: 1, pick: 'none', targets: 0,
+    pose: 'sk2', name: '요정의 축제', art: 'sk_fey', hits: 1, pick: 'none', targets: 0,
     dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 1, cost: 15, aura: 'rune', leaps: false,
@@ -1210,7 +1246,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
   },
 
   purify: {
-    name: '정화', art: 'sk_purify', hits: 1, pick: 'none', targets: 0, dmg: 'magic',
+    pose: 'sk2', name: '정화', art: 'sk_purify', hits: 1, pick: 'none', targets: 0, dmg: 'magic',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 2, cost: 20, aura: 'ash', leaps: false,
     cleanse: true, opt: true,

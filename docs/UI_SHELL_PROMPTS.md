@@ -1,6 +1,10 @@
 # UI 뼈대 로고
 
-**이 파일은 손으로 씁니다** — 생성기가 없습니다. 다른 로고 문서(`ICON_PROMPTS.md` ·
+**이 파일은 손으로 씁니다** — 생성기가 없습니다.
+
+**세 프롬프트가 각자 온전합니다.** 한동안 B·C 장이 "위 A장과 같습니다" 로
+스타일 지시를 참조하고 있었는데, 그러면 복사할 때 두 군데를 오려 붙여야 하고
+한쪽만 붙이면 조용히 다른 화풍이 나옵니다. 다른 로고 문서(`ICON_PROMPTS.md` ·
 `STATUS_ICON_PROMPTS.md`)는 게임 수치에서 만들어지는데, 이 열셋은 수치가 아니라
 **화면 구조**에서 나오므로 읽어 올 소스가 없습니다.
 
@@ -196,7 +200,11 @@ SHEET LAYOUT:
 
 ```
 ABSOLUTE RULE — NO TEXT OF ANY KIND:
-(위 A장과 같습니다. 그대로 옮겨 붙이세요.)
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
 
 SUBJECT: a single sheet of EXACTLY 5 ICONS in ONE row, left to right. Five cells.
 
@@ -237,8 +245,47 @@ a gap of empty black between them a fifth of the cell wide. All four exactly the
 same. It is the only icon made of repeated identical parts. Squint test: four
 little boxes.
 
-STYLE / ICON RULES / NO DITHERING / THEY ALL WEIGH THE SAME:
-(위 A장과 같습니다. 그대로 옮겨 붙이세요.)
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur.
+- Chunky, clearly visible square pixels — every pixel a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in solid pure white.
+- NEVER put a white or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic.
+- No watermarks, no signatures, no sparkle marks, no borders around the whole image.
+
+ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 18 TO 24 PIXELS. Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon reads as a single silhouette at a glance.
+- FILL THE CELL. The shape nearly touches all four sides, with a margin of about
+  one twelfth of the cell left empty all the way around.
+- OUTLINED, NOT SOLID. Draw the shape as a BAND of solid white about one eighth
+  of the cell wide, with EMPTY BLACK inside it. This is the rule that makes the
+  eleven look like one set. A filled shape at this size is a black-and-white blob;
+  an outline keeps its form.
+- THE STROKE IS THE SAME WIDTH EVERYWHERE, on every icon in the sheet. Do not
+  taper, do not thin a line to fit — if a shape needs a thinner line to work,
+  simplify the shape instead.
+- INTERIOR MARKS ONLY WHERE THEY MEAN SOMETHING. The helmet's eye slit, the
+  castle's gate, the envelope's fold, the document's three text rules. At most
+  three, each at least a sixth of the cell long. No rivets, no shading, no
+  highlights, no texture.
+- STRAIGHT AND CHUNKY. Hard angles, flat ends. Curves only where the object is
+  genuinely round.
+- NO PERSPECTIVE. Flat and front-on, like a road sign.
+- CENTRED and upright. These sit in a row of six and a tilted one looks broken.
+
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING. Every edge is a HARD STEP between
+solid white and solid black.
+
+THEY ALL WEIGH THE SAME. Same stroke width, same amount of white on screen.
+Nothing in the drawing says which is important — the interface says that with
+brightness and size, not with the artwork.
+
+THEY MUST NOT BE CONFUSABLE. Put the 6 finished icons side by side and squint until
+they blur. If any two have a similar outline, redraw the weaker one.
 
 THEY MUST NOT BE CONFUSABLE — and they must also not resemble the six top-bar
 icons (trophy / calendar / envelope / gift box / document / gear), which appear on
@@ -271,7 +318,11 @@ SHEET LAYOUT:
 
 ```
 ABSOLUTE RULE — NO TEXT OF ANY KIND:
-(위 A장과 같습니다.)
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
 
 SUBJECT: a single sheet of EXACTLY 2 ICONS in ONE row, left to right.
 
@@ -293,8 +344,47 @@ bottom. It must NOT be a symmetric diamond lozenge (that reads as a playing-card
 suit) and must NOT have facet lines inside it. Squint test: a blunt-topped,
 sharp-bottomed stone.
 
-STYLE / ICON RULES / NO DITHERING:
-(위 A장과 같습니다.)
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur.
+- Chunky, clearly visible square pixels — every pixel a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in solid pure white.
+- NEVER put a white or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic.
+- No watermarks, no signatures, no sparkle marks, no borders around the whole image.
+
+ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 18 TO 24 PIXELS. Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon reads as a single silhouette at a glance.
+- FILL THE CELL. The shape nearly touches all four sides, with a margin of about
+  one twelfth of the cell left empty all the way around.
+- OUTLINED, NOT SOLID. Draw the shape as a BAND of solid white about one eighth
+  of the cell wide, with EMPTY BLACK inside it. This is the rule that makes the
+  eleven look like one set. A filled shape at this size is a black-and-white blob;
+  an outline keeps its form.
+- THE STROKE IS THE SAME WIDTH EVERYWHERE, on every icon in the sheet. Do not
+  taper, do not thin a line to fit — if a shape needs a thinner line to work,
+  simplify the shape instead.
+- INTERIOR MARKS ONLY WHERE THEY MEAN SOMETHING. The helmet's eye slit, the
+  castle's gate, the envelope's fold, the document's three text rules. At most
+  three, each at least a sixth of the cell long. No rivets, no shading, no
+  highlights, no texture.
+- STRAIGHT AND CHUNKY. Hard angles, flat ends. Curves only where the object is
+  genuinely round.
+- NO PERSPECTIVE. Flat and front-on, like a road sign.
+- CENTRED and upright. These sit in a row of six and a tilted one looks broken.
+
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING. Every edge is a HARD STEP between
+solid white and solid black.
+
+THEY ALL WEIGH THE SAME. Same stroke width, same amount of white on screen.
+Nothing in the drawing says which is important — the interface says that with
+brightness and size, not with the artwork.
+
+THEY MUST NOT BE CONFUSABLE. Put the 6 finished icons side by side and squint until
+they blur. If any two have a similar outline, redraw the weaker one.
 
 Note on size: these two are shown LARGER than the other eleven (the chest up to
 24 pixels, the gem at 10) and they sit next to NUMBERS rather than next to each
