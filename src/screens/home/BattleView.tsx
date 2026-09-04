@@ -152,6 +152,34 @@ const LANE_SKEW = 0.10;
 const FOE_COL_RATIO = 0.62;
 
 /**
+ * 적 가로줄 하나가 **몇 칸씩** 물러나나 (`Ground` 의 `depthAt`).
+ *
+ * 1 이 아니라 2 다. 1 이면 세 줄이 24px 씩만 벌어지는데 (`DEPTH_LIFT`) 잡몹이
+ * 95px 쯤 되므로, 한 세로줄에 선 셋이 거의 다 포개져서 **한 마리로 보였다.**
+ *
+ * 2 면 48px 씩이라 세 줄이 96px 에 걸쳐 선다. 아군의 `3-1`·`1-3` 이 ①③⑤ 를
+ * 쓸 때와 정확히 같은 간격이라 (`core/party` 의 `FORM_LANES`), 두 진영의
+ * 위아래 리듬이 맞는다.
+ *
+ * 땅에 다 들어간다: `FLOOR + 2 × 2 × DEPTH_LIFT` = 159 ≤ `GROUND_H`(185).
+ */
+const FOE_LANE_STEP = 2;
+
+/**
+ * 그 자리가 **몇 칸 물러나 있나** — 크기와 높이가 다 이 값에서 나온다.
+ *
+ * 혼자 서는 놈은 예외로 맨 앞줄이다. 자리 채우기는 가운데 줄부터 시작하는데
+ * (`LANE_FILL`) 우두머리는 늘 그 한 자리만 쓰므로, 규칙대로면 **혼자인데도
+ * 48px 떠서 16% 작게** 그려진다. 우두머리 크기(`BOSS_W`)는 제 몸으로 잰
+ * 값이라 거기서 더 줄면 잡몹과의 차이가 흐려진다.
+ *
+ * 흩어질 상대가 없으면 흩어질 이유도 없다.
+ */
+const foeDepth = (pos: number, cap: number) => (
+  cap <= 1 ? 0 : foeCell(pos).lane * FOE_LANE_STEP
+);
+
+/**
  * 근접끼리 맞붙었을 때 남기는 틈.
  *
  * 이 한 값이 "얼마나 붙어서 싸우나" 를 정한다. 세 번 조정했다.
@@ -379,8 +407,9 @@ function foeLayout(cap: number, base: number, scale: Scales): {
   const lift: number[] = [];
   const size: number[] = [];
   for (let p = 0; p < n; p++) {
-    const { col, lane } = foeCell(p);
-    const d = depthAt(lane);
+    const { col } = foeCell(p);
+    /* 가로줄은 한 칸이 아니라 두 칸씩 물러난다 (`FOE_LANE_STEP`) */
+    const d = depthAt(foeDepth(p, n));
     x.push(Math.round(col * step));
     lift.push(d.lift);
     size.push(Math.round(base * d.scale * (scale[p] ?? 1)));
@@ -2447,7 +2476,7 @@ export function BattleView({ top, corner }: Props = {}) {
                   줄인 놈에게는 줄인 것들이 붙는다.
                 */
                 const foeSize = Math.round(
-                  foeW * depthAt(foeCell(back).lane).scale * (kf.scale ?? 1),
+                  foeW * depthAt(foeDepth(back, cap)).scale * (kf.scale ?? 1),
                 );
                 /*
                   이 마리가 지금 그리는 칸.
