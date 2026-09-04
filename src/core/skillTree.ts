@@ -159,20 +159,20 @@ const BIANCA: readonly TreeNode[] = [
     rival: 'ba3b',
     desc: '적 전체에 공격력의 130% 물리 피해. 5초간 [지옥불] — 0.5초마다 '
       + '공격력의 20%가 화염 피해로 들어간다.',
-    art: 'sk_lava',
+    art: 'sk_lava', live: true,
   },
   {
     id: 'ba3b', who: 'bunnyaxe', tier: 3, name: '불굴의 의지', kind: 'active', cost: 13,
     rival: 'ba3a',
     desc: '5초간 모든 디버프에 안 걸리고 공격력이 두 배가 된다. '
       + '그동안 입힌 피해의 7%만큼 체력을 회복한다.',
-    art: 'sk_resolve',
+    art: 'sk_resolve', live: true,
   },
   {
     id: 'ba4', who: 'bunnyaxe', tier: 4, name: '과열', kind: 'passive',
     desc: '세 번째 평타마다 두 번 친다. 둘째 대는 공격력의 150%로 터진다 '
       + '(세 번 치면 네 대, 코스트는 네 칸).',
-    art: 'sk_overheat',
+    art: 'sk_overheat', live: true,
   },
 ];
 

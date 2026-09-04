@@ -3992,19 +3992,42 @@ export function battleTick(
   /*
     ── 적에게 걸린 것이 흐른다 ──
 
-    지금 여기 들어오는 것은 비앙카의 화산이 거는 시듦 하나다. 지속 피해는
-    아직 없어서 `dot` 은 버린다 — 생기면 아군 쪽과 같은 문(`strikeFor`)을
-    지나야 한다.
+    시듦 · 약화 · 둔화, 그리고 **지옥불**이 여기 들어온다 (비앙카의 용암
+    지대 — `st_burn`).
+
+    ## 지속 피해가 실제로 깎는다
+
+    오랫동안 `dot` 을 버렸다 — 적에게 거는 지속 피해가 하나도 없었기
+    때문이다. 이제 있다.
+
+    아군 쪽과 **같은 문**을 지난다 (`strikeFor`): 적의 방어 두 겹을 빼고,
+    아무리 깎여도 최소 1 은 들어간다. 따로 세면 "적에게 들어가는 지속 피해만
+    방어를 무시하는" 규칙이 하나 더 생긴다.
 
     **죽은 놈의 기록은 여기서 사라진다.** 서 있는 놈만 훑으므로, 죽어서
     목록에서 빠지면 그 번호는 다음 판까지 안 돌아온다.
   */
   const foeHex: Record<number, Hex[]> = {};
-  for (const f of foes) {
+  for (let i = 0; i < foes.length; i += 1) {
+    const f = foes[i];
     const was = foeHexOf(st.foeHex, f.id);
     if (!was.length) continue;
-    const { left } = tickHex(was, TICK_MS);
+    const { left, dot } = tickHex(was, TICK_MS);
     if (left.length) foeHex[f.id] = left;
+    /*
+      물리와 마법을 따로 굴린다 — 막는 겹이 다르다 (`Armor`). 둘을 더해서
+      한 번에 넣으면 방어가 한 번만 빠져서, 두 종류를 같이 건 놈에게는
+      실제보다 아프게 들어간다.
+    */
+    const kind0 = foeAt({ stage: st.stage, boss: isBoss }, f);
+    let burn = 0;
+    for (const [type, raw] of [['phys', dot.phys], ['magic', dot.magic]] as const) {
+      if (raw <= 0) continue;
+      burn += strikeFor(
+        raw, 1, foeArmor(kind0, foes[i].hp), { type, pierce: NO_PIERCE },
+      );
+    }
+    if (burn > 0) foes[i] = biteFoe(foes[i], burn);
   }
 
   /** 이 마리가 지금 받는 회복 배수 — 시듦이 걸려 있으면 깎인다 */
@@ -4579,6 +4602,34 @@ export function battleTick(
  *
  * @param who 휘두른 사람. 파티에 없거나 쓰러졌으면 아무 일도 안 일어난다
  */
+/**
+ * ── 흡혈 ── 입힌 만큼 제 체력이 찬다 (`st_leech`).
+ *
+ * 비앙카의 불굴의 의지 하나다. 걸려 있지 않으면 `hp` 를 **그대로 돌려준다** —
+ * 새 객체를 안 만든다: 이 함수는 휘두를 때마다 불리고, 걸린 사람은 드물다.
+ *
+ * ## 최대치를 못 넘는다
+ *
+ * 넘게 두면 다음 판으로 넘어갈 때 가득 찬 것으로 잘리므로 티가 안 나지만,
+ * 그 판 안에서는 "맞아도 안 줄어드는" 구간이 생긴다 — 막대가 안 움직이는데
+ * 실제로는 깎이고 있는 셈이라 화면이 거짓말을 한다.
+ *
+ * @param dealt 이번에 실제로 적에게 들어간 피해
+ */
+function leech(
+  who: string, me: OwnedChar, dealt: number,
+  hex: readonly Hex[], hp: Record<string, number>,
+): Record<string, number> {
+  const pct = Math.max(0, upOf(hex, 'st_leech') - 1);
+  if (pct <= 0 || dealt <= 0) return hp;
+  const got = Math.max(1, Math.round(dealt * pct));
+  const max = statOf(me).hp;
+  const cur = hpOf(me, hp);
+  /* 쓰러진 사람은 안 찬다 — 회복이 전멸을 취소하면 아무도 안 죽는다 */
+  if (cur <= 0) return hp;
+  return { ...hp, [who]: Math.min(max, cur + got) };
+}
+
 export function applyHit(
   st: BattleState,
   who: string,
@@ -4587,6 +4638,18 @@ export function applyHit(
   rand: () => number = Math.random,
   /** 화면이 이미 고른 자리. 없으면 여기서 고른다 (시험·서버용) */
   aim?: number,
+  /**
+   * 이 한 대의 배수 — 기본은 1.
+   *
+   * 비앙카의 과열이 쓴다 (`core/skillTree` 의 `ba4`): 세 번째 평타마다 두
+   * 번 치는데 **둘째 대만** 150% 다. 같은 함수를 두 번 부르되 두 번째에
+   * 1.5 를 넘긴다.
+   *
+   * 기술의 배수(`SkillDef.mul`)와 자리가 다르다. 저건 표에 적힌 기술의
+   * 세기이고 이건 **이번 한 대에만** 붙는 값이라, 같은 칸에 담으면 평타가
+   * 기술인 척하게 된다.
+   */
+  mul = 1,
 ): TickResult {
   const me = chars[who];
   /* 쓰러져 있거나, 파티에 없거나, 적이 없으면 헛스윙이다 */
@@ -4666,7 +4729,7 @@ export function applyHit(
   const mineHex = hexOf(st.hex, who);
   const kind = foeAt(st, foes[at]);
   const dmg = Math.max(1, Math.round(strikeFor(
-    mine.atk * allyAtkMul(alive) * mulOf(mineHex, 'st_weak'),
+    mine.atk * allyAtkMul(alive) * mulOf(mineHex, 'st_weak') * mul,
     rollCrit(mine, rand, mineHex),
     /* 20판은 체력이 낮으면 방어가 오른다 (`foeArmor`) */
     foeArmor(kind, foes[at].hp), blowOf(me.id),
@@ -4682,7 +4745,8 @@ export function applyHit(
     빼면 방어를 올린 사람과 안 올린 사람이 똑같이 아파서, 이 게임에서 방어가
     유일하게 안 통하는 자리가 생긴다.
   */
-  let hp = st.hp;
+  /* 때린 만큼 찬다 — 불굴의 의지가 켜져 있을 때만 (`leech`) */
+  let hp = leech(who, me, dmg, mineHex, st.hp);
   const back = kind.passive?.reflect ?? 0;
   if (back > 0) {
     const bite = strikeFor(
@@ -5180,7 +5244,7 @@ export function applySkill(
   }
 
   if (sk.self) {
-    const put = putHex(hexOf(st.hex, who), {
+    let put = putHex(hexOf(st.hex, who), {
       id: sk.self.id,
       ms: Math.round(sk.self.sec * 1000),
       dot: 0,
@@ -5188,6 +5252,23 @@ export function applySkill(
       mul: sk.self.mul,
       n: 1,
     }, 1);
+    /*
+      한 기술이 여럿을 걸 수 있다 (`SkillDef.selfAlso`) — 비앙카의 불굴의
+      의지가 셋을 한꺼번에 건다.
+
+      **앞엣것 위에 쌓는다.** `hexOf(st.hex, who)` 를 다시 읽으면 `self` 로
+      건 것이 통째로 사라진다 — 공격력 두 배가 조용히 없어지고 면역만 남는다.
+    */
+    for (const more of sk.selfAlso ?? []) {
+      put = putHex(put, {
+        id: more.id,
+        ms: Math.round(more.sec * 1000),
+        dot: 0,
+        dmg: 'magic',
+        mul: more.mul,
+        n: 1,
+      }, 1);
+    }
     return {
       battle: { ...st, hex: { ...st.hex, [who]: put } },
       ev: { ...NOTHING, applied: true },
@@ -5281,6 +5362,31 @@ export function applySkill(
       읽으면 첫째가 통째로 사라진다 — 신의 천벌이 둔화만 걸고 약화를
       지우는 셈이 된다.
     */
+    /*
+      ── 지속 피해를 건다 ── 비앙카의 용암 지대 (`SkillDef.foeDot`).
+
+      **계수가 아니라 실제 숫자**로 바꿔서 담는다 (`Hex.dot`). 건 사람이
+      죽고 나서도 불은 계속 타는데, 계수만 들고 있으면 그때 공격력을
+      어디서 읽을지가 없어진다.
+
+      쓰는 사람의 지금 공격력을 본다 (`mine.atk` — 파티 배수와 약화가 이미
+      얹힌 값이 아니라 맨 공격력이다). 지속 피해까지 파티 배수를 타면
+      아녜스가 서 있을 때만 불이 세지는데, 그건 표에 안 적혀 있다.
+    */
+    if (sk.foeDot) {
+      foeHex[foes[i].id] = putHex(
+        foeHex[foes[i].id] ?? foeHexOf(st.foeHex, foes[i].id),
+        {
+          id: sk.foeDot.id,
+          ms: Math.round(sk.foeDot.sec * 1000),
+          dot: Math.max(1, Math.round(mine.atk * sk.foeDot.pct)),
+          dmg: sk.foeDot.dmg,
+          mul: 1,
+          n: 1,
+        },
+        1,
+      );
+    }
     for (const spec of [sk.foeHex, sk.foeHex2]) {
       if (!spec) continue;
       foeHex[foes[i].id] = putHex(
@@ -5307,9 +5413,19 @@ export function applySkill(
     }
   }
 
-  const hp = bite > 0
+  /*
+    ── 반사로 받은 것과 흡혈로 채운 것 ──
+
+    **흡혈이 나중이다.** 반사를 먼저 빼야 "이번 한 번에 얼마나 오갔나" 가
+    실제 순서와 같다 — 기술이 나가고, 가시에 찔리고, 빤 만큼 찬다.
+
+    `hit` 은 이번 기술이 **적에게 실제로 넣은 합**이라 그걸 기준으로 빤다
+    (여러 마리를 치는 기술은 친 만큼 다 빨린다).
+  */
+  const hurtSelf = bite > 0
     ? { ...st.hp, [who]: Math.max(0, hpOf(me, st.hp) - bite) }
     : st.hp;
+  const hp = leech(who, me, hit, mineHex, hurtSelf);
 
   /* 죽은 놈을 걷어낸다 — 뒤에서부터 지워야 인덱스가 안 밀린다 */
   let seq = st.seq;

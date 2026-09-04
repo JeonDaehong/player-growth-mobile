@@ -87,7 +87,8 @@ export interface RosterActions {
    * 화면(`Fighter`)이 부른다 — 틱이 아니라 **휘두름**이 때리는 순간이다.
    */
   /** @param aim 화면이 이미 고른 자리. 없으면 확률대로 여기서 고른다 */
-  strikeFoe: (who: string, aim?: number) => void;
+  /** @param mul 이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 */
+  strikeFoe: (who: string, aim?: number, mul?: number) => void;
   /**
    * 스킬 — 횡으로 베며 검기를 날린다. 앞의 세 마리를 1.5배로 친다.
    *
@@ -399,11 +400,11 @@ export const createRosterSlice = (
     return 'ok';
   },
 
-  strikeFoe: (who, aim) => {
+  strikeFoe: (who, aim, mul) => {
     const st = get();
     /* 판 연출 중에는 안 때린다 — 막 뒤에서 적이 녹아 있으면 안 된다 */
     if (fightHeld(st.battle)) return;
-    const { battle, ev } = applyHit(st.battle, who, st.party, seated(st), Math.random, aim);
+    const { battle, ev } = applyHit(st.battle, who, st.party, seated(st), Math.random, aim, mul);
     /*
       ── 돌아서서 아군을 쳤나 ──
 

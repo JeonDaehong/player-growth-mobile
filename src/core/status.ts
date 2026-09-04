@@ -47,6 +47,7 @@ export type StatusId =
   | 'st_break'    // 파쇄 — 방어력 감소
   | 'st_wither'   // 시듦 — 받는 치유량 감소
   | 'st_taunt'    // 도발 — 건 사람만 노리게 된다 (적에게 걸린다)
+  | 'st_burn'     // 지옥불 — 불타는 지속 피해 (비앙카의 용암 지대)
   /* ── 좋은 것 ── */
   | 'st_rage'     // 격노 — 공격력 증가
   | 'st_guard'    // 견고 — 방어력 증가
@@ -60,12 +61,15 @@ export type StatusId =
     이것은 **거는 것을 막는다** (`putHex`). 이미 걸린 것을 걷어내지는
     않는다 — 그건 정화가 하는 일이고, 둘이 같으면 정화가 할 일이 없어진다.
   */
-  | 'st_ward';    // 보호 — 새 디버프 면역
+  | 'st_ward'     // 보호 — 새 디버프 면역
+  | 'st_leech';   // 흡혈 — 입힌 피해의 일부를 제 체력으로
 
 /** 화면에 적는 이름 */
 export const STATUS_NAME: Record<StatusId, string> = {
   st_focus: '집중',
   st_ward: '보호',
+  st_burn: '지옥불',
+  st_leech: '흡혈',
   st_bleed: '출혈',
   st_poison: '중독',
   st_stun: '기절',
@@ -148,6 +152,9 @@ export const STATUS_ALT: Partial<Record<StatusId, string>> = {
   */
   st_focus: 'st_rage',
   st_ward: 'st_guard',
+  /* 지옥불은 출혈(붉은 지속 피해)로, 흡혈은 재생(차오르는 것)으로 버틴다 */
+  st_burn: 'st_bleed',
+  st_leech: 'st_regen',
 };
 
 /**
@@ -167,6 +174,8 @@ export const STATUS_ALT: Partial<Record<StatusId, string>> = {
 export const STATUS_WHAT: Record<StatusId, string> = {
   st_focus: '치명타 확률이 오른다',
   st_ward: '새로 걸리는 나쁜 것을 막는다',
+  st_burn: '0.5초마다 불타는 피해를 입는다',
+  st_leech: '입힌 피해의 일부만큼 회복한다',
   st_bleed: '지속 피해',
   st_poison: '지속 피해',
   st_stun: '행동 불가',
@@ -201,7 +210,7 @@ export const STATUS_WHAT: Record<StatusId, string> = {
  * 흑백에서 색으로 못 가르니 자리로 가른다.
  */
 export const GOOD: ReadonlySet<StatusId> = new Set<StatusId>([
-  'st_rage', 'st_guard', 'st_regen', 'st_haste', 'st_focus', 'st_ward',
+  'st_rage', 'st_guard', 'st_regen', 'st_haste', 'st_focus', 'st_ward', 'st_leech',
 ]);
 
 /**

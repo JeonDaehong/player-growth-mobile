@@ -170,7 +170,18 @@ export interface Swing {
   fx: HitFx;
   /** 띄울 숫자 */
   dmg: number;
+  /**
+   * 이 한 대의 배수 — 기본은 1 (`core/autoBattle` 의 `applyHit`).
+   *
+   * 비앙카의 과열이 쓴다: 세 번째 평타마다 두 번 치는데 둘째 대가 150% 다.
+   */
+  mul?: number;
+  /** 크게 터지나 — 과열의 둘째 대 */
+  blast?: boolean;
 }
+
+/** 과열의 둘째 대가 몇 배인가 (`core/skillTree` 의 `ba4`) */
+const HEAT_MUL = 1.5;
 
 /** 아무것도 안 하는 콜백 — 매 렌더마다 새로 만들면 애니메이션이 되감긴다 */
 const NOOP = () => {};
@@ -477,6 +488,22 @@ function FighterView({
   /* 콜백이 바뀌어도 타이머를 다시 걸지 않는다 — 걸면 박자가 리셋된다 */
   const cb = useRef(onSwing);
   cb.current = onSwing;
+  /*
+    ── 과열 ── 비앙카 4단계 (`core/skillTree` 의 `ba4`).
+
+    **세 번째 평타마다 두 번 친다.** 둘째 대는 150% 이고 폭발로 그려진다.
+    그래서 세 번 휘두르면 네 대가 나가고 코스트도 네 칸이 찬다.
+
+    세는 것은 여기다 — 스윙 순환을 돌리는 곳이 여기뿐이라, 계산 쪽에서
+    세면 "몇 번째 평타인가" 를 두 곳에서 따로 세게 된다.
+
+    `ref` 로 드는 이유는 `canCast` 와 같다: 아래 타이머 안의 닫힘이라
+    그냥 읽으면 합성 직후에도 한동안 옛 트리를 본다.
+  */
+  const heatRef = useRef(false);
+  heatRef.current = (ch.tree ?? []).includes('ba4');
+  /** 여태 휘두른 평타 수 — 3의 배수마다 한 대가 더 나간다 */
+  const swings = useRef(0);
   const cbAim = useRef(onAim);
   cbAim.current = onAim;
   const cbSkill = useRef(onSkill);
@@ -862,6 +889,27 @@ function FighterView({
           cbSkill.current(ch.id, slot);
         } else {
           cb.current({ id: ch.id, fx: d.fx, dmg: atkRef.current });
+          /*
+            ── 과열의 둘째 대 ──
+
+            같은 순간에 한 번 더 친다. 시간을 벌려 두지 않는 이유: 이건
+            "두 번 휘두른다" 가 아니라 **한 번 휘두른 것이 두 번 맞는다**
+            이므로 (도끼가 돌아 나오며 한 번 더 걸린다), 벌려 놓으면
+            공격속도가 빨라진 것으로 보인다.
+
+            `blast` 를 켜면 화면이 크게 그린다 — 평타와 같은 그림이면
+            네 대 중 어느 것이 150% 인지 알 수가 없다.
+          */
+          swings.current += 1;
+          if (heatRef.current && swings.current % 3 === 0) {
+            cb.current({
+              id: ch.id, fx: d.fx, dmg: Math.round(atkRef.current * HEAT_MUL),
+              mul: HEAT_MUL, blast: true,
+            });
+            /* 그 한 대도 코스트를 채운다 — 세 번 치면 네 칸이다 */
+            if (!noChargeRef.current) chargeRef.current = chargeUp(ch, chargeRef.current);
+            pushCharge();
+          }
         }
         /*
           내디디는 걸음.

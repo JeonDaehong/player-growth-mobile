@@ -417,6 +417,8 @@ export type SkillKind =
   | 'song'      // 정령의 노래 — 리안느 3-2
   | 'judge'     // 신의 심판 — 아녜스 3-1
   | 'ward'      // 수호의 결의 — 이졸데 3-1
+  | 'lava'      // 용암 지대 — 비앙카 3-1
+  | 'resolve'   // 불굴의 의지 — 비앙카 3-2
   | 'purify';  // 정화 (아녜스)
 
 export interface SkillDef {
@@ -602,6 +604,29 @@ export interface SkillDef {
    * 이것 하나뿐이다.
    */
   foeHex2?: { id: StatusId; sec: number; mul: number };
+  /**
+   * 맞은 적에게 거는 **지속 피해** — 비앙카의 용암 지대 하나다.
+   *
+   * `foeHex` 와 갈라 둔다. 저건 배수를 거는 것이고 (약화 · 둔화 · 시듦)
+   * 이건 **틱마다 깎는 것**이라, 담는 값이 배수가 아니라 한 틱의 피해량이다.
+   *
+   * `pct` 는 **쓰는 사람 공격력의 몇 할**인가. 계수가 아니라 실제 숫자로
+   * 바꿔서 담는 이유는 `Hex.dot` 에 적어 두었다 — 건 사람이 죽고 나서도
+   * 지속 피해는 남는데, 계수만 들고 있으면 그때 공격력을 어디서 읽을지가
+   * 없어진다.
+   */
+  foeDot?: { id: StatusId; sec: number; pct: number; dmg: DmgType };
+  /**
+   * `self` 말고 **더 거는 것들.**
+   *
+   * 비앙카의 불굴의 의지 하나다 — 5초 동안 세 가지가 한꺼번에 걸린다
+   * (공격력 두 배 · 디버프 면역 · 흡혈). `self` 는 한 칸뿐이라 못 담는다.
+   *
+   * `self` 를 배열로 바꾸지 않은 이유: 저 칸에는 `noCharge` 가 같이 붙어
+   * 있고 (광란), 그건 **기술 하나에 하나**인 성질이라 배열의 원소로
+   * 들어가면 "둘째 것만 코스트를 막는다" 같은 말이 안 되는 상태가 생긴다.
+   */
+  selfAlso?: readonly { id: StatusId; sec: number; mul: number }[];
   /**
    * **아군 전체에 보호막을 씌우나** — 이졸데의 수호의 결의 하나다.
    *
@@ -1032,6 +1057,69 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     desc: '아군 전체에 이졸데 최대 체력의 12%만큼 보호막을 씌운다',
   },
 
+  /*
+    ── 용암 지대 ── 비앙카 3-1. 불을 넓게 펴는 쪽.
+
+    적 전체에 130% 를 넣고 5초짜리 지옥불을 건다 — 0.5초마다 비앙카 공격력의
+    20% 다. 5초면 열 틱이라 **지속 피해만 200%** 가 들어간다.
+
+    ## 왜 즉시 피해가 낮은가
+
+    130% 는 강타(150%)보다 낮다. 이 기술의 값은 한 방이 아니라 **깔아 두는
+    것**이라, 즉시 피해까지 세면 강타를 쓸 이유가 없어진다.
+
+    여럿이 서 있을수록 세진다 — 전체에 걸리므로 아홉 마리가 선 판에서는
+    지속 피해가 아홉 줄로 흐른다. 우두머리 하나에게는 그만큼 덜하다.
+    3-2(불굴의 의지)가 정확히 그 반대라, 둘이 고를 만한 갈래가 된다.
+  */
+  lava: {
+    name: '용암 지대', art: 'sk_lava', hits: 1, pick: 'all', targets: 0,
+    dmg: 'phys',
+    mul: 1.3, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 3, cost: 10, aura: 'ash', leaps: false,
+    /* 0.5초마다 공격력의 20% — 한 틱이 `HEX_TICK_MS` 다 (`core/status`) */
+    foeDot: { id: 'st_burn', sec: 5, pct: 0.2, dmg: 'phys' },
+    cast: 'erupt',
+    fx: 'smash',
+    desc: '적 전체를 불바다로 만들고 5초간 태운다',
+  },
+
+  /*
+    ── 불굴의 의지 ── 비앙카 3-2. 제 몸으로 밀어붙이는 쪽.
+
+    5초 동안 셋이 한꺼번에 걸린다.
+
+      공격력 두 배    `st_rage` 2.0
+      디버프 면역     `st_ward` — 새로 걸리는 나쁜 것을 막는다
+      흡혈 7%         `st_leech` — 입힌 만큼 제 체력이 찬다
+
+    ## 코스트가 제일 비싸다 (13)
+
+    비앙카는 넷 중 제일 느리게 친다 (`spd` 0.7). 13 이면 스물두 초쯤이라
+    한 판에 한두 번이다 — 그 한 번이 판을 뒤집는 것이라야 값이 맞는다.
+
+    ## 왜 면역이 같이 붙나
+
+    공격력만 두 배면 침묵이나 기절 한 번에 그 5초가 통째로 날아간다
+    (11~20판 우두머리가 그걸 자주 건다). 밀어붙이는 갈래인데 밀어붙이는
+    동안 멈출 수 있으면 그건 밀어붙이는 것이 아니다.
+  */
+  resolve: {
+    name: '불굴의 의지', art: 'sk_resolve', hits: 1, pick: 'none', targets: 0,
+    dmg: 'phys',
+    mul: 0, defMul: 0, heal: 0, healPct: 0,
+    flies: false, landOn: 1, cost: 13, aura: 'ash', leaps: false,
+    self: { id: 'st_rage', sec: 5, mul: 2.0 },
+    selfAlso: [
+      { id: 'st_ward', sec: 5, mul: 1 },
+      /* 1.07 은 "입힌 것의 7% 를 가져간다" 다 — `upOf` 가 1 을 뺀 값을 쓴다 */
+      { id: 'st_leech', sec: 5, mul: 1.07 },
+    ],
+    cast: 'haste',
+    fx: 'smash',
+    desc: '5초간 공격력이 두 배가 되고, 디버프에 안 걸리며, 때린 만큼 회복한다',
+  },
+
   purify: {
     name: '정화', art: 'sk_purify', hits: 1, pick: 'none', targets: 0, dmg: 'magic',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
@@ -1118,6 +1206,8 @@ const NODE_SKILL: Record<string, SkillKind> = {
   kg4b: 'holysword',
   ba1: 'leap',
   ba2: 'volcano',
+  ba3a: 'lava',
+  ba3b: 'resolve',
   ea1: 'rain',
   ea2: 'frenzy',
   ea3b: 'song',

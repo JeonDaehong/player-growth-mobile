@@ -1429,19 +1429,22 @@ export function BattleView({ top, corner }: Props = {}) {
     const to = foeAt.current.pos[at] ?? 0;
     /* 자리는 **때리기 전에** 잡는다 — 죽으면 목록이 줄어 번호가 밀린다 */
     const spot = spotOf(to);
-    strikeFoe(sw.id, at);
+    /* 이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 (`Swing.mul`) */
+    strikeFoe(sw.id, at, sw.mul);
 
     const key = hitSeq.current++;
     /* 같은 자리에서 터지면 여러 개가 하나로 보인다 — 조금씩 흩는다 */
     setHits((old) => {
       const live = old.slice(-7);
       return [...live, {
-        ...sw, key, ...spot, blast: false, arrow: '', erupt: false,
+        /* 과열의 둘째 대는 크게 터진다 — 같은 그림이면 넷 중 어느 것이 150% 인지 모른다 */
+        ...sw, key, ...spot, blast: !!sw.blast, arrow: '', erupt: false,
         row: rowFor(live, spot.x), born: Date.now(),
         dx: -14 + Math.random() * 24, dy: -6 + Math.random() * 20,
       }];
     });
-    shake.fire(0.55);
+    /* 크게 터지는 한 대는 더 흔든다 — 화면이 세기를 말하는 유일한 수단이다 */
+    shake.fire(sw.blast ? 0.9 : 0.55);
     /* 움찔하는 것도 **무대 자리**로 적는다 — 그리는 쪽이 그 번호를 본다 */
     setFlinch([to]);
     if (flinchT.current) clearTimeout(flinchT.current);
