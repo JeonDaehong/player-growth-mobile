@@ -98,6 +98,16 @@ Everything below follows from that one fact.
 - CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
   text and a tilted icon looks like a mistake.
 
+OUTPUT A RASTER IMAGE — A PICTURE MADE OF PIXELS.
+- Do NOT return SVG, vector paths, or any markup. Do not describe the shape in code.
+  The answer is an IMAGE FILE, nothing else.
+- Draw it on a COARSE PIXEL GRID: the shape is built from visible square blocks, and
+  every diagonal is a hard staircase of those blocks. There are no smooth curves and
+  no smooth diagonals anywhere.
+- A clean vector-looking symbol is a failed output even when the shape is correct.
+  This icon sits beside hand-placed pixel art and a smooth one reads as a sticker
+  from another program.
+
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
 
@@ -194,6 +204,16 @@ Everything below follows from that one fact.
   in this game that are NOT drawn in three-quarter view.
 - CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
   text and a tilted icon looks like a mistake.
+
+OUTPUT A RASTER IMAGE — A PICTURE MADE OF PIXELS.
+- Do NOT return SVG, vector paths, or any markup. Do not describe the shape in code.
+  The answer is an IMAGE FILE, nothing else.
+- Draw it on a COARSE PIXEL GRID: the shape is built from visible square blocks, and
+  every diagonal is a hard staircase of those blocks. There are no smooth curves and
+  no smooth diagonals anywhere.
+- A clean vector-looking symbol is a failed output even when the shape is correct.
+  This icon sits beside hand-placed pixel art and a smooth one reads as a sticker
+  from another program.
 
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
@@ -298,6 +318,16 @@ Everything below follows from that one fact.
   in this game that are NOT drawn in three-quarter view.
 - CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
   text and a tilted icon looks like a mistake.
+
+OUTPUT A RASTER IMAGE — A PICTURE MADE OF PIXELS.
+- Do NOT return SVG, vector paths, or any markup. Do not describe the shape in code.
+  The answer is an IMAGE FILE, nothing else.
+- Draw it on a COARSE PIXEL GRID: the shape is built from visible square blocks, and
+  every diagonal is a hard staircase of those blocks. There are no smooth curves and
+  no smooth diagonals anywhere.
+- A clean vector-looking symbol is a failed output even when the shape is correct.
+  This icon sits beside hand-placed pixel art and a smooth one reads as a sticker
+  from another program.
 
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
@@ -422,6 +452,16 @@ Everything below follows from that one fact.
 - CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
   text and a tilted icon looks like a mistake.
 
+OUTPUT A RASTER IMAGE — A PICTURE MADE OF PIXELS.
+- Do NOT return SVG, vector paths, or any markup. Do not describe the shape in code.
+  The answer is an IMAGE FILE, nothing else.
+- Draw it on a COARSE PIXEL GRID: the shape is built from visible square blocks, and
+  every diagonal is a hard staircase of those blocks. There are no smooth curves and
+  no smooth diagonals anywhere.
+- A clean vector-looking symbol is a failed output even when the shape is correct.
+  This icon sits beside hand-placed pixel art and a smooth one reads as a sticker
+  from another program.
+
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
 
@@ -513,6 +553,16 @@ Everything below follows from that one fact.
   in this game that are NOT drawn in three-quarter view.
 - CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
   text and a tilted icon looks like a mistake.
+
+OUTPUT A RASTER IMAGE — A PICTURE MADE OF PIXELS.
+- Do NOT return SVG, vector paths, or any markup. Do not describe the shape in code.
+  The answer is an IMAGE FILE, nothing else.
+- Draw it on a COARSE PIXEL GRID: the shape is built from visible square blocks, and
+  every diagonal is a hard staircase of those blocks. There are no smooth curves and
+  no smooth diagonals anywhere.
+- A clean vector-looking symbol is a failed output even when the shape is correct.
+  This icon sits beside hand-placed pixel art and a smooth one reads as a sticker
+  from another program.
 
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
@@ -607,6 +657,16 @@ Everything below follows from that one fact.
 - CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
   text and a tilted icon looks like a mistake.
 
+OUTPUT A RASTER IMAGE — A PICTURE MADE OF PIXELS.
+- Do NOT return SVG, vector paths, or any markup. Do not describe the shape in code.
+  The answer is an IMAGE FILE, nothing else.
+- Draw it on a COARSE PIXEL GRID: the shape is built from visible square blocks, and
+  every diagonal is a hard staircase of those blocks. There are no smooth curves and
+  no smooth diagonals anywhere.
+- A clean vector-looking symbol is a failed output even when the shape is correct.
+  This icon sits beside hand-placed pixel art and a smooth one reads as a sticker
+  from another program.
+
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
 
@@ -699,6 +759,16 @@ Everything below follows from that one fact.
   in this game that are NOT drawn in three-quarter view.
 - CENTRED and upright. Not tilted, not dynamic, not in motion — these sit next to
   text and a tilted icon looks like a mistake.
+
+OUTPUT A RASTER IMAGE — A PICTURE MADE OF PIXELS.
+- Do NOT return SVG, vector paths, or any markup. Do not describe the shape in code.
+  The answer is an IMAGE FILE, nothing else.
+- Draw it on a COARSE PIXEL GRID: the shape is built from visible square blocks, and
+  every diagonal is a hard staircase of those blocks. There are no smooth curves and
+  no smooth diagonals anywhere.
+- A clean vector-looking symbol is a failed output even when the shape is correct.
+  This icon sits beside hand-placed pixel art and a smooth one reads as a sticker
+  from another program.
 
 TEST: squint until the image is a blur. If you can still name it, it is right.
 If it becomes a grey blob, the shape is too busy.
