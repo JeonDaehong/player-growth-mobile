@@ -4465,6 +4465,18 @@
         "shot_2",
         "shot_3"
       ]
+    },
+    {
+      "file": "eadb910f-a344-4c27-af2d-ea1a18bc2921.jpg",
+      "name": "status_icon",
+      "expect": [
+        1,
+        1
+      ],
+      "labels": [
+        "st_shock"
+      ],
+      "append": true
     }
   ],
   "_srcDirs": [
