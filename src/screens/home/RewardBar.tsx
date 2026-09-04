@@ -36,7 +36,7 @@ import { T } from '@/ui/atoms';
 import { Pixel } from '@/ui/Pixel';
 import { ICONS } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
-import { BORDER, C, SP, WHITE } from '@/ui/theme';
+import { C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 import { TreasurePop } from './TreasureFx';
 
 /** 게이지를 몇 초마다 다시 그리나 */
@@ -106,16 +106,16 @@ export function RewardBar() {
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: SP.xs,
+        gap: SP.sm,
         /*
           **띠다 — 카드가 아니다.** 좌우 여백을 제 안에서 주고, 아래는 가는
-          가로줄로 무대와 이어진다 (`HomeScreen`). 예전에는 양옆이 뜬 채로
+          가로줄로 다음 띠와 이어진다 (`HomeScreen`). 예전에는 양옆이 뜬 채로
           아래에 8px 을 비워 두어서, 무대와 이 줄이 서로 남남으로 보였다.
         */
         paddingHorizontal: SP.sm,
-        paddingVertical: SP.xs,
+        paddingVertical: SP.sm - 2,
         borderBottomWidth: 1,
-        borderBottomColor: '#FFFFFF33',
+        borderBottomColor: LINE.low,
       }}
     >
       {/* ── 상자 ── */}
@@ -125,17 +125,26 @@ export function RewardBar() {
           if (claimIdle()) { setPop((n) => n + 1); }
         }}
         hitSlop={6}
-        style={({ pressed }) => [
-          BORDER,
-          {
-            width: 40,
-            height: 40,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: full ? 2 : 1,
-            backgroundColor: pressed && full ? C.bgInv : 'transparent',
-          },
-        ]}
+        style={({ pressed }) => ({
+          width: 42,
+          height: 42,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: R.md,
+          /*
+            **가득 찼을 때만 단추처럼 보인다.**
+
+            여태 두께로 말했다 (1px ↔ 2px). 흑백에서 1px 과 2px 의 차이는
+            나란히 놓고 봐야 보이는 정도라, 실제로는 늘 같은 네모였다.
+
+            지금은 선이 아니라 **밝기**로 말한다: 찼으면 밝은 테두리에 옅은
+            면, 아니면 테두리 없이 파인 자리다. 못 누르는 것은 눌러도 되는
+            것과 아예 다른 모양이어야 한다.
+          */
+          borderWidth: full ? 1 : 0,
+          borderColor: LINE.hi,
+          backgroundColor: pressed && full ? C.bgInv : (full ? SURF.up : SURF.down),
+        })}
       >
         {({ pressed }: { pressed: boolean }) => (
           <Animated.View style={{ transform: [{ rotate: tilt }] }}>
@@ -143,35 +152,57 @@ export function RewardBar() {
               sprite={ICONS.chest}
               scale={3}
               color={pressed && full ? C.fgInv : WHITE}
-              opacity={full ? 1 : 0.45}
+              opacity={full ? 1 : 0.35}
             />
           </Animated.View>
         )}
       </Pressable>
 
       {/* ── 게이지 ── */}
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: 1, gap: 3 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <T size={9} dim="sub">{full ? '가득 찼습니다 — 상자를 누르세요' : '재화 게이지'}</T>
-          <T size={9} dim="dim">{`${Math.floor(at * 100)}%`}</T>
+          {/*
+            **한 줄로 줄였다.** 여태 "재화 게이지" · "34%" · "가득 차면 약
+            19.2만 골드어치" 세 줄이 있었는데, 셋 다 같은 크기의 흐린 글씨라
+            무엇이 중요한지 알 수 없었다.
+
+            지금 알아야 하는 것은 하나다: **지금 눌러도 되나.** 얼마어치인지는
+            그 옆에 붙는 값이지 따로 설 줄이 아니다.
+          */}
+          <T size={FS.tiny} bold={full} dim={full ? 'full' : 'sub'}>
+            {full ? '가득 찼습니다 — 상자를 누르세요' : '재화 게이지'}
+          </T>
+          <T size={FS.tiny} dim="dim">
+            {full ? fmtShort(worth) : `${Math.floor(at * 100)}% · ${fmtShort(worth)}`}
+          </T>
         </View>
         {/*
           `ui/atoms` 의 `Bar` 를 안 쓴다 — 저건 칸을 나눈 블록 막대라 몇 %
           찼는지가 칸 단위로 튄다. 여기 값은 1초마다 조금씩 오르는 것이라
           이어진 막대여야 "차고 있다" 가 보인다.
+
+          홈을 파고 (`SURF.down`) 그 안을 채운다. 테두리를 두르면 이 줄에
+          네모가 하나 더 생기는데, 게이지는 원래 **파인 자리**다.
         */}
-        <View style={[BORDER, { height: 8, padding: 1 }]}>
+        <View
+          style={{
+            height: 9,
+            padding: 1,
+            borderRadius: R.sm,
+            backgroundColor: SURF.down,
+            overflow: 'hidden',
+          }}
+        >
           <View
             style={{
               width: `${Math.max(0, Math.min(1, at)) * 100}%`,
               height: '100%',
+              borderRadius: R.sm,
               backgroundColor: WHITE,
+              opacity: full ? 1 : O.sub,
             }}
           />
         </View>
-        <T size={8} dim="dim" numberOfLines={1}>
-          {`가득 차면 약 ${fmtShort(worth)}어치`}
-        </T>
       </View>
 
       {/* ── 다이아로 즉시 ── */}
@@ -179,32 +210,37 @@ export function RewardBar() {
         <Pressable
           onPress={() => { if (instantIdle()) setPop((n) => n + 1); }}
           hitSlop={4}
-          disabled={price === null}
-          style={({ pressed }) => [
-            BORDER,
-            {
-              paddingHorizontal: SP.xs,
-              paddingVertical: 4,
-              alignItems: 'center',
-              opacity: price === null ? 0.35 : 1,
-              backgroundColor: pressed ? C.bgInv : 'transparent',
-            },
-          ]}
+          disabled={price === null || dia < price}
+          style={({ pressed }) => ({
+            paddingHorizontal: SP.sm,
+            paddingVertical: 5,
+            alignItems: 'center',
+            borderRadius: R.md,
+            borderWidth: 1,
+            borderColor: LINE.mid,
+            opacity: price === null || dia < price ? 0.35 : 1,
+            backgroundColor: pressed ? C.bgInv : SURF.up,
+          })}
         >
           {({ pressed }: { pressed: boolean }) => (
             <>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                 <Pixel sprite={ICONS.gem} scale={1.2} color={pressed ? C.fgInv : WHITE} />
-                <T size={10} bold style={{ color: pressed ? C.fgInv : WHITE }}>
+                <T size={FS.label} bold style={{ color: pressed ? C.fgInv : WHITE }}>
                   {price === null ? '—' : String(price)}
                 </T>
               </View>
               {/*
-                남은 횟수를 같이 적는다. 값만 있으면 왜 어제는 50 이었는지가
-                설명되지 않는다.
+                아래 한 줄이 **셋 중 하나**를 말한다: 오늘 남은 횟수 · 오늘
+                끝 · 다이아 부족.
+
+                "다이아 부족" 은 원래 이 띠 밖으로 삐져나온 자리에 절대 좌표로
+                떠 있었다 (`bottom: -10`). 아래 띠 위에 글자가 걸쳐서, 화면이
+                어긋난 것처럼 보였다 — 붙일 자리가 없는 말이 아니라 **여기가
+                제자리**다.
               */}
               <T size={8} dim="dim" style={pressed ? { color: C.fgInv } : undefined}>
-                {price === null ? '오늘 끝' : `${3 - used}회 남음`}
+                {price === null ? '오늘 끝' : dia < price ? '다이아 부족' : `${3 - used}회 남음`}
               </T>
             </>
           )}
@@ -213,13 +249,6 @@ export function RewardBar() {
 
       {/* 받는 순간 상자에서 터져 나오는 것 — 자리는 상자 위다 */}
       <TreasurePop nonce={pop} left={20} bottom={20} />
-
-      {/* 다이아가 모자라면 값이 회색이어야 하는데, 그 판단은 스토어가 한다 */}
-      {price !== null && dia < price && !full && (
-        <View style={{ position: 'absolute', right: 0, bottom: -10 }}>
-          <T size={8} dim="dim">다이아 부족</T>
-        </View>
-      )}
     </View>
   );
 }

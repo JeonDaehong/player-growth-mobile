@@ -32,7 +32,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { Row } from '@/ui/atoms';
 import {
-  CHARS, HitFx, OwnedChar, chargeUp, cutCharge, newCharge, readySkill, skillOf,
+  CHARS, HitFx, OwnedChar, chargeUp, cutCharge, newCharge, readySkill, skillOf, skillOpen,
   skillsOf, spendCharge, statOf, swingMs,
 } from '@/core/chars';
 
@@ -499,6 +499,20 @@ function FighterView({
   noChargeRef.current = noCharge;
   const canCastRef = useRef(canCast);
   canCastRef.current = canCast;
+  /*
+    ── 아직 안 열린 기술은 고르지 않는다 ──
+
+    성이 기술을 연다 (`core/growth` 의 `skillSlots`). 2성이 되기 전의 사람은
+    스킬2 를 못 쓰는데, 코스트는 자리마다 따로 차므로 (`Charge`) 막지 않으면
+    **잠긴 기술이 그대로 나간다.**
+
+    `ref` 로 드는 이유는 `canCast` 와 같다 — 아래 `allow` 는 스윙 타이머 안의
+    닫힘이라, 그냥 `ch` 를 읽으면 합성 직후에도 한동안 옛 성을 본다.
+
+    잠긴 자리도 코스트는 계속 찬다. 그래야 합성한 그 순간부터 쓸 수 있다.
+  */
+  const openRef = useRef(ch);
+  openRef.current = ch;
   const onChargeRef = useRef(onCharge);
   onChargeRef.current = onCharge;
 
@@ -720,7 +734,9 @@ function FighterView({
        */
       const slot = silentRef.current
         ? -1
-        : readySkill(ch.id, chargeRef.current, (i) => canCastRef.current(ch.id, i));
+        : readySkill(ch.id, chargeRef.current, (i) => (
+          skillOpen(openRef.current, i) && canCastRef.current(ch.id, i)
+        ));
       const skill = slot >= 0;
       if (skill) chargeRef.current = spendCharge(ch.id, chargeRef.current, slot);
       pushCharge();

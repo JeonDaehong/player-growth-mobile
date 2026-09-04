@@ -5,25 +5,32 @@
  * 영영 비어 있다. 자리를 만들어 놓고 채울 방법을 안 주면 그 자리는 기능이
  * 아니라 결함이다.
  *
- * ## 중복이 안 나온다
+ * ## 이제 중복이 나온다
  *
- * 열두 명뿐인 게임에서 중복을 주면, 이미 가진 사람이 또 나오는 일이 금방
- * 대부분이 된다. 중복을 쓸 데(합성·돌파)가 있어야 그게 성립하는데 지금은 없다.
- * 그래서 **안 가진 사람 중에서만** 뽑는다. 뽑을 때마다 확실히 하나가 늘고,
- * 열둘을 다 모으면 모집이 닫힌다.
+ * 한동안 **안 가진 사람 중에서만** 뽑았다. 중복을 쓸 데가 없었기 때문이다 —
+ * 이미 가진 사람이 또 나오면 그건 그냥 허탕이었다.
+ *
+ * 성 체계가 생기면서 쓸 데가 생겼다 (`core/growth`). 같은 사람 둘을 합치면
+ * 한 성이 오르고, 성이 오르면 레벨 상한과 기술이 열린다. 그래서 규칙을
+ * 바꿨다: **안 가진 사람이 남아 있으면 그쪽을 먼저** 주고, 다 모았으면
+ * 조각이 나온다.
+ *
+ * 순서를 이렇게 둔 이유는 초반이다. 처음부터 섞어 뽑으면 파티 네 자리가
+ * 안 채워진 채로 조각만 쌓이는 일이 생기는데, 자리가 빈 파티는 조각이
+ * 아무리 많아도 약하다.
  *
  * ## 등급은 확률이지 세기가 아니다
  *
- * 등급이 높다고 지금 당장 세지 않는다 (`core/chars` 의 `GRADE_GROWTH` —
- * 등급은 레벨당 성장률만 올린다). 그래서 C 를 뽑아도 손해가 아니고, 초반에
- * 파티를 채우는 데는 오히려 그쪽이 낫다. 등급은 **오래 키울 사람**을 가른다.
+ * 등급이 높다고 지금 당장 세지 않는다 (`core/growth` 의 `RARITY_GROWTH` —
+ * 등급은 강화 성장률과 **상한**을 정한다). 그래서 일반을 뽑아도 손해가
+ * 아니고, 초반에 파티를 채우는 데는 오히려 그쪽이 낫다.
  *
  * ## 값이 오른다
  *
  * 가진 수에 따라 1.7배씩 오른다. 고정으로 두면 골드가 쌓이는 후반에 열두 명을
  * 한 번에 다 뽑고 끝난다 — 모으는 게임인데 모으는 과정이 사라진다.
  */
-import { CHARS, CHAR_IDS, CharId, Grade } from './chars';
+import { CHARS, CHAR_IDS, CharId, Rarity } from './chars';
 import { Rand, rnd } from './rng';
 
 /**
@@ -58,19 +65,32 @@ export function recruitCost(owned: number): number {
 /**
  * 등급이 나올 가중치.
  *
- * S 가 A 의 3분의 1쯤이다. 더 벌리면 S 둘(백기사·대공·무녀)이 사실상 안
- * 나오고, 좁히면 등급이 있을 이유가 없다.
+ * 신화가 일반의 40분의 1이다. 더 벌리면 신화가 사실상 안 나와서 각성이
+ * 없는 규칙이 되고, 좁히면 등급이 있을 이유가 없다.
  */
-export const GRADE_WEIGHT: Record<Grade, number> = {
-  C: 100,
-  B: 55,
-  A: 25,
-  S: 8,
+export const RARITY_WEIGHT: Record<Rarity, number> = {
+  common: 100,
+  rare: 55,
+  epic: 25,
+  legendary: 8,
+  mythic: 2.5,
 };
 
-/** 아직 안 가진 사람들 */
-export const poolOf = (owned: readonly string[]): CharId[] =>
-  CHAR_IDS.filter((id) => !owned.includes(id));
+/**
+ * 이번에 뽑을 대상.
+ *
+ * 안 가진 사람이 남아 있으면 **그 사람들만**, 다 모았으면 전원이다 (그때는
+ * 나오는 것이 조각이다 — `drawChar` 를 부르는 쪽이 이미 가진 사람인지 보고
+ * 가른다).
+ */
+export const poolOf = (owned: readonly string[]): CharId[] => {
+  const fresh = CHAR_IDS.filter((id) => !owned.includes(id));
+  return fresh.length ? fresh : [...CHAR_IDS];
+};
+
+/** 이번 뽑기가 **조각**만 나오는 판인가 — 열둘을 다 모았을 때 */
+export const allOwned = (owned: readonly string[]): boolean =>
+  CHAR_IDS.every((id) => owned.includes(id));
 
 /**
  * 한 명 뽑는다.
@@ -79,13 +99,13 @@ export const poolOf = (owned: readonly string[]): CharId[] =>
  * 고르는" 방식으로 하면, 그 등급에 한 명만 남았을 때 그 사람이 튀어나올 확률이
  * 갑자기 치솟는다. 사람 단위로 재면 남은 구성이 어떻든 확률이 자연스럽다.
  *
- * @returns 뽑힌 사람. 더 뽑을 사람이 없으면 null
+ * @returns 뽑힌 사람. 이미 가진 사람이면 **조각 한 장**이다
  */
 export function drawChar(owned: readonly string[], rand: Rand = rnd): CharId | null {
   const pool = poolOf(owned);
   if (!pool.length) return null;
 
-  const weights = pool.map((id) => GRADE_WEIGHT[CHARS[id].grade]);
+  const weights = pool.map((id) => RARITY_WEIGHT[CHARS[id].rarity]);
   const total = weights.reduce((a, w) => a + w, 0);
   let roll = rand() * total;
   for (let i = 0; i < pool.length; i++) {
@@ -97,14 +117,14 @@ export function drawChar(owned: readonly string[], rand: Rand = rnd): CharId | n
 }
 
 /** 지금 풀에서 각 등급이 나올 확률 (화면에 적어 준다) */
-export function gradeOdds(owned: readonly string[]): Partial<Record<Grade, number>> {
+export function rarityOdds(owned: readonly string[]): Partial<Record<Rarity, number>> {
   const pool = poolOf(owned);
   if (!pool.length) return {};
-  const total = pool.reduce((a, id) => a + GRADE_WEIGHT[CHARS[id].grade], 0);
-  const out: Partial<Record<Grade, number>> = {};
+  const total = pool.reduce((a, id) => a + RARITY_WEIGHT[CHARS[id].rarity], 0);
+  const out: Partial<Record<Rarity, number>> = {};
   for (const id of pool) {
-    const g = CHARS[id].grade;
-    out[g] = (out[g] ?? 0) + GRADE_WEIGHT[g] / total;
+    const g = CHARS[id].rarity;
+    out[g] = (out[g] ?? 0) + RARITY_WEIGHT[g] / total;
   }
   return out;
 }

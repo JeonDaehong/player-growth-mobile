@@ -42,7 +42,7 @@ import { T } from '@/ui/atoms';
 import { Pixel } from '@/ui/Pixel';
 import { BUBBLE } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
-import { BORDER, C, SP, WHITE } from '@/ui/theme';
+import { C, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
 
 /** 몇 줄까지 */
 const LINES = 3;
@@ -107,9 +107,15 @@ export function Ticker() {
     <View
       style={{
         flexDirection: 'row',
-        backgroundColor: '#000000A6',
-        borderWidth: 1,
-        borderColor: '#FFFFFF2B',
+        backgroundColor: SURF.veil,
+        /*
+          테두리를 지우고 **모서리만** 남겼다. 무대 위에 얹히는 것에 흰 선을
+          두르면 그 선이 곧 "여기부터는 게임이 아니다" 가 되어, 채팅이 무대
+          안에 있다는 인상이 깨진다. 어두운 판 하나면 글씨는 읽히고 무대는
+          안 갈린다.
+        */
+        borderRadius: R.md,
+        overflow: 'hidden',
       }}
     >
       {/* ── 말하는 단추 ── */}
@@ -123,7 +129,7 @@ export function Ticker() {
           alignItems: 'center',
           justifyContent: 'center',
           borderRightWidth: 1,
-          borderRightColor: '#FFFFFF33',
+          borderRightColor: LINE.low,
           backgroundColor: pressed ? C.bgInv : 'transparent',
         })}
       >
@@ -139,21 +145,19 @@ export function Ticker() {
       */}
       {!!badge && (
         <View
-          style={[
-            BORDER,
-            {
-              position: 'absolute',
-              left: 21,
-              top: 1,
-              minWidth: 18,
-              paddingHorizontal: 3,
-              alignItems: 'center',
-              backgroundColor: C.bgInv,
-              zIndex: 2,
-            },
-          ]}
+          style={{
+            position: 'absolute',
+            left: 20,
+            top: 2,
+            minWidth: 16,
+            paddingHorizontal: 4,
+            alignItems: 'center',
+            borderRadius: R.round,
+            backgroundColor: C.bgInv,
+            zIndex: 2,
+          }}
         >
-          <T size={9} bold style={{ color: C.fgInv }}>{badge}</T>
+          <T size={8} bold style={{ color: C.fgInv }}>{badge}</T>
         </View>
       )}
 

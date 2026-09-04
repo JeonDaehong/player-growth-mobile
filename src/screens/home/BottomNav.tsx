@@ -10,18 +10,25 @@
  * 길어지는 날 단추가 화면 밖으로 밀려나고, 그러면 "같이 보인다" 가 깨진다.
  * 위에서 무엇을 보고 있든 다섯 칸은 늘 제자리에 있다.
  *
- * ## 가운데가 솟아 있다
+ * ## 여기가 제일 자주 눌린다
  *
- * 다섯 칸의 한가운데(`main`)가 지금 보고 있는 화면이라 안 눌린다 — 눌러도
- * 아무 데도 안 가는 단추를 준비중 팝업으로 막으면, 이미 여기 있는데 준비중
- * 이라는 말을 듣게 된다.
+ * 화면에서 손이 제일 자주 닿는 자리이므로, 완성도를 여기부터 맞춘다.
  *
- * 반전(흰 바탕)만으로 말했었는데, 그러면 **네모 하나가 더 생길 뿐**이다.
- * 지금은 가운데 칸이 띠 위로 솟고 그림도 한 단계 크다 — 흔한 모바일 게임의
- * 아래 띠가 다 그 모양이라, 설명 없이 "여기가 본거리" 로 읽힌다.
+ * 한 번은 가운데 칸을 **띠 위로 솟게** 만들었다. 흔한 모바일 게임이 다 그
+ * 모양이라 "여기가 본거리" 로 읽힐 줄 알았는데, 실제로는 솟은 네모가 파티
+ * 칸 위에 얹혀서 화면을 한 번 더 갈랐다. 흑백이라 솟은 것과 얹힌 것을
+ * 그림자로 이을 수가 없어서, 그냥 **떠 있는 네모**가 됐다.
  *
- * 나머지 넷은 아직 화면이 없어 준비중이다 (`ui/SoonPopup`). 자리부터 잡는
- * 이유는 저기 적어 두었다.
+ * 지금은 솟지 않는다. 대신 셋으로 말한다.
+ *
+ *   1. **알약 배경** — 고른 칸에만 깔린다. 네모가 아니라 알약이라, 띠를
+ *      가르는 칸막이가 아니라 **띠 위를 미끄러지는 표시**로 읽힌다
+ *   2. **밝기** — 안 고른 칸은 그림도 글자도 흐리다 (`O.sub`). 흑백에서
+ *      "지금 여기" 를 말하는 제일 싼 수단이다
+ *   3. **크기** — 고른 칸의 그림만 한 단계 크다
+ *
+ * 칸마다 두르던 테두리는 지웠다. 다섯이 각자 네모를 두르면 띠 하나가 아니라
+ * 작은 상자 다섯이 된다.
  */
 import React from 'react';
 import { Pressable, View } from 'react-native';
@@ -31,7 +38,7 @@ import { Pixel } from '@/ui/Pixel';
 import { NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
-import { C, O, SP, WHITE } from '@/ui/theme';
+import { C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 
 const TABS: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
   { id: 'hero', label: '영웅', art: 'hero' },
@@ -41,14 +48,6 @@ const TABS: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
   { id: 'content', label: '컨텐츠', art: 'more' },
 ];
 
-/**
- * 가운데 칸이 띠 위로 솟는 높이.
- *
- * 이만큼 위로 나가므로 부모가 그 자리를 비워 둬야 한다 (`paddingTop`).
- * 안 비우면 솟은 부분이 파티 칸 위에 얹혀서 파티 마지막 줄을 가린다.
- */
-const BUMP = 10;
-
 export function BottomNav() {
   const insets = useSafeAreaInsets();
 
@@ -56,15 +55,17 @@ export function BottomNav() {
     <View
       style={{
         flexDirection: 'row',
-        alignItems: 'flex-end',
+        /*
+          **테두리가 아니라 밝은 실선 하나**다. 순백 1px 을 두르면 이 띠가
+          화면에서 잘려 나온 네모가 되는데, 여기는 화면의 바닥이라 위쪽
+          경계 하나만 있으면 된다.
+        */
         borderTopWidth: 1,
-        borderTopColor: WHITE,
+        borderTopColor: LINE.low,
         backgroundColor: C.bg,
-        /* 솟은 칸이 나갈 자리 */
-        paddingTop: BUMP,
-        paddingBottom: insets.bottom,
-        paddingLeft: insets.left,
-        paddingRight: insets.right,
+        paddingTop: SP.xs + 2,
+        paddingBottom: insets.bottom + SP.xs,
+        paddingHorizontal: SP.xs + insets.left,
       }}
     >
       {TABS.map((t) => {
@@ -75,30 +76,31 @@ export function BottomNav() {
             disabled={here}
             onPress={() => { sfx('tap'); soon(t.label); }}
             style={({ pressed }) => ({
+              /* 다섯이 **정확히 같은 폭**이다 — 라벨 길이가 자리를 못 바꾼다 */
               flex: 1,
-              paddingTop: here ? SP.xs : SP.sm,
-              paddingBottom: SP.sm,
+              paddingVertical: SP.xs + 1,
               alignItems: 'center',
+              justifyContent: 'center',
               gap: 3,
-              /* 솟은 만큼 위로 나간다 — 자리는 부모가 비워 두었다 */
-              marginTop: here ? -BUMP : 0,
-              /*
-                지금 있는 칸만 반전. 흑백이라 "여기다" 를 말할 수단이 이것과
-                굵기뿐인데, 굵기는 이미 눌림에 쓰고 있다.
-              */
-              backgroundColor: here ? C.bgInv : (pressed ? '#FFFFFF33' : 'transparent'),
-              borderWidth: here ? 1 : 0,
-              borderColor: WHITE,
+              borderRadius: R.round,
+              backgroundColor: here ? SURF.up : (pressed ? SURF.up : 'transparent'),
             })}
           >
             <Pixel
               sprite={NAV[t.art]}
-              /* 가운데만 한 단계 크다 — 크기가 곧 "여기가 본거리" 다 */
-              scale={here ? 2.6 : 2}
-              color={here ? C.fgInv : WHITE}
-              opacity={here ? 1 : O.sub}
+              /* 고른 칸만 한 단계 크다 — 크기가 곧 "여기가 본거리" 다 */
+              scale={here ? 2 : 1.7}
+              color={WHITE}
+              opacity={here ? 1 : O.dim}
             />
-            <T size={10} bold style={{ color: here ? C.fgInv : WHITE }}>{t.label}</T>
+            <T
+              size={FS.tiny}
+              bold={here}
+              /* 안 고른 칸은 글자도 같이 물러난다 — 그림만 흐리면 줄이 어긋나 보인다 */
+              dim={here ? 'full' : 'dim'}
+            >
+              {t.label}
+            </T>
           </Pressable>
         );
       })}

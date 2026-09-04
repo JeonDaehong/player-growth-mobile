@@ -45,7 +45,7 @@ import {
 } from '@/core/autoBattle';
 import { CHARS, projFrame, projSet, skillOf, skillsOf, statOf } from '@/core/chars';
 import {
-  FORMATIONS, FormSpot, formationSpots, hpOf, livingMembers, members, partyStat,
+  FORMATIONS, FormSpot, formationSpots, hpOf, livingMembers, members, partyStat, seatRows,
 } from '@/core/party';
 import {
   CC, Hex, STATUS_MARK, STATUS_NAME, STUN, hasHex, hexOf, stunned,
@@ -55,7 +55,7 @@ import { cleanseOptOf, cleanseTargets } from '@/core/skillOpt';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
-import { BAD_C, C, SHIELD_C, SP, WHITE } from '@/ui/theme';
+import { BAD_C, C, FS, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
 import { SkillFx } from './SkillFx';
 import {
@@ -569,7 +569,7 @@ interface Props {
 export function BattleView({ top, corner }: Props = {}) {
   const battle = useGame((s) => s.battle);
   const party = useGame((s) => s.party);
-  const chars = useGame((s) => s.chars);
+  const rawChars = useGame((s) => s.chars);
   const strikeFoe = useGame((s) => s.strikeFoe);
   const skillFoe = useGame((s) => s.skillFoe);
   const skillOpts = useGame((s) => s.skillOpts);
@@ -577,6 +577,21 @@ export function BattleView({ top, corner }: Props = {}) {
   const form = useGame((s) => s.formation);
   const goStage = useGame((s) => s.goStage);
   const callBossNow = useGame((s) => s.callBossNow);
+  /*
+    ── 화면도 **앉힌 명부**를 본다 ──
+
+    전투는 대형에 앉힌 몸으로 계산한다 (`core/party` 의 `seatRows` — 앞줄은
+    체력 1.1배, 뒷줄은 공격 1.15배). 화면이 맨 몸 수치를 읽으면 **최대 체력이
+    두 값으로 갈린다**: 계산은 330 을 최대로 보고 화면은 300 을 최대로 보므로,
+    30 을 맞은 사람이 화면에서는 여전히 가득 찬 채로 서 있게 된다.
+
+    `useMemo` 를 안 쓴다. 네 명짜리 명부를 한 번 베끼는 일이라, 기억해 두는
+    비용이 다시 만드는 비용보다 크다.
+
+    파티에 없는 사람은 `row` 가 안 붙으므로 (`seatRows`) 창고 목록은 그대로
+    맨 몸 수치다 — 캐릭터끼리 견주는 자리에서 대형이 끼어들면 안 된다.
+  */
+  const chars = seatRows(party, rawChars, form);
   /* ⚠ 테스트용 — 아래 TEST 단추가 부른다. 출시 전에 같이 지운다 */
   const rageNow = useGame((s) => s.rageNow);
 
@@ -3152,9 +3167,27 @@ export function BattleView({ top, corner }: Props = {}) {
         >
           {top}
 
-          {/* ── 판 줄 ── */}
+          {/*
+            ── 판 줄 ──
+
+            위 띠의 검은 판(`TopBar` 의 `Fade`)이 여기까지 안 내려오므로, 이
+            줄은 제 배경을 스스로 져야 한다. 밝은 챕터에서는 하늘이 거의
+            흰색이라 흰 글씨가 통째로 사라졌다.
+
+            **양끝에만** 판을 깐다 — 가운데는 비워 둬야 그 아래 무대가 계속
+            보인다. 줄 전체에 깔면 띠가 하나 더 생기고, 그러면 무대가 다시
+            "정보 창 밑의 게임 창" 이 된다.
+          */}
           <Row between style={{ paddingHorizontal: SP.sm, paddingTop: SP.xs }}>
-            <Row gap={SP.xs}>
+            <Row
+              gap={SP.xs}
+              style={{
+                paddingHorizontal: SP.xs + 2,
+                paddingVertical: 2,
+                borderRadius: R.round,
+                backgroundColor: SURF.veil,
+              }}
+            >
               {/*
                 판을 골라 간다. **깬 판과 지금 판까지만** — 안 가 본 데를
                 건너뛸 수 있으면 판을 차례로 여는 것 자체가 뜻을 잃는다.
@@ -3169,9 +3202,18 @@ export function BattleView({ top, corner }: Props = {}) {
                 **올라간 티가 안 난다.** 지역 이름은 다섯 판마다 한 번 바뀌므로
                 어디쯤 왔는지가 읽힌다.
               */}
-              <T size={10} dim="sub">{stageOf(battle.stage).zone}</T>
+              <T size={FS.tiny} dim="sub">{stageOf(battle.stage).zone}</T>
             </Row>
-            <T size={9} dim="dim">최고 {battle.best}</T>
+            <View
+              style={{
+                paddingHorizontal: SP.xs + 2,
+                paddingVertical: 3,
+                borderRadius: R.round,
+                backgroundColor: SURF.veil,
+              }}
+            >
+              <T size={FS.tiny} dim="sub">최고 {battle.best}</T>
+            </View>
           </Row>
 
           {/* 가운데는 무대가 그대로 보여야 한다 */}
@@ -3196,9 +3238,25 @@ export function BattleView({ top, corner }: Props = {}) {
             */}
             <View style={{ flex: 1 }}>{corner}</View>
 
-            {/* ── 진행과 우두머리 ── */}
-            <View style={{ width: '38%', gap: 3 }}>
-              <T size={9} dim="sub" numberOfLines={1}>
+            {/*
+              ── 진행과 우두머리 ──
+
+              채팅과 **같은 모양의 판** 위에 얹는다 (`Ticker` — 어두운 판에
+              둥근 모서리, 테두리 없음). 무대 아래 양끝에 선 둘이라 서로
+              짝으로 보여야 하는데, 한쪽만 테두리를 두르고 있으면 둘이 다른
+              종류의 것으로 읽힌다.
+            */}
+            <View
+              style={{
+                width: '38%',
+                gap: 3,
+                paddingHorizontal: SP.xs + 2,
+                paddingVertical: SP.xs,
+                borderRadius: R.md,
+                backgroundColor: SURF.veil,
+              }}
+            >
+              <T size={FS.tiny} dim="sub" numberOfLines={1}>
                 {battle.boss
                   ? (rage ? '광폭화 — 두 배' : `광폭화 ${rageSec}초`)
                   : battle.called
@@ -3251,12 +3309,13 @@ export function BattleView({ top, corner }: Props = {}) {
                     style={{
                       borderWidth: 1,
                       borderColor: BAD_C,
+                      borderRadius: R.sm,
                       paddingVertical: 2,
                       alignItems: 'center',
                       backgroundColor: C.bg,
                     }}
                   >
-                    <T size={9} bold style={{ color: BAD_C }}>TEST · 광폭화</T>
+                    <T size={8} bold style={{ color: BAD_C }}>TEST · 광폭화</T>
                   </View>
                 </Pressable>
               )}

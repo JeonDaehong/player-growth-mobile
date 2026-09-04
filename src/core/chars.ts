@@ -45,6 +45,10 @@
  * 다음 사람을 만들면 여기 한 줄, `CHARS` 에 한 덩어리를 더한다.
  */
 import type { StatusId } from './status';
+import {
+  LV_GROWTH, LV_HP_RATIO, RARITY_GROWTH, Rarity, STAR_CAP,
+  canAwaken, lvCap, maxStar, skillSlots,
+} from './growth';
 
 export const CHAR_IDS = ['knightgirl', 'bunnyaxe', 'elfarcher', 'nun'] as const;
 
@@ -95,34 +99,22 @@ export function battleTypeOf(id: string): BattleType {
   return d.range === 'ranged' ? 'ranged' : 'melee';
 }
 
-/**
- * 등급.
- *
- * 수집 게임에서 등급은 **얼마나 세냐**가 아니라 **얼마나 구하기 어렵냐**다.
- * 그래서 등급이 스탯을 직접 올리지 않고, `growth`(강화 한 칸당 성장률)만
- * 올린다 — +0 에서는 C 와 S 가 별 차이 없고, 키울수록 벌어진다. 처음 얻은 C 캐릭터가
- * 곧바로 쓸모없어지지 않아야 초반이 성립한다.
- */
-export type Grade = 'C' | 'B' | 'A' | 'S';
+/*
+  ── 등급은 `core/growth` 에 산다 ──
 
-export const GRADE_ORDER: Grade[] = ['C', 'B', 'A', 'S'];
-
-/** 강화 한 칸당 기본 스탯의 몇 %가 붙는가 */
-/**
- * 강화 한 단계가 올려 주는 비율.
- *
- * 예전에는 **레벨** 한 칸의 성장률이었다. 레벨을 없애면서 그대로 강화 쪽으로
- * 옮겼다 — 남은 축이 하나뿐이므로 등급이 얹힐 자리도 하나다.
- *
- * 그래서 같은 +10 이라도 S 등급이 C 등급보다 훨씬 크게 오른다. 등급이 "얼마나
- * 세게 시작하나" 가 아니라 **"키울 값이 있나"** 를 정한다.
- */
-export const GRADE_GROWTH: Record<Grade, number> = {
-  C: 0.06,
-  B: 0.075,
-  A: 0.09,
-  S: 0.11,
-};
+  `C·B·A·S` 넷을 **일반·희귀·영웅·전설·신화** 다섯으로 갈아 끼웠다. 넷일
+  때는 등급이 강화 성장률 하나만 정했는데, 이제 성 상한(`RARITY_STAR`)과
+  각성 여부(`RARITY_AWAKE`)까지 정하므로 규칙이 한 덩이가 됐다. 그 덩이는
+  캐릭터 표와 따로 사는 편이 낫다 — 숫자를 고치러 들어갈 때 열두 명의
+  설정글을 지나지 않아도 된다.
+*/
+export type { Rarity } from './growth';
+export {
+  RARITY_IDS, RARITY_NAME, RARITY_LETTER, RARITY_GROWTH,
+  RARITY_STAR, RARITY_AWAKE, STAR_CAP, LV_CAP, AWAKE_LV_CAP,
+  AWAKEN_COPIES, AWAKEN_ELIXIR, ELIXIR_NAME,
+  canAwaken, isAwakenSlot, lvCap, lvCost, maxStar, skillNeeds, skillSlots, starUpCost,
+} from './growth';
 
 /**
  * 피해의 종류.
@@ -203,7 +195,7 @@ export const PHYS_BLOW: Blow = { type: 'phys', pierce: NO_PIERCE };
 export interface CharDef {
   id: CharId;
   name: string;
-  grade: Grade;
+  rarity: Rarity;
   role: Role;
   /** 고유장비 이름 — 캐릭터에서 떼어 낼 수 없다 */
   gear: string;
@@ -1029,7 +1021,7 @@ export const CHARS: Record<CharId, CharDef> = {
   */
   knightgirl: {
     id: 'knightgirl', name: '이졸데', title: '서약의 백기사',
-    grade: 'S', role: 'guard',
+    rarity: 'mythic', role: 'guard',
     quote: '맹세를 지키느라 한 번도 뒤로 물러선 적이 없다.',
     gear: '서약검 여명', gearKind: 'sword',
     gearNote: '무릎 꿇고 받은 검. 날에 새긴 맹세가 아직 지워지지 않았다.',
@@ -1062,7 +1054,7 @@ export const CHARS: Record<CharId, CharDef> = {
   */
   bunnyaxe: {
     id: 'bunnyaxe', name: '비앙카', title: '연회장의 도끼',
-    grade: 'A', role: 'dealer',
+    rarity: 'epic', role: 'dealer',
     quote: '박수는 나중에 쳐. 아직 한 곡 남았어.',
     gear: '축배의 도끼', gearKind: 'axe',
     gearNote: '연회장에서 집어 온 것. 무엇을 자르려고 만든 물건인지는 안 물었다.',
@@ -1086,7 +1078,7 @@ export const CHARS: Record<CharId, CharDef> = {
   */
   elfarcher: {
     id: 'elfarcher', name: '리안느', title: '숲의 마지막 활',
-    grade: 'A', role: 'dealer',
+    rarity: 'epic', role: 'dealer',
     quote: '나무는 다 베어 갔어. 활은 아직 여기 있고.',
     gear: '마른가지 곡궁', gearKind: 'bow',
     gearNote: '베어 나간 숲에서 하나 남은 가지로 깎았다. 아직 마르는 중이다.',
@@ -1110,7 +1102,7 @@ export const CHARS: Record<CharId, CharDef> = {
   */
   nun: {
     id: 'nun', name: '아녜스', title: '재를 뿌리는 사제',
-    grade: 'S', role: 'support',
+    rarity: 'legendary', role: 'support',
     quote: '다치는 건 상관없어요. 혼자 다치지만 않으면.',
     gear: '잿빛 종 향로', gearKind: 'censer',
     gearNote: '불타는 예배당에서 하나 건져 나왔다. 아직 재 냄새가 난다.',
@@ -1202,6 +1194,30 @@ export interface OwnedChar {
   /** 고유장비 강화 수치 */
   gearLv: number;
   /**
+   * 몇 성인가 (1 ~ 5). 등급이 상한을 정한다 (`core/growth` 의 `RARITY_STAR`).
+   *
+   * 스탯을 **직접 올리지는 않는다.** 성이 올려 주는 것은 레벨 상한(`lvCap`)과
+   * 기술 해금(`skillSlots`) 둘이다. 셋 다 올리면 성 하나가 다른 두 축을
+   * 통째로 삼켜서, 결국 "같은 사람 몇 장 모았나" 만 남는다.
+   */
+  star: number;
+  /**
+   * 각성했나 — 5성 **위**의 한 단계. 신화만 간다.
+   *
+   * 성이 6 이 되는 것이 아니라 따로 둔 이유: 별 다섯이 푸른빛을 띠는 것이지
+   * 별이 여섯 개가 되는 것이 아니다. 숫자로 두면 화면이 별 여섯을 그린다.
+   */
+  awake: boolean;
+  /** 레벨 (1 ~ `lvCap`). 오르면 공격과 체력이 조금씩 는다 */
+  lv: number;
+  /**
+   * 가지고 있는 **1성 조각** 수 — 성을 올리는 데 쓴다 (`starUpCost`).
+   *
+   * 성별로 나눠 세지 않는다. 2성 조각 하나는 언제나 1성 조각 둘과 같은
+   * 것이라, 나누면 창고에 줄이 여럿 생기고 사람이 손으로 옮겨야 한다.
+   */
+  copies: number;
+  /**
    * 지금 어느 줄에 서 있나 — **저장되지 않는다.**
    *
    * 대형이 정하는 값이라 (`core/party` 의 `seatRows`) 세이브에 넣을 것이
@@ -1220,7 +1236,60 @@ export interface OwnedChar {
   row?: Row;
 }
 
-export const newChar = (id: CharId): OwnedChar => ({ id, gearLv: 0 });
+export const newChar = (id: CharId): OwnedChar => ({
+  id, gearLv: 0, star: 1, awake: false, lv: 1, copies: 0,
+});
+
+/**
+ * 저장본을 **믿지 않고** 읽는다.
+ *
+ * 성 · 레벨 · 조각은 나중에 생긴 칸이라 옛 저장본에 없다. 없는 값을 그대로
+ * 계산에 넣으면 `undefined` 가 NaN 이 되어 스탯이 통째로 사라진다 — 화면에는
+ * 캐릭터가 서 있는데 공격력이 `NaN` 인, 눈으로는 잡기 어려운 종류의 고장이다.
+ *
+ * ## 옛 저장본은 몇 성으로 치나
+ *
+ * **2성**이다 (등급이 허락하는 만큼). 여태 넷은 다들 기술을 둘씩 쓰고 있었고
+ * (`CharDef.skill` + `extra`) 1성으로 내리면 그 둘째 기술이 조용히 사라진다.
+ * 켜 놓고 보던 사람에게 그건 새 체계가 아니라 **고장**으로 보인다.
+ */
+export function fixChar(c: OwnedChar): OwnedChar {
+  const cap = maxStar(CHARS[c.id]?.rarity ?? 'common');
+  const star = Number.isFinite(c.star)
+    ? Math.max(1, Math.min(cap, Math.floor(c.star)))
+    : Math.min(2, cap);
+  const awake = !!c.awake && canAwaken(CHARS[c.id]?.rarity ?? 'common') && star >= STAR_CAP;
+  return {
+    ...c,
+    gearLv: Number.isFinite(c.gearLv) ? Math.max(0, Math.floor(c.gearLv)) : 0,
+    star,
+    awake,
+    lv: Number.isFinite(c.lv) ? Math.max(1, Math.min(lvCap(star, awake), Math.floor(c.lv))) : 1,
+    copies: Number.isFinite(c.copies) ? Math.max(0, Math.floor(c.copies)) : 0,
+  };
+}
+
+/** 이 사람의 지금 레벨 상한 */
+export const capOf = (c: OwnedChar): number => lvCap(c.star, c.awake);
+
+/** 이 사람의 등급 */
+export const rarityOf = (c: OwnedChar): Rarity => CHARS[c.id].rarity;
+
+/**
+ * 지금 **열려 있는 기술의 수.**
+ *
+ * 성이 기술을 연다 (`core/growth` 의 `skillSlots`). 다만 **가진 것보다 많이
+ * 열 수는 없다** — 넷은 아직 기술을 둘씩만 들고 있으므로 (`skillsOf`),
+ * 5성이 되어도 셋째 자리는 그릴 것이 없다.
+ *
+ * 안 막으면 `readySkill` 이 없는 자리를 고르고, 화면은 이름 없는 기술을
+ * 띄운다.
+ */
+export const openSkills = (c: OwnedChar): number =>
+  Math.min(skillsOf(c.id).length, skillSlots(c.star, c.awake));
+
+/** 그 자리의 기술이 열려 있나 — 화면이 잠긴 칸을 흐리게 그린다 */
+export const skillOpen = (c: OwnedChar, slot: number): boolean => slot < openSkills(c);
 
 /*
   ── 레벨은 없다 ──
@@ -1341,7 +1410,7 @@ export interface Stat extends Armor {
  */
 export function statOf(c: OwnedChar): Stat {
   const d = CHARS[c.id];
-  const g = GRADE_GROWTH[d.grade] * Math.max(0, c.gearLv);
+  const g = RARITY_GROWTH[d.rarity] * Math.max(0, c.gearLv);
   /*
     ── 서 있는 줄이 몸을 바꾼다 ──
 
@@ -1353,9 +1422,22 @@ export function statOf(c: OwnedChar): Stat {
     빨라진다" 가 되어, 강화 0 인 사람에게는 아무 일도 안 일어난다.
   */
   const m = rowMod(c.row);
+  /*
+    ── 레벨은 등급을 안 탄다 ──
+
+    강화(`g`)에는 등급이 붙지만 (`RARITY_GROWTH`) 레벨은 누구나 한 칸에 2%
+    다. 두 축에 다 등급을 얹으면 신화와 일반의 차이가 곱절로 벌어져서, 일반은
+    뽑는 순간 버리는 것이 된다.
+
+    없는 레벨은 1 로 읽는다 — 옛 저장본에는 이 칸이 없고 (`fixChar` 가
+    채우지만 여기까지 안 들른 길이 있을 수 있다), `undefined - 1` 은 NaN 이라
+    한 번 새면 스탯이 통째로 사라진다.
+  */
+  const lv = Math.max(0, (Number.isFinite(c.lv) ? c.lv : 1) - 1);
+  const lg = 1 + LV_GROWTH * lv;
   return {
-    atk: Math.round(d.atk * (1 + g) * m.atk),
-    hp: Math.round(d.hp * (1 + g * 0.6) * m.hp),
+    atk: Math.round(d.atk * (1 + g) * lg * m.atk),
+    hp: Math.round(d.hp * (1 + g * 0.6) * (1 + LV_GROWTH * LV_HP_RATIO * lv) * m.hp),
     /*
       방어도 자란다. 다만 **제일 천천히** — 뺄셈으로 들어가는 값이라 조금만
       올라도 효과가 크고, 공격력과 같은 기울기로 키우면 어느 지점부터 맞는

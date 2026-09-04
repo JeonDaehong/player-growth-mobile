@@ -9,11 +9,11 @@
  * 두 체계가 잠깐 같이 있는 건 괜찮지만, **서로 참조하지는 않는다.**
  */
 import {
-  CHARS, CharId, FREE_ENHANCE, MAX_GEAR_LV, OwnedChar,
-  gearCost, gearOdds, isCharId, newChar,
+  AWAKEN_COPIES, AWAKEN_ELIXIR, CHARS, CharId, FREE_ENHANCE, MAX_GEAR_LV, OwnedChar,
+  STAR_CAP, canAwaken, capOf, gearCost, gearOdds, isCharId, lvCost, maxStar, newChar, starUpCost,
 } from '@/core/chars';
 import { FormationId, PARTY_SIZE, Party, cleanParty, seatRows } from '@/core/party';
-import { drawChar, poolOf, recruitCost } from '@/core/recruit';
+import { allOwned, drawChar, poolOf, recruitCost } from '@/core/recruit';
 import { optKey } from '@/core/skillOpt';
 import {
   BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, forceRage,
@@ -105,7 +105,22 @@ export interface RosterActions {
    * 안 가진 사람 중에서만 나온다 — 중복을 쓸 데가 없는데 중복을 주면
    * 뽑을수록 허탕이 는다.
    */
-  recruitDraw: () => { id: CharId } | 'poor' | 'full';
+  recruitDraw: () => { id: CharId; dup: boolean } | 'poor' | 'full';
+  /**
+   * ── 캐릭터가 자라는 세 축 ── (`core/growth`)
+   *
+   * 강화(`enhanceGear`)는 확률로 시간을 먹고, 레벨은 골드로, 성은 **같은
+   * 사람 조각**으로 오른다. 셋이 서로 다른 것을 먹으므로 어느 하나가 다른
+   * 둘을 대신하지 못한다.
+   */
+  /** 레벨 한 칸. 골드를 쓰고 실패하지 않는다 */
+  levelUp: (id: CharId) => 'up' | 'max' | 'poor' | 'none';
+  /** 조각을 합쳐 한 성 (`starUpCost` — 1성 조각으로 1·2·4·8장) */
+  starUp: (id: CharId) => 'up' | 'max' | 'short' | 'none';
+  /** 5성 위의 한 단계 — 조각 서른둘과 강성의 영약 하나. 신화만 */
+  awaken: (id: CharId) => 'ok' | 'no' | 'short' | 'none';
+  /** ⚠ 테스트용 — 조각과 레벨을 그 자리에서 정한다 (`FREE_ENHANCE` 일 때만) */
+  setGrowth: (id: CharId, at: { copies?: number; lv?: number }) => void;
 }
 
 /**
@@ -216,14 +231,94 @@ export const createRosterSlice = (
     if (!id) return 'full';
 
     /*
+      ── 이미 가진 사람이면 **조각 한 장** ──
+
+      열둘을 다 모으면 그때부터 나오는 것이 조각이다 (`core/recruit` 의
+      `allOwned`). 예전에는 여기서 `'full'` 을 돌려주고 모집이 닫혔는데,
+      성 체계가 생기면서 (`core/growth`) 조각이 쓸 데가 생겼다.
+
+      값은 그대로다 (`recruitCost` 는 가진 **사람 수**로 오른다). 다 모은
+      뒤로는 값이 더 안 오르므로, 조각은 늘 같은 값에 한 장씩 쌓인다.
+    */
+    const dup = !!st.chars[id];
+
+    /*
       돈은 여기서 뺀다.
 
       `recruit` 을 부르면 그 안에서 또 `set` 이 돈다. 골드 차감을 그쪽에
       맡기면 "뽑았는데 돈이 안 빠진" 중간 상태가 한 프레임 보인다.
     */
     set({ money: st.money - cost });
-    get().recruit(id);
-    return { id };
+    if (dup) {
+      const c = get().chars[id];
+      set({ chars: { ...get().chars, [id]: { ...c, copies: c.copies + 1 } } });
+    } else {
+      get().recruit(id);
+    }
+    return { id, dup };
+  },
+
+  levelUp: (id) => {
+    const st = get();
+    const c = st.chars[id];
+    if (!c) return 'none';
+    if (c.lv >= capOf(c)) return 'max';
+    /* 강화와 같은 스위치를 탄다 — 시험 중에는 둘 다 공짜여야 짝이 맞는다 */
+    const cost = FREE_ENHANCE ? 0 : lvCost(c.lv);
+    if (st.money < cost) return 'poor';
+    set({
+      money: st.money - cost,
+      chars: { ...st.chars, [id]: { ...c, lv: c.lv + 1 } },
+    });
+    return 'up';
+  },
+
+  starUp: (id) => {
+    const st = get();
+    const c = st.chars[id];
+    if (!c) return 'none';
+    /* 등급이 상한이다 — 일반은 1성에서, 희귀는 3성에서 멈춘다 */
+    if (c.star >= maxStar(CHARS[id].rarity)) return 'max';
+    const need = starUpCost(c.star);
+    if (c.copies < need) return 'short';
+    /*
+      **레벨은 안 건드린다.** 성이 올려 주는 것은 상한이지 지금 값이 아니다
+      (`core/growth`). 올라간 상한만큼은 골드로 따로 올려야 한다.
+    */
+    set({
+      chars: { ...st.chars, [id]: { ...c, star: c.star + 1, copies: c.copies - need } },
+    });
+    return 'up';
+  },
+
+  setGrowth: (id, at) => {
+    /* 테스트 스위치가 꺼져 있으면 없는 기능이다 (`setGear` 와 같은 규칙) */
+    if (!FREE_ENHANCE) return;
+    const st = get();
+    const c = st.chars[id];
+    if (!c) return;
+    const next = { ...c };
+    if (at.copies !== undefined) next.copies = Math.max(0, Math.floor(at.copies));
+    /* 레벨은 지금 성의 상한을 넘길 수 없다 — 시험이라고 규칙을 어기면 안 본다 */
+    if (at.lv !== undefined) next.lv = Math.max(1, Math.min(capOf(c), Math.floor(at.lv)));
+    set({ chars: { ...st.chars, [id]: next } });
+  },
+
+  awaken: (id) => {
+    const st = get();
+    const c = st.chars[id];
+    if (!c) return 'none';
+    /* 신화만, 그리고 5성을 다 채운 뒤에만 */
+    if (!canAwaken(CHARS[id].rarity) || c.star < STAR_CAP || c.awake) return 'no';
+    if (c.copies < AWAKEN_COPIES || st.elixir < AWAKEN_ELIXIR) return 'short';
+    set({
+      elixir: st.elixir - AWAKEN_ELIXIR,
+      chars: {
+        ...st.chars,
+        [id]: { ...c, awake: true, copies: c.copies - AWAKEN_COPIES },
+      },
+    });
+    return 'ok';
   },
 
   strikeFoe: (who, aim) => {
@@ -252,7 +347,7 @@ export const createRosterSlice = (
       하나로 모으면서 (`core/chars`) 경험치를 없앴다 — 켜 두면 저절로 오르는
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
-    set({ battle, money: st.money + ev.gold });
+    set({ battle, money: st.money + ev.gold, elixir: st.elixir + ev.elixir });
   },
 
   skillFoe: (who, at, slot) => {
@@ -281,7 +376,7 @@ export const createRosterSlice = (
       하나로 모으면서 (`core/chars`) 경험치를 없앴다 — 켜 두면 저절로 오르는
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
-    set({ battle, money: st.money + ev.gold });
+    set({ battle, money: st.money + ev.gold, elixir: st.elixir + ev.elixir });
   },
 
   goStage: (stage) => {
@@ -367,7 +462,7 @@ export const createRosterSlice = (
       하나로 모으면서 (`core/chars`) 경험치를 없앴다 — 켜 두면 저절로 오르는
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
-    set({ battle, money: st.money + ev.gold });
+    set({ battle, money: st.money + ev.gold, elixir: st.elixir + ev.elixir });
   },
 });
 

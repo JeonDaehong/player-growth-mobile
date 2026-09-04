@@ -57,6 +57,7 @@ import {
   Armor, Blow, CHARS, DmgType, NO_ARMOR, NO_PIERCE, OwnedChar, PHYS_BLOW, Role,
   SkillDef, Stat, blowOf, rowMod, skillOf, skillsOf, statOf, swingMs,
 } from './chars';
+import { rollElixir } from './growth';
 import {
   GOOD, Hex, StatusId, hexOf, mulOf, putHex, tickHex,
 } from './status';
@@ -3418,6 +3419,17 @@ export interface TickEvent {
   killed: number;
   /** 우두머리를 잡아 스테이지를 넘겼나 */
   cleared: boolean;
+  /**
+   * 이번에 떨어진 **강성의 영약** (`core/growth` 의 `rollElixir`).
+   *
+   * 우두머리를 잡을 때만, 10판부터 다섯에 하나 꼴이다. 각성에 드는 유일한
+   * 재료라 (`AWAKEN_ELIXIR`) 다른 곳에서는 안 나온다.
+   *
+   * 골드(`gold`)와 나란히 두는 이유: 셋 있는 처치 자리(`battleTick` 의
+   * 우화 · `applyHit` · `applySkill`)가 전부 이 한 칸을 채우므로, 받는 쪽은
+   * 어디서 잡았는지 몰라도 된다.
+   */
+  elixir: number;
   /** 우두머리가 방금 나타났나 */
   bossCame: boolean;
   wiped: boolean;
@@ -3452,7 +3464,7 @@ export interface TickResult {
 }
 
 const NOTHING: TickEvent = {
-  hit: 0, taken: 0, hurt: null, fell: null, killed: 0, cleared: false,
+  hit: 0, taken: 0, hurt: null, fell: null, killed: 0, cleared: false, elixir: 0,
   bossCame: false, wiped: false, gold: 0, healed: 0, pattern: null,
   applied: false,
 };
@@ -4330,7 +4342,7 @@ export function battleTick(
       },
       ev: {
         hit, taken, hurt: hurtId, fell, pattern,
-        killed, cleared: false, bossCame, wiped: true, gold, healed,
+        killed, cleared: false, elixir: 0, bossCame, wiped: true, gold, healed,
         applied: true,
       },
     };
@@ -4393,6 +4405,7 @@ export function battleTick(
       hit, taken, hurt: hurtId, fell, pattern,
       killed: gimCleared ? killed + 1 : killed,
       cleared: gimCleared,
+      elixir: gimCleared ? rollElixir(st.stage, rand) : 0,
       bossCame,
       wiped: false,
       gold: gimCleared ? gold + killGold(st.stage, true) : gold,
@@ -4602,6 +4615,7 @@ export function applyHit(
       },
       ev: {
         ...NOTHING, hit: dmg, killed: 1, cleared: true, gold,
+        elixir: rollElixir(st.stage, rand),
       },
     };
   }
@@ -5105,7 +5119,7 @@ export function applySkill(
         clearKind: 'boss',
         goTo: nextStage(st.stage),
       },
-      ev: { ...NOTHING, hit, killed, cleared: true, gold },
+      ev: { ...NOTHING, hit, killed, cleared: true, gold, elixir: rollElixir(st.stage, rand) },
     };
   }
 

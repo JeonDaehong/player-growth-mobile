@@ -22,6 +22,19 @@
  * 위 띠와 채팅은 스크롤 밖에 따로 두지 않고 **무대 위에 얹었다** — 그래야
  * 배경 그림이 그 뒤로 비치고, 화면이 "게임 창 + 정보 창"으로 안 갈린다.
  *
+ * ## 아래는 **띠**로 잇는다 — 카드가 아니다
+ *
+ * 한동안 상자 줄 · 대형 · 파티가 각자 좌우 여백을 두고 8px 씩 떨어져 있었다.
+ * 그러면 셋이 검은 바탕 위에 떠 있는 **카드 세 장**이 되고, 무대까지 합쳐
+ * 화면이 네 조각으로 갈린다 ("다 뚝뚝 끊긴 느낌").
+ *
+ * 지금은 셋이 화면 폭을 꽉 채우고 (좌우 여백은 각자 제 안에서 준다) 사이는
+ * **머리카락 같은 가로줄 하나**로만 갈린다 (`LINE.low`). 위에서 아래로
+ * 이어지는 한 장이 되고, 줄은 "여기서 이야기가 바뀐다" 만 말한다.
+ *
+ * 무대가 0.8배로 줄면서 (`Ground` 의 `STAGE_H`) 이 아래로 350px 쯤이 남는다 —
+ * 요즘 폰이면 셋이 굴리지 않고 한 화면에 들어간다.
+ *
  * ## 전투 틱은 여기서 돌린다
  *
  * `App.tsx` 가 아니라 여기다. 지금은 화면이 하나뿐이라 차이가 없지만, 화면이
@@ -35,7 +48,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGame } from '@/state/store';
 import { T } from '@/ui/atoms';
 import { TICK_MS } from '@/core/autoBattle';
-import { C, SP } from '@/ui/theme';
+import { C, LINE, SP } from '@/ui/theme';
 import { BattleView } from './home/BattleView';
 import { PartyBar } from './home/PartyBar';
 import { CharPopup } from './home/CharPopup';
@@ -87,14 +100,21 @@ export default function HomeScreen() {
           대형은 파티 바로 위다 — "누가 서나" 와 "어떻게 서나" 는 같은 종류의
           결정이라 붙어 있어야 한다 (`FormationPicker`).
 
-          아래 둘은 위의 띠들과 성격이 다르다. 저건 보는 것이고 이건 만지는
-          것이라, 좌우 여백을 줘서 손에 잡히는 칸으로 보이게 한다.
+          둘 다 **띠**다. 좌우 여백은 제 안에서 주고, 사이는 가는 가로줄
+          하나로만 갈린다 — 카드로 띄우면 화면이 다시 조각난다.
         */}
-        <View style={{ paddingHorizontal: SP.sm, marginTop: SP.sm }}>
+        <View style={{ paddingHorizontal: SP.sm, paddingVertical: SP.sm }}>
           <FormationPicker />
         </View>
 
-        <View style={{ paddingHorizontal: SP.sm, marginTop: SP.sm }}>
+        <View
+          style={{
+            paddingHorizontal: SP.sm,
+            paddingVertical: SP.sm,
+            borderTopWidth: 1,
+            borderTopColor: LINE.low,
+          }}
+        >
           <PartyBar onPick={setSlot} />
         </View>
 
@@ -107,16 +127,8 @@ export default function HomeScreen() {
           맨 아래다. 무대 바로 밑은 상자 줄 자리라 (`RewardBar`) 거기에 임시
           표시를 두면, 눈이 무대에서 내려오자마자 이 줄부터 읽게 된다.
         */}
-        <View
-          style={{
-            borderTopWidth: 1,
-            borderColor: '#FFFFFF66',
-            borderStyle: 'dashed',
-            paddingVertical: 2,
-            marginTop: SP.md,
-          }}
-        >
-          <T size={9} bold center>TEST 진행중</T>
+        <View style={{ paddingTop: SP.sm, alignItems: 'center' }}>
+          <T size={9} bold dim="dim">TEST 진행중</T>
         </View>
       </ScrollView>
 

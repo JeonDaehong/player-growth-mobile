@@ -48,8 +48,91 @@ export const font = (size: number, weight: TextStyle['fontWeight'] = 'normal'): 
 
 export const SP = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 
-/** 도트 감성 — 모서리는 절대 둥글게 하지 않는다 */
-export const BORDER = { borderWidth: 1, borderColor: WHITE, borderRadius: 0 } as const;
+/* ══════════════════ 디자인 시스템 ══════════════════ */
+
+/**
+ * ── 모서리 ── 셋뿐이다.
+ *
+ * 오랫동안 **0** 이었다 ("도트 감성 — 모서리는 절대 둥글게 하지 않는다").
+ * 인물이 도트라 화면도 도트여야 한다고 봤는데, 실제로 굴려 보니 화면 전체가
+ * 직각 네모 스무 개로 갈려서 **프로토타입처럼** 보였다. 게임 화면과 UI 가
+ * 서로 다른 세계에 있었다.
+ *
+ * 도트 감성은 **인물과 그림**이 진다 (스프라이트 · `Pixel` · 바닥 격자).
+ * 껍데기는 그 그림을 담는 그릇이므로 부드러워도 된다 — 오히려 그래야 그림이
+ * 도드라진다.
+ *
+ * 값이 넷 이상이면 어느 것을 쓸지가 매번 판단이 되고, 판단이 매번이면
+ * 결국 제각각이 된다.
+ *
+ *   sm  4   작은 칸 · 뱃지 안쪽 · 게이지
+ *   md  8   기본. 단추 · 패널 · 슬롯
+ *   lg  12  큰 판 · 창
+ *   round   알약 (뱃지 · 재화 덩이)
+ */
+export const R = { sm: 4, md: 8, lg: 12, round: 999 } as const;
+
+/**
+ * ── 선 ── 굵기가 아니라 **밝기**로 위계를 준다.
+ *
+ * 여태 테두리가 전부 순백 1px 이었다. 그래서 화면에 있는 모든 네모가 **같은
+ * 목소리로** 말했고, 무엇이 중요한지 선으로는 알 수가 없었다.
+ *
+ * 흑백에서 선을 굵히면 금방 조잡해진다 (2px 이 넘으면 도트 그림과 다투기
+ * 시작한다). 밝기는 그런 문제가 없고 단계도 잘게 나눌 수 있다.
+ *
+ *   hi   눌러야 할 것 · 지금 고른 것
+ *   mid  보통 — 여기가 기본이다
+ *   low  칸막이. 있는 줄 모르게
+ */
+export const LINE = {
+  hi: '#FFFFFFD9',
+  mid: '#FFFFFF52',
+  low: '#FFFFFF24',
+} as const;
+
+/**
+ * ── 면 ── 테두리 **대신** 영역을 가른다.
+ *
+ * "필요하지 않은 테두리는 제거하고 여백과 배경 명암만으로 영역을 구분한다."
+ * 테두리 없이 옅게 밝은 면을 깔면 그 자체가 칸이 된다 — 선이 하나 줄 때마다
+ * 화면이 한 조각 덜 갈린다.
+ *
+ *   up    한 단 올라온 것 (슬롯 · 칸 · 눌리는 것)
+ *   down  한 단 들어간 것 (게이지 홈 · 빈 자리)
+ *   veil  무대 위에 얹히는 것 — 뒤로 배경이 비쳐야 한다
+ */
+export const SURF = {
+  up: '#FFFFFF12',
+  down: '#00000059',
+  veil: '#000000A6',
+} as const;
+
+/**
+ * ── 글자 계단 ── 다섯.
+ *
+ * 크기를 자유롭게 쓰면 같은 성격의 글자가 화면마다 9 · 10 · 11 로 흩어진다.
+ * 다섯 칸으로 묶어 두면 "이건 제목인가 보조인가" 만 정하면 된다.
+ *
+ * `MIN_FONT`(11) 아래 둘은 **한글이 뭉갠다.** 그래서 저 둘은 숫자와 짧은
+ * 라벨에만 쓴다 (`font` 이 어차피 11 로 끌어올린다).
+ */
+export const FS = { hero: 16, title: 13, body: 12, label: 10, tiny: 9 } as const;
+
+/**
+ * 기본 테두리 — **보통 목소리**다.
+ *
+ * 색이 순백에서 `LINE.mid` 로 내려갔고 모서리가 생겼다. 이 한 줄이 앱 거의
+ * 전부에 걸려 있으므로 (`Btn` · `Panel` · `Tag` · `ListItem` · 파티 칸 …)
+ * 여기만 고치면 화면 전체의 인상이 같이 바뀐다.
+ */
+export const BORDER = { borderWidth: 1, borderColor: LINE.mid, borderRadius: R.md } as const;
+
+/** 강조 테두리 — 지금 고른 것, 지금 눌러야 할 것 */
+export const BORDER_HI = { borderWidth: 1, borderColor: LINE.hi, borderRadius: R.md } as const;
+
+/** 알약 — 뱃지와 재화 덩이 */
+export const PILL = { borderWidth: 1, borderColor: LINE.mid, borderRadius: R.round } as const;
 
 /**
  * ── 딱 두 가지 색 ──
@@ -80,3 +163,16 @@ export const BAD_C = '#FF5C5C';
  * 아니다.
  */
 export const SHIELD_C = '#6FD4FF';
+
+/**
+ * **각성한 사람의 별** — 네 번째 색.
+ *
+ * 사양이 그렇다: "5성 이후 각성이 있고, 별 다섯이 푸른빛을 띈다"
+ * (`core/growth`). 흑백에서 각성을 표시할 다른 수단이 마땅치 않다 — 별을
+ * 여섯 개로 늘리면 5성과 셈이 헷갈리고, 크기를 키우면 다섯 칸이 안 맞는다.
+ *
+ * 하늘색(`SHIELD_C`)과 갈라 두었다. 저건 **적의 몸**에만 뜨고 이건 **내
+ * 캐릭터 창**에만 뜨므로 한 화면에서 만날 일이 없지만, 같은 값을 쓰면
+ * 언젠가 한쪽을 고치다 다른 쪽이 같이 바뀐다.
+ */
+export const AWAKE_C = '#8FB8FF';

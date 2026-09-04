@@ -30,7 +30,8 @@ import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import {
-  CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillsOf, statOf, swingMs,
+  CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillNeeds, skillOpen,
+  skillsOf, statOf, swingMs,
 } from '@/core/chars';
 import { passiveOf } from '@/core/passives';
 import { Party, allyAtk, members } from '@/core/party';
@@ -40,7 +41,7 @@ import {
 } from '@/core/skillOpt';
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
-import { BLACK, BORDER, SP, WHITE } from '@/ui/theme';
+import { BLACK, BORDER, O, SP, WHITE } from '@/ui/theme';
 
 /**
  * 이 기술이 **빨라야 몇 초마다** 나가나.
@@ -151,6 +152,8 @@ export function SkillPanel({
   const [open, setOpen] = useState<string | null>(null);
 
   const list = skillsOf(c.id);
+  /* 지금 몇 개가 열려 있나 — 머리말이 이걸 적는다 (`core/chars` 의 `openSkills`) */
+  const openCount = list.filter((_sk, i) => skillOpen(c, i)).length;
   const st = statOf(c);
   /* 파티 패시브가 기술에도 걸린다 — 전투가 쓰는 것과 같은 값이다 */
   const sup = allyAtk(party, chars);
@@ -194,12 +197,22 @@ export function SkillPanel({
         </>
       )}
 
+      {/*
+        ── 잠긴 기술도 목록에 남는다 ──
+
+        성이 기술을 연다 (`core/growth` 의 `skillSlots`). 아직 못 쓰는 것을
+        목록에서 빼면 "합성하면 무엇이 생기나" 가 어디에도 안 적힌다 — 성을
+        올릴 이유가 화면에서 사라지는 셈이다.
+
+        대신 흐리게 두고 몇 성이 필요한지를 오른쪽에 적는다.
+      */}
       <Row between style={{ marginBottom: SP.xs }}>
         <T size={11} bold>액티브 스킬</T>
-        <T size={9} dim="dim">눌러서 자세히</T>
+        <T size={9} dim="dim">{`${c.star}성 — ${openCount}개 열림`}</T>
       </Row>
 
       {list.map((sk, slot) => {
+        const unlocked = skillOpen(c, slot);
         const on = open === sk.name;
         const sec = skillEverySec(c, sk);
         /* 한 대의 피해. **계산과 같은 함수**를 쓴다 — 적어 둔 수와 박히는 수가 갈리면 안 된다 */
@@ -211,7 +224,7 @@ export function SkillPanel({
         const hit = strikeFor(skillBase(st, sk, sup), 1, NO_ARMOR, blowOf(c.id, sk));
         const pierce = pierceText(sk, c.id);
         return (
-          <View key={sk.name}>
+          <View key={sk.name} style={unlocked ? undefined : { opacity: O.dim }}>
             <ListItem
               title={sk.name}
               sub={sk.desc}
@@ -225,11 +238,14 @@ export function SkillPanel({
                 쿨타임 옆에 **피해 종류**를 붙인다. 회복형은 아무도 안 때리므로
                 뺀다 — 거기 "마법" 이 붙으면 마법으로 때리는 기술로 읽힌다.
               */
-              right={(
+              right={unlocked ? (
                 <Row gap={3}>
                   {sk.pick !== 'none' && <Tag label={DMG_NAME[sk.dmg]} />}
                   <Tag label={`${sec.toFixed(1)}초`} />
                 </Row>
+              ) : (
+                /* 잠긴 것에는 쿨타임 대신 **열리는 조건**을 적는다 */
+                <Tag label={`${skillNeeds(slot)}성 필요`} />
               )}
               onPress={() => setOpen(on ? null : sk.name)}
             />

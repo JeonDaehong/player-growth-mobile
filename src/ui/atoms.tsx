@@ -3,7 +3,11 @@ import {
   ActivityIndicator, Pressable, ScrollView, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BORDER, C, O, SP, WHITE, font } from './theme';
+import {
+  AWAKE_C, BORDER, BORDER_HI, C, FS, LINE, O, PILL, R, SP, SURF, WHITE, font,
+} from './theme';
+import { Pixel } from './Pixel';
+import { STARS } from './sprites';
 import { sfx, type SfxId } from './sfx';
 
 // ── 텍스트 ─────────────────────────────────────────────
@@ -100,13 +104,20 @@ export function Btn({ label, onPress, disabled, fill, sub, style, size = 'md', b
       /* onPress 가 없는 버튼은 눌리지 않아야 한다 — 소리만 나면 먹통처럼 느껴진다 */
       onPress={disabled || busy || !onPress ? undefined : () => { if (sound) sfx(sound); onPress(); }}
       style={({ pressed }) => [
-        BORDER,
+        /*
+          ── 지금 눌러야 할 단추는 선이 밝다 ──
+
+          채워진 단추(`fill`)는 이 화면에서 할 일 그 자체라 테두리도 강조로
+          간다 (`BORDER_HI`). 나머지는 보통 선이고, 안쪽에 옅은 면을 깔아
+          **선이 없어도 단추로 보이게** 한다 — 그래야 화면에 남는 선이 준다.
+        */
+        fill ? BORDER_HI : BORDER,
         {
           paddingVertical: pad,
           paddingHorizontal: SP.md,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: fill || pressed ? C.bgInv : 'transparent',
+          backgroundColor: fill || pressed ? C.bgInv : SURF.up,
           opacity: disabled ? O.dim : 1,
         },
         style,
@@ -166,11 +177,28 @@ export function ListItem({ title, sub, left, right, onPress, disabled, sound = '
 export function Bar({ value, max = 100, blocks = 20, height = 8 }: { value: number; max?: number; blocks?: number; height?: number }) {
   const filled = Math.round(Math.max(0, Math.min(1, value / max)) * blocks);
   return (
-    <View style={{ flexDirection: 'row', gap: 1, flex: 1 }}>
+    /*
+      **홈이 파여 있다** (`SURF.down`).
+
+      여태 안 찬 칸을 옅은 흰색으로 그렸는데, 그러면 다 안 찬 막대가 검은
+      바탕 위에 떠 있는 회색 줄무늬가 된다 — 게이지인지 무늬인지 모른다.
+      바닥을 어둡게 파고 그 안을 채우면, 안 찬 만큼이 "아직 비었다" 로 읽힌다.
+    */
+    <View
+      style={{
+        flexDirection: 'row',
+        gap: 1,
+        flex: 1,
+        padding: 1,
+        backgroundColor: SURF.down,
+        borderRadius: R.sm,
+        overflow: 'hidden',
+      }}
+    >
       {Array.from({ length: blocks }, (_, i) => (
         <View
           key={i}
-          style={{ flex: 1, height, backgroundColor: WHITE, opacity: i < filled ? O.full : O.faint }}
+          style={{ flex: 1, height, backgroundColor: WHITE, opacity: i < filled ? O.full : 0.09 }}
         />
       ))}
     </View>
@@ -187,26 +215,77 @@ export function KV({ k, v, dim, warn }: { k: string; v: string; dim?: boolean; w
   );
 }
 
-/** 테두리 뱃지 */
+/**
+ * 뱃지 — **알약**이다.
+ *
+ * 네모로 두면 화면의 다른 네모(단추 · 칸 · 패널)와 같은 모양이 되어, 눌리는
+ * 것인지 그냥 표시인지 알 수가 없다. 알약은 이 화면에서 **안 눌리는 표시**
+ * 하나만 뜻한다.
+ */
 export function Tag({ label, fill }: { label: string; fill?: boolean }) {
   return (
-    <View style={[BORDER, { paddingHorizontal: 5, paddingVertical: 2, backgroundColor: fill ? C.bgInv : 'transparent' }]}>
-      <Text style={[font(10, 'bold'), { color: fill ? C.fgInv : C.fg }]}>{label}</Text>
+    <View
+      style={[
+        PILL,
+        {
+          paddingHorizontal: 7,
+          paddingVertical: 2,
+          backgroundColor: fill ? C.bgInv : SURF.up,
+          borderColor: fill ? C.bgInv : LINE.mid,
+        },
+      ]}
+    >
+      <Text style={[font(FS.tiny, 'bold'), { color: fill ? C.fgInv : C.fg }]}>{label}</Text>
     </View>
+  );
+}
+
+/**
+ * ── 별 ── 이 사람이 몇 성인가 (`core/growth`).
+ *
+ * **자리는 늘 그 등급이 갈 수 있는 만큼**이다. 가진 만큼만 그리면 3성인
+ * 희귀와 3성인 신화가 화면에서 똑같아 보이는데, 둘은 전혀 다르다 — 하나는
+ * 다 큰 것이고 하나는 이제 절반이다.
+ *
+ * 각성하면 다섯이 **푸르게** 물든다 (`AWAKE_C`). 별을 여섯 개로 늘리지
+ * 않는다 — 사양이 "별 다섯이 푸른빛을 띈다" 이고, 여섯 개면 5성과 셈이
+ * 헷갈린다.
+ */
+export function Stars({ star, max, awake, scale = 1.6 }: {
+  star: number; max: number; awake?: boolean; scale?: number;
+}) {
+  const ink = awake ? AWAKE_C : WHITE;
+  return (
+    <Row gap={1}>
+      {Array.from({ length: Math.max(1, max) }, (_v, i) => (
+        <Pixel
+          key={i}
+          sprite={i < star ? STARS.on : STARS.off}
+          scale={scale}
+          color={ink}
+          /* 안 찬 별은 흐리다 — 지우면 앞으로 몇 칸 남았는지가 안 보인다 */
+          opacity={i < star ? 1 : O.dim}
+        />
+      ))}
+    </Row>
   );
 }
 
 export const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.bg },
-  panel: { ...BORDER, marginBottom: SP.md },
+  /* 모서리가 둥글어졌으므로 안쪽 내용도 같이 잘라 낸다 — 안 그러면 귀가 삐져나온다 */
+  panel: { ...BORDER, borderRadius: R.lg, overflow: 'hidden', marginBottom: SP.md },
   panelHead: {
     paddingHorizontal: SP.md,
     paddingVertical: SP.sm - 2,
     borderBottomWidth: 1,
-    borderBottomColor: WHITE,
+    /* 머리말 밑줄은 칸막이다 — 바깥 테두리와 같은 밝기면 판이 둘로 갈려 보인다 */
+    borderBottomColor: LINE.low,
+    backgroundColor: SURF.up,
   },
   item: {
     ...BORDER,
+    backgroundColor: SURF.up,
     padding: SP.md,
     marginBottom: SP.sm,
   },

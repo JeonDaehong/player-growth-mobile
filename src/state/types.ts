@@ -167,6 +167,17 @@ export interface GameState {
    */
   dia: number;
   /**
+   * **강성의 영약** — 각성에 드는 것 (`core/growth` 의 `AWAKEN_ELIXIR`).
+   *
+   * 재화가 아니라 **재료**다. 파는 곳이 없고 살 수도 없다 — 10판부터
+   * 우두머리를 잡으면 다섯에 하나 꼴로 나온다 (`rollElixir`).
+   *
+   * 골드·다이아와 나란히 지갑에 두지 않은 이유가 그것이다. 저 둘은 "무엇을
+   * 살 수 있나" 를 말하지만 이건 **한 사람을 각성시킬 수 있나** 하나만
+   * 말하므로, 그 이야기가 벌어지는 자리(캐릭터 창)에서만 보이면 된다.
+   */
+  elixir: number;
+  /**
    * 온라인 게이지를 **마지막으로 비운 시각** (ms).
    *
    * 쌓인 양을 저장하지 않는다. 시각 하나면 언제 읽어도 같은 답이 나오고,
@@ -526,7 +537,28 @@ export interface GameActions {
    */
   skillFoe: (who: string, at?: readonly number[], slot?: number) => void;
   /** 골드로 한 명 모집. 안 가진 사람 중에서만 나온다 */
-  recruitDraw: () => { id: CharId } | 'poor' | 'full';
+  recruitDraw: () => { id: CharId; dup: boolean } | 'poor' | 'full';
+  /**
+   * 레벨 한 칸. 골드를 쓰고 **실패하지 않는다** (`core/growth` 의 `lvCost`).
+   *
+   * 강화는 확률로 시간을 먹고 레벨은 값으로 먹는다 — 둘 다 확률이면 골드를
+   * 어디에 쓸지가 그냥 운이 된다.
+   */
+  levelUp: (id: CharId) => 'up' | 'max' | 'poor' | 'none';
+  /** 조각을 합쳐 한 성 올린다 (`starUpCost`) */
+  starUp: (id: CharId) => 'up' | 'max' | 'short' | 'none';
+  /** 5성 위의 한 단계 — 조각 서른둘과 영약 하나 (`AWAKEN_COPIES`) */
+  awaken: (id: CharId) => 'ok' | 'no' | 'short' | 'none';
+  /**
+   * ⚠ **테스트용** — 조각과 레벨을 그 자리에서 정한다.
+   *
+   * 각성 하나를 보려면 조각 마흔여덟 장이 필요하고 (`AWAKEN_COPIES`) 레벨
+   * 140 은 백마흔 번을 눌러야 한다. 직접 굴려 보려면 그 앞을 건너뛸 수단이
+   * 있어야 한다 — `setGear` 와 같은 이유로, 같은 스위치를 탄다.
+   *
+   * ⚠ `FREE_ENHANCE` 가 꺼져 있으면 아무 일도 안 한다.
+   */
+  setGrowth: (id: CharId, at: { copies?: number; lv?: number }) => void;
 
   toast: (text: string, tone?: Toast['tone']) => void;
   dismissToast: (id: number) => void;

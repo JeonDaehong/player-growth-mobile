@@ -13,33 +13,56 @@ import { View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useGame } from '@/state/store';
 import {
-  BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId, DMG_NAME, FREE_ENHANCE,
-  MAX_GEAR_LV, anyPierce, battleTypeOf, blowOf, charPower, gearCost, gearOdds,
-  statOf, swingMs,
+  AWAKEN_COPIES, AWAKEN_ELIXIR, BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId,
+  DMG_NAME, ELIXIR_NAME, FREE_ENHANCE, MAX_GEAR_LV, RARITY_NAME, STAR_CAP,
+  anyPierce, battleTypeOf, blowOf, canAwaken, capOf, charPower, gearCost, gearOdds,
+  lvCost, maxStar, starUpCost, statOf, swingMs,
 } from '@/core/chars';
 import { fmt } from '@/core/currency';
-import { Bar, Btn, KV, ListItem, Row, Sep, T, Tag } from '@/ui/atoms';
+import { Bar, Btn, KV, ListItem, Row, Sep, Stars, T, Tag } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { Money } from '@/ui/Money';
-import { BORDER, SP } from '@/ui/theme';
+import { BORDER, FS, LINE, R, SP, SURF } from '@/ui/theme';
 import { SkillPanel } from './SkillPanel';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
 import { deltaText, liveArmor, liveAtk, liveSpd } from '@/core/passives';
 import { hexOf } from '@/core/status';
-import { hpOf, livingMembers } from '@/core/party';
+import { hpOf, livingMembers, seatRows } from '@/core/party';
 
 export function CharPopup({
   slot, onClose,
 }: { slot: number | null; onClose: () => void }) {
   const party = useGame((s) => s.party);
-  const chars = useGame((s) => s.chars);
+  const raw = useGame((s) => s.chars);
+  const form = useGame((s) => s.formation);
+  /*
+    ── 화면도 **앉힌 명부**를 본다 ──
+
+    전투는 대형에 앉힌 몸으로 계산한다 (`core/party` 의 `seatRows` — 앞줄은
+    체력 1.1배, 뒷줄은 공격 1.15배). 화면이 맨 몸 수치를 읽으면 **최대 체력이
+    두 값으로 갈린다**: 계산은 330 을 최대로 보고 화면은 300 을 최대로 보므로,
+    30 을 맞은 사람이 화면에서는 여전히 가득 찬 채로 서 있게 된다.
+
+    `useMemo` 를 안 쓴다. 네 명짜리 명부를 한 번 베끼는 일이라, 기억해 두는
+    비용이 다시 만드는 비용보다 크다.
+
+    파티에 없는 사람은 `row` 가 안 붙으므로 (`seatRows`) 창고 목록은 그대로
+    맨 몸 수치다 — 캐릭터끼리 견주는 자리에서 대형이 끼어들면 안 된다.
+  */
+  const chars = seatRows(party, raw, form);
   const money = useGame((s) => s.money);
   const setPartySlot = useGame((s) => s.setPartySlot);
   const enhanceGear = useGame((s) => s.enhanceGear);
   const setGear = useGame((s) => s.setGear);
   const toast = useGame((s) => s.toast);
+  /* ── 자라는 세 축 (`core/growth`) ── */
+  const elixir = useGame((s) => s.elixir);
+  const levelUp = useGame((s) => s.levelUp);
+  const starUp = useGame((s) => s.starUp);
+  const awaken = useGame((s) => s.awaken);
+  const setGrowth = useGame((s) => s.setGrowth);
   /*
     지금 남은 체력과 걸려 있는 것들.
 
@@ -82,7 +105,14 @@ export function CharPopup({
     ...liveArmor(c, hex),
   } : null;
 
-  const owned = Object.values(chars);
+  /*
+    아래 목록은 **맨 몸 명부**를 쓴다 (`raw`).
+
+    여기는 캐릭터끼리 견주는 자리다. 파티에 선 넷만 대형 배수가 얹힌 전투력을
+    내걸면, 창고에 있는 사람이 실제보다 약해 보인다 — 바꿔 넣는 순간 그쪽도
+    같은 배수를 받는데.
+  */
+  const owned = Object.values(raw);
   const cost = c ? gearCost(c.gearLv) : 0;
   const maxed = !!c && c.gearLv >= MAX_GEAR_LV;
   /* 테스트 모드에서는 비용이 0 이라 돈을 안 본다 (`FREE_ENHANCE`) */
@@ -123,16 +153,30 @@ export function CharPopup({
             <View style={{ flex: 1 }}>
               {!!d.title && <T size={9} dim="dim">{d.title}</T>}
               <Row gap={SP.xs}>
-                <T size={15} bold>{d.name}</T>
-                <Tag label={d.grade} fill={d.grade === 'S'} />
+                <T size={FS.hero} bold>{d.name}</T>
+                {/*
+                  등급은 **얼마나 세냐가 아니라 어디까지 가느냐**다
+                  (`core/growth`). 전설과 신화만 채워 그린다 — 저 둘만 5성과
+                  각성까지 간다.
+                */}
+                <Tag
+                  label={RARITY_NAME[d.rarity]}
+                  fill={d.rarity === 'mythic' || d.rarity === 'legendary'}
+                />
                 {/* 전투 타입 — 아이콘과 이름을 붙여서 한 덩어리로 */}
                 <Row gap={3} style={{ alignItems: 'center' }}>
                   <Sprite set="role_icon" name={BATTLE_TYPE_ART[battleTypeOf(c.id)]} size={11} />
                   <Tag label={BATTLE_TYPE_NAME[battleTypeOf(c.id)]} />
                 </Row>
               </Row>
-              <T size={10} dim="sub">강화 +{c.gearLv} / {MAX_GEAR_LV}</T>
-              <T size={10} dim="dim">전투력 {charPower(c).toLocaleString()}</T>
+              <Row gap={SP.xs} style={{ marginTop: 2 }}>
+                <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} scale={2} />
+                <T size={FS.label} bold>Lv {c.lv}</T>
+                <T size={FS.tiny} dim="dim">/ {capOf(c)}</T>
+              </Row>
+              <T size={FS.tiny} dim="dim">
+                {`강화 +${c.gearLv} / ${MAX_GEAR_LV} · 전투력 ${charPower(c).toLocaleString()}`}
+              </T>
               {/*
                 월페이퍼 — **그림이 있는 사람에게만** 뜬다 (`hasWallpaper`).
                 없는 사람에게 눌리지 않는 단추를 남겨 두면, 그게 "아직 안
@@ -158,6 +202,119 @@ export function CharPopup({
             세울지 고르는 창이므로 먼저 알아야 하는 쪽은 뒤엣것이다 — 궁수와
             사제 중 누구를 넣을지는 공격력 숫자로 안 갈린다.
           */}
+          {/*
+            ── 자라는 세 축 ── 등급 · 성 · 레벨 (`core/growth`).
+
+            **스킬보다 먼저 온다.** 성이 스킬을 여는 축이라 (`skillSlots`),
+            아래 기술 목록에서 잠긴 칸을 보기 전에 "왜 잠겼나" 가 여기 있어야
+            한다. 순서가 반대면 잠긴 칸을 보고 여기까지 되짚어 내려와야 한다.
+          */}
+          <View
+            style={{
+              padding: SP.sm,
+              borderRadius: R.md,
+              backgroundColor: SURF.up,
+              gap: SP.xs,
+            }}
+          >
+            {/* ── 레벨 ── 골드로 오르고 실패가 없다 */}
+            <Row between>
+              <T size={FS.tiny} dim="sub">레벨</T>
+              <T size={FS.tiny} dim="dim">
+                {c.lv >= capOf(c)
+                  ? `${c.star}성 상한 — 합성해야 더 오른다`
+                  : `다음 ${(FREE_ENHANCE ? 0 : lvCost(c.lv)).toLocaleString()} 골드`}
+              </T>
+            </Row>
+            <Row gap={SP.xs}>
+              <Bar value={c.lv} max={capOf(c)} blocks={20} height={5} />
+              <T size={FS.label} bold>{c.lv} / {capOf(c)}</T>
+            </Row>
+            <Btn
+              label="레벨 올리기"
+              size="sm"
+              fill={c.lv < capOf(c) && (FREE_ENHANCE || money >= lvCost(c.lv))}
+              disabled={c.lv >= capOf(c) || (!FREE_ENHANCE && money < lvCost(c.lv))}
+              onPress={() => {
+                const r = levelUp(c.id);
+                if (r === 'poor') toast('골드가 부족합니다', 'bad');
+                if (r === 'max') toast('지금 성의 상한입니다', 'plain');
+              }}
+            />
+
+            <View style={{ height: 1, backgroundColor: LINE.low, marginVertical: 2 }} />
+
+            {/*
+              ── 성 ── 같은 사람 조각을 합친다 (`starUpCost`).
+
+              한 성 오를 때마다 **1성 조각으로 두 배씩** 든다 (1·2·4·8). 값이
+              큰 이유는 성이 올려 주는 것이 스탯이 아니라 레벨 상한과 기술
+              이라서다 — 한 번 오를 때마다 그 사람이 하는 일이 바뀐다.
+            */}
+            <Row between>
+              <T size={FS.tiny} dim="sub">성 · 합성</T>
+              <T size={FS.tiny} dim="dim">
+                {`조각 ${c.copies}장 · ${RARITY_NAME[d.rarity]}는 ${maxStar(d.rarity)}성까지`}
+              </T>
+            </Row>
+            {c.star >= maxStar(d.rarity) ? (
+              /*
+                다 올린 사람에게는 **단추 대신 다음 이야기**를 보여 준다.
+                신화면 각성이 남았고, 아니면 여기가 끝이다.
+              */
+              canAwaken(d.rarity) && !c.awake ? (
+                <>
+                  <Btn
+                    label={`각성 — 조각 ${AWAKEN_COPIES} · ${ELIXIR_NAME} ${AWAKEN_ELIXIR}`}
+                    size="sm"
+                    fill={c.copies >= AWAKEN_COPIES && elixir >= AWAKEN_ELIXIR}
+                    disabled={c.copies < AWAKEN_COPIES || elixir < AWAKEN_ELIXIR}
+                    onPress={() => {
+                      const r = awaken(c.id);
+                      if (r === 'short') toast('조각이나 영약이 부족합니다', 'bad');
+                      if (r === 'ok') toast(`${d.name} 각성!`, 'good');
+                    }}
+                  />
+                  <T size={FS.tiny} dim="dim">
+                    {`가진 것 — 조각 ${c.copies} / ${AWAKEN_COPIES}, ${ELIXIR_NAME} ${elixir} / ${AWAKEN_ELIXIR}`}
+                  </T>
+                  <T size={FS.tiny} dim="dim">
+                    각성하면 별 다섯이 푸르게 물들고, 레벨 상한이 140 이 되며
+                    각성 스킬과 각성 패시브가 열립니다. {ELIXIR_NAME}은 10판부터
+                    우두머리를 잡으면 가끔 나옵니다.
+                  </T>
+                </>
+              ) : (
+                <T size={FS.tiny} dim="dim">
+                  {c.awake
+                    ? '각성까지 마쳤습니다 — 더 올릴 것이 없습니다.'
+                    : `${RARITY_NAME[d.rarity]} 등급이 갈 수 있는 마지막 성입니다.`}
+                </T>
+              )
+            ) : (
+              <>
+                <Btn
+                  label={`${c.star + 1}성으로 — 조각 ${starUpCost(c.star)}장`}
+                  size="sm"
+                  fill={c.copies >= starUpCost(c.star)}
+                  disabled={c.copies < starUpCost(c.star)}
+                  onPress={() => {
+                    const r = starUp(c.id);
+                    if (r === 'short') toast('조각이 부족합니다', 'bad');
+                    if (r === 'up') toast(`${d.name} ${c.star + 1}성!`, 'good');
+                  }}
+                />
+                <T size={FS.tiny} dim="dim">
+                  {`${c.star + 1}성이 되면 레벨 상한이 ${capOf({ ...c, star: c.star + 1 })} 가 되고 `
+                    + `${c.star + 1}번째 기술이 열립니다. 조각은 모집에서 이미 가진 사람이 `
+                    + '나오면 쌓입니다.'}
+                </T>
+              </>
+            )}
+          </View>
+
+          <Sep />
+
           <SkillPanel c={c} party={party} chars={chars} />
 
           <Sep />
@@ -308,22 +465,50 @@ export function CharPopup({
             ⚠ 출시 전에 `FREE_ENHANCE` 를 끄면 이 줄은 통째로 사라진다.
           */}
           {FREE_ENHANCE && (
-            <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
-              <Btn
-                label={`+${MAX_GEAR_LV} 까지`}
-                size="sm"
-                style={{ flex: 1 }}
-                disabled={maxed}
-                onPress={() => { setGear(c.id, MAX_GEAR_LV); setLast(null); }}
-              />
-              <Btn
-                label="+0 으로 되돌리기"
-                size="sm"
-                style={{ flex: 1 }}
-                disabled={c.gearLv === 0}
-                onPress={() => { setGear(c.id, 0); setLast(null); }}
-              />
-            </Row>
+            <>
+              <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
+                <Btn
+                  label={`+${MAX_GEAR_LV} 까지`}
+                  size="sm"
+                  style={{ flex: 1 }}
+                  disabled={maxed}
+                  onPress={() => { setGear(c.id, MAX_GEAR_LV); setLast(null); }}
+                />
+                <Btn
+                  label="+0 으로 되돌리기"
+                  size="sm"
+                  style={{ flex: 1 }}
+                  disabled={c.gearLv === 0}
+                  onPress={() => { setGear(c.id, 0); setLast(null); }}
+                />
+              </Row>
+              {/*
+                성과 레벨도 같은 이유로 건너뛸 수 있어야 한다. 각성 하나를
+                보려면 조각 마흔여덟 장(`AWAKEN_COPIES` + 5성까지 열여섯)이
+                필요하고, 레벨 140 은 백마흔 번을 눌러야 한다.
+              */}
+              <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
+                <Btn
+                  label="조각 +48"
+                  size="sm"
+                  style={{ flex: 1 }}
+                  onPress={() => setGrowth(c.id, { copies: c.copies + 48 })}
+                />
+                <Btn
+                  label="Lv 최대"
+                  size="sm"
+                  style={{ flex: 1 }}
+                  disabled={c.lv >= capOf(c)}
+                  onPress={() => setGrowth(c.id, { lv: capOf(c) })}
+                />
+                <Btn
+                  label="Lv 1 로"
+                  size="sm"
+                  style={{ flex: 1 }}
+                  onPress={() => setGrowth(c.id, { lv: 1 })}
+                />
+              </Row>
+            </>
           )}
 
           <Btn
@@ -353,12 +538,13 @@ export function CharPopup({
           <ListItem
             key={o.id}
             title={od.name}
-            sub={`+${o.gearLv} · ${BATTLE_TYPE_NAME[battleTypeOf(o.id)]} · 전투력 ${charPower(o).toLocaleString()}`}
+            sub={`${o.star}성${o.awake ? '(각성)' : ''} · Lv ${o.lv} · +${o.gearLv}`
+              + ` · ${BATTLE_TYPE_NAME[battleTypeOf(o.id)]} · 전투력 ${charPower(o).toLocaleString()}`}
             left={<Sprite set="avatar" name={od.art} size={26} />}
             right={
               here ? <Tag label="이 자리" fill />
                 : at >= 0 ? <Tag label={`${at + 1}번과 교체`} />
-                  : <Tag label={od.grade} />
+                  : <Tag label={RARITY_NAME[od.rarity]} />
             }
             disabled={here}
             onPress={() => setPartySlot(slot, o.id as CharId)}

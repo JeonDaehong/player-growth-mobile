@@ -31,20 +31,30 @@ import { useGame } from '@/state/store';
 import { FORMATIONS, FORMATION_IDS, FORM_LANES } from '@/core/party';
 import { Row, T } from '@/ui/atoms';
 import { sfx } from '@/ui/sfx';
-import { BORDER, C, O, SP, WHITE } from '@/ui/theme';
+import { BORDER, BORDER_HI, C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 
-/** 점 하나 — 찬 것과 빈 것 */
-function Dot({ on, inv }: { on: boolean; inv: boolean }) {
+/**
+ * 점 하나.
+ *
+ * **앞줄은 속이 찼고 뒷줄은 비었다.** 자리만으로 앞뒤를 말하면 (왼쪽이 뒤,
+ * 오른쪽이 앞) 4px 짜리 점 열 개에서 그 좌우를 세어야 하는데, 아래 한 줄로
+ * 적어 둔 설명(`앞줄 …` · `뒷줄 …`)과 모양을 맞춰 두면 세지 않아도 읽힌다.
+ *
+ * 안 쓰는 자리는 아주 흐린 점으로 남긴다. 지우면 대형마다 그림의 높이가
+ * 달라져서 셋을 나란히 못 견준다.
+ */
+function Dot({ on, front, inv }: { on: boolean; front?: boolean; inv: boolean }) {
   const ink = inv ? C.fgInv : WHITE;
   return (
     <View
       style={{
-        width: 4,
-        height: 4,
+        width: 5,
+        height: 5,
+        borderRadius: R.round,
         borderWidth: 1,
         borderColor: ink,
-        backgroundColor: on ? ink : 'transparent',
-        opacity: on ? 1 : 0.3,
+        backgroundColor: on && front ? ink : 'transparent',
+        opacity: on ? 1 : 0.16,
       }}
     />
   );
@@ -66,7 +76,7 @@ function Grid({ back, front, inv }: {
         {lanes.map((ln) => (
           <Row key={ln} gap={4}>
             <Dot on={back.includes(ln)} inv={inv} />
-            <Dot on={front.includes(ln)} inv={inv} />
+            <Dot on={front.includes(ln)} front inv={inv} />
           </Row>
         ))}
       </View>
@@ -78,7 +88,8 @@ function Grid({ back, front, inv }: {
       <View
         style={{
           width: 2,
-          height: FORM_LANES * 4 + (FORM_LANES - 1) * 3,
+          height: FORM_LANES * 5 + (FORM_LANES - 1) * 3,
+          borderRadius: R.round,
           backgroundColor: inv ? C.fgInv : WHITE,
           opacity: O.dim,
         }}
@@ -94,12 +105,12 @@ export function FormationPicker() {
   return (
     <View style={{ gap: SP.xs }}>
       <Row between>
-        <T size={12} bold>대형</T>
+        <T size={FS.title} bold>대형</T>
         {/*
           지금 고른 대형이 실제로 무엇을 뜻하는지 한 줄. 이름(`2-2`)은 모양을
           말하지 확률을 말하지 않는다 (`FormationDef.text`).
         */}
-        <T size={9} dim="sub">{FORMATIONS[form].text}</T>
+        <T size={FS.tiny} dim="sub">{FORMATIONS[form].text}</T>
       </Row>
 
       <Row gap={SP.xs}>
@@ -111,22 +122,55 @@ export function FormationPicker() {
               key={id}
               onPress={() => { sfx('tap'); setFormation(id); }}
               style={({ pressed }) => [
-                BORDER,
+                /*
+                  고른 칸은 **반전이 아니라 밝은 테두리**다.
+
+                  흰 바탕으로 뒤집으면 그 한 칸이 화면에서 제일 밝은 덩어리가
+                  되어, 정작 위에서 벌어지는 싸움보다 눈에 먼저 들어온다.
+                  테두리만 밝히면 "골랐다" 는 그대로 읽히면서 화면의 무게는
+                  안 옮겨진다.
+                */
+                on ? BORDER_HI : BORDER,
                 {
                   flex: 1,
-                  paddingVertical: SP.xs,
+                  paddingVertical: SP.sm - 2,
                   alignItems: 'center',
-                  gap: 3,
-                  borderWidth: on ? 2 : 1,
-                  backgroundColor: on ? C.bgInv : (pressed ? '#FFFFFF33' : 'transparent'),
+                  gap: 4,
+                  backgroundColor: on || pressed ? SURF.up : 'transparent',
                 },
               ]}
             >
-              <T size={11} bold style={on ? { color: C.fgInv } : undefined}>{id}</T>
-              <Grid back={def.backLanes} front={def.frontLanes} inv={on} />
+              <T size={FS.label} bold dim={on ? 'full' : 'sub'}>{id}</T>
+              <Grid back={def.backLanes} front={def.frontLanes} inv={false} />
             </Pressable>
           );
         })}
+      </Row>
+
+      {/*
+        ── 줄이 몸을 바꾼다 ──
+
+        확률만 적어 두면 대형을 고르는 일이 "누가 덜 맞나" 하나로 보인다.
+        실제로는 서는 자리가 스탯도 바꾸므로 (`core/party` 의 `ROW_MOD`)
+        그 한 줄이 같이 있어야 고를 수 있다.
+
+        세 칸 아래 한 줄로 둔다 — 칸마다 적으면 세 번 같은 말이 되고, 이건
+        대형에 따라 안 바뀌는 규칙이다.
+      */}
+      <Row gap={SP.xs}>
+        <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+          <View style={{ width: 3, height: 3, borderRadius: R.round, backgroundColor: WHITE }} />
+          <T size={FS.tiny} dim="dim">앞줄 방어 · 마저 x1.5, 체력 x1.1</T>
+        </View>
+        <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+          <View
+            style={{
+              width: 3, height: 3, borderRadius: R.round,
+              borderWidth: 1, borderColor: LINE.hi,
+            }}
+          />
+          <T size={FS.tiny} dim="dim">뒷줄 공격 x1.15</T>
+        </View>
       </Row>
     </View>
   );

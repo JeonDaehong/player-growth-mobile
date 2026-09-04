@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn, ZoomOut } from 'react-native-reanimated';
 import { Row, T } from './atoms';
-import { C, SP, WHITE } from './theme';
+import { C, LINE, R, SP, SURF } from './theme';
 import { sfx } from './sfx';
 import { useBackClose } from './backGuard';
 
@@ -109,13 +109,25 @@ const styles = StyleSheet.create({
     maxWidth: 380,
     maxHeight: '82%',
     backgroundColor: C.bg,
-    borderWidth: 2,
-    borderColor: WHITE,
+    /*
+      2px 순백 테두리에서 1px 로 내렸다. 창은 이미 어두운 판 위에 홀로 떠
+      있어서 (`host`) 경계를 굵게 그을 이유가 없었고, 굵은 흰 테두리는
+      그 자체로 화면에서 제일 밝은 것이 되어 안에 적힌 내용을 눌렀다.
+
+      모서리를 둥글게 잘라 내므로 (`R.lg`) 안쪽 머리말이 귀로 삐져나오지
+      않게 `overflow` 도 같이 준다.
+    */
+    borderWidth: 1,
+    borderColor: LINE.hi,
+    borderRadius: R.lg,
+    overflow: 'hidden',
   },
   head: {
     paddingHorizontal: SP.md,
     paddingVertical: SP.sm,
     borderBottomWidth: 1,
-    borderBottomColor: WHITE,
+    /* 머리말 밑줄은 **칸막이**다 — 바깥 테두리와 같은 밝기면 창이 둘로 갈린다 */
+    borderBottomColor: LINE.low,
+    backgroundColor: SURF.up,
   },
 });

@@ -41,7 +41,7 @@ const ALCH_MAX_MUL = BANDS.high.mythic[1];
 const MAX_FREED = 200;
 import type { Creature } from '@/core/types';
 import {
-  CharId, MAX_GEAR_LV, OwnedChar, STARTING_CHARS, isCharId, newChar,
+  CharId, MAX_GEAR_LV, OwnedChar, STARTING_CHARS, fixChar, isCharId, newChar,
 } from '@/core/chars';
 import { DEFAULT_FORMATION, cleanParty, isFormationId } from '@/core/party';
 import { OPEN_MS, STAGE_MS, startFoes } from '@/core/autoBattle';
@@ -207,15 +207,23 @@ export function migrateState(persisted: unknown): GameState {
     if (!isCharId(k)) continue;
     const c = bag(v);
     /*
-      레벨과 경험치는 **버린다.**
+      성 · 레벨 · 조각은 **나중에 생긴 칸**이다 (`core/growth`).
 
-      옛 저장본에는 남아 있지만 이제 그런 것이 없다 (`core/chars`). 성장은
-      고유장비 강화 하나로 모았으므로, 여기서 살릴 것도 그 하나뿐이다.
+      한동안 캐릭터가 자라는 축이 고유장비 강화 하나뿐이라 레벨을 버리고
+      있었다. 이제 축이 셋이라 (등급 · 성 · 레벨) 셋 다 담는다.
+
+      없는 값은 `fixChar` 가 채운다 — 옛 저장본은 **2성**부터 시작한다
+      (등급이 허락하는 만큼). 넷은 여태 기술을 둘씩 쓰고 있었으므로 1성으로
+      내리면 그 둘째 기술이 조용히 사라진다.
     */
-    chars[k] = {
+    chars[k] = fixChar({
       id: k,
       gearLv: Math.min(MAX_GEAR_LV, Math.max(0, Math.floor(num(c.gearLv, 0)))),
-    };
+      star: num(c.star, NaN),
+      awake: c.awake === true,
+      lv: num(c.lv, NaN),
+      copies: Math.max(0, Math.floor(num(c.copies, 0))),
+    });
   }
   /*
     시작 캐릭터는 **없으면 채워 준다.**
@@ -339,6 +347,8 @@ export function migrateState(persisted: unknown): GameState {
     */
     money: Math.max(0, Math.floor(num(p.money, base.money))) + payout,
     dia: Math.max(0, Math.floor(num(p.dia, 0))),
+    /* 나중에 생긴 칸 — 없으면 0 (`core/growth` 의 `rollElixir` 로만 는다) */
+    elixir: Math.max(0, Math.floor(num(p.elixir, 0))),
     /* 대형이 없던 저장본은 기본 대형으로 — 모르는 이름이 들어와도 마찬가지다 */
     formation: isFormationId(p.formation) ? p.formation : DEFAULT_FORMATION,
     /*

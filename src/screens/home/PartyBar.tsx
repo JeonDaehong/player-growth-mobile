@@ -13,22 +13,39 @@ import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, battleTypeOf, skillsOf, statOf,
+  BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, battleTypeOf, capOf, maxStar,
+  skillOpen, skillsOf, statOf,
 } from '@/core/chars';
 import {
-  MAX_PARTY_GEAR, PARTY_SIZE, hpOf, livingMembers, partyGear, partyPower,
+  MAX_PARTY_GEAR, PARTY_SIZE, hpOf, livingMembers, partyGear, partyPower, seatRows,
 } from '@/core/party';
 import { fitCharge } from '@/core/chars';
 import { hexOf } from '@/core/status';
 import { marksOf } from '@/core/passives';
-import { Bar, Row, T, Tag } from '@/ui/atoms';
+import { Bar, Row, Stars, T, Tag } from '@/ui/atoms';
 import { StatusRow } from './StatusRow';
 import { Sprite } from '@/ui/Sprite';
-import { BORDER, SP, WHITE } from '@/ui/theme';
+import { BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 
 export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
   const party = useGame((s) => s.party);
-  const chars = useGame((s) => s.chars);
+  const raw = useGame((s) => s.chars);
+  const form = useGame((s) => s.formation);
+  /*
+    ── 화면도 **앉힌 명부**를 본다 ──
+
+    전투는 대형에 앉힌 몸으로 계산한다 (`core/party` 의 `seatRows` — 앞줄은
+    체력 1.1배, 뒷줄은 공격 1.15배). 화면이 맨 몸 수치를 읽으면 **최대 체력이
+    두 값으로 갈린다**: 계산은 330 을 최대로 보고 화면은 300 을 최대로 보므로,
+    30 을 맞은 사람이 화면에서는 여전히 가득 찬 채로 서 있게 된다.
+
+    `useMemo` 를 안 쓴다. 네 명짜리 명부를 한 번 베끼는 일이라, 기억해 두는
+    비용이 다시 만드는 비용보다 크다.
+
+    파티에 없는 사람은 `row` 가 안 붙으므로 (`seatRows`) 창고 목록은 그대로
+    맨 몸 수치다 — 캐릭터끼리 견주는 자리에서 대형이 끼어들면 안 된다.
+  */
+  const chars = seatRows(party, raw, form);
   /*
     지금 남은 체력.
 
@@ -82,12 +99,14 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
     <View>
       <Row between style={{ marginBottom: SP.xs }}>
         <Row gap={SP.sm}>
-          <T size={12} bold>파티</T>
-          <T size={10} dim="sub">
-            강화 {gear} / {MAX_PARTY_GEAR}
-          </T>
+          <T size={FS.title} bold>파티</T>
+          <T size={FS.tiny} dim="dim">강화 {gear} / {MAX_PARTY_GEAR}</T>
         </Row>
-        <T size={11} bold>전투력 {power.toLocaleString()}</T>
+        {/*
+          전투력은 이 줄에서 **제일 중요한 숫자**다 — 파티를 고친 결과가
+          여기 하나로 돌아온다. 그래서 이 줄에서 유일하게 크고 진하다.
+        */}
+        <T size={FS.body} bold>전투력 {power.toLocaleString()}</T>
       </Row>
 
       <Row gap={SP.xs}>
@@ -103,22 +122,57 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                 BORDER,
                 {
                   flex: 1,
-                  paddingVertical: SP.xs,
+                  paddingVertical: SP.xs + 1,
+                  paddingHorizontal: 2,
                   alignItems: 'center',
                   opacity: pressed ? 0.6 : 1,
-                  /* 빈 칸은 흐리게 — 채워야 할 자리라는 게 한눈에 보이게 */
+                  /*
+                    ── 찬 칸과 빈 칸이 다른 **면**이다 ──
+
+                    여태 점선 테두리 하나로 갈랐는데, 흑백에서 실선과 점선의
+                    차이는 나란히 놓고 봐야 보인다. 찬 칸은 한 단 **올라오고**
+                    (`SURF.up`) 빈 칸은 한 단 **파인다** (`SURF.down`) —
+                    파인 자리는 설명 없이 "여기에 넣어라" 로 읽힌다.
+                  */
                   borderStyle: c ? 'solid' : 'dashed',
+                  borderColor: c ? LINE.mid : LINE.low,
+                  backgroundColor: c ? SURF.up : SURF.down,
                 },
               ]}
             >
               {c && d ? (
                 <>
                   <Sprite set="avatar" name={d.art} size={34} />
-                  <T size={9} bold center numberOfLines={1} style={{ marginTop: 2 }}>
+                  <T size={FS.tiny} bold center numberOfLines={1} style={{ marginTop: 2 }}>
                     {d.name}
                   </T>
-                  {/* 이 사람에 대해 저장되는 값은 강화 수치 하나다 */}
-                  <T size={11} bold style={{ marginTop: 1 }}>+{c.gearLv}</T>
+                  {/*
+                    ── 별 ── 몇 성인가 (`core/growth`).
+
+                    자리는 늘 그 등급이 갈 수 있는 만큼이다 (`maxStar`) —
+                    3성인 희귀와 3성인 신화는 전혀 다른 상태인데, 가진 만큼만
+                    그리면 화면에서 똑같아 보인다.
+                  */}
+                  <View style={{ marginTop: 2 }}>
+                    <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} scale={1.4} />
+                  </View>
+                  {/*
+                    ── 레벨과 강화 ──
+
+                    자라는 축이 셋이 되면서 (등급 · 성 · 레벨 + 강화) 칸에
+                    적을 것이 늘었다. 셋을 세 줄로 늘어놓으면 파티 칸이 표가
+                    되므로, **레벨을 크게 · 나머지를 그 옆에 작게** 붙여 한
+                    줄로 묶는다.
+
+                    레벨이 앞인 이유: 상한이 성에 걸려 있어 (`capOf`) "얼마나
+                    더 올릴 수 있나" 가 곧 이 사람을 얼마나 키웠나다. 강화는
+                    골드만 있으면 늘 오른다.
+                  */}
+                  <Row gap={3} style={{ marginTop: 1 }}>
+                    <T size={FS.label} bold>Lv {c.lv}</T>
+                    <T size={8} dim="dim">/{capOf(c)}</T>
+                    <T size={8} dim="dim">+{c.gearLv}</T>
+                  </Row>
 
                   {/*
                     체력 — 막대와 숫자를 같이 둔다.
@@ -136,7 +190,7 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     <T
                       size={8}
                       center
-                      dim={hpOf(c, hpMap) <= 0 ? 'dim' : undefined}
+                      dim={hpOf(c, hpMap) <= 0 ? 'dim' : 'sub'}
                       style={{ marginTop: 1 }}
                     >
                       {hpOf(c, hpMap) <= 0
@@ -176,30 +230,69 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     칸씩 차므로 "네 번" 이 그대로 보인다.
                   */}
                   {skillsOf(c.id).map((sk, si) => {
+                    /*
+                      ── 기술 한 칸이 말하는 것은 셋 중 하나다 ──
+
+                        잠김    아직 성이 모자라 못 쓴다 (`skillOpen`)
+                        차는 중  몇 번 더 치면 나간다
+                        준비    다음 스윙에 나간다
+
+                      셋을 **밝기로만** 가른다 (흑백이라 그것뿐이다). 잠긴
+                      것은 아예 흐리고, 차는 중이면 홈만 보이고, 준비되면
+                      막대가 꽉 찬 채로 글자까지 진해진다.
+
+                      잠긴 것도 지우지 않고 **흐리게 남긴다.** 지우면 칸의
+                      높이가 사람마다 달라져서 넷이 들쭉날쭉해지고, 무엇보다
+                      "몇 성이 되면 이게 열린다" 가 안 보인다.
+                    */
+                    const open = skillOpen(c, si);
                     const on = fitCharge(c.id, charge[c.id])[si] ?? 0;
-                    const full = on >= sk.cost;
+                    const full = open && on >= sk.cost;
                     /* 스무 칸은 1px 이 되어 뭉갠다 — 여덟 칸에 비율로 채운다 */
                     const cells = Math.min(8, Math.max(1, sk.cost));
-                    const lit = Math.round((on / Math.max(1, sk.cost)) * cells);
+                    const lit = open ? Math.round((on / Math.max(1, sk.cost)) * cells) : 0;
                     return (
-                      <View key={sk.name} style={{ alignSelf: 'stretch', marginTop: 3, paddingHorizontal: 3 }}>
-                        <Row gap={1}>
+                      <View
+                        key={sk.name}
+                        style={{
+                          alignSelf: 'stretch',
+                          marginTop: 3,
+                          paddingHorizontal: 3,
+                          opacity: open ? 1 : O.dim,
+                        }}
+                      >
+                        <Row
+                          gap={1}
+                          style={{
+                            padding: 1,
+                            borderRadius: R.sm,
+                            backgroundColor: SURF.down,
+                          }}
+                        >
                           {Array.from({ length: cells }, (_v, k) => (
                             <View
                               key={k}
                               style={{
                                 flex: 1,
                                 height: 3,
+                                borderRadius: 1,
+                                backgroundColor: WHITE,
                                 /* 다 차면 꽉 찬다 — 마지막 칸이 눈에 띄어야 한다 */
-                                backgroundColor: k < lit ? WHITE : 'transparent',
-                                borderWidth: 1,
-                                borderColor: k < lit ? WHITE : '#FFFFFF55',
+                                opacity: k < lit ? (full ? 1 : O.sub) : 0.09,
                               }}
                             />
                           ))}
                         </Row>
-                        <T size={8} center dim={full ? undefined : 'dim'} style={{ marginTop: 1 }}>
-                          {full ? `${sk.name} 준비` : `${sk.name} ${on}/${sk.cost}`}
+                        <T
+                          size={8}
+                          center
+                          numberOfLines={1}
+                          dim={full ? 'full' : 'dim'}
+                          style={{ marginTop: 1 }}
+                        >
+                          {!open
+                            ? `${sk.name} ${si + 1}성`
+                            : full ? `${sk.name} 준비` : `${sk.name} ${on}/${sk.cost}`}
                         </T>
                       </View>
                     );
@@ -214,15 +307,33 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     아이콘이 아직 없으면 글자만 남는다 (`Sprite` 의 대체 처리) —
                     그림이 도착하는 순간 저절로 붙는다.
                   */}
-                  <Row gap={2} style={{ marginTop: 2, alignItems: 'center' }}>
+                  <Row gap={3} style={{ marginTop: 3, alignItems: 'center' }}>
                     <Sprite set="role_icon" name={BATTLE_TYPE_ART[battleTypeOf(c.id)]} size={9} />
                     <T size={8} dim="dim">{BATTLE_TYPE_NAME[battleTypeOf(c.id)]}</T>
                   </Row>
                 </>
               ) : (
-                <View style={{ height: 74, justifyContent: 'center' }}>
-                  <T size={20} dim="dim" center>+</T>
-                  <T size={9} dim="dim" center>빈 자리</T>
+                <View style={{ height: 96, justifyContent: 'center', gap: 4 }}>
+                  {/*
+                    빈 칸의 `+` 는 **동그라미 안에** 넣는다. 글자만 덩그러니
+                    있으면 그게 단추인지 그냥 표시인지 모르겠는데, 실제로
+                    누를 수 있는 자리이므로 눌러 보여야 맞다.
+                  */}
+                  <View
+                    style={{
+                      width: 26,
+                      height: 26,
+                      alignSelf: 'center',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: R.round,
+                      borderWidth: 1,
+                      borderColor: LINE.mid,
+                    }}
+                  >
+                    <T size={14} dim="sub">+</T>
+                  </View>
+                  <T size={FS.tiny} dim="dim" center>빈 자리</T>
                 </View>
               )}
             </Pressable>

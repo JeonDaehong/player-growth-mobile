@@ -14,6 +14,25 @@
  * 밀어내서, 재화가 `96.1만` 처럼 접히고 단추는 20px 이 됐다. 성격이 다른
  * 두 가지라 줄을 가르는 것이 자리를 아끼는 것보다 낫다.
  *
+ * ## 얇아야 한다
+ *
+ * 이 띠는 무대 **안에** 얹혀 있으므로 (`BattleView` 의 `top`) 여기서 먹는
+ * 높이가 그대로 하늘에서 빠진다. 무대를 0.8배로 줄이면서 (`Ground` 의
+ * `STAGE_H`) 하늘이 238px 이 됐으니, 띠가 120px 을 먹으면 인물 머리 위로
+ * 남는 것이 100px 뿐이다 — 피해 숫자 두 줄이면 천장에 닿는다.
+ *
+ * 그래서 두 가지를 줄였다: 문 여섯의 글자를 9 에서 8 로, 그림을 20px 에서
+ * 18px 로. 다 합쳐 96px 남짓이다.
+ *
+ * ## 테두리를 걷어냈다
+ *
+ * 지갑과 문 여섯이 각자 흰 네모를 두르고 있었다. 그 둘에 무대의 네모,
+ * 아래 상자 줄의 네모가 더해지니 화면이 **네모의 목록**으로 보였다.
+ *
+ * 지금은 둘 다 테두리 없이 **어두운 알약** 위에 얹힌다 (`SURF.veil`). 배경
+ * 위에서 글씨가 읽히게 하는 것이 원래 목적이었고, 그건 선이 아니라 면이
+ * 하는 일이다. 선이 하나 줄 때마다 화면이 한 조각 덜 갈린다.
+ *
  * ## 아이템레벨과 체력은 어디로 갔나
  *
  * 안 지웠다. 체력 막대는 윗줄 오른쪽 끝에 가늘게 남고, 아이템레벨은 로고를
@@ -34,7 +53,7 @@ import { Pixel } from '@/ui/Pixel';
 import { ICONS, NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
-import { BORDER, C, O, SP, WHITE } from '@/ui/theme';
+import { FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 import { ProfilePopup } from './ProfilePopup';
 import { SettingsPopup } from './SettingsPopup';
 
@@ -68,12 +87,15 @@ const GATES: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
 /**
  * 문 하나 — 그림 위에 글자.
  *
- * **테두리가 없다.** 여섯이 각자 네모를 두르면 화면에 네모가 여섯 개 생기고,
- * 그 여섯이 위 띠의 네모와 무대의 네모 사이에 끼어 전부 따로 노는 조각으로
- * 보인다 ("다 뚝뚝 끊긴 느낌"). 칸을 가르는 것은 줄 하나로 충분하다
- * (`GateRow` 의 세로줄) — 그러면 여섯이 **한 줄**로 읽힌다.
+ * **테두리도 칸막이도 없다.** 여섯이 각자 네모를 두르면 작은 상자 여섯이
+ * 되고, 세로줄로 가르면 표가 된다. 둘 다 해 봤다.
  *
- * 눌리는 것은 배경 반전으로 말한다. 흑백이라 그 편이 테두리 굵기보다 세다.
+ * 여섯을 한 줄로 묶는 것은 **그 아래 깔린 알약 하나**다 (`GateRow`). 칸을
+ * 가르는 것은 여백뿐이고, 눌리는 자리만 잠깐 밝아진다 — 아래 띠와 같은
+ * 규칙이다 (`BottomNav`).
+ *
+ * 그림은 흐리게(`O.sub`), 글자는 진하게 둔다. 여기는 **읽고 가는 곳**이라
+ * 그림이 앞설 이유가 없다 — 그림이 앞서야 하는 곳은 늘 누르는 아래 띠다.
  */
 function Gate({ label, art, onPress }: {
   label: string; art: keyof typeof NAV; onPress: () => void;
@@ -84,18 +106,15 @@ function Gate({ label, art, onPress }: {
       hitSlop={4}
       style={({ pressed }) => ({
         flex: 1,
-        paddingVertical: 5,
+        paddingVertical: 4,
         alignItems: 'center',
         gap: 2,
-        backgroundColor: pressed ? C.bgInv : 'transparent',
+        borderRadius: R.md,
+        backgroundColor: pressed ? '#FFFFFF2E' : 'transparent',
       })}
     >
-      {({ pressed }: { pressed: boolean }) => (
-        <>
-          <Pixel sprite={NAV[art]} scale={2} color={pressed ? C.fgInv : WHITE} />
-          <T size={9} bold style={{ color: pressed ? C.fgInv : WHITE }}>{label}</T>
-        </>
-      )}
+      <Pixel sprite={NAV[art]} scale={1.5} color={WHITE} opacity={O.sub} />
+      <T size={8} bold>{label}</T>
     </Pressable>
   );
 }
@@ -103,21 +122,24 @@ function Gate({ label, art, onPress }: {
 /**
  * 재화 한 덩이 — 그림 하나에 숫자 하나.
  *
- * 세 덩이가 **한 테두리 안에** 들어간다 (`TopBar` 의 지갑). 따로 두면 셋
+ * 세 덩이가 **알약 하나 안에** 들어간다 (`TopBar` 의 지갑). 따로 두면 셋
  * 사이 간격이 곧 "이건 다른 것" 이라는 말이 되는데, 내가 가진 것은 한 벌이다.
+ *
+ * 그림은 흐리고 숫자는 진하다. 여기서 읽는 것은 숫자이고 그림은 그 숫자가
+ * 무엇인지 말할 뿐이라, 둘이 같은 밝기면 눈이 그림에서 한 번 멈춘다.
  */
 function Coin({ icon, text }: { icon: typeof ICONS.coin; text: string }) {
   return (
     <Row gap={3}>
-      <Pixel sprite={icon} scale={1.4} />
-      <T size={11} bold>{text}</T>
+      <Pixel sprite={icon} scale={1.3} opacity={O.sub} />
+      <T size={FS.label} bold>{text}</T>
     </Row>
   );
 }
 
 /** 지갑 안의 칸막이 — 재화 사이를 가르는 세로줄 */
 function VBar() {
-  return <View style={{ width: 1, height: 12, backgroundColor: WHITE, opacity: O.faint }} />;
+  return <View style={{ width: 1, height: 10, backgroundColor: WHITE, opacity: 0.14 }} />;
 }
 
 /**
@@ -136,8 +158,18 @@ function Fade() {
       pointerEvents="none"
       style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
     >
-      <View style={{ flex: 3, backgroundColor: '#000000C8' }} />
-      <View style={{ flex: 1, backgroundColor: '#00000080' }} />
+      {/*
+        두 겹에서 **네 겹**으로 늘렸다. 두 겹이면 경계가 한 번뿐이라 눈에
+        안 띌 줄 알았는데, 그 한 번이 하늘 한가운데를 가로지르는 실선으로
+        보였다 — 배경이 밝은 챕터에서 특히 그랬다.
+
+        네 겹이면 단마다 차이가 절반으로 줄어 실선이 안 생긴다. 다섯을 넘기면
+        그때부터는 겹만 늘고 눈에 보이는 것은 그대로다.
+      */}
+      <View style={{ flex: 4, backgroundColor: '#000000C4' }} />
+      <View style={{ flex: 2, backgroundColor: '#0000009E' }} />
+      <View style={{ flex: 1, backgroundColor: '#00000066' }} />
+      <View style={{ flex: 1, backgroundColor: '#00000029' }} />
     </View>
   );
 }
@@ -190,28 +222,53 @@ export function TopBar() {
           <Pressable
             onPress={() => { sfx('tap'); setProfile(true); }}
             hitSlop={6}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            style={({ pressed }) => ({
+              /*
+                **얼굴과 이름이 한 덩이**다 (알약 하나). 여태 얼굴만 네모를
+                두르고 이름은 그 옆에 떠 있어서, 둘이 같은 것을 여는 단추라는
+                게 안 보였다.
+              */
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: SP.xs,
+              paddingRight: SP.sm,
+              paddingLeft: 3,
+              paddingVertical: 3,
+              borderRadius: R.round,
+              backgroundColor: pressed ? '#FFFFFF2E' : SURF.veil,
+            })}
           >
-            <Row gap={SP.xs}>
-              <View style={[BORDER, { padding: 1 }]}>
-                <Sprite
-                  set="avatar"
-                  name={avatar}
-                  size={26}
-                  fallback={ICONS.badge}
-                />
-              </View>
-              <View>
-                <T size={11} bold numberOfLines={1}>{nickname || '이름 없음'}</T>
-                <T size={8} dim="dim" numberOfLines={1}>{AVATAR_NAME[avatar] ?? ''}</T>
-              </View>
-            </Row>
+            <View
+              style={{
+                padding: 1,
+                borderRadius: R.round,
+                borderWidth: 1,
+                borderColor: LINE.mid,
+                overflow: 'hidden',
+              }}
+            >
+              <Sprite
+                set="avatar"
+                name={avatar}
+                size={24}
+                fallback={ICONS.badge}
+              />
+            </View>
+            <View>
+              <T size={FS.label} bold numberOfLines={1}>{nickname || '이름 없음'}</T>
+              <T size={8} dim="dim" numberOfLines={1}>{AVATAR_NAME[avatar] ?? ''}</T>
+            </View>
           </Pressable>
 
-          {/* ── 지갑 ── 셋이 한 테두리 안에 들어간다 */}
+          {/* ── 지갑 ── 셋이 알약 하나 안에 들어간다 */}
           <Row
             gap={SP.xs}
-            style={[BORDER, { paddingHorizontal: SP.xs, paddingVertical: 3 }]}
+            style={{
+              paddingHorizontal: SP.sm,
+              paddingVertical: 5,
+              borderRadius: R.round,
+              backgroundColor: SURF.veil,
+            }}
           >
             <Coin icon={ICONS.coin} text={fmtShort(money).replace(' 골드', '')} />
             <VBar />
@@ -221,32 +278,33 @@ export function TopBar() {
               체력은 숫자만. 막대로 두면 재화 옆에서 폭을 다투고, 이 자리에서
               알아야 하는 것은 "얼마나 남았나" 하나다.
             */}
-            <Row gap={3}>
-              <Pixel sprite={ICONS.heart} scale={1.3} opacity={O.sub} />
-              <T size={11} bold>{`${stamina}/${maxSta}`}</T>
-            </Row>
+            <Coin icon={ICONS.heart} text={`${stamina}/${maxSta}`} />
           </Row>
         </Row>
 
         {/*
           ── 아랫줄 · 갈 곳 여섯 ──
 
-          **한 테두리 안에 여섯**이다. 사이는 세로줄로만 가른다 — 칸마다
-          네모를 두르면 여섯 개의 작은 상자가 되고, 그 여섯이 위아래 어디에도
-          안 붙어서 화면이 조각난다.
+          **알약 하나 위에 여섯**이다. 테두리도 칸막이도 없다 — 한 판 위에
+          나란히 놓인 것들은 설명 없이 한 벌로 읽힌다. 칸마다 네모를 두르거나
+          세로줄로 가르면 작은 상자 여섯, 또는 표가 된다. 둘 다 해 봤다.
         */}
-        <Row gap={0} style={BORDER}>
-          {GATES.map((g, i) => (
-            <React.Fragment key={g.id}>
-              {i > 0 && (
-                <View style={{ width: 1, alignSelf: 'stretch', backgroundColor: WHITE, opacity: O.dim }} />
-              )}
-              <Gate
-                label={g.label}
-                art={g.art}
-                onPress={() => (g.id === 'config' ? setConfig(true) : soon(g.label))}
-              />
-            </React.Fragment>
+        <Row
+          gap={2}
+          style={{
+            paddingHorizontal: SP.xs,
+            paddingVertical: 2,
+            borderRadius: R.lg,
+            backgroundColor: SURF.veil,
+          }}
+        >
+          {GATES.map((g) => (
+            <Gate
+              key={g.id}
+              label={g.label}
+              art={g.art}
+              onPress={() => (g.id === 'config' ? setConfig(true) : soon(g.label))}
+            />
           ))}
         </Row>
       </View>
