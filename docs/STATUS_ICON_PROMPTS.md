@@ -149,7 +149,7 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. 4 cells. Not more, not fewer, and not two rows — 4 cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
 
 The 4 cells, in this exact order:
 
@@ -242,7 +242,7 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. 4 cells. Not more, not fewer, and not two rows — 4 cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
 
 The 4 cells, in this exact order:
 
@@ -335,7 +335,7 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. 4 cells. Not more, not fewer, and not two rows — 4 cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
 
 The 4 cells, in this exact order:
 
@@ -428,9 +428,9 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+SUBJECT: a single sheet of EXACTLY 1 ICON in ONE row, left to right. One cell. Not more, not fewer, and not two rows — 1 cell in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
 
-The 4 cells, in this exact order:
+The 1 cell, in this exact order:
 
 Cell 1 — A HORN LYING SIDEWAYS. One solid TRAPEZOID spanning the full width of the cell — narrow at the LEFT edge (about a fifth of the cell tall) and widening evenly all the way to the RIGHT edge (about three quarters of the cell tall), both ends cut flat and vertical. It is a megaphone seen from the side, filled solid. It is the only icon in the whole set that is ASYMMETRIC LEFT TO RIGHT — thin on one side, thick on the other — and that wedge is the entire read. No mouth, no face, no sound lines, no rim. Squint test: a sideways wedge, thin left, thick right.
 
@@ -518,7 +518,7 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. 4 cells. Not more, not fewer, and not two rows — 4 cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
 
 The 4 cells, in this exact order:
 
@@ -613,9 +613,9 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+SUBJECT: a single sheet of EXACTLY 1 ICON in ONE row, left to right. One cell. Not more, not fewer, and not two rows — 1 cell in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
 
-The 4 cells, in this exact order:
+The 1 cell, in this exact order:
 
 Cell 1 — AN UPSIDE-DOWN U. One thick arch touching the TOP edge of the cell and curving down into TWO STRAIGHT LEGS that run all the way to the BOTTOM edge, the legs a quarter of the cell wide and the black gap between them a third of the cell wide. Flat square feet. It is a staple stood on its head, or the two prongs of a plug. It is the ONLY closed-at-one-end, open-at-the-other shape in the whole set — everything else is a bar, a wedge, a ring or a zigzag. It must NOT be a lightning bolt: the stun icon already is one, and these two appear on the same party slots. Squint test: an upside-down U with two legs.
 
@@ -707,7 +707,7 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. Four cells. Not five, not six, and not two rows — four cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
+SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to right. 4 cells. Not more, not fewer, and not two rows — 4 cells in one row, each a different icon. Do not repeat an icon anywhere on the sheet and do not add variants of one.
 
 The 4 cells, in this exact order:
 

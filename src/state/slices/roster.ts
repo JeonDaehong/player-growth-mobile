@@ -123,8 +123,8 @@ export interface RosterActions {
   starUp: (id: CharId) => 'up' | 'max' | 'short' | 'none';
   /** 5성 위의 한 단계 — 조각 서른둘과 강성의 영약 하나. 신화만 */
   awaken: (id: CharId) => 'ok' | 'no' | 'short' | 'none';
-  /** ⚠ 테스트용 — 조각과 레벨을 그 자리에서 정한다 (`FREE_ENHANCE` 일 때만) */
-  setGrowth: (id: CharId, at: { copies?: number; lv?: number }) => void;
+  /** ⚠ 테스트용 — 성 · 레벨 · 조각을 그 자리에서 정한다 (`FREE_ENHANCE` 일 때만) */
+  setGrowth: (id: CharId, at: { copies?: number; lv?: number; star?: number }) => void;
   /**
    * 스킬 트리의 갈래 하나를 찍는다 (`core/skillTree`).
    *
@@ -361,8 +361,27 @@ export const createRosterSlice = (
     if (!c) return;
     const next = { ...c };
     if (at.copies !== undefined) next.copies = Math.max(0, Math.floor(at.copies));
+    /*
+      ── 성을 오르내린다 ──
+
+      등급 상한은 지킨다 (`maxStar`). 시험이라고 희귀를 5성으로 만들면
+      "등급이 상한을 정한다" 는 규칙 자체를 못 보게 된다.
+
+      **레벨을 같이 조인다.** 4성 Lv100 에서 1성으로 내리면 상한이 35 인데
+      레벨이 100 으로 남아, 화면에는 `Lv 100 / 35` 가 뜨고 스탯은 100 짜리로
+      계산된다.
+
+      찍어 둔 트리는 **안 지운다.** 성이 모자란 자리는 어차피 안 걸리고
+      (`activeNodes`), 다시 올리면 그대로 돌아온다 — 성을 오르내리며 보는
+      것이 이 단추의 용도인데 그때마다 다시 찍게 하면 못 쓴다.
+    */
+    if (at.star !== undefined) {
+      next.star = Math.max(1, Math.min(maxStar(CHARS[id].rarity), Math.floor(at.star)));
+      next.awake = next.awake && next.star >= STAR_CAP;
+      next.lv = Math.min(next.lv, capOf(next));
+    }
     /* 레벨은 지금 성의 상한을 넘길 수 없다 — 시험이라고 규칙을 어기면 안 본다 */
-    if (at.lv !== undefined) next.lv = Math.max(1, Math.min(capOf(c), Math.floor(at.lv)));
+    if (at.lv !== undefined) next.lv = Math.max(1, Math.min(capOf(next), Math.floor(at.lv)));
     set({ chars: { ...st.chars, [id]: next } });
   },
 

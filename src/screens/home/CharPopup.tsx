@@ -533,6 +533,29 @@ export function CharPopup({
                 보려면 조각 마흔여덟 장(`AWAKEN_COPIES` + 5성까지 열여섯)이
                 필요하고, 레벨 140 은 백마흔 번을 눌러야 한다.
               */}
+              {/*
+                ── 성을 오르내린다 ──
+
+                합성으로 올리면 조각이 들고, 내릴 방법은 아예 없다. 성이
+                여는 것이 레벨 상한과 **스킬 트리 단계**라 (`core/growth`),
+                1성과 4성을 오가며 보지 않으면 트리를 확인할 수가 없다.
+
+                레벨은 같이 조여진다 — 4성 Lv100 에서 1성으로 내리면 상한이
+                35 이므로 35 가 된다.
+              */}
+              <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
+                <T size={FS.tiny} dim="dim">성</T>
+                {Array.from({ length: maxStar(d.rarity) }, (_v, i) => i + 1).map((n) => (
+                  <Btn
+                    key={n}
+                    label={`${n}`}
+                    size="sm"
+                    fill={c.star === n}
+                    style={{ flex: 1 }}
+                    onPress={() => setGrowth(c.id, { star: n })}
+                  />
+                ))}
+              </Row>
               <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
                 <Btn
                   label="조각 +48"

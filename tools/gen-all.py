@@ -87,6 +87,11 @@ ITEMS = [
     ('status_icon_g', 4, '상태 로고 넷 — 집중 · 보호 · 흡혈 · 요정',
      'STATUS_ICON_PROMPTS.md', r'^## G장',
      ['st_focus', 'st_ward', 'st_leech', 'st_fey']),
+    # 한 칸짜리다. 20판 벼락이 거는 감전 — 아직 신경 마비를 빌려 쓴다
+    # (`core/status` 의 `STATUS_ALT`).
+    ('status_icon_f', 1, '상태 로고 · 감전 한 칸',
+     'STATUS_ICON_PROMPTS.md', r'^## F장',
+     ['st_shock']),
 
     ('knightgirl3', 3, '이졸데 세 번째 동작 — 성검 발현',
      'MOTION_ART_PROMPTS.md', r'^## §P3-KN',
@@ -110,7 +115,7 @@ REAL = {
     'growth2': 'growth',
     'skill_icon_kg': 'skill_icon', 'skill_icon_ba': 'skill_icon',
     'skill_icon_ea': 'skill_icon', 'skill_icon_nu': 'skill_icon',
-    'status_icon_g': 'status_icon',
+    'status_icon_g': 'status_icon', 'status_icon_f': 'status_icon',
     'knightgirl3': 'knightgirl', 'bunnyaxe3': 'bunnyaxe', 'elfarcher3': 'elfarcher',
 }
 

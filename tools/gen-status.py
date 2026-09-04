@@ -571,11 +571,20 @@ def build():
         cells = [(i, by[i][1], by[i][5]) for i in ids]
         prompt = block(
             NOTEXT,
-            'SUBJECT: a single sheet of EXACTLY 4 ICONS in ONE row, left to '
-            'right. Four cells. Not five, not six, and not two rows — four cells '
-            'in one row, each a different icon. Do not repeat an icon anywhere '
-            'on the sheet and do not add variants of one.' + NL + NL
-            + rows_of(cells, 'The 4 cells, in this exact order:'),
+            # 개수를 **셀 수를 세어서** 적는다. 4 로 박혀 있었다 — 시트가
+            # 넷씩일 때는 맞았는데, 한 칸짜리(감전 · 도발)에서는 "EXACTLY 4
+            # ICONS" 라고 해 놓고 셀 설명은 하나만 주는 프롬프트가 나갔다.
+            # 그러면 생성기가 나머지 셋을 지어낸다.
+            'SUBJECT: a single sheet of EXACTLY %d ICON%s in ONE row, left to '
+            'right. %s. Not more, not fewer, and not two rows — %d cell%s in '
+            'one row, each a different icon. Do not repeat an icon anywhere on '
+            'the sheet and do not add variants of one.' % (
+                len(cells), '' if len(cells) == 1 else 'S',
+                'One cell' if len(cells) == 1 else '%d cells' % len(cells),
+                len(cells), '' if len(cells) == 1 else 's',
+            ) + NL + NL
+            + rows_of(cells, 'The %d cell%s, in this exact order:' % (
+                len(cells), '' if len(cells) == 1 else 's')),
             PIXEL_STYLE,
             ICON_STYLE,
             'NO DITHERING. NO CHECKERBOARD. NO STIPPLING.' + NL
