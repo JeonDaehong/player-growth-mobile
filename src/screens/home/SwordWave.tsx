@@ -91,11 +91,13 @@ const TIP_X = 0.98;
 const TIP_Y = 0.33;
 
 export function SwordWave({
-  charId, nonce, size, dist, proj,
+  charId, nonce, size, dist, proj, mul,
 }: {
   charId: string;
   /** 이 기술이 지목한 투사체 시트 — 없으면 그 사람의 기본 것 (`SkillDef.proj`) */
   proj?: string;
+  /** 몸 길이의 몇 배로 그릴까 (`SkillDef.projMul`) */
+  mul?: number;
   nonce: number;
   size: number;
   /**
@@ -224,7 +226,13 @@ export function SwordWave({
         */
         set={proj || projSet(charId)}
         name={projFrame(charId)}
-        size={size * (proj ? 1.25 : 0.85)}
+        /*
+          기술이 크기를 지목하면 그것을 쓴다 (`SkillDef.projMul`).
+
+          제 시트를 가진 것은 1.25, 기본 화살·검기는 0.85 다. 궁극기 하나가
+          3 을 부른다 — 거대 화살은 크기 자체가 기술의 절반이다.
+        */
+        size={size * (mul ?? (proj ? 1.25 : 0.85))}
         fallbackSet={projSet(charId)}
         flip={!ranged}
       />

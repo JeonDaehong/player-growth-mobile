@@ -4,9 +4,19 @@
  * 네 칸이 항상 보인다. 비어 있어도 빈 칸을 그린다 — 자리가 넷이라는 걸
  * 아는 것과 모르는 것은 다르고, 빈 칸이 보여야 채우고 싶어진다.
  *
- * 칸 하나에 들어가는 것은 넷뿐이다: 얼굴 · 이름 · 레벨 · 고유장비 강화 수치.
- * 여기서 스탯까지 보여 주면 네 칸이 표가 되고, 표는 위쪽 전투에서 시선을 뺏는다.
- * 자세한 건 눌러서 여는 창(`CharPopup`)이 맡는다.
+ * 칸 하나에 들어가는 것은 얼굴 · 이름 · 별 · 레벨이다. 여기서 스탯까지 보여
+ * 주면 네 칸이 표가 되고, 표는 위쪽 전투에서 시선을 뺏는다. 자세한 건 눌러서
+ * 여는 창(`CharPopup`)이 맡는다.
+ *
+ * ## 숫자는 **잘리느니 접는다**
+ *
+ * 칸 하나가 화면 폭의 4분의 1 이라 좁다. 여기에 큰 수를 그대로 넣으면 두
+ * 가지가 일어난다 — 줄이 바뀌어 칸 높이가 넷이 서로 달라지거나, 끝이 잘려
+ * 나가 `27679 / 2…` 처럼 읽을 수 없는 것이 남는다.
+ *
+ * 규칙을 하나로 뒀다. **한 줄에 하나씩, 넘치면 만·억으로 접는다**
+ * (`short`). 이름처럼 접을 수 없는 것만 말줄임을 허용하고, 숫자는 절대
+ * 안 자른다 — 잘린 숫자는 틀린 숫자다.
  */
 import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
@@ -17,7 +27,7 @@ import {
   skillOpen, skillsFor, statOf,
 } from '@/core/chars';
 import {
-  MAX_PARTY_GEAR, PARTY_SIZE, hpOf, livingMembers, partyGear, partyPower, seatRows,
+  PARTY_SIZE, hpOf, livingMembers, partyLevel, partyLevelCap, partyPower, seatRows,
 } from '@/core/party';
 import { fitCharge } from '@/core/chars';
 import { hexOf } from '@/core/status';
@@ -26,6 +36,20 @@ import { Bar, Row, Stars, T, Tag } from '@/ui/atoms';
 import { StatusRow } from './StatusRow';
 import { Sprite } from '@/ui/Sprite';
 import { BORDER, FS, LINE, O, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
+
+/**
+ * 좁은 칸에 들어갈 수 있게 접은 수.
+ *
+ * 만 미만은 그대로 둔다 — 초반 체력이 `1.2만` 으로 보이면 한 대에 얼마씩
+ * 닳는지가 안 읽힌다. 접기 시작하는 자리는 자릿수가 다섯이 되는 지점이고,
+ * 그때부터는 어차피 마지막 두어 자리를 눈으로 안 좇는다.
+ */
+function short(n: number): string {
+  const a = Math.max(0, Math.round(n));
+  if (a >= 100_000_000) return `${(a / 100_000_000).toFixed(1).replace(/\.0$/, '')}억`;
+  if (a >= 10_000) return `${(a / 10_000).toFixed(1).replace(/\.0$/, '')}만`;
+  return String(a);
+}
 
 export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
   const party = useGame((s) => s.party);
@@ -101,24 +125,51 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
   */
   const alive = livingMembers(party, chars, hpMap, fadeMap);
 
-  const gear = partyGear(party, chars);
+  /*
+    여기 `partyGear`(파티 넷의 전용무기 강화 합)가 있었다. 전용무기를 없애면서
+    **레벨 합**으로 갈아탔다 (`core/party`) — 상한이 사람마다 다르므로
+    (성이 정한다) 그것도 같이 센다.
+  */
+  const lvSum = partyLevel(party, chars);
+  const lvCapSum = partyLevelCap(party, chars);
   const power = partyPower(party, chars);
 
   return (
     <View>
       <Row between style={{ marginBottom: SP.xs }}>
-        <Row gap={SP.sm}>
+        {/*
+          왼쪽이 줄어든다 (`flexShrink`). 좁은 화면에서 두 덩어리가 부딪히면
+          **전투력 쪽이 이겨야 한다** — 저건 파티를 고친 결과가 돌아오는
+          자리라, 잘리면 고친 보람이 안 보인다.
+        */}
+        <Row gap={SP.sm} style={{ flexShrink: 1 }}>
           <T size={FS.title} bold>파티</T>
-          <T size={FS.tiny} dim="dim">강화 {gear} / {MAX_PARTY_GEAR}</T>
+          <T size={FS.tiny} dim="dim" numberOfLines={1}>
+            레벨 합 {lvSum} / {lvCapSum}
+          </T>
         </Row>
         {/*
           전투력은 이 줄에서 **제일 중요한 숫자**다 — 파티를 고친 결과가
           여기 하나로 돌아온다. 그래서 이 줄에서 유일하게 크고 진하다.
         */}
-        <T size={FS.body} bold>전투력 {power.toLocaleString()}</T>
+        <T size={FS.body} bold numberOfLines={1}>
+          전투력 {power.toLocaleString()}
+        </T>
       </Row>
 
-      <Row gap={SP.xs}>
+      {/*
+        ── 네 칸의 **위가 맞아야 한다** ──
+
+        `Row` 는 기본이 가운데 정렬이다 (`alignItems: 'center'`). 그런데 칸
+        높이가 사람마다 다르다 — 기술이 셋인 리안느의 칸이 둘인 사람보다
+        한 줄 더 길다 (`skillsFor`). 가운데로 맞추면 그 한 줄이 **위아래로
+        반씩** 갈려서, 긴 칸 하나가 다른 셋보다 위로도 아래로도 튀어나온다.
+
+        `stretch` 로 바꾸면 넷이 제일 긴 칸에 맞춰 같은 높이가 된다. 얼굴 ·
+        이름 · 별이 한 줄에 서고, 남는 자리는 짧은 칸 아래에 생긴다 — 튀어
+        나온 칸 하나보다 그쪽이 훨씬 조용하다.
+      */}
+      <Row gap={SP.xs} style={{ alignItems: 'stretch' }}>
         {Array.from({ length: PARTY_SIZE }, (_, i) => {
           const id = party[i];
           const c = id ? chars[id] : null;
@@ -166,22 +217,22 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={10} />
                   </View>
                   {/*
-                    ── 레벨과 강화 ──
+                    ── 레벨 ──
 
-                    자라는 축이 셋이 되면서 (등급 · 성 · 레벨 + 강화) 칸에
-                    적을 것이 늘었다. 셋을 세 줄로 늘어놓으면 파티 칸이 표가
-                    되므로, **레벨을 크게 · 나머지를 그 옆에 작게** 붙여 한
-                    줄로 묶는다.
+                    여기 강화 수치(`+100`)가 옆에 붙어 있었다. 전용무기를
+                    없애면서 걷었고, 덕분에 **세 조각이 한 조각**이 되었다 —
+                    좁은 칸에서 셋이 나란히 서면 마지막 것이 다음 줄로
+                    넘어가서 네 칸의 높이가 서로 달라졌다.
 
-                    레벨이 앞인 이유: 상한이 성에 걸려 있어 (`capOf`) "얼마나
-                    더 올릴 수 있나" 가 곧 이 사람을 얼마나 키웠나다. 강화는
-                    골드만 있으면 늘 오른다.
+                    글자 하나로 그린다. 조각을 나누면 그 사이가 줄바꿈 자리가
+                    되는데, 한 덩어리는 통째로만 줄어든다 (`numberOfLines`).
+
+                    상한을 같이 적는 이유: 상한이 성에 걸려 있어 (`capOf`)
+                    "얼마나 더 올릴 수 있나" 가 곧 이 사람을 얼마나 키웠나다.
                   */}
-                  <Row gap={3} style={{ marginTop: 1 }}>
-                    <T size={FS.label} bold>Lv {c.lv}</T>
-                    <T size={8} dim="dim">/{capOf(c)}</T>
-                    <T size={8} dim="dim">+{c.gearLv}</T>
-                  </Row>
+                  <T size={FS.label} bold numberOfLines={1} style={{ marginTop: 1 }}>
+                    Lv {c.lv} / {capOf(c)}
+                  </T>
 
                   {/*
                     체력 — 막대와 숫자를 같이 둔다.
@@ -231,15 +282,21 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                         </View>
                       );
                     })()}
+                    {/*
+                      체력 숫자는 **접어서** 넣는다 (`short`). 만렙 근처에서는
+                      다섯 자리가 둘이라 (`27679 / 27679`) 칸을 넘겨 잘렸다 —
+                      잘린 숫자는 없는 것만 못하다.
+                    */}
                     <T
                       size={8}
                       center
+                      numberOfLines={1}
                       dim={hpOf(c, hpMap) <= 0 ? 'dim' : 'sub'}
                       style={{ marginTop: 1 }}
                     >
                       {hpOf(c, hpMap) <= 0
                         ? '쓰러짐'
-                        : `${Math.ceil(hpOf(c, hpMap))} / ${statOf(c).hp}`}
+                        : `${short(hpOf(c, hpMap))} / ${short(statOf(c).hp)}`}
                     </T>
                   </View>
                   {/*
@@ -327,17 +384,28 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                             />
                           ))}
                         </Row>
-                        <T
-                          size={8}
-                          center
-                          numberOfLines={1}
-                          dim={full ? 'full' : 'dim'}
-                          style={{ marginTop: 1 }}
-                        >
-                          {!open
-                            ? `${sk.name} ${si + 1}성`
-                            : full ? `${sk.name} 준비` : `${sk.name} ${on}/${sk.cost}`}
-                        </T>
+                        {/*
+                          ── 이름은 줄이고, 숫자는 안 줄인다 ──
+
+                          한 덩어리로 적었더니 (`거대 화살 8/12`) 좁은 칸에서
+                          말줄임이 **뒤에서부터** 먹어 들어와 정작 봐야 하는
+                          숫자가 사라졌다. 둘을 갈라 놓고 이름 쪽에만
+                          `flexShrink` 를 주면, 모자랄 때 이름이 줄고 숫자는
+                          끝까지 남는다.
+                        */}
+                        <Row gap={2} style={{ marginTop: 1, justifyContent: 'center' }}>
+                          <T
+                            size={8}
+                            numberOfLines={1}
+                            dim={full ? 'full' : 'dim'}
+                            style={{ flexShrink: 1 }}
+                          >
+                            {sk.name}
+                          </T>
+                          <T size={8} numberOfLines={1} dim={full ? 'full' : 'dim'}>
+                            {!open ? `${si + 1}성` : full ? '준비' : `${on}/${sk.cost}`}
+                          </T>
+                        </Row>
                       </View>
                     );
                   })}

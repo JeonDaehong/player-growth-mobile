@@ -120,7 +120,7 @@ export interface GameState {
   // ── 캐릭터 · 파티 · 자동 전투 ────────────────────────
   /*
     이 게임이 새로 키우는 것. 한 사람의 열 칸 장비 대신, 캐릭터를 모으고
-    그 캐릭터의 고유장비를 올린다 (`core/chars` · `core/party`).
+    그 캐릭터를 레벨·성으로 키운다 (`core/chars` · `core/party`).
 
     아래 `equipped`/`inventory` 는 옛 체계다. 저장된 계정에 아직 들어 있어서
     같이 둔다 — 캐릭터 쪽이 자리를 잡은 뒤에 걷어낸다. 서로 참조하지 않는다.
@@ -521,10 +521,6 @@ export interface GameActions {
    * 끝나기를 기다렸다가 다시 고칠 수는 없어야 한다.
    */
   clearPending: () => void;
-  /** 고유장비를 한 번 두들긴다. 부서지지도 내려가지도 않는다 */
-  enhanceGear: (id: CharId) => 'up' | 'fail' | 'max' | 'poor' | 'none';
-  /** 강화 수치를 바로 정한다 — 테스트용 (`FREE_ENHANCE` 가 꺼지면 아무 일도 안 한다) */
-  setGear: (id: CharId, lv: number) => void;
   /** 스킬 설정을 바꾼다 (`core/skillOpt`) */
   setSkillOpt: (who: CharId, slot: number, opt: string) => void;
   /** 자동 전투 한 틱 — 시간·등장·적 공격 */
@@ -583,7 +579,7 @@ export interface GameActions {
    *
    * 각성 하나를 보려면 조각 마흔여덟 장이 필요하고 (`AWAKEN_COPIES`) 레벨
    * 140 은 백마흔 번을 눌러야 한다. 직접 굴려 보려면 그 앞을 건너뛸 수단이
-   * 있어야 한다 — `setGear` 와 같은 이유로, 같은 스위치를 탄다.
+   * 있어야 한다 — 그래서 `FREE_ENHANCE` 스위치를 탄다.
    *
    * ⚠ `FREE_ENHANCE` 가 꺼져 있으면 아무 일도 안 한다.
    */

@@ -1428,7 +1428,14 @@ function FighterView({
         사라지는 쪽은 눈에 띄므로, 켜 두는 편이 맞다.
       */}
       {(skillsFor(ch).some((sk) => sk.flies) || d.range === 'ranged') && (
-        <SwordWave charId={ch.id} nonce={castNo} size={size} dist={fly} proj={castSk?.proj} />
+        <SwordWave
+          charId={ch.id}
+          nonce={castNo}
+          size={size}
+          dist={fly}
+          proj={castSk?.proj}
+          mul={castSk?.projMul}
+        />
       )}
 
       <Sprite

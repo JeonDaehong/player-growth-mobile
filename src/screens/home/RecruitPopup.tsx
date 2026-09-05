@@ -28,8 +28,8 @@ import { View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useGame } from '@/state/store';
 import {
-  CHARS, CHAR_LIST, CharId, RARITY_IDS, RARITY_NAME, ROLE_NAME,
-  maxStar as maxStarOf,
+  BATTLE_TYPE_NAME, CHARS, CHAR_LIST, CharId, RARITY_IDS, RARITY_NAME, ROLE_NAME,
+  battleTypeOf, maxStar as maxStarOf,
 } from '@/core/chars';
 import { allOwned, rarityOdds, poolOf, recruitCost } from '@/core/recruit';
 import { fmt } from '@/core/currency';
@@ -105,7 +105,14 @@ export function RecruitPopup({ visible, onClose }: { visible: boolean; onClose: 
               fill={gd.rarity === 'mythic' || gd.rarity === 'legendary'}
             />
           </Row>
-          <T size={FS.label} dim="sub">{ROLE_NAME[gd.role]} · {gd.gear}</T>
+          {/*
+            역할과 **때리는 방식**. 여기 무기 이름이 있었는데 (`gd.gear`),
+            전용무기를 없애면서 같이 걷었다 (`core/chars`) — 남는 자리에는
+            파티를 짤 때 실제로 보는 것을 적는다.
+          */}
+          <T size={FS.label} dim="sub">
+            {ROLE_NAME[gd.role]} · {BATTLE_TYPE_NAME[battleTypeOf(gd.id)]}
+          </T>
           {!!gd.quote && (
             <T size={FS.label} dim="sub" center style={{ marginTop: SP.xs }}>{gd.quote}</T>
           )}

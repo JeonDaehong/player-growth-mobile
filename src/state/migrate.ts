@@ -41,7 +41,7 @@ const ALCH_MAX_MUL = BANDS.high.mythic[1];
 const MAX_FREED = 200;
 import type { Creature } from '@/core/types';
 import {
-  CharId, MAX_GEAR_LV, OwnedChar, STARTING_CHARS, fixChar, isCharId, newChar,
+  CharId, OwnedChar, STARTING_CHARS, fixChar, isCharId, newChar,
 } from '@/core/chars';
 import { DEFAULT_FORMATION, cleanParty, isFormationId } from '@/core/party';
 import { OPEN_MS, STAGE_MS, startFoes } from '@/core/autoBattle';
@@ -209,8 +209,12 @@ export function migrateState(persisted: unknown): GameState {
     /*
       성 · 레벨 · 조각은 **나중에 생긴 칸**이다 (`core/growth`).
 
-      한동안 캐릭터가 자라는 축이 고유장비 강화 하나뿐이라 레벨을 버리고
-      있었다. 이제 축이 셋이라 (등급 · 성 · 레벨) 셋 다 담는다.
+      한동안 캐릭터가 자라는 축이 전용무기 강화(`gearLv`) 하나뿐이라 레벨을
+      버리고 있었다. 이제 축이 셋이라 (등급 · 성 · 레벨) 셋 다 담는다.
+
+      **`gearLv` 는 여기서 조용히 사라진다.** 전용무기를 없애면서
+      (`core/chars`) 읽지 않게 두었다 — 옛 저장본에 그 칸이 남아 있어도
+      새 명부에는 안 옮겨진다.
 
       없는 값은 `fixChar` 가 채운다 — 옛 저장본은 **2성**부터 시작한다
       (등급이 허락하는 만큼). 넷은 여태 기술을 둘씩 쓰고 있었으므로 1성으로
@@ -218,7 +222,6 @@ export function migrateState(persisted: unknown): GameState {
     */
     chars[k] = fixChar({
       id: k,
-      gearLv: Math.min(MAX_GEAR_LV, Math.max(0, Math.floor(num(c.gearLv, 0)))),
       star: num(c.star, NaN),
       awake: c.awake === true,
       lv: num(c.lv, NaN),

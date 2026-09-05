@@ -53,16 +53,30 @@ interface BattleUi {
    *
    * `no` 는 같은 사람이 연달아 맞아도 무대가 알아보게 하는 번호다.
    */
-  charmHit: { id: string; no: number } | null;
-  hitByAlly: (id: string) => void;
+  /**
+   * **때린 사람별로** 담는다 — 키가 때린 쪽, `id` 가 맞은 쪽이다.
+   *
+   * 하나만 담다가 바꿨다. 29판은 파티 **전원**이 돌아서므로 (`Charm.who`)
+   * 넷이 동시에 서로를 치는데, 한 칸이면 마지막 한 대만 남아 나머지 셋은
+   * 엉뚱한 쪽을 보고 때린다.
+   */
+  charmHit: Record<string, { id: string; no: number }>;
+  /**
+   * @param who 돌아서서 친 사람
+   * @param id  맞은 아군
+   */
+  hitByAlly: (who: string, id: string) => void;
 }
 
 export const useBattleUi = create<BattleUi>((set) => ({
   charge: {},
-  charmHit: null,
+  charmHit: {},
 
-  hitByAlly: (id) => set((st) => ({
-    charmHit: { id, no: (st.charmHit?.no ?? 0) + 1 },
+  hitByAlly: (who, id) => set((st) => ({
+    charmHit: {
+      ...st.charmHit,
+      [who]: { id, no: (st.charmHit[who]?.no ?? 0) + 1 },
+    },
   })),
 
   setCharge: (who, on) => set((st) => {

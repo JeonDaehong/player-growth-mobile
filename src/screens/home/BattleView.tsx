@@ -69,6 +69,9 @@ import {
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
+  PIERCE_MS, PIERCE_SWEEP_MS, PierceAura, PierceBand, pierceDelay,
+} from './PierceAura';
+import {
   BOSS_W, DEPTH_LIFT, EDGE, FOE_W, GROUND_H, Ground, PARTY_W, STAGE_H, ZOOM, depthAt,
 } from './Ground';
 import {
@@ -999,16 +1002,17 @@ export function BattleView({ top, corner }: Props = {}) {
     갈래만 넷이 늘고 화면에서 달라지는 것은 없다.
   */
   const charmHit = useBattleUi((s) => s.charmHit);
-  const lastCharmHit = useRef(0);
+  const lastCharmHit = useRef<Record<string, number>>({});
   useEffect(() => {
-    const no = charmHit?.no ?? 0;
-    if (!charmHit || no <= lastCharmHit.current) { lastCharmHit.current = no; return; }
-    lastCharmHit.current = no;
-    const id = charmHit.id;
-    setBodyFx((old) => ({
-      ...old,
-      [id]: { no: (old[id]?.no ?? 0) + 1, kind: 'claw' as const },
-    }));
+    for (const [who, hit] of Object.entries(charmHit)) {
+      if (hit.no <= (lastCharmHit.current[who] ?? 0)) continue;
+      lastCharmHit.current[who] = hit.no;
+      const id = hit.id;
+      setBodyFx((old) => ({
+        ...old,
+        [id]: { no: (old[id]?.no ?? 0) + 1, kind: 'claw' as const },
+      }));
+    }
   }, [charmHit]);
 
   /**
@@ -1361,6 +1365,29 @@ export function BattleView({ top, corner }: Props = {}) {
   const flinchT = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
+   * 꿰뚫는 기운 — 거대 화살이 지나가며 줄 전체에 퍼뜨리는 것 (`PierceAura`).
+   *
+   * 맞는 놈마다 자리를 담아 둔다. `no` 가 올라갈 때마다 새로 태우고
+   * (`key={pierce.no}`), 다 스러지면 스스로 비운다.
+   *
+   * `hits` 에 섞어 넣지 않은 이유: 저건 **한 대 맞았다**를 그리는 목록이라
+   * 850ms 뒤에 통째로 치워지고 자리마다 하나씩 들어간다. 이건 여럿을 한
+   * 묶음으로 봐야 왼쪽부터 차례로 번지게 할 수 있고 (`pierceDelay` 가 제일
+   * 왼쪽과 오른쪽을 알아야 한다), 무대를 가로지르는 띠는 자리가 아예 없다.
+   */
+  const [pierce, setPierce] = useState<{
+    no: number;
+    /** 띠가 설 높이 — 맞는 놈들의 가슴 높이 */
+    y: number;
+    /** 띠 두께의 기준이 되는 몸 길이 */
+    size: number;
+    at: readonly { x: number; y: number; size: number; delay: number }[];
+  } | null>(null);
+  const pierceNo = useRef(0);
+  const pierceT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (pierceT.current) clearTimeout(pierceT.current); }, []);
+
+  /**
    * 그 **자리**가 무대 어디인가 (목록 순서가 아니라 `FoeSlot.pos`).
    *
    * 격자는 오른쪽 벽에서 `EDGE` 만큼 띄우고, 그 안에서 자리마다 좌표가 못
@@ -1584,6 +1611,41 @@ export function BattleView({ top, corner }: Props = {}) {
       ? [{ ...spots[0], x: Math.min(...spots.map((sp) => sp.x)) }]
       : [];
 
+    /*
+      ── 길에 선 것을 전부 꿴다 ──
+
+      **날아가면서 줄을 통째로 치는 기술**에만 붙는다 — 지금은 거대 화살
+      하나다 (`bigshot`). 화살비(`rain`)는 `flies` 가 아니고, 검기는
+      `pick` 이 하나라 여기 안 들어온다.
+
+      맞는 놈들을 한 묶음으로 넘긴다. 왼쪽 끝과 오른쪽 끝을 알아야
+      **왼쪽부터 차례로** 터뜨릴 수 있는데 (`pierceDelay`), 그 차례가 곧
+      "화살을 따라 기운이 흘렀다" 다. 한꺼번에 터뜨리면 화면이 한 번
+      번쩍이고 마는, 광역기 아무거나와 같은 그림이 된다.
+    */
+    if (sk.flies && sk.pick === 'all' && spots.length) {
+      const xs = spots.map((sp) => sp.x);
+      const from = Math.min(...xs);
+      const to = Math.max(...xs);
+      /* 띠는 제일 앞에 선 놈의 가슴 높이에 건다 — 화살이 지나가는 높이다 */
+      const lead = spots.reduce((a, b) => (a.x < b.x ? a : b));
+      pierceNo.current += 1;
+      setPierce({
+        no: pierceNo.current,
+        y: lead.y + lead.size * 0.46,
+        size: lead.size,
+        at: spots.map((sp) => ({
+          x: sp.x, y: sp.y, size: sp.size, delay: pierceDelay(sp.x, from, to),
+        })),
+      });
+      /* 다 스러지면 비운다 — 안 비우면 마지막 것이 판이 끝날 때까지 붙어 있다 */
+      if (pierceT.current) clearTimeout(pierceT.current);
+      pierceT.current = setTimeout(
+        () => setPierce(null),
+        PIERCE_MS + PIERCE_SWEEP_MS + 60,
+      );
+    }
+
     skillFoe(id, idx, slot);
     shake.fire(sk.pick === 'all' || sk.leaps ? 1.2 : 1);
 
@@ -1610,8 +1672,18 @@ export function BattleView({ top, corner }: Props = {}) {
           id, fx: sk.fx ?? CHARS[me.id].fx,
           dmg: amount, key: hitSeq.current++, ...spot,
           blast: big,
-          /* 화살비는 맞는 자리마다 화살이 한 대 꽂힌다 */
-          arrow: CHARS[me.id].range === 'ranged' ? projSet(me.id) : '',
+          /*
+            화살비는 맞는 자리마다 화살이 **위에서** 한 대 꽂힌다 (`FallingArrow`).
+
+            **날아가는 기술은 빼야 한다** (`sk.flies`). 거대 화살은 앞으로
+            쏘는 것인데 (`SwordWave`) 여기까지 걸려서, 정면으로 날아가는
+            큰 화살 한 대와 하늘에서 떨어지는 작은 화살들이 **같이** 나왔다.
+            보는 쪽에서는 큰 쪽이 뒤에 묻혀 "위에서 떨구는 기술" 로 읽힌다.
+
+            위에서 떨어지는 것은 하늘로 쏘는 화살비(`rain`, `flies: false`)
+            뿐이다. 정면으로 가는 것은 가는 길에 제 연출을 이미 갖고 있다.
+          */
+          arrow: CHARS[me.id].range === 'ranged' && !sk.flies ? projSet(me.id) : '',
           row: rowFor([...live, ...add], spot.x), born: Date.now(),
           /*
             막이 서 있는 놈에게 들어간 것은 튕긴다 (`Ping`).
@@ -2151,6 +2223,28 @@ export function BattleView({ top, corner }: Props = {}) {
   const depthOf = (i: number) => spots[i]?.lane ?? 0;
   /** 그 사람이 아군 구역 안에서 서는 자리 (왼쪽 끝에서 px) */
   const allyXOf = (i: number) => Math.round((form1.x[i] ?? 0) * fit);
+
+  /**
+   * 돌아선 이 사람이 **왼쪽을 보아야 하나.**
+   *
+   * 방금 친 아군이 내 왼쪽에 서 있으면 그렇다 (`charmHit`). 그 사람이
+   * 지금 대형 어디에 섰는지는 자리 목록에서 찾는다 — 대형이 바뀌면
+   * 좌표도 같이 바뀌므로 저장해 둘 수가 없다.
+   *
+   * 아직 한 대도 안 쳤으면 **왼쪽에 누가 있기만 하면** 돌아선다. 돌아선
+   * 순간부터 첫 스윙까지는 누구를 칠지 알 방법이 없는데, 그 사이 내내
+   * 적을 보고 서 있으면 머리 위 딱지만 붙은 멀쩡한 사람으로 보인다.
+   */
+  const faceLeft = (id: string, me: number): boolean => {
+    const hit = charmHit[id];
+    if (hit) {
+      const at = spots.findIndex((sp) => sp.c.id === hit.id);
+      if (at >= 0) return allyXOf(at) < allyXOf(me);
+    }
+    return spots.some((o2, oi) => (
+      allyXOf(oi) < allyXOf(me) && hpOf(o2.c, battle.hp) > 0
+    ));
+  };
   const allySizeOf = (i: number) => Math.round(partyW * depthAt(depthOf(i)).scale);
   /**
    * 그 사람이 적 쪽으로 나와 있는 거리 (px).
@@ -2535,23 +2629,24 @@ export function BattleView({ top, corner }: Props = {}) {
                     warded={(battle.ward?.[c.id]?.hp ?? 0) > 0}
                     shock={hasHex(hexOf(battle.hex, c.id), 'st_shock')}
                     /*
-                      ── 돌아섰나 ──
+                      ── 돌아섰나 ── **실제로 친 사람 쪽을 본다.**
 
-                      혼란에 걸린 사람은 아군을 친다 (`core/autoBattle` 의
-                      `applyHit`). **내 왼쪽에 살아 있는 아군이 있으면**
-                      뒤집는다 — 대형이 자리를 좌표로 정하므로 (`allyXOf`)
-                      왼쪽인지 오른쪽인지를 그 자리로 바로 물을 수 있다.
+                      여태 "내 왼쪽에 살아 있는 아군이 있나" 로 어림잡았다.
+                      그런데 누구를 칠지는 계산이 매번 무작위로 고르므로
+                      (`core/autoBattle` 의 `applyHit`), 왼쪽에 둘이 있어도
+                      오른쪽 하나를 칠 수 있고 그 반대도 된다 — 뒤에 선
+                      아군을 때리면서 앞을 보는 일이 그래서 났다.
 
-                      실제로 누구를 칠지는 계산이 무작위로 고르므로 늘
-                      맞지는 않는다. 왼쪽에 아무도 없을 때 안 뒤집는 것만
-                      확실하면 "아군이 왼쪽에 있는데 오른쪽을 보며 때린다"
-                      는 안 나온다.
+                      이제 계산이 **누구를 쳤는지** 알려 준다
+                      (`state/battleUi` 의 `charmHit` — 때린 사람별로 담는다).
+                      맞은 사람의 자리가 내 왼쪽이면 뒤집는다.
+
+                      아직 한 대도 안 쳤으면 예전 어림짐작으로 떨어진다 —
+                      돌아선 순간부터 첫 스윙까지는 알 방법이 없다.
                     */
                     turn={
                       !!battle.charm?.who.includes(c.id)
-                      && spots.some((o2, oi) => (
-                        allyXOf(oi) < allyXOf(i) && hpOf(o2.c, battle.hp) > 0
-                      ))
+                      && faceLeft(c.id, i)
                     }
                     cut={battle.cut?.[c.id] ?? 0}
                     /*
@@ -3352,6 +3447,43 @@ export function BattleView({ top, corner }: Props = {}) {
             cx={burstAt.x}
             cy={burstAt.y}
           />
+        )}
+
+        {/*
+          ── 꿰뚫는 기운 ── 거대 화살이 지나간 자리 (`PierceAura`).
+
+          맞는 놈마다 고리가 퍼지고, 그 위로 무대를 가로지르는 띠가 한 줄
+          지나간다. **왼쪽부터 차례로** 터지므로 (`pierceDelay`) 기운이
+          화살을 따라 흘러가는 것으로 보인다.
+
+          `key` 를 번호로 준다 — 같은 기술이 연달아 나가도 앞엣것이 끝까지
+          돌고 새것이 따로 돈다 (`BossFx` 의 `useRun` 과 같은 규칙).
+
+          아군 것이라 흰색이고, 우두머리가 퍼뜨리는 붉은 고리(`Burst`)
+          **바로 위**에 둔다 — 둘이 겹칠 일은 거의 없지만, 겹치면 지금 누가
+          무엇을 했는지는 이쪽이 말해야 한다.
+        */}
+        {!down && !!pierce && stageW > 0 && (
+          <React.Fragment key={`pierce-${pierce.no}`}>
+            <PierceBand w={stageW} y={pierce.y} h={pierce.size} />
+            {pierce.at.map((p, i) => (
+              <View
+                /* 한 번 만들면 안 바뀌는 목록이라 자리 번호로 충분하다 */
+                key={i}
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: p.x,
+                  top: p.y,
+                  width: p.size,
+                  height: p.size,
+                  zIndex: 46,
+                }}
+              >
+                <PierceAura size={p.size} delay={p.delay} />
+              </View>
+            ))}
+          </React.Fragment>
         )}
 
         {/* 우두머리 등장 — 무대 한가운데. 전멸 안내보다 아래에 둔다 */}

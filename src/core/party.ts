@@ -16,25 +16,27 @@
  * 자리인데 비우는 게 정답이 되면 안 된다. 더하기면 누구를 넣든 오르고,
  * 그래서 "채우고 나서 누구를 넣을지" 를 고민하게 된다.
  *
- * 상한은 200 이다 (50 × 4). 이 숫자가 콘텐츠 해금 기준이 된다.
+ * 상한은 **사람마다 다르다.** 각자의 레벨 상한을 더한 값이고 (`capOf`), 그
+ * 상한은 성이 정한다 — 파티 넷을 다 각성시키면 그만큼 위가 열린다.
  *
  * ## 전투력은 따로다
  *
- * 파티 레벨은 **레벨만** 본다. 고유장비 강화는 파티 레벨에 안 들어간다.
- * 둘을 한 숫자로 뭉치면 "레벨을 올렸는데 왜 그대로지" 같은 일이 생긴다.
- * 레벨은 레벨대로, 전투력은 전투력대로 보여 준다 — 화면에 두 줄이면 충분하다.
+ * 파티 레벨은 **레벨만** 본다. 둘을 한 숫자로 뭉치면 "레벨을 올렸는데 왜
+ * 그대로지" 같은 일이 생긴다. 레벨은 레벨대로, 전투력은 전투력대로 보여
+ * 준다 — 화면에 두 줄이면 충분하다.
+ *
+ * (여기 `partyGear` 가 있었다. 파티 넷의 **고유장비 강화 수치**를 더한 값
+ * 이었는데, 전용무기를 없애면서 같이 걷었다 — `core/chars` 참고. 이름만
+ * 강화였고 머리말은 이미 "레벨의 합" 이라 적혀 있었다.)
  */
 import {
-  CharId, MAX_GEAR_LV, OwnedChar, Role, Row, charPower, CHARS, statOf, swingMs,
+  CharId, OwnedChar, Role, Row, capOf, charPower, CHARS, statOf, swingMs,
 } from './chars';
 import { allyAtkMul, allySpdAdd } from './passives';
 
 /** 파티 자리 수 */
 export const PARTY_SIZE = 4;
 
-/** 파티 레벨의 최대치 */
-/** 파티 넷이 다 만렙 강화일 때의 합 — 화면이 "얼마나 남았나" 를 말할 때 쓴다 */
-export const MAX_PARTY_GEAR = MAX_GEAR_LV * PARTY_SIZE;
 
 /** 자리 넷. 비어 있으면 null */
 export type Party = (CharId | null)[];
@@ -71,9 +73,23 @@ export function members(party: Party, chars: Record<string, OwnedChar>): OwnedCh
     .filter((c): c is OwnedChar => !!c);
 }
 
-/** 파티 레벨 = 파티원 레벨의 합 */
-export function partyGear(party: Party, chars: Record<string, OwnedChar>): number {
-  return members(party, chars).reduce((a, c) => a + c.gearLv, 0);
+/** 파티 레벨 = 파티원 레벨의 합. 빈 자리는 0 */
+export function partyLevel(party: Party, chars: Record<string, OwnedChar>): number {
+  return members(party, chars).reduce((a, c) => a + c.lv, 0);
+}
+
+/**
+ * 지금 파티가 갈 수 있는 레벨 합의 **상한**.
+ *
+ * 붙박이 숫자가 아니다 — 사람마다 성이 다르고 성이 상한을 정하므로
+ * (`capOf`), 성을 하나 올리면 이 값도 같이 올라간다. 그래야 "다 올렸다" 와
+ * "더 올릴 수 있다" 가 화면에서 갈린다.
+ *
+ * 빈 자리는 안 센다. 세면 아무도 안 앉힌 자리 때문에 영영 못 채우는 막대가
+ * 된다.
+ */
+export function partyLevelCap(party: Party, chars: Record<string, OwnedChar>): number {
+  return members(party, chars).reduce((a, c) => a + capOf(c), 0);
 }
 
 /** 파티 전투력 = 파티원 전투력의 합 */

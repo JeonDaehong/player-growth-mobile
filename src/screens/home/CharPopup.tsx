@@ -2,7 +2,7 @@
  * 파티 칸을 누르면 열리는 창 — 두 가지를 한 자리에서 한다.
  *
  *   · 누구를 세울지 고른다 (가지고 있는 캐릭터 목록)
- *   · 서 있는 캐릭터의 고유장비를 강화한다
+ *   · 서 있는 캐릭터를 키운다 (레벨 · 성 · 스킬 트리)
  *
  * 둘을 나누지 않은 이유가 있다. 파티 칸을 눌렀을 때 하고 싶은 일은 "이 자리를
  * 어떻게 할까" 하나고, 그 답이 사람을 바꾸는 것일 수도 키우는 것일 수도 있다.
@@ -14,11 +14,10 @@ import * as Haptics from 'expo-haptics';
 import { useGame } from '@/state/store';
 import {
   AWAKEN_COPIES, AWAKEN_ELIXIR, BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId,
-  DMG_NAME, ELIXIR_NAME, FREE_ENHANCE, MAX_GEAR_LV, RARITY_NAME, STAR_CAP,
-  anyPierce, battleTypeOf, blowOf, canAwaken, capOf, charPower, gearCost, gearOdds,
+  DMG_NAME, ELIXIR_NAME, FREE_ENHANCE, RARITY_NAME, STAR_CAP,
+  anyPierce, battleTypeOf, blowOf, canAwaken, capOf, charPower,
   lvCost, maxStar, starUpCost, statOf, swingMs,
 } from '@/core/chars';
-import { fmt } from '@/core/currency';
 import { Bar, Btn, KV, ListItem, Row, Sep, Stars, T, Tag } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
@@ -67,8 +66,6 @@ export function CharPopup({
   const chars = useMemo(() => seatRows(party, raw, form), [party, raw, form]);
   const money = useGame((s) => s.money);
   const setPartySlot = useGame((s) => s.setPartySlot);
-  const enhanceGear = useGame((s) => s.enhanceGear);
-  const setGear = useGame((s) => s.setGear);
   const toast = useGame((s) => s.toast);
   /* ── 자라는 세 축 (`core/growth`) ── */
   const elixir = useGame((s) => s.elixir);
@@ -87,7 +84,6 @@ export function CharPopup({
   const hexMap = useGame((s) => s.battle.hex);
 
   /** 방금 두들긴 결과 — 창을 닫으면 사라진다 */
-  const [last, setLast] = useState<'up' | 'fail' | null>(null);
   /** 월페이퍼를 보고 있나 */
   const [paper, setPaper] = useState(false);
   /** 스킬 트리를 보고 있나 (`SkillTreePopup`) */
@@ -131,25 +127,8 @@ export function CharPopup({
   const picks = c ? openPicks(c.id, c.star, c.tree) : 0;
 
   const owned = Object.values(raw);
-  const cost = c ? gearCost(c.gearLv) : 0;
-  const maxed = !!c && c.gearLv >= MAX_GEAR_LV;
-  /* 테스트 모드에서는 비용이 0 이라 돈을 안 본다 (`FREE_ENHANCE`) */
-  const canPay = !!c && (FREE_ENHANCE || money >= cost) && !maxed;
 
-  const run = () => {
-    if (!c) return;
-    const r = enhanceGear(c.id);
-    if (r === 'poor') { toast('골드가 부족합니다', 'bad'); return; }
-    if (r === 'max') { toast('더 올릴 수 없습니다', 'plain'); return; }
-    if (r === 'up' || r === 'fail') {
-      setLast(r);
-      void Haptics.impactAsync(
-        r === 'up' ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light,
-      );
-    }
-  };
-
-  const close = () => { setLast(null); setPaper(false); setTree(false); onClose(); };
+  const close = () => { setPaper(false); setTree(false); onClose(); };
 
   return (
     <>
@@ -194,8 +173,8 @@ export function CharPopup({
                 <T size={FS.label} bold>Lv {c.lv}</T>
                 <T size={FS.tiny} dim="dim">/ {capOf(c)}</T>
               </Row>
-              <T size={FS.tiny} dim="dim">
-                {`강화 +${c.gearLv} / ${MAX_GEAR_LV} · 전투력 ${charPower(c).toLocaleString()}`}
+              <T size={FS.tiny} dim="dim" numberOfLines={1}>
+                {`전투력 ${charPower(c).toLocaleString()}`}
               </T>
               {/*
                 월페이퍼 — **그림이 있는 사람에게만** 뜬다 (`hasWallpaper`).
@@ -363,45 +342,14 @@ export function CharPopup({
 
           <SkillPanel c={c} party={party} chars={chars} />
 
-          <Sep />
-
           {/*
-            강화 진행 — 이 사람에 대해 **자라는 것은 이것 하나**다.
+            여기 **전용무기(고유장비) 강화**가 있었다 — 이름 붙은 무기 한
+            자루와 +0~+100 막대 둘, 강화 단추, 성공/실패 알림.
 
-            예전에는 여기에 경험치 막대가 있었다. 전투가 알아서 채우는 값이라
-            보고만 있을 뿐 할 수 있는 게 없었고, 그 옆에서 강화만이 실제 선택
-            이었다. 레벨을 없애면서 막대도 강화 쪽으로 옮겼다.
+            개념째로 걷었다 (`core/chars` 머리말). 이 창에서 자라는 것은 이제
+            위의 레벨 · 성 · 스킬 트리 셋뿐이고, 그게 원래 이 게임이 자란다고
+            말하던 것이다 (`core/growth`).
           */}
-          <Row between style={{ marginTop: SP.sm }}>
-            <T size={9} dim="sub">고유장비 강화</T>
-            <T size={9} dim="dim">+{c.gearLv} / {MAX_GEAR_LV}</T>
-          </Row>
-          <Bar value={c.gearLv} max={MAX_GEAR_LV} blocks={20} height={5} />
-
-          <Sep />
-
-          {/* ── 고유장비 ── */}
-          <Row between>
-            <T size={12} bold>{d.gear}</T>
-            <T size={16} bold>+{c.gearLv}</T>
-          </Row>
-          {!!d.gearNote && <T size={10} dim="sub">{d.gearNote}</T>}
-          <T size={9} dim="dim">
-            떼어 낼 수 없는 고유장비입니다. 실패해도 부서지거나 내려가지 않습니다.
-          </T>
-
-          <View style={{ marginTop: SP.xs }}>
-            <Bar value={c.gearLv} max={MAX_GEAR_LV} blocks={20} height={6} />
-          </View>
-
-          {last && (
-            <View style={[BORDER, { padding: SP.xs, marginTop: SP.sm }]}>
-              <T size={12} bold center>
-                {last === 'up' ? `강화 성공! +${c.gearLv}` : '실패 — 그대로입니다'}
-              </T>
-            </View>
-          )}
-
           <Sep />
           {/*
             ── 수치 ──
@@ -481,53 +429,14 @@ export function CharPopup({
             몫입니다. 판이 끝나거나 걸린 것이 풀리면 사라집니다.
           </T>
           {/*
-            공짜·확실일 때는 확률과 비용 줄을 뺀다 — "100%" 와 "0 골드" 는
-            읽는 사람에게 아무것도 안 알려 주면서 자리만 차지한다.
-          */}
-          {!maxed && !FREE_ENHANCE && (
-            <KV k="성공 확률" v={`${Math.round(gearOdds(c.gearLv) * 100)}%`} dim />
-          )}
-          {!maxed && !FREE_ENHANCE && (
-            <KV k="강화 비용" v={fmt(cost)} warn={money < cost} />
-          )}
+            ── 테스트용 단추 ──
 
-          <Btn
-            label={maxed ? '최대 강화' : '강화하기'}
-            sub={maxed || FREE_ENHANCE ? undefined : fmt(cost)}
-            size="lg"
-            fill={canPay}
-            disabled={!canPay}
-            style={{ marginTop: SP.md }}
-            onPress={run}
-          />
-
-          {/*
-            ── 테스트용 단추 둘 ──
-
-            `FREE_ENHANCE` 가 켜져 있을 때만 나온다 (`core/chars`). 공짜로
-            강화해도 +100 까지 백 번을 눌러야 하면 직접 굴려 볼 수가 없어서
-            한 번에 올리는 것도 같이 둔다.
+            `FREE_ENHANCE` 가 켜져 있을 때만 나온다 (`core/chars`).
 
             ⚠ 출시 전에 `FREE_ENHANCE` 를 끄면 이 줄은 통째로 사라진다.
           */}
           {FREE_ENHANCE && (
             <>
-              <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
-                <Btn
-                  label={`+${MAX_GEAR_LV} 까지`}
-                  size="sm"
-                  style={{ flex: 1 }}
-                  disabled={maxed}
-                  onPress={() => { setGear(c.id, MAX_GEAR_LV); setLast(null); }}
-                />
-                <Btn
-                  label="+0 으로 되돌리기"
-                  size="sm"
-                  style={{ flex: 1 }}
-                  disabled={c.gearLv === 0}
-                  onPress={() => { setGear(c.id, 0); setLast(null); }}
-                />
-              </Row>
               {/*
                 성과 레벨도 같은 이유로 건너뛸 수 있어야 한다. 각성 하나를
                 보려면 조각 마흔여덟 장(`AWAKEN_COPIES` + 5성까지 열여섯)이
@@ -584,7 +493,7 @@ export function CharPopup({
             label="이 자리 비우기"
             size="sm"
             style={{ marginTop: SP.xs }}
-            onPress={() => { setPartySlot(slot, null); setLast(null); }}
+            onPress={() => setPartySlot(slot, null)}
           />
         </>
       ) : (
@@ -607,7 +516,7 @@ export function CharPopup({
           <ListItem
             key={o.id}
             title={od.name}
-            sub={`${o.star}성${o.awake ? '(각성)' : ''} · Lv ${o.lv} · +${o.gearLv}`
+            sub={`${o.star}성${o.awake ? '(각성)' : ''} · Lv ${o.lv}`
               + ` · ${BATTLE_TYPE_NAME[battleTypeOf(o.id)]} · 전투력 ${charPower(o).toLocaleString()}`}
             left={<Sprite set="avatar" name={od.art} size={26} />}
             right={

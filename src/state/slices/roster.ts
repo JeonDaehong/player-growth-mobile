@@ -2,15 +2,15 @@
  * 캐릭터 · 파티 · 자동 전투.
  *
  * 이 게임이 새로 가는 방향이다 — 한 사람의 열 칸 장비 대신, 캐릭터를 모으고
- * 그 캐릭터의 고유장비를 키운다 (`core/chars`).
+ * 그 캐릭터를 레벨·성으로 키운다 (`core/chars`).
  *
  * 옛 장비 뭉치(`slices/gear`)는 아직 그대로 둔다. 저장된 계정에 장비가 들어
  * 있고, 그걸 지우는 건 캐릭터 쪽이 자리를 잡은 뒤에 해도 늦지 않다.
  * 두 체계가 잠깐 같이 있는 건 괜찮지만, **서로 참조하지는 않는다.**
  */
 import {
-  AWAKEN_COPIES, AWAKEN_ELIXIR, CHARS, CharId, FREE_ENHANCE, MAX_GEAR_LV, OwnedChar,
-  STAR_CAP, canAwaken, capOf, gearCost, gearOdds, isCharId, lvCost, maxStar, newChar, starUpCost,
+  AWAKEN_COPIES, AWAKEN_ELIXIR, CHARS, CharId, FREE_ENHANCE, OwnedChar,
+  STAR_CAP, canAwaken, capOf, isCharId, lvCost, maxStar, newChar, starUpCost,
 } from '@/core/chars';
 import { FormationId, PARTY_SIZE, Party, cleanParty, seatRows } from '@/core/party';
 import { allOwned, drawChar, poolOf, recruitCost } from '@/core/recruit';
@@ -37,18 +37,11 @@ export interface RosterActions {
   setFormation: (f: FormationId) => void;
   /** 짜 둔 편성을 버린다 — 아직 안 들어간 것만 사라진다 */
   clearPending: () => void;
-  /** 고유장비를 한 번 두들긴다 */
-  enhanceGear: (id: CharId) => 'up' | 'fail' | 'max' | 'poor' | 'none';
-  /**
-   * 강화 수치를 **바로 정한다** — 테스트용.
-   *
-   * 되돌리기(+0)와 한 번에 올리기(+100)가 이걸 쓴다. 공짜로 강화해도 100 칸을
-   * 한 번씩 눌러야 하면 직접 굴려 볼 수가 없다.
-   *
-   * ⚠ `FREE_ENHANCE` 가 꺼져 있으면 아무 일도 안 한다 — 출시본에 남아서
-   * 돈 없이 만렙이 되는 길이 되면 안 된다.
-   */
-  setGear: (id: CharId, lv: number) => void;
+  /*
+    여기 `enhanceGear` 와 `setGear` 가 있었다 — 전용무기(고유장비)를 골드로
+    두들기는 것. 개념째로 걷었다 (`core/chars` 참고). 그 자리는 레벨 올리기가
+    받는다 (`levelUp`).
+  */
   /**
    * 스킬 설정을 바꾼다 (`core/skillOpt`).
    *
@@ -111,11 +104,14 @@ export interface RosterActions {
    */
   recruitDraw: () => { id: CharId; dup: boolean } | 'poor' | 'full';
   /**
-   * ── 캐릭터가 자라는 세 축 ── (`core/growth`)
+   * ── 캐릭터가 자라는 축 ── (`core/growth`)
    *
-   * 강화(`enhanceGear`)는 확률로 시간을 먹고, 레벨은 골드로, 성은 **같은
-   * 사람 조각**으로 오른다. 셋이 서로 다른 것을 먹으므로 어느 하나가 다른
-   * 둘을 대신하지 못한다.
+   * 레벨은 골드로, 성은 **같은 사람 조각**으로 오른다. 서로 다른 것을
+   * 먹으므로 한쪽이 다른 쪽을 대신하지 못한다.
+   *
+   * 여기 셋째로 강화(`enhanceGear`)가 있었다 — 걷었다. 골드만 있으면 늘
+   * 오르는 값이라 레벨과 먹는 것이 같았고, 같은 것을 먹는 축은 축이 아니라
+   * 같은 축의 두 번째 이름이다.
    */
   /** 레벨 한 칸. 골드를 쓰고 실패하지 않는다 */
   levelUp: (id: CharId) => 'up' | 'max' | 'poor' | 'none';
@@ -243,38 +239,6 @@ export const createRosterSlice = (
     set({ pendingParty: party });
   },
 
-  enhanceGear: (id) => {
-    const st = get();
-    const c = st.chars[id];
-    if (!c) return 'none';
-    if (c.gearLv >= MAX_GEAR_LV) return 'max';
-    const cost = gearCost(c.gearLv);
-    if (st.money < cost) return 'poor';
-
-    const up = Math.random() < gearOdds(c.gearLv);
-    /*
-      고유장비는 **부서지지도 내려가지도 않는다** (`core/chars` 참고).
-      실패하면 돈만 나간다. 캐릭터 자신인 물건을 잃게 만들 수는 없다.
-    */
-    const next: OwnedChar = up ? { ...c, gearLv: c.gearLv + 1 } : c;
-    set({
-      money: st.money - cost,
-      chars: { ...st.chars, [id]: next },
-    });
-    return up ? 'up' : 'fail';
-  },
-
-  setGear: (id, lv) => {
-    /* 테스트 스위치가 꺼져 있으면 없는 기능이다 */
-    if (!FREE_ENHANCE) return;
-    const st = get();
-    const c = st.chars[id];
-    if (!c) return;
-    const next = Math.max(0, Math.min(MAX_GEAR_LV, Math.floor(lv)));
-    if (next === c.gearLv) return;
-    set({ chars: { ...st.chars, [id]: { ...c, gearLv: next } } });
-  },
-
   setSkillOpt: (who, slot, opt) => {
     const st = get();
     const key = optKey(who, slot);
@@ -354,7 +318,7 @@ export const createRosterSlice = (
   },
 
   setGrowth: (id, at) => {
-    /* 테스트 스위치가 꺼져 있으면 없는 기능이다 (`setGear` 와 같은 규칙) */
+    /* 테스트 스위치가 꺼져 있으면 없는 기능이다 (`FREE_ENHANCE`) */
     if (!FREE_ENHANCE) return;
     const st = get();
     const c = st.chars[id];
@@ -436,7 +400,7 @@ export const createRosterSlice = (
       "누가 쳐서 누가 맞았나" 를 둘 다 안다.
     */
     if (ev.taken > 0 && ev.hurt) {
-      useBattleUi.getState().hitByAlly(ev.hurt);
+      useBattleUi.getState().hitByAlly(who, ev.hurt);
       set({ battle });
       return;
     }
@@ -457,7 +421,7 @@ export const createRosterSlice = (
     /*
       잡으면 **골드만** 들어온다.
 
-      예전에는 여기서 경험치도 나눠 줬다. 캐릭터가 자라는 길을 고유장비 강화
+      예전에는 여기서 경험치도 나눠 줬다. 캐릭터가 자라는 길을 강화
       하나로 모으면서 (`core/chars`) 경험치를 없앴다 — 켜 두면 저절로 오르는
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
@@ -486,7 +450,7 @@ export const createRosterSlice = (
     /*
       잡으면 **골드만** 들어온다.
 
-      예전에는 여기서 경험치도 나눠 줬다. 캐릭터가 자라는 길을 고유장비 강화
+      예전에는 여기서 경험치도 나눠 줬다. 캐릭터가 자라는 길을 강화
       하나로 모으면서 (`core/chars`) 경험치를 없앴다 — 켜 두면 저절로 오르는
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
@@ -585,7 +549,7 @@ export const createRosterSlice = (
     /*
       잡으면 **골드만** 들어온다.
 
-      예전에는 여기서 경험치도 나눠 줬다. 캐릭터가 자라는 길을 고유장비 강화
+      예전에는 여기서 경험치도 나눠 줬다. 캐릭터가 자라는 길을 강화
       하나로 모으면서 (`core/chars`) 경험치를 없앴다 — 켜 두면 저절로 오르는
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
