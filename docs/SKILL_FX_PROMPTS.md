@@ -2,6 +2,9 @@
 
 **손으로 쓰는 문서입니다** (자동 생성이 아닙니다).
 
+**들어왔습니다** (2026-09-06). 시트는 `assets/sprites/sfx_holysword/` 에 있고
+화면에 붙어 있습니다 (`screens/home/SkillFx` 의 `HolySword`).
+
 아군 기술 중 **캐릭터 시트에 못 그리는 것**을 여기에 모읍니다. 보스 쪽과
 같은 갈림길입니다 ([`BOSS_FX_PROMPTS.md`](BOSS_FX_PROMPTS.md)) — 자리가 다르고
 수명이 다른 것은 인물 시트에 못 넣습니다.
@@ -148,16 +151,30 @@ writing in any language real or invented — remove it and produce the image wit
 ```
 
 
-### 들어오면 붙이는 자리
+### 붙일 때 걸린 것 둘
 
-1. 시트를 `assets/<날짜>/` 에 넣고 `tools/sprites.config.json` 에 다섯 칸
-   (`1`~`5`)으로 적습니다.
-2. `python tools/slice.py holysword` — `assets/sprites/sfx_holysword/` 와
-   `src/ui/spriteAssets.ts` 가 같이 생깁니다.
-3. `SkillFx` 에 갈래를 하나 늘리고 (`sfx_erupt` 를 쓰는 `Erupt` 와 같은
-   얼개입니다), `core/chars` 의 `holysword` 에 `cast: 'holy'` 를 답니다.
+받은 시트를 그냥 자르면 두 가지가 어긋났습니다. 다음에 같은 모양으로 받을
+때를 위해 적어 둡니다.
 
-**맞는 적 위에서 그립니다.** 지금 `Erupt` 는 쓰는 사람 발밑에서 나는데
-(`SkillDef.cast` 가 인물에 붙어 있어서), 이것은 반대로 맞는 쪽 위에서 나야
-합니다 — 붙이는 자리는 `BattleView` 의 `hits` 쪽입니다 (`FallingArrow` 가
-이미 그 자리에서 위에서 떨어지는 것을 그립니다).
+**1. 구분선이 마젠타가 아니라 흰색으로 왔습니다.** 다섯 칸이 흰 액자로 둘러
+싸여 나와서, 자르면 칸마다 흰 사각형 테두리가 그대로 남았습니다 — 화면에서
+검 대신 흰 네모가 떴습니다. `grid` 로 균등 분할하고 `maskRects` 로 네 변의
+흰 띠를 지웁니다 (`tools/sprites.config.json`).
+
+**2. 칸마다 따로 트림하면 검이 프레임마다 튑니다.** 슬라이서는 평소 검은
+여백을 깎아 내는데, 이 시트는 **칸 안에서 검이 위에서 아래로 내려오는 것**이
+곧 연출입니다. 칸마다 깎으면 그 높이 차이가 통째로 사라지고 다섯 장이 같은
+상자에 꽉 차게 늘어납니다.
+
+그래서 `noTrim` 을 하나 만들었습니다 — 상자를 통째로 저장합니다. **여러 칸이
+한 동작인 시트는 앞으로 이걸 켜야 합니다.**
+
+### 화면에 붙은 자리
+
+- `core/chars` 의 `holysword` 에 `drop: 'sword'`. `cast` 와 자리가 반대라
+  (저건 쓰는 사람 발밑) 칸을 따로 팠습니다.
+- 그리는 것은 `screens/home/SkillFx` 의 `HolySword`, 부르는 것은
+  `BattleView` 의 타격 목록(`hits`)입니다 — 화산(`erupt`)과 **같은 상자**를
+  씁니다. 둘 다 "적의 발 높이에 바닥을 맞춘다" 라 조건이 같고, 다른 것은
+  그 바닥에서 위로 솟느냐 위에서 내려와 박히느냐뿐입니다.
+- **내려오는 움직임은 코드가 안 얹습니다.** 시트가 이미 칸 안에서 내려옵니다.

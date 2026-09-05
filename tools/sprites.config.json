@@ -4477,6 +4477,53 @@
         "st_shock"
       ],
       "append": true
+    },
+    {
+      "file": "sfx_holysword.jpg",
+      "name": "sfx_holysword",
+      "expect": [
+        5,
+        1
+      ],
+      "grid": [
+        5,
+        1
+      ],
+      "note": "아군 스킬 이펙트 — 하늘에서 내리꽂히는 빛의 대검 (docs/SKILL_FX_PROMPTS.md). 마젠타 대신 흰 구분선으로 와서 grid 로 균등 분할하고 maskRects 로 그 선을 지운다. 다섯 칸이 한 동작(검이 위에서 아래로)이라 noTrim 이 필수다",
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "noTrim": true,
+      "maskRects": [
+        [
+          0,
+          0,
+          0.095,
+          1
+        ],
+        [
+          0.905,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0.055
+        ],
+        [
+          0,
+          0.945,
+          1,
+          1
+        ]
+      ]
     }
   ],
   "_srcDirs": []

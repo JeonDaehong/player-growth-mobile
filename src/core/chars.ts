@@ -444,6 +444,18 @@ export interface SkillDef {
    */
   art: string;
   /**
+   * **맞는 자리 위에서 도는 큰 연출** — 지금은 성검 하나다.
+   *
+   * `cast` 와 자리가 반대다. 저건 **쓰는 사람** 쪽에서 나고 (`SkillFx` —
+   * 포효 · 광란 · 정화 · 화산), 이건 **맞는 놈** 위에서 난다. 이졸데가 검을
+   * 부르고 검은 저쪽에 떨어지므로, 쓰는 사람 발밑에 그리면 정작 아무 일도
+   * 안 일어난 자리에 그림이 뜬다.
+   *
+   * 그래서 부르는 자리도 다르다 — `cast` 는 `Fighter` 가, 이건 `BattleView`
+   * 의 타격 목록(`hits`)이 그린다.
+   */
+  drop?: 'sword';
+  /**
    * 한 번 쓸 때 몇 번 나가나.
    *
    * 화살비만 여럿이다 — 한 발씩 따로 떨어지고, 떨어질 때마다 그 시점에
@@ -1052,6 +1064,14 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     mul: 3.0, defMul: 0, heal: 0, healPct: 0,
     /* 하늘에서 내려온다 — 몸에서 날아가는 것이 아니다 */
     flies: false, landOn: 3, cost: 12, aura: 'rune', leaps: false,
+    /*
+      **맞는 놈 위에서 검이 떨어진다** (`screens/home/SkillFx` 의 `HolySword`).
+
+      여태 화면에 나오는 것이 발밑 마법진과 타격 불꽃 둘뿐이었다. 그 둘은
+      코스트 10짜리 신의 심판도 쓰는 것이라, 12를 모아 쓴 것과 10을 모아 쓴
+      것이 화면에서 같았다 — 검 갈래의 끝인데.
+    */
+    drop: 'sword',
     fx: 'holy',
     desc: '적 하나에게 빛과 함께 큰 검이 떨어진다',
   },

@@ -57,7 +57,7 @@ import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
 import { BAD_C, C, FS, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
-import { SkillFx } from './SkillFx';
+import { HolySword, SkillFx } from './SkillFx';
 import {
   BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, Burst, Charging, Fuse, FxPlan,
   Ping, Veil,
@@ -785,6 +785,8 @@ export function BattleView({ top, corner }: Props = {}) {
        * 빈 문자열이면 안 얹는다. 활잡이의 화살비에서만 붙는다.
        */
       arrow: string;
+      /** 맞는 자리 위에서 성검이 떨어지나 (`SkillDef.drop`) */
+      sword: boolean;
       /**
        * 몸으로 부딪힌 한 방인가.
        *
@@ -1711,7 +1713,8 @@ export function BattleView({ top, corner }: Props = {}) {
       const live = old.slice(-7);
       return [...live, {
         /* 과열의 둘째 대는 크게 터진다 — 같은 그림이면 넷 중 어느 것이 150% 인지 모른다 */
-        ...sw, key, ...spot, blast: !!sw.blast, arrow: '', erupt: false, ping: shielded, fey,
+        ...sw, key, ...spot, blast: !!sw.blast, arrow: '', erupt: false, sword: false,
+        ping: shielded, fey,
         row: rowFor(live, spot.x), born: Date.now(),
         dx: -14 + Math.random() * 24, dy: -6 + Math.random() * 20,
       }];
@@ -1923,6 +1926,8 @@ export function BattleView({ top, corner }: Props = {}) {
         add.push({
           /* 발밑에서 솟는 기술인가 — 지금은 화산 하나다 */
           erupt: sk.cast === 'erupt' && !big,
+          /* 머리 위에서 내려오는 기술인가 — 지금은 성검 하나다 */
+          sword: sk.drop === 'sword' && !big,
           /* 기술이 제 그림을 가지고 있으면 그걸 쓴다 — 없으면 평타 것 */
           id, fx: sk.fx ?? CHARS[me.id].fx,
           dmg: amount, key: hitSeq.current++, ...spot,
@@ -1989,6 +1994,7 @@ export function BattleView({ top, corner }: Props = {}) {
             const f = now.current.battle.foes[idx[n + 1]];
             return [...live, {
               erupt: sk.cast === 'erupt',
+              sword: sk.drop === 'sword',
               id, fx: sk.fx ?? CHARS[me.id].fx,
               dmg, key: hitSeq.current++, ...spot,
               blast: false,
@@ -3699,6 +3705,28 @@ export function BattleView({ top, corner }: Props = {}) {
               달리 흩어지지 않으므로 `dx`/`dy` 를 안 얹는다 — 땅에서 나는
               것이 옆으로 밀리면 어디서 났는지가 사라진다.
             */}
+            {/*
+              ── 하늘에서 내려오는 것 ── 이졸데의 성검 하나다.
+
+              화산과 **같은 상자**를 쓴다 (아래 `h.erupt`). 둘 다 "발 높이에
+              바닥을 맞춘다" 라 상자 조건이 같고, 다른 것은 그림이 그 바닥에서
+              위로 솟느냐 위에서 내려와 박히느냐뿐이다.
+            */}
+            {h.sword && (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: h.x,
+                  top: h.y,
+                  width: h.size,
+                  height: h.size,
+                  zIndex: 58,
+                }}
+              >
+                <HolySword nonce={h.key} size={h.size} />
+              </View>
+            )}
             {h.erupt && (
               <View
                 pointerEvents="none"

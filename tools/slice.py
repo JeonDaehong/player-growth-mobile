@@ -42,6 +42,23 @@
                         된다 — 흑백 반전으로 들어온 시트와 결과가 같아진다.
   inset                 셀 네 변을 이 비율만큼 깎는다. 흰 배경 시트를 invert 하면
                         칸 테두리가 흰 액자로 남는데, 그걸 없애는 데 쓴다.
+
+여러 칸이 **한 동작**인 시트 (설정 키):
+  noTrim                검은 여백을 안 깎는다. 칸 상자를 통째로 저장한다.
+
+                        평소에는 깎는 것이 맞다 — 칸마다 그림 크기가 다르면
+                        화면이 상자에 맞춰 그리므로, 여백을 남기면 그만큼
+                        작게 그려진다.
+
+                        그런데 **칸끼리 자리가 맞아야 하는** 시트가 있다.
+                        성검(`sfx_holysword`)은 세로로 긴 칸 안에서 검이 위에서
+                        아래로 내려온다 — 1번은 위쪽, 3번은 박힌 자리다. 칸마다
+                        따로 깎으면 그 높이 차이가 통째로 사라지고, 다섯 장이
+                        같은 상자에 꽉 차게 늘어나 **검이 프레임마다 튄다.**
+
+                        이걸 켜면 다섯 칸이 같은 크기로 나오고, 그림은 제자리에
+                        남는다. 대신 칸 가장자리의 흰 테두리·구분선을
+                        `maskRects` 로 직접 지워야 한다 — 트림이 안 지워 준다.
 """
 import json, os, re, sys
 from PIL import Image
@@ -493,11 +510,18 @@ def run(only=None):
                 # 바닥선도 트림 전에 — 지우고 나면 그림이 그만큼 작아진다
                 if s.get('floor'):
                     mask = drop_floor(mask)
-                box = trim(mask)
-                if box is None:
-                    n -= 1
-                    continue
-                r0, r1, c0, c1 = box
+                if s.get('noTrim'):
+                    # 칸끼리 자리가 맞아야 하는 시트 — 상자를 통째로 쓴다 
+                    if not mask.any():
+                        n -= 1
+                        continue
+                    r0, r1, c0, c1 = 0, mask.shape[0], 0, mask.shape[1]
+                else:
+                    box = trim(mask)
+                    if box is None:
+                        n -= 1
+                        continue
+                    r0, r1, c0, c1 = box
                 out = to_png(mask[r0:r1, c0:c1])
                 if cell_folders:
                     idx = n - len([x for x in drop if x < n])

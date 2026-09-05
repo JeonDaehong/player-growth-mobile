@@ -423,6 +423,84 @@ function Erupt({ t, size }: { t: Animated.Value; size: number }) {
 const ERUPT_MS = 420;
 
 /**
+ * ── 성검이 도는 시간 (ms) ──
+ *
+ * 화산(420ms)보다 한참 길다. 저건 **한 번 터지고 마는 것**이고 이건
+ * 하늘에서 내려와 박히는 것이라, 내려오는 동안이 눈에 남아야 "떨어졌다" 가
+ * 된다. 코스트 12 짜리라 한 판에 두어 번 나오므로 길어도 지겹지 않다.
+ */
+export const SWORD_MS = 820;
+
+/**
+ * ── 성검 발현 ── 맞는 적 위에서 빛의 대검이 내리꽂힌다.
+ *
+ * ## `cast` 와 자리가 반대다
+ *
+ * 포효 · 광란 · 정화 · 화산은 전부 **쓰는 사람** 쪽에서 난다 (`SkillFx`).
+ * 이것만 **맞는 놈** 위에서 난다 — 이졸데가 검을 부르고 검은 저쪽에
+ * 떨어지므로, 쓰는 사람 발밑에 그리면 정작 아무 일도 안 일어난 자리에
+ * 그림이 뜬다. 그래서 부르는 자리도 다르다 (`BattleView` 의 `hits`).
+ *
+ * ## 내려오는 것은 **시트가 한다**
+ *
+ * 다른 다섯 칸 시트는 한자리에서 피었다 지므로 움직임을 코드가 얹는데
+ * (`bfx_bolt` 등), 이 시트는 칸 안에서 이미 검이 위에서 아래로 내려온다
+ * (1번은 위쪽, 2번은 가운데, 3번은 박힌 자리). 세로로 긴 칸을 그렇게
+ * 받았다 (`docs/SKILL_FX_PROMPTS.md`).
+ *
+ * 그래서 여기서는 **자리를 안 옮긴다.** 칸 바닥을 적의 발 높이에 붙여
+ * 두기만 하면 그림이 알아서 떨어진다 — 코드가 한 번 더 밀면 두 번 내려온다.
+ *
+ * ## 3번 칸에 오래 머문다
+ *
+ * 박히는 칸이 이 기술의 그림이다. 다섯을 고르게 나누면 제일 중요한 칸이
+ * 다른 넷과 똑같이 스쳐 지나간다.
+ */
+export function HolySword({ nonce, size }: { nonce: number; size: number }) {
+  const { t, on } = useOnce(nonce, SWORD_MS);
+  const [frame, setFrame] = useState(1);
+
+  useEffect(() => {
+    if (nonce <= 0) return undefined;
+    setFrame(1);
+    /* 나타남 · 낙하 · **박힘(길게)** · 퍼짐 · 스러짐 */
+    const at = [0.14, 0.28, 0.62, 0.82].map((r) => Math.round(SWORD_MS * r));
+    const ts = at.map((ms, i) => setTimeout(() => setFrame(i + 2), ms));
+    return () => ts.forEach(clearTimeout);
+  }, [nonce]);
+
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.06, 0.9, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+
+  if (!on) return null;
+
+  /*
+    몸의 두 배 남짓. 하늘에서 내려오는 것이라 몸보다 커야 "위에서 왔다" 가
+    되고, 상한을 두는 이유는 우두머리다 — 132px 짜리 몸에 배수를 그대로
+    곱하면 검 하나가 무대 높이를 넘는다.
+  */
+  const h = Math.round(Math.min(size * 2.3, 200));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        /* 칸 바닥을 적의 발 높이에 붙인다 — 검은 그 위에서 내려온다 */
+        bottom: 0,
+        left: Math.round((size - h) / 2),
+        width: h,
+        opacity: fade,
+        /* 맞은 놈 위에 뜨되 피해 숫자(60)보다는 아래 */
+        zIndex: 47,
+      }}
+    >
+      <Sprite set="sfx_holysword" name={String(frame)} size={h} />
+    </Animated.View>
+  );
+}
+
+/**
  * ── 몸이 번쩍인다 ──
  *
  * ## 왜 필요했나
