@@ -885,13 +885,28 @@ function FighterView({
       const throwing = shooting || (skill && sk.flies);
 
       /*
-        **날릴 것이 있으면 여기서 대상을 정한다.**
+        **대상은 스윙이 시작할 때 정한다.**
 
-        스윙이 시작할 때 정해야 하는 이유는, 날아갈 거리가 곧 날아가는 시간이고
-        (`flyMsOf`) 그 시간을 알아야 **닿는 순간**에 피해 타이머를 걸 수 있기
-        때문이다. 놓는 순간에 정하면 거리를 모르는 채로 시간을 잡아야 한다.
+        원래는 날릴 것이 있을 때만 그랬다 (`throwing`). 날아갈 거리가 곧
+        날아가는 시간이고 (`flyMsOf`) 그 시간을 알아야 **닿는 순간**에 피해
+        타이머를 걸 수 있어서다 — 놓는 순간에 정하면 거리를 모르는 채로
+        시간을 잡아야 한다.
+
+        ── 근접 평타도 여기서 정하게 바꿨다 ──
+
+        혼란 때문이다. 돌아선 사람이 **어느 쪽을 보고 서느냐**는 누구를 칠지
+        정해져야 알 수 있는데, 여태 그걸 주먹이 닿는 순간에 골랐다
+        (`core/autoBattle` 의 `applyHit`). 그래서 스윙 내내 적 쪽을 보고
+        있다가 다 때리고 나서야 돌아섰고, 다음 스윙은 또 새로 굴리니 늘 한
+        박자 늦은 방향을 보고 있었다 — "뒤에 있는 애를 때리는데 뒤를 안 돈다"
+        가 이것이다.
+
+        기술은 그대로 둔다. 날아가지 않는 기술(도약·기도)까지 여기서 고르면
+        `onAim` 이 남겨 둔 자리를 아무도 안 꺼내 가고, 그 다음 근접 평타가
+        그걸 물려받는다 (`BattleView` 의 `onSwing` 이 꺼내면서 지운다).
       */
-      const dist = throwing ? cbAim.current(ch.id, skill) : 0;
+      const aimAt = throwing || !skill ? cbAim.current(ch.id, skill) : 0;
+      const dist = throwing ? aimAt : 0;
       /* 멀리 있는 놈을 노렸으면 그만큼 오래 날아간다 — 속도가 고정이다 */
       const reach = flyMsOf(dist);
 
@@ -1071,6 +1086,36 @@ function FighterView({
   const max = st.hp;
   const ratio = Math.max(0, Math.min(1, hp / Math.max(1, max)));
 
+  /*
+    ── 몸에 걸리는 변형. **세 장이 같은 것을 쓴다** ──
+
+    같은 그림을 세 번 그린다. 빛나는 실루엣(`BodyFlash` — 광란), 붉은
+    겹(`HurtTint` — 맞았을 때), 그리고 실제로 보이는 몸. 셋이 정확히 겹쳐야
+    한 사람으로 보인다.
+
+    ⚠ **여기가 갈라져 있어서 혼란이 화면에 안 나왔다.** `turn` 이 실루엣
+    한 장에만 걸려 있었다 — 뒤집힌 것은 광란을 쓸 때만 잠깐 뜨는 그림자
+    한 장뿐이라, 돌아선 사람은 여전히 적을 보고 서서 뒤에 선 아군을 쳤다.
+    같은 그림 셋이 각자 제 transform 을 들고 있으면 언젠가 이렇게 어긋난다.
+
+    ## 둘을 여기서 합쳐야 하는 이유
+
+    `Sprite` 의 `flip` 을 못 쓴다 — 저건 style 에 transform 이 있으면 스스로
+    물러나므로 (덮어써서 반전이 사라지는 걸 막는 장치다), 발을 맞추는
+    `translateY` 와 같이 쓰려면 배열을 직접 만들어야 한다.
+
+    `translateY` 는 **발을 상자 바닥에 맞춘다.** `Sprite` 는 정사각 상자에
+    `contain` 으로 그리므로 가로가 더 긴 칸은 위아래 가운데에 놓여 그만큼
+    발이 뜬다. 칸마다 비율이 달라서 (비앙카는 `guard` 가 세로형인데 `sk_3`
+    은 가로형) 안 맞추면 휘두르는 동안 인물이 위아래로 들썩인다.
+  */
+  const bodyStyle = {
+    transform: [
+      { scaleX: turn ? -1 : 1 },
+      { translateY: Math.round(size * spriteGap(ch.id, frame)) },
+    ],
+  } as const;
+
   return (
     <Animated.View
       style={{
@@ -1244,20 +1289,7 @@ function FighterView({
           set={ch.id}
           name={frame}
           size={size}
-          /*
-            **돌아서면 좌우를 뒤집는다** (`turn`).
-
-            `Sprite` 의 `flip` 을 못 쓴다 — 저건 style 에 transform 이 있으면
-            스스로 물러나므로 (덮어써서 반전이 사라지는 걸 막는 장치다),
-            발을 맞추는 `translateY` 와 같이 쓰려면 여기서 직접 합쳐야 한다.
-            적 줄이 같은 자리에서 같은 일을 한다 (`BattleView`).
-          */
-          style={{
-            transform: [
-              { scaleX: turn ? -1 : 1 },
-              { translateY: Math.round(size * spriteGap(ch.id, frame)) },
-            ],
-          }}
+          style={bodyStyle}
           fallbackSet="duel"
           fallbackName={SK_FALLBACK[frame] ?? CUT_FALLBACK[frame] ?? frame}
         />
@@ -1329,7 +1361,7 @@ function FighterView({
           name={frame}
           size={size}
           tint={BAD_C}
-          style={{ transform: [{ translateY: Math.round(size * spriteGap(ch.id, frame)) }] }}
+          style={bodyStyle}
           fallbackSet="duel"
           fallbackName={SK_FALLBACK[frame] ?? CUT_FALLBACK[frame] ?? frame}
         />
@@ -1442,18 +1474,7 @@ function FighterView({
         set={ch.id}
         name={frame}
         size={size}
-        /*
-          **발을 상자 바닥에 맞춘다.**
-
-          `Sprite` 는 정사각 상자에 `contain` 으로 그리므로, 가로가 더 긴 칸은
-          상자 안에서 위아래 가운데에 놓인다 — 그만큼 발이 떠 있다. 칸마다
-          비율이 달라서(비앙카는 `guard` 가 세로형인데 `sk_3` 은 가로형),
-          휘두르는 동안 인물이 위아래로 들썩였다.
-
-          `spriteGap` 이 그 뜬 거리를 알려 준다. 아래로 그만큼 밀면 어느 칸에서든
-          발이 같은 높이에 놓인다.
-        */
-        style={{ transform: [{ translateY: Math.round(size * spriteGap(ch.id, frame)) }] }}
+        style={bodyStyle}
         fallbackSet="duel"
         /* §D 를 아직 안 받았으면 §A 의 세 프레임으로 떨어진다 */
         fallbackName={SK_FALLBACK[frame] ?? CUT_FALLBACK[frame] ?? frame}

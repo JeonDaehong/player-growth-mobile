@@ -550,7 +550,7 @@ export interface GameActions {
   /** 한 명이 검을 내려친 순간. 화면이 부른다 */
   /** @param aim 화면이 이미 고른 자리. 없으면 확률대로 고른다 */
   /** @param mul 이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 */
-  strikeFoe: (who: string, aim?: number, mul?: number) => void;
+  strikeFoe: (who: string, aim?: number, mul?: number, ally?: string | null) => void;
   /** 스킬 — 앞의 세 마리를 1.5배로. 5초마다 */
   /** @param at 화면이 이미 고른 자리들. 없으면 스킬 규칙대로 여기서 고른다 */
   /**

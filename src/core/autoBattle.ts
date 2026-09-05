@@ -4677,6 +4677,20 @@ export function applyHit(
    * 기술인 척하게 된다.
    */
   mul = 1,
+  /**
+   * 혼란일 때 **화면이 이미 고른 아군**.
+   *
+   * `aim` 과 같은 규칙이다 — 화면과 계산이 각자 굴리면 맞는 놈과 닳는 놈이
+   * 갈린다. 다만 이쪽은 그 이유가 하나 더 있다: 돌아선 사람이 **어느 쪽을
+   * 보고 서느냐**가 이 값에서 나온다 (`BattleView` 의 `faceLeft`).
+   *
+   * 여기서 굴리면 대상이 정해지는 순간이 **주먹이 닿는 순간**이라, 화면은
+   * 스윙이 다 끝난 뒤에야 누구를 쳤는지 알게 된다. 그래서 뒤에 선 아군을
+   * 치면서 앞을 보고 있었다.
+   *
+   * 살아 있는 다른 파티원이 아니면 무시하고 여기서 고른다 (시험·서버용).
+   */
+  ally?: string | null,
 ): TickResult {
   const me = chars[who];
   /* 쓰러져 있거나, 파티에 없거나, 적이 없으면 헛스윙이다 */
@@ -4705,7 +4719,14 @@ export function applyHit(
       .filter((c) => c.id !== who && hpOf(c, st.hp) > 0);
     /* 혼자 남았으면 칠 사람이 없다 — 헛스윙이다 */
     if (!mates.length) return { battle: st, ev: NOTHING };
-    const it = mates[Math.floor(rand() * mates.length) % mates.length];
+    /*
+      화면이 스윙을 시작할 때 골라 뒀으면 **그 사람**이다 (`ally`).
+
+      그 사이에 쓰러졌으면 (스윙 하나가 300ms 쯤 된다) 여기서 다시 고른다 —
+      시체를 때리면 피해가 어디로 갔는지 설명할 수 없다.
+    */
+    const aimed = ally ? mates.find((c) => c.id === ally) : undefined;
+    const it = aimed ?? mates[Math.floor(rand() * mates.length) % mates.length];
     const hurt = Math.max(1, strikeFor(
       mine.atk, rollCrit(mine, rand, hexOf(st.hex, who)),
       liveArmor(it, hexOf(st.hex, it.id)), blowOf(me.id),

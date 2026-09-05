@@ -834,8 +834,21 @@ export function BattleView({ top, corner }: Props = {}) {
    * 담아 둔다 — 그래야 날아가 꽂힌 놈과 체력이 닳는 놈이 같아진다.
    */
   const aimed = useRef<Record<string, number>>({});
+  /**
+   * 혼란에 걸린 사람이 **이번 스윙에 치기로 한 아군** — 이름표 → 이름표.
+   *
+   * 위의 `aimed` 와 하는 일이 같다. 적 대신 아군을 담을 뿐이고, 그래서
+   * 담기는 순간도 같다 — **스윙이 시작할 때** (`Fighter` 의 `onAim`).
+   *
+   * 여기가 비어 있으면 계산이 제 손으로 고른다 (`core/autoBattle` 의
+   * `applyHit`). 그 경우 대상이 정해지는 순간이 주먹이 닿는 순간이라,
+   * 화면은 스윙이 다 끝난 뒤에야 누구를 쳤는지 알게 된다.
+   */
+  const aimedAlly = useRef<Record<string, string>>({});
   /** 아군 줄의 자리 재는 함수 — 렌더마다 최신으로 갈아 끼운다 (`spotOf` 와 짝) */
   const allyRightRef = useRef<(back: number) => number>(() => 0);
+  /** 그 자리 아군의 **몸 한가운데**가 무대 어디인가 — 돌아서서 겨눌 때 쓴다 */
+  const allyMidRef = useRef<(back: number) => number>(() => 0);
   /** 그 사람이 파티 줄 몇 번째 뒤에 서 있나 */
   const backRef = useRef<Record<string, number>>({});
   /** 이번 박자에 날릴 것들을 재는 함수 — 렌더마다 최신으로 갈아 끼운다 */
@@ -1001,6 +1014,25 @@ export function BattleView({ top, corner }: Props = {}) {
     여기서 말해야 하는 것은 **누가 맞았나** 하나다. 무기별로 갈래를 만들면
     갈래만 넷이 늘고 화면에서 달라지는 것은 없다.
   */
+  /**
+   * ── 돌아선 사람이 **지금 겨누고 있는 아군** ── 이름표 → 이름표.
+   *
+   * `onAim` 이 스윙을 시작할 때 채우고, 여기가 곧 몸이 어느 쪽을 보는지다
+   * (`faceLeft`). 맞은 뒤에 오는 `charmHit` 과 다른 값이다 — 저건 "누구를
+   * 쳤나"(과거)이고 이건 "누구를 치려는가"(지금)라, 돌아서는 시점이 한
+   * 스윙만큼 다르다.
+   *
+   * 혼란이 풀리면 통째로 비운다. 안 비우면 다음에 걸렸을 때 지난번 겨누던
+   * 쪽을 보고 서 있다가 첫 스윙에 홱 돌아선다.
+   */
+  const [charmAt, setCharmAt] = useState<Record<string, string>>({});
+  const charmOn = !!battle.charm && battle.charm.ms > 0;
+  useEffect(() => {
+    if (charmOn) return;
+    aimedAlly.current = {};
+    setCharmAt((old) => (Object.keys(old).length ? {} : old));
+  }, [charmOn]);
+
   const charmHit = useBattleUi((s) => s.charmHit);
   const lastCharmHit = useRef<Record<string, number>>({});
   useEffect(() => {
@@ -1420,6 +1452,49 @@ export function BattleView({ top, corner }: Props = {}) {
    * 달라진다.
    */
   const onAim = React.useCallback((id: string, skill: boolean) => {
+    const back = backRef.current[id] ?? 0;
+    /*
+      ── 돌아섰으면 아군을 겨눈다 ──
+
+      **여기서 고르는 것이 핵심이다.** 여태 계산이 주먹 닿는 순간에 굴렸고
+      (`applyHit`), 화면은 다 때린 뒤에야 누구를 쳤는지 알았다. 그래서
+      스윙 내내 적 쪽을 보고 서 있다가 끝나고 나서 돌아섰고, 다음 스윙은
+      또 새로 굴리니 늘 한 박자 늦은 쪽을 보고 있었다.
+
+      골라서 두 곳에 남긴다.
+        · `aimedAlly` — 잠시 뒤 `onSwing` 이 꺼내 계산에 넘긴다.
+          그래야 화면이 돌아본 쪽과 체력이 닳는 쪽이 같다
+        · `charmAt`  — 그리는 쪽이 본다 (`faceLeft`). 상태라서 이 한 줄이
+          곧 몸이 뒤집히는 순간이다
+
+      쓰러진 사람은 안 고른다. 혼자 남았으면 아무도 안 고르고 (그때는
+      계산도 헛스윙으로 끝낸다) 예전처럼 적을 겨눈 값을 돌려준다.
+
+      **기술은 여기 안 들어온다** (`skill`). 혼란이 막는 것은 평타뿐이고
+      (`applyHit` 의 혼란 갈래 — `applySkill` 에는 그 갈래가 없다), 기술은
+      걸린 채로도 적에게 그대로 나간다. 여기서 같이 돌려세우면 화살비는
+      적을 치는데 화살만 아군 쪽으로 날아간다.
+    */
+    const b = now.current.battle;
+    if (!skill && b.charm && b.charm.ms > 0 && b.charm.who.includes(id)) {
+      const mates = members(now.current.party, now.current.chars)
+        .filter((c) => c.id !== id && hpOf(c, b.hp) > 0);
+      if (mates.length) {
+        const it = mates[Math.floor(Math.random() * mates.length) % mates.length];
+        aimedAlly.current[id] = it.id;
+        setCharmAt((old) => (old[id] === it.id ? old : { ...old, [id]: it.id }));
+        /*
+          날아가는 것도 **그쪽으로** 간다.
+
+          왼쪽에 선 아군을 겨누면 이 값이 음수이고, `SwordWave` 는 그만큼
+          왼쪽으로 옮긴다 (`translateX`). 안 그러면 돌아선 궁수의 화살만
+          혼자 적 줄로 날아간다.
+        */
+        const at = backRef.current[it.id] ?? 0;
+        return Math.round(allyMidRef.current(at) - allyRightRef.current(back));
+      }
+    }
+
     const foes = Math.max(1, foeAt.current.count);
     /* 목록 자리 → 무대 자리. 죽어도 안 움직이므로 둘이 다르다 */
     const posAt = (i: number) => foeAt.current.pos[i] ?? 0;
@@ -1433,7 +1508,6 @@ export function BattleView({ top, corner }: Props = {}) {
     aimed.current[id] = at;
 
     const spot = spotOf(posAt(at));
-    const back = backRef.current[id] ?? 0;
     /*
       검끝에서 적의 **몸 가운데**까지.
 
@@ -1468,6 +1542,15 @@ export function BattleView({ top, corner }: Props = {}) {
       **꺼내면서 지운다.** 남겨 두면 다음 근접 평타가 지난번 화살이 노렸던
       자리를 물려받는다.
     */
+    /*
+      ── 돌아서서 아군을 친 스윙인가 ──
+
+      `onAim` 이 골라 둔 아군을 꺼낸다. **꺼내면서 지운다** — 남겨 두면
+      혼란이 풀린 뒤의 평타가 지난번 아군을 물려받는다.
+    */
+    const ally = aimedAlly.current[sw.id] ?? null;
+    delete aimedAlly.current[sw.id];
+
     const saved = aimed.current[sw.id];
     delete aimed.current[sw.id];
     const live = now.current.battle.foes.length;
@@ -1486,7 +1569,19 @@ export function BattleView({ top, corner }: Props = {}) {
     */
     const shielded = (now.current.battle.foes[at]?.gim?.shield ?? 0) > 0;
     /* 이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 (`Swing.mul`) */
-    strikeFoe(sw.id, at, sw.mul);
+    strikeFoe(sw.id, at, sw.mul, ally);
+
+    /*
+      ── 아군을 친 대는 **적 쪽에 아무것도 안 그린다** ──
+
+      여태 혼란이든 아니든 적 자리에 불꽃과 피해 숫자를 띄우고 무대를
+      흔들었다. 그런데 그 한 대는 적에게 안 들어간다 (`applyHit` 이 `hit` 을
+      0 으로 돌려준다) — 체력은 그대로인데 숫자만 뜨니, 보는 쪽에서는 적이
+      안 죽는 이유를 알 수가 없다.
+
+      맞은 아군 쪽 연출은 따로 온다 (`charmHit` → `bodyFx` 의 발톱 자국).
+    */
+    if (ally) return;
 
     const key = hitSeq.current++;
     /* 같은 자리에서 터지면 여러 개가 하나로 보인다 — 조금씩 흩는다 */
@@ -2227,18 +2322,37 @@ export function BattleView({ top, corner }: Props = {}) {
   /**
    * 돌아선 이 사람이 **왼쪽을 보아야 하나.**
    *
-   * 방금 친 아군이 내 왼쪽에 서 있으면 그렇다 (`charmHit`). 그 사람이
-   * 지금 대형 어디에 섰는지는 자리 목록에서 찾는다 — 대형이 바뀌면
-   * 좌표도 같이 바뀌므로 저장해 둘 수가 없다.
+   * ## 겨눈 쪽을 본다 — 친 쪽이 아니라
    *
-   * 아직 한 대도 안 쳤으면 **왼쪽에 누가 있기만 하면** 돌아선다. 돌아선
-   * 순간부터 첫 스윙까지는 누구를 칠지 알 방법이 없는데, 그 사이 내내
-   * 적을 보고 서 있으면 머리 위 딱지만 붙은 멀쩡한 사람으로 보인다.
+   * 세 군데를 차례로 묻는다.
+   *
+   *   1. `charmAt`  지금 겨누고 있는 아군 (`onAim` 이 스윙 시작에 채운다)
+   *   2. `charmHit` 마지막으로 실제 친 아군 (`state/battleUi`)
+   *   3. 어림짐작   왼쪽에 살아 있는 아군이 있나
+   *
+   * **1번이 없으면 안 맞는다.** 2번만 보던 때는 늘 한 스윙 늦은 쪽을 보고
+   * 있었다 — 대상은 매번 새로 굴리므로 (`applyHit`), 지난번에 왼쪽을 쳤다는
+   * 것이 이번에도 왼쪽이라는 뜻이 아니다. 뒤에 선 아군을 때리면서 앞을 보고
+   * 있던 것이 그래서다.
+   *
+   * 2번은 첫 스윙이 아직 시작되지 않은 아주 짧은 사이를 메운다. 3번은
+   * 돌아선 바로 그 순간용이다 — 그때는 아무도 아무것도 모르는데, 그 사이
+   * 내내 적을 보고 서 있으면 머리 위 딱지만 붙은 멀쩡한 사람으로 보인다.
+   *
+   * 앞줄이 오른쪽이다 (`formLayout` — 앞뒤가 곧 좌우다). 그래서 앞줄에 선
+   * 사람이 뒷줄을 겨누면 이 값이 참이 된다.
    */
   const faceLeft = (id: string, me: number): boolean => {
+    const seatOf = (who: string) => spots.findIndex((sp) => sp.c.id === who);
+
+    const aim = charmAt[id];
+    if (aim) {
+      const at = seatOf(aim);
+      if (at >= 0) return allyXOf(at) < allyXOf(me);
+    }
     const hit = charmHit[id];
     if (hit) {
-      const at = spots.findIndex((sp) => sp.c.id === hit.id);
+      const at = seatOf(hit.id);
       if (at >= 0) return allyXOf(at) < allyXOf(me);
     }
     return spots.some((o2, oi) => (
@@ -2283,6 +2397,8 @@ export function BattleView({ top, corner }: Props = {}) {
     한 번만 만들고, 바뀌는 값은 ref 로 건넨다.
   */
   allyRightRef.current = (back: number) => allyRightOf(back);
+  /* 돌아서서 겨눌 때 찍는 점 — 적을 겨눌 때와 같이 **몸 가운데**다 (`onAim`) */
+  allyMidRef.current = (back: number) => allyRightOf(back) - allySizeOf(back) / 2;
   /*
     ── 1판 뭉개기가 건너갈 거리 ──
 
