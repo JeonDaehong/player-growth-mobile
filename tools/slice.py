@@ -43,7 +43,7 @@
   inset                 셀 네 변을 이 비율만큼 깎는다. 흰 배경 시트를 invert 하면
                         칸 테두리가 흰 액자로 남는데, 그걸 없애는 데 쓴다.
 """
-import json, os, sys
+import json, os, re, sys
 from PIL import Image
 import numpy as np
 
@@ -51,12 +51,29 @@ OUT = 'assets/sprites'
 CFG = 'tools/sprites.config.json'
 
 """
-원본 시트를 찾을 폴더.
+원본 시트를 찾을 폴더 — **새것부터.**
 
-**설정 파일의 `_srcDirs` 를 읽는다.** 예전에는 이 목록이 여기 하드코딩돼 있었고,
-설정에도 같은 이름의 키가 따로 있었다. 두 벌이 갈라져 있으니 새 시트를 받아
-설정에만 폴더를 더하면 슬라이서는 계속 "원본 없음" 이라고 했다 — 실제로 그렇게
-한 번 막혔다.
+## 스스로 찾는다
+
+`assets/` 아래 **날짜로 시작하는 폴더**를 전부 집는다 (`2026-09-05`,
+`2026-09-02-001` …). 설정의 `_srcDirs` 도 계속 읽지만 이제는 덤이다 —
+그림을 받아 넣는 날마다 사람이 목록에 한 줄을 더해야 하는 구조였고, 그걸
+빠뜨리면 슬라이서는 **아무 말 없이 옛 그림을 계속 쓴다.**
+
+## 순서가 규칙이다 — 새 폴더가 이긴다
+
+같은 이름의 시트가 여러 폴더에 있으면 **제일 새 폴더 것**을 쓴다
+(`sorted(..., reverse=True)` — 폴더 이름이 ISO 날짜로 시작하므로 글자
+순서가 곧 날짜 순서다).
+
+여태는 설정에 적힌 **순서대로** 뒤져서 처음 찾은 것을 썼다. 그래서
+`2026-09-02-001/30-boss.jpg` 가 목록 앞쪽에 있는 한, 그 뒤 어느 폴더에 새
+시트를 넣어도 영영 안 쓰였다 — 30판 우두머리가 몇 번을 다시 그려 넣어도
+정면을 보고 서 있던 것이 이것이다. 슬라이서는 매번 "5칸 잘랐다" 고 말했고,
+결과 파일은 늘 같았다.
+
+같은 시트를 여러 날에 걸쳐 다시 받는 일이 이 프로젝트의 기본 흐름이므로
+(프롬프트를 고쳐 다시 뽑는다), **새것이 이기는 쪽**이 유일하게 맞는 규칙이다.
 
 없는 폴더는 걸러 낸다. 지운 폴더가 목록에 남아 있어도 그냥 넘어가면 되고,
 그것 때문에 멈출 이유가 없다.
@@ -64,11 +81,19 @@ CFG = 'tools/sprites.config.json'
 
 
 def _src_dirs():
+    dirs = []
     try:
         cfg = json.load(open(CFG, encoding='utf-8'))
+        dirs += [os.path.normpath(d) for d in cfg.get('_srcDirs', []) if os.path.isdir(d)]
     except Exception:
-        return []
-    return [d for d in cfg.get('_srcDirs', []) if os.path.isdir(d)]
+        pass
+    if os.path.isdir('assets'):
+        for name in sorted(os.listdir('assets')):
+            path = os.path.join('assets', name)
+            if os.path.isdir(path) and re.match(r'^\d{4}-\d{2}-\d{2}', name):
+                dirs.append(os.path.normpath(path))
+    # 새 폴더가 앞에 오게 — 폴더 이름이 날짜라 글자 순서가 곧 날짜 순서다
+    return sorted(set(dirs), key=os.path.basename, reverse=True)
 
 
 SRC_DIRS = _src_dirs()
