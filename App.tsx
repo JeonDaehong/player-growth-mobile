@@ -32,6 +32,7 @@ import { BLACK, MONO, WHITE } from '@/ui/theme';
 import { applyWebTextRendering } from '@/ui/webText';
 import { applyWebViewport } from '@/ui/webViewport';
 import { InstallBar } from '@/ui/InstallBar';
+import { Crash } from '@/ui/Crash';
 
 import AuthScreen from '@/screens/AuthScreen';
 import HomeScreen from '@/screens/HomeScreen';
@@ -253,7 +254,16 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: BLACK }}>
       <SafeAreaProvider>
-        <Root />
+        {/*
+          그리다 던진 것을 받는 한 겹 (`ui/Crash`).
+
+          `SafeAreaProvider` **안**에 둔다 — 잡는 화면도 노치를 피해 그려야
+          하고, 밖에 두면 붙잡는 순간 provider 까지 같이 날아가서 잡는
+          화면이 화면 맨 위에 걸린다.
+        */}
+        <Crash>
+          <Root />
+        </Crash>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

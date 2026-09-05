@@ -1434,8 +1434,6 @@ function Ripple({ size }: { size: number }) {
       extrapolate: 'clamp',
     }),
   })), [t]);
-
-  if (!on) return null;
   /*
     ── 몸도 옅게 물든다 ──
 
@@ -1445,10 +1443,23 @@ function Ripple({ size }: { size: number }) {
 
     0.08~0.20 이다. 더 진하면 우두머리 몸이 통째로 물들어서, 정작 깨야 하는
     막(체력 막대 위의 하늘색 겹)과 그 아래 몸이 안 보인다.
+
+    ⚠ **`if (!on)` 위에 있어야 한다.** 아래에 두었더니 게임이 통째로
+    회색 화면이 되었다 — 22판(`veil`)과 17판(`hollow`)에서 나던 그 버그다.
+
+    `useRun` 은 760ms 뒤에 `on` 을 끄고, 그 순간 이 함수는 `useMemo` 를
+    하나 덜 부른 채 끝난다. React 는 훅을 **부르는 순서로만** 세므로
+    (이름이 없다) 한 번이라도 개수가 줄면 "Rendered fewer hooks than
+    expected" 로 던지고, 이 화면에는 잡아 줄 ErrorBoundary 가 없어서
+    루트까지 통째로 언마운트된다. 그게 사용자가 본 회색 화면이다.
+
+    조건부로 끝내는 곳 **위**에 훅을 다 모아 두는 것이 유일한 규칙이다.
   */
   const body = useMemo(() => t.interpolate({
     inputRange: [0, 0.5, 1], outputRange: [0.08, 0.20, 0.08],
   }), [t]);
+
+  if (!on) return null;
 
   const w = size * 1.1;
   return (
