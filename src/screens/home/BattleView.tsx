@@ -670,45 +670,77 @@ export function BattleView({ top, corner }: Props = {}) {
     **열쇠만 이어 붙인 글자를 같이 만든다.** 배열은 매번 새로 만들어지므로
     참조로는 "바뀌었나" 를 물을 수가 없다 (`Fighter` 의 `markKey`).
 
-    ## 같은 것은 **한 사람만** 말한다
+    ## 걸린 사람마다 제 머리 위에 뜬다
 
-    파티 전체에 걸리는 것이 많다 — 요정의 축제는 넷에게 `공격속도 증가` 와
-    `미니 화살 추가타` 를 한꺼번에 걸고, 우두머리 전원기도 넷을 같이 물들인다.
-    그때 넷이 각자 제 머리 위에 같은 글을 띄우면 여덟 줄이 한꺼번에 뜬다.
+    파티 전체에 걸리는 것이 많다 — 요정의 축제는 넷에게 한꺼번에 걸고,
+    우두머리 전원기도 넷을 같이 물들인다. 그러면 넷이 각자 제 머리 위에
+    같은 글을 띄우는데, 그게 맞다: **누구에게 걸렸나가 이 줄이 하는 말의
+    절반**이다.
 
-    한글은 글자가 전각이라 여덟 자짜리 한 줄이 인물 두 배 폭이다. 넷이 겨우
-    50px 씩 떨어져 서 있으므로, 같은 글 넷은 반드시 서로 맞붙어
-    `미니 화살 추가타미니 화살 추가타` 같은 덩어리가 된다 — 높이를 어긋내
-    봐도 (`noteLiftOf`) 두 줄에 둘씩 붙을 뿐이다.
+    겹침은 높이로 푼다 (`noteLiftOf`). 문구를 짧게 유지하는 것도 같은
+    이유다 (`core/status` 의 `STATUS_WHAT` — 두세 낱말).
 
-    **그래서 이미 나온 것은 뒷사람이 안 말한다.** 이 줄이 하는 말은 "이게
-    지금 걸렸다" 하나이고, 그건 한 번만 들으면 된다. 누구에게 걸렸는지는
-    파티 칸의 로고가 사람마다 따로 그린다 (`PartyBar` → `StatusRow`) —
-    저기는 늘 있는 자리라 겹칠 일이 없다.
+    ## 한동안 **한 사람만** 말하게 했다 — 물렀다
+
+    넷이 같은 글을 동시에 띄우면 맞붙어 읽을 수 없으므로, 앞사람이 이미
+    말한 것은 뒷사람이 건너뛰게 했다. 겹침은 사라졌는데 대신 **넷에게 걸린
+    버프가 한 사람 것으로 보였다** — 판이 열릴 때 슬롯 1번 머리 위에만 석
+    줄이 쌓이고 나머지 셋은 조용했다. 실제로 "왜 한 명한테만 뜨냐" 는 말을
+    들었다.
+
+    걸린 사람을 숨겨서 겹침을 푸는 것은 너무 비싸다. 겹침은 **높이로**
+    푼다 (`noteLiftOf` — 가로 순서대로 세 줄을 돌려 쓴다).
+
+    적 쪽은 여전히 한 마리만 말한다 (`foeNoteOf`). 거긴 사정이 다르다 —
+    도발은 **판 전체에 하나** 걸리는 것이라 여섯 마리가 같은 말을 해도
+    새로 알려 주는 것이 없고, 잡몹은 40px 간격으로 붙어 선다.
   */
   const markOf = React.useMemo(() => {
     const out: Record<string, { marks: readonly Mark[]; key: string }> = {};
-    /* 앞사람이 이미 말한 것 — 파티 자리 순서대로 채워진다 */
-    const said = new Set<string>();
     for (const c of members(party, chars)) {
-      const mine: Mark[] = [];
-      for (const m of marksOf(
+      const mine = marksOf(
         c.id,
         hpOf(c, battle.hp),
         statOf(c).hp,
         hexOf(battle.hex, c.id),
         aliveLine,
         battle.fade,
-      )) {
+        battle.ward?.[c.id],
+      );
+      out[c.id] = { marks: mine, key: mine.map((m) => `${m.set}:${m.name}`).join(',') };
+    }
+    return out;
+  }, [party, chars, battle.hp, battle.hex, battle.fade, battle.ward, aliveLine]);
+
+  /**
+   * ── 적 쪽도 같은 규칙 ── **같은 것은 한 마리만 말한다.**
+   *
+   * 도발이 그랬다. 저건 판 전체에 걸리는 것이라 (`BattleState.taunt`) 서
+   * 있는 여섯 마리가 동시에 `도발` 을 띄웠고, 잡몹은 40px 간격으로 붙어
+   * 서므로 여섯 줄이 가로로 맞붙어 읽을 수 없는 덩어리가 되었다 — 아군 쪽에서
+   * 이미 겪은 일이다 (`markOf`).
+   *
+   * **로고는 마리마다 그대로 뜬다** (`FoeMarks`). 저기는 제 몸 아래 붙박이
+   * 자리라 겹칠 일이 없고, "누가 걸렸나" 는 거기서 읽는 것이 맞다. 여기서
+   * 줄이는 것은 **말**뿐이다.
+   */
+  const foeNoteOf = React.useMemo(() => {
+    const out: Record<number, { marks: readonly Mark[]; key: string }> = {};
+    const said = new Set<string>();
+    const tMs = battle.taunt?.ms ?? 0;
+    const tFoes = battle.taunt && battle.taunt.ms > 0 ? (battle.taunt.foes ?? []) : [];
+    for (const f of battle.foes) {
+      const mine: Mark[] = [];
+      for (const m of foeMarksOf(foeHexOf(battle.foeHex, f.id), tFoes.includes(f.id), tMs)) {
         const k = `${m.set}:${m.name}`;
         if (said.has(k)) continue;
         said.add(k);
         mine.push(m);
       }
-      out[c.id] = { marks: mine, key: mine.map((m) => `${m.set}:${m.name}`).join(',') };
+      out[f.id] = { marks: mine, key: mine.map((m) => `${m.set}:${m.name}`).join(',') };
     }
     return out;
-  }, [party, chars, battle.hp, battle.hex, battle.fade, aliveLine]);
+  }, [battle.foes, battle.foeHex, battle.taunt]);
 
   /** 판 연출 중인가 — 그동안은 아무도 안 휘두른다 (`Fighter` 의 `held`) */
   const held = fightHeld(battle);
@@ -901,7 +933,12 @@ export function BattleView({ top, corner }: Props = {}) {
    * 것으로 굳는다** — 무대를 아직 안 쟀을 때라 폭이 0 이다. 화살이 지나가는
    * 시각을 그 0 으로 나누면 맞는 놈들이 전부 같은 순간에 터진다.
    */
-  const crossRef = useRef({ w: 0, party: PARTY_W });
+  const crossRef = useRef<{
+    w: number;
+    party: number;
+    /** 그 자리 아군의 **활 끝**(오른쪽 끝)과 **가슴 높이**가 무대 어디인가 */
+    bow: (back: number) => { x: number; y: number };
+  }>({ w: 0, party: PARTY_W, bow: () => ({ x: 0, y: 0 }) });
   /** 이번 박자에 날릴 것들을 재는 함수 — 렌더마다 최신으로 갈아 끼운다 */
   const shotsRef = useRef<(hurt: string[]) => {
     key: number; art: string; x: number; y: number; size: number; dist: number;
@@ -1470,8 +1507,10 @@ export function BattleView({ top, corner }: Props = {}) {
     y: number;
     /** 띠 두께의 기준이 되는 몸 길이 */
     size: number;
-    /** 화살 그림 — 몇 px 짜리로, 어느 시트를 (`SkillDef.proj`) */
-    arrow: { set: string; name: string; size: number } | null;
+    /** 화살 그림 — 어느 시트를, 몇 px 로, 어디서 어디까지 (`GiantArrow`) */
+    arrow: {
+      set: string; name: string; size: number; from: number; to: number;
+    } | null;
     at: readonly { x: number; y: number; size: number; delay: number }[];
   } | null>(null);
   const pierceNo = useRef(0);
@@ -1817,39 +1856,41 @@ export function BattleView({ top, corner }: Props = {}) {
     */
     if ((sk.projMul ?? 1) >= 2 && sk.flies && spots.length) {
       /* 몸 길이의 몇 배로 그릴까 — 계산과 그림이 같은 값을 봐야 한다 */
-      const { w: stageNow, party: bodyW } = crossRef.current;
+      const { w: stageNow, party: bodyW, bow } = crossRef.current;
       const arrowSize = Math.round(bodyW * (sk.projMul ?? 1));
+      /* 쏘는 사람의 활 끝에서 나가 무대 오른쪽 밖으로 나간다 */
+      const shot = bow(backRef.current[id] ?? 0);
+      const goesTo = stageNow + Math.round(arrowSize * 0.4);
       const lead = spots.reduce((a, b) => (a.x < b.x ? a : b));
       pierceNo.current += 1;
       setPierce({
         no: pierceNo.current,
         /*
-          **맨 앞줄 가슴 높이 — 무대를 가로지르는 붙박이 한 줄이다.**
+          **쏘는 사람의 가슴 높이 — 거기서 곧게 나간다.**
 
-          제일 앞에 선 놈의 가슴이었다 (`lead.y + lead.size * 0.46`). 그러면
-          적이 어느 줄에 섰느냐에 따라 길이 오르내려서, 같은 궁극기가 판마다
-          다른 데를 지나갔다.
+          두 번 옮겼다. 처음엔 제일 앞에 선 적의 가슴이었고 (`lead.y + …`),
+          다음엔 무대 한가운데였다 (`STAGE_H * 0.5`). 앞엣것은 적이 어느
+          줄에 섰느냐에 따라 길이 오르내렸고, 뒤엣것은 저 상자가 423px 인데
+          아랫동네 185px 만 땅이라 (`Ground` 의 `GROUND_H`) **아무도 없는
+          하늘**을 가로질렀다.
 
-          무대 한가운데(`STAGE_H * 0.5`)로 잡아 봤다가 물렀다. 저 상자는
-          423px 인데 아랫동네 185px 만 땅이고 나머지는 하늘이라 (`Ground` 의
-          `GROUND_H`), 절반은 **인물들 머리 한참 위**다 — 화살이 아무도 없는
-          하늘을 가로질렀다.
-
-          바닥선에서 몸 길이의 절반쯤 올라온 자리가 맨 앞줄 가슴이고, 거기가
-          화면에서 싸움이 벌어지는 띠의 한가운데다.
+          쏘는 사람 몸에서 나가는 것이 맞다. 그러면 활에서 나가 곧게 지나가는
+          한 줄이 되고, 리안느가 어느 줄에 서든 그 사람 몸과 이어진다.
         */
-        y: STAGE_H - FLOOR - Math.round(bodyW * 0.55),
+        y: shot.y,
         size: lead.size,
         arrow: {
           set: sk.proj || projSet(me.id),
           name: projFrame(me.id),
           size: arrowSize,
+          from: shot.x,
+          to: goesTo,
         },
         at: spots.map((sp) => ({
           x: sp.x,
           y: sp.y,
           size: sp.size,
-          delay: crossDelay(sp.x, stageNow, arrowSize),
+          delay: crossDelay(sp.x, shot.x, goesTo),
         })),
       });
       /* 다 스러지면 비운다 — 안 비우면 마지막 것이 판이 끝날 때까지 붙어 있다 */
@@ -2531,15 +2572,36 @@ export function BattleView({ top, corner }: Props = {}) {
    * 여덟 자면 인물 두 배 폭이므로, 넷이 같은 높이에 서면 옆 사람 글과 맞붙어
    * 읽을 수 없는 덩어리가 된다 (`screens/home/HitFx` 의 `StatusNote`).
    *
-   * **가로로 왼쪽부터 센 순서**로 두 줄을 번갈아 쓴다. 자리 번호로 세면 안
+   * **가로로 왼쪽부터 센 순서**로 두 층을 번갈아 쓴다. 자리 번호로 세면 안
    * 된다 — 대형은 앞뒤로도 서므로 (`formLayout`) 0번과 2번이 가로로는 겨우
    * 43px 떨어져 있고, 그 둘의 홀짝이 같으면 그대로 맞붙는다.
+   *
+   * ## 층 간격이 **한 사람 몫보다 커야** 한다
+   *
+   * 여기가 여태 두 번 틀린 자리다. 26 이었다가 15 였는데, 둘 다 **한 사람이
+   * 쓰는 높이보다 작았다.** 한 사람에게 세 가지가 한꺼번에 걸리면 석 줄이
+   * 쌓이고 (`StatusNote` 의 `i * 12`) 그 덩어리가 36px 인데, 층을 15px 만
+   * 어긋내면 옆 사람 석 줄과 사이사이에 끼어 여섯 줄이 한 덩어리가 된다 —
+   * 실제로 판이 열릴 때 그렇게 보였다.
+   *
+   * 46 이다. 석 줄(36px)보다 크므로 이웃한 둘은 세로로 안 겹치고, 같은 층을
+   * 쓰는 것끼리는 (넷 중 1·3번째, 2·4번째) 가로로 120px 넘게 떨어진다 —
+   * 한 줄이 `공격속도 증가` 여섯 자(≈54px)라 어느 쪽으로도 안 붙는다.
+   *
+   * 제일 높은 줄이 머리 위 86px 이다 (16 + 24 + 46). 하늘이 238px 이므로
+   * (`Ground` 의 머리말) 위쪽 띠에 안 닿는다.
+   *
+   * ## 한동안은 아예 **한 사람만 말하게** 해서 피했다
+   *
+   * 그런데 그러면 넷에게 걸린 버프가 화면에서는 한 사람 것으로 보인다 —
+   * 실제로 "왜 한 명한테만 뜨냐" 는 말을 들었다. 겹치는 것을 푸는 값으로
+   * 걸린 사람을 숨기는 것은 너무 비쌌다.
    */
   const noteLiftOf = React.useMemo(() => {
     const order = spots.map((_sp, i) => i)
       .sort((a, b) => (form1.x[a] ?? 0) - (form1.x[b] ?? 0));
     const row: number[] = [];
-    order.forEach((seat, rank) => { row[seat] = (rank % 2) * 26; });
+    order.forEach((seat, rank) => { row[seat] = (rank % 2) * 46; });
     return row;
     /* `form1` 은 렌더마다 새로 만들어지므로 자리 배열 자체를 열쇠로 쓴다 */
   }, [spots, form1.x]);
@@ -2649,8 +2711,23 @@ export function BattleView({ top, corner }: Props = {}) {
   */
   const fit = fitOf(stageW, allyW1, foeW1);
   const partyW = PARTY_W * fit;
-  /* 거대 화살이 스킬 콜백 안에서 읽어 갈 자리 (`crossRef`) */
-  crossRef.current = { w: stageW, party: partyW };
+  /*
+    거대 화살이 스킬 콜백 안에서 읽어 갈 자리 (`crossRef`).
+
+    `partyW` 아래에 둔다 — 저 값을 그 자리에서 읽는다. 렌더 값을 콜백 안에서
+    바로 읽으면 첫 렌더의 것으로 굳는다 (무대를 아직 안 쟀을 때라 폭이 0 이다).
+  */
+  crossRef.current = {
+    w: stageW,
+    party: partyW,
+    bow: (back: number) => ({
+      x: allyRightOf(back),
+      /* 활은 몸 가운데쯤에 있다 — 발밑도 머리 위도 아니다 */
+      y: STAGE_H - FLOOR - depthAt(depthOf(back)).lift
+        - Math.round(allySizeOf(back) * 0.55),
+    }),
+  };
+
   const foeW = (cur.boss ? BOSS_W : FOE_W) * fit;
   const edge = EDGE * fit;
   /** 실제로 그리는 적 격자 — 배율을 먹인 값 */
@@ -3373,7 +3450,12 @@ export function BattleView({ top, corner }: Props = {}) {
                       것이 화면에 안 나온다 — 적 머리 위에는 로고만 있었고 그건
                       외운 사람만 읽는다.
                     */}
-                    <MarkNotes marks={fMarks} markKey={fKey} live={!held && !down} />
+                    <MarkNotes
+                      /* 말은 한 마리만 한다 (`foeNoteOf`) — 로고는 위에서 마리마다 */
+                      marks={foeNoteOf[f.id]?.marks ?? NO_MARK}
+                      markKey={foeNoteOf[f.id]?.key ?? ''}
+                      live={!held && !down}
+                    />
 
                     {/*
                       ── 우두머리가 스스로 채운 양 ──
@@ -3849,7 +3931,8 @@ export function BattleView({ top, corner }: Props = {}) {
                 set={pierce.arrow.set}
                 name={pierce.arrow.name}
                 size={pierce.arrow.size}
-                w={stageW}
+                from={pierce.arrow.from}
+                to={pierce.arrow.to}
                 y={pierce.y}
               />
             )}

@@ -61,85 +61,92 @@
 ### 프롬프트
 
 ```
-ABSOLUTE RULE — NO TEXT OF ANY KIND:
-- Do NOT write, print, label, caption, title, name, or number ANYTHING.
-- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
-- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
-- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
-- A cell containing even one letter-like mark is a failed output.
+NO TEXT. NO LETTERS. NO NUMBERS. NO LABELS. NO CAPTIONS. NO FRAME NUMBERS.
+Read that line again before you draw anything. An image with one letter-like
+mark anywhere in it is a failed output and must not be produced.
 
-SUBJECT: a 5-frame effect sheet in one row, left to right. It is ONE effect shown at 5
-moments in time, not 5 different pictures. Each cell is TALL — twice as high as it is wide.
+This is a horizontal strip of 5 panels. The panels are separated ONLY by empty
+black space. There is no dividing line between them, no border around them, no
+number in any corner, no word under any panel, and no title anywhere.
 
-THE EFFECT: a colossal two-handed sword of light plunging down from above, point first,
-and driving into the ground. Think of a holy execution blade called down from the sky.
+Below, each panel is described in words FOR YOU TO READ. Those words are
+instructions, not content. NONE of them may appear in the picture. Do not letter
+the panels. Do not number the panels. Do not write the description under the art.
 
-The blade is enormous and straight, with a broad flat fuller running down its center, a
-plain straight crossguard, and a simple wrapped grip with a round pommel. It is a WEAPON,
-not a beam — it has hard silhouette edges, and you could name every part of it.
+WHAT TO DRAW: one enormous two-handed sword made of light, plunging straight
+down point-first out of the sky and driving into the ground. One effect, shown at
+five moments in time, left to right. Every panel is TALL — twice as high as wide.
 
-The 5 cells, in this exact order:
+The sword: enormous, straight, with a broad flat groove running down the centre
+of the blade, a plain straight crossguard, a wrapped grip, a round pommel. It is
+a WEAPON with hard edges, not a glowing beam. You could name every part of it.
 
-Cell 1 — APPEARING. The sword hangs high in the cell, point down, occupying only the TOP
-THIRD. It is drawn in OUTLINE ONLY — thin white contour lines, hollow inside, as if not
-fully arrived. Three or four short straight rays angle down and outward from the pommel.
-Nothing at the bottom of the cell yet.
+First panel. The sword hangs high, point down, filling only the top third. Drawn
+in thin outline only, hollow inside, as if not fully arrived. Three or four short
+straight rays angle down and outward from the pommel. The bottom of the panel is
+empty.
 
-Cell 2 — FALLING. The same sword, now SOLID (white outline with dithered fill), dropping
-to fill the MIDDLE of the cell, point down, perfectly vertical. Two long straight streak
-lines trail vertically upward from the crossguard to the top edge of the cell — the path
-it fell through. The point has not touched anything.
+Second panel. The same sword, now solid — outline with dithered fill — dropped to
+the middle of the panel, point down, perfectly upright. Two long straight streaks
+trail upward from the crossguard to the top edge, marking the path it fell
+through. The point has touched nothing.
 
-Cell 3 — STRUCK. THE LARGEST CELL CONTENT. The sword is buried point-first: roughly the
-lower quarter of the blade is hidden, so what is drawn is the upper blade, crossguard,
-grip and pommel, running from the top of the cell down to about three quarters of the
-way down. At the buried point, a WIDE FLAT BURST of light spreads left and right — a
-low horizontal spray of straight tapered spikes, widest here, wider than the crossguard.
-Four or five straight rays also shoot upward alongside the blade.
+Third panel. The biggest moment. The point is buried: the lowest quarter of the
+blade is hidden, so what you see runs from the top of the panel down to about
+three quarters of the way. Where the point disappears, a WIDE FLAT SPRAY of light
+throws out sideways, left and right — straight tapered spikes, low and broad,
+wider than the crossguard. Four or five straight rays also shoot upward along the
+blade.
 
-Cell 4 — SPREADING. The sword is FADING — drawn again in OUTLINE ONLY, thinner than
-cell 1, and slightly shorter. The horizontal burst at its base has spread WIDER but
-broken into separated shards of clearly different lengths, no two the same, drifting
+Fourth panel. The sword is fading — outline only again, thinner than the first
+panel, and a little shorter. The sideways spray has travelled further out and
+broken into separate shards of clearly different lengths, no two alike, drifting
 outward and slightly upward.
 
-Cell 5 — GONE. No sword. Only a sparse scatter of small angular fragments and three or
-four short straight rays, spread across the lower half of the cell, no two alike, thin
-and few. Nothing solid is left.
+Fifth panel. The sword is gone. Only a sparse scatter of small angular fragments
+and three or four short straight rays across the lower half of the panel. Thin,
+few, no two alike. Nothing solid remains.
 
-COMPOSITION RULES:
-- Perfectly vertical. The blade never tilts in any cell.
-- The sword is CENTERED horizontally in every cell. It must not drift sideways.
-- Leave generous empty black space at the left and right of every cell.
-- The burst in cells 3 and 4 is WIDE AND FLAT — it spreads sideways, never into a circle
-  or a ring. No circles, no rings, no ellipses anywhere in this sheet.
+COMPOSITION:
+- Perfectly upright. The blade never tilts, in any panel.
+- The sword is centred left-to-right in every panel and never drifts sideways.
+- Leave generous empty black space either side of the sword in every panel.
+- The spray in panels three and four is WIDE AND FLAT. It spreads sideways.
+- No circles, no rings, no ellipses anywhere in this image.
 
 STYLE (strict, non-negotiable):
-- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
-- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- 1-bit monochrome pixel art. ONLY two colours: pure black #000000, pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO colour fringing.
 - Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
-- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
-- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
-- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
-- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+- Chunky, clearly visible square pixels — every pixel a crisp hard-edged square.
+- Background: solid pure black. Subject drawn in pure white outline and dithered fill.
+- NEVER put a white, light, or filled panel behind the subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game look. Think "Downwell", "Minit",
   and the 1-bit look of "Return of the Obra Dinn".
 - No watermarks, no signatures, no sparkle marks in the corners.
-- No borders or frames around the whole image.
+- No border or frame around the whole image.
 
 NEVER DRAW THE GROUND.
 
-The game draws its own floor under these sprites (a receding quarter-view plane) and
-composites the artwork on top of it. Anything floor-like inside a cell lands on the
-screen as a white slab sitting in mid-air.
+The game draws its own floor under these sprites (a receding quarter-view plane)
+and composites the artwork on top of it. Anything floor-like inside a panel lands
+on screen as a white slab sitting in mid-air.
 
-So there is NO ground line, NO horizon, NO floor plane, NO paving, NO grass, NO dirt,
-NO rubble, NO cracks, NO drop shadow, and NO dust lying on a surface. Not even a thin
-line under the blade.
+So there is NO ground line, NO horizon, NO floor plane, NO paving, NO grass, NO
+dirt, NO rubble, NO cracks, NO drop shadow, and NO dust lying on a surface. Not
+even a thin line under the blade.
 
-THE IMPACT IS SOLD BY THE BURST, NOT BY DRAWN GROUND. Where the description says the
-sword is "buried point-first" or "driving into the ground", it means: draw the blade
-ending at that height with the wide flat burst spreading from it, standing on nothing.
-The point simply stops, with pure black beneath it.
+THE IMPACT IS SOLD BY THE SPRAY, NOT BY DRAWN GROUND. Where the description says
+the sword is "buried point-first" or "driving into the ground", it means: draw the
+blade ending at that height with the wide flat spray throwing out from it,
+standing on nothing. The point simply stops, with pure black beneath it.
+
+FINAL CHECK BEFORE YOU OUTPUT:
+Scan the image you are about to produce. If you can find a letter, a digit, a word,
+a rune, a caption, a title, a signature, a panel number, or any mark that looks like
+writing in any language real or invented — remove it and produce the image without it.
 ```
+
 
 ### 들어오면 붙이는 자리
 

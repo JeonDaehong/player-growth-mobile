@@ -50,7 +50,21 @@ export type StatusId =
   | 'st_burn'     // 지옥불 — 불타는 지속 피해 (비앙카의 용암 지대)
   /* ── 좋은 것 ── */
   | 'st_rage'     // 격노 — 공격력 증가
-  | 'st_guard'    // 견고 — 방어력 증가
+  /*
+    견고 — 방어력 증가.
+
+    **아직 아무도 안 건다.** 낱말과 그림(`status_icon/st_guard`)만 있고,
+    이걸 거는 기술도 우두머리 기술도 없다.
+
+    자리를 남겨 두는 이유는 `STATUS_ALT` 와 같다 — 방어력을 올리는 것이
+    생기는 날 낱말부터 새로 만들지 않아도 된다. 지금 화면에 안 뜨는 것은
+    고장이 아니라 아무도 안 걸어서다.
+
+    수호의 결의의 보호막은 이게 아니다. 저건 체력 주머니라 상태로 안 두고
+    따로 센다 (`BattleState.ward`) — 머리 위 표시는 `core/passives` 의
+    `marksOf` 가 그 주머니를 보고 직접 만든다.
+  */
+  | 'st_guard'    // 견고 — 방어력 증가 (아직 안 쓰임)
   | 'st_regen'    // 재생 — 지속 회복
   | 'st_haste'    // 신속 — 공격속도 증가
   | 'st_focus'    // 집중 — 치명타 확률 증가 (리안느의 정령의 노래)
@@ -178,10 +192,26 @@ export const STATUS_ALT: Partial<Record<StatusId, string>> = {};
  */
 export const STATUS_WHAT: Record<StatusId, string> = {
   st_focus: '치명타 확률 증가',
-  st_ward: '나쁜 것 차단',
+  st_ward: '디버프 무효화',
   st_burn: '화상 지속 피해',
   st_leech: '피해 흡혈',
-  st_fey: '미니 화살 추가타',
+  /*
+    ── 빈 글자는 **아무 말도 안 한다** ── (`screens/home/HitFx` 의 `MarkNotes`)
+
+    요정의 축제는 한 번에 둘을 건다 — 신속과 이것이다. 그런데 둘이 같은
+    순간에 같은 사람 머리 위로 올라오므로 두 줄이 세로로 쌓이고, 그 위에
+    피해 숫자와 말풍선이 얹힌다. 넷이 다 걸리는 기술이라 화면이 그 순간
+    글자로 덮였다.
+
+    **둘 중 하나만 말한다.** 남긴 것은 `공격속도 증가` 쪽이다 — 저건 화면에서
+    박자가 눈에 띄게 빨라지는 것으로 이어지지만, 미니 화살은 이미 제 그림이
+    날아가고 제 숫자가 뜬다 (`HitFx` 의 `FeyDart`). 말로 한 번 더 할 이유가
+    없다.
+
+    로고는 그대로 뜬다 (`PartyBar` → `StatusRow`). 저기는 늘 있는 자리라
+    붐빌 일이 없고, "지금 이게 걸려 있다" 는 거기서 읽으면 된다.
+  */
+  st_fey: '',
   st_bleed: '지속 피해',
   st_poison: '지속 피해',
   st_stun: '행동 불가',
@@ -204,7 +234,7 @@ export const STATUS_WHAT: Record<StatusId, string> = {
   */
   st_taunt: '도발',
   st_rage: '공격력 증가',
-  st_guard: '방어력 증가',
+  st_guard: '방어력 증가',   // ⚠ 아직 아무도 안 건다 (`StatusId` 의 `st_guard`)
   st_regen: '지속 회복',
   st_haste: '공격속도 증가',
 };

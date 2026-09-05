@@ -100,6 +100,7 @@ export function HeroPopup({ visible, onClose }: { visible: boolean; onClose: () 
   const pendingParty = useGame((s) => s.pendingParty);
   const pendingForm = useGame((s) => s.pendingFormation);
   const clearPending = useGame((s) => s.clearPending);
+  const applyPending = useGame((s) => s.applyPending);
   const stage = useGame((s) => s.battle.stage);
   /* ⚠ 테스트용 — 아래 성 맞추기 단추가 쓴다. 출시 전에 같이 지운다 */
   const chars = useGame((s) => s.chars);
@@ -107,6 +108,8 @@ export function HeroPopup({ visible, onClose }: { visible: boolean; onClose: () 
   const toast = useGame((s) => s.toast);
 
   const [slot, setSlot] = useState<number | null>(null);
+  /* 저장을 누르면 뜨는 확인 창 — 판이 다시 서는 것은 되돌릴 수 없다 */
+  const [asking, setAsking] = useState(false);
 
   if (!visible) return null;
 
@@ -133,21 +136,41 @@ export function HeroPopup({ visible, onClose }: { visible: boolean; onClose: () 
         >
           <T size={FS.body} bold={waiting}>
             {waiting
-              ? '다음 판부터 이 편성으로 싸웁니다'
-              : '편성을 바꾸면 다음 판부터 들어갑니다'}
+              ? '저장해야 들어갑니다'
+              : '편성을 바꾸면 저장을 눌러야 들어갑니다'}
           </T>
           <T size={FS.tiny} dim="dim" style={{ marginTop: 2 }}>
             {waiting
-              ? `지금 ${stage}판은 바꾸기 전 편성 그대로 싸웁니다.`
-              : '판이 도는 중에는 안 바뀝니다 — 판을 어떻게 짤까를 정하는 자리이지, 지금 뭘 누를까를 정하는 자리가 아닙니다.'}
+              ? `지금 ${stage}판은 바꾸기 전 편성 그대로 싸웁니다. 저장하면 ${stage}판을 처음부터 다시 시작합니다.`
+              : '판이 도는 중에는 저절로 안 바뀝니다 — 판을 어떻게 짤까를 정하는 자리이지, 지금 뭘 누를까를 정하는 자리가 아닙니다.'}
           </T>
           {waiting && (
-            <Btn
-              label="짜 둔 편성 버리기"
-              size="sm"
-              style={{ marginTop: SP.xs, alignSelf: 'flex-start' }}
-              onPress={() => { sfx('tap'); clearPending(); }}
-            />
+            <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
+              {/*
+                ── 저장 ── **누르면 그 자리에서 들어간다.**
+
+                예약은 판이 바뀔 때 저절로 들어가지만 (`commitPending`), 그때가
+                언제인지가 사람 쪽에서는 안 보인다 — 마지막 판을 도는 사람은
+                판 번호가 안 바뀌므로 한참을 기다려야 하고, 기다리는 동안
+                "안 눌린 건가" 를 알 방법이 없다.
+
+                값은 **판을 다시 세우는 것**이다. 그래서 묻고 넣는다 —
+                한창 우두머리를 깎는 중에 눌러 놓고 나중에 알면 늦다.
+              */}
+              <Btn
+                label="저장"
+                size="sm"
+                fill
+                style={{ flex: 1 }}
+                onPress={() => { sfx('tap'); setAsking(true); }}
+              />
+              <Btn
+                label="짜 둔 편성 버리기"
+                size="sm"
+                style={{ flex: 1 }}
+                onPress={() => { sfx('tap'); clearPending(); }}
+              />
+            </Row>
           )}
         </View>
 
@@ -227,6 +250,43 @@ export function HeroPopup({ visible, onClose }: { visible: boolean; onClose: () 
 
       {/* 칸을 누르면 그 위에 겹쳐 열린다 */}
       <CharPopup slot={slot} onClose={() => setSlot(null)} />
+
+      {/*
+        ── 저장 확인 ──
+
+        묻는 이유는 하나다: **지금 판이 처음부터 다시 선다.** 되돌릴 수
+        없고, 우두머리를 반쯤 깎아 놓은 판이었다면 그 몫이 통째로 사라진다.
+
+        되돌릴 수 없는 것은 묻고 한다 — 이 게임에서 그 규칙을 지키는
+        자리가 여럿이다 (강화·정리).
+      */}
+      <Popup visible={asking} title="편성 저장" onClose={() => setAsking(false)}>
+        <T size={FS.body} bold>변경이 적용되고 해당 스테이지는 재시작됩니다</T>
+        <T size={FS.tiny} dim="dim" style={{ marginTop: SP.xs }}>
+          {`지금 ${stage}판을 처음부터 다시 시작합니다. 모아 둔 스킬 코스트와 걸려 있던 것은 사라지고, 쓰러진 사람은 다시 일어섭니다.`}
+        </T>
+        <Row gap={SP.xs} style={{ marginTop: SP.md }}>
+          <Btn
+            label="취소"
+            size="lg"
+            style={{ flex: 1 }}
+            onPress={() => { sfx('tap'); setAsking(false); }}
+          />
+          <Btn
+            label="확인"
+            size="lg"
+            fill
+            style={{ flex: 1 }}
+            onPress={() => {
+              sfx('tap');
+              applyPending();
+              setAsking(false);
+              /* 창을 닫는다 — 판이 다시 서는 것을 봐야 눌린 것이 보인다 */
+              onClose();
+            }}
+          />
+        </Row>
+      </Popup>
     </>
   );
 }

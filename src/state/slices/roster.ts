@@ -18,6 +18,7 @@ import { whyLocked } from '@/core/skillTree';
 import { optKey } from '@/core/skillOpt';
 import {
   BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, forceRage,
+  restartFor,
   leaveFor, TICK_MS,
 } from '@/core/autoBattle';
 import { useBattleUi } from '../battleUi';
@@ -35,6 +36,12 @@ export interface RosterActions {
    * 미루기로 했다 — 이유는 `state/types` 의 `pendingParty` 에 적어 두었다.
    */
   setFormation: (f: FormationId) => void;
+  /**
+   * 짜 둔 편성을 **그 자리에서** 들여보낸다 — 지금 판은 처음부터 다시 선다.
+   *
+   * 예약이 없으면 아무 일도 안 하고 `false`.
+   */
+  applyPending: () => boolean;
   /** 짜 둔 편성을 버린다 — 아직 안 들어간 것만 사라진다 */
   clearPending: () => void;
   /*
@@ -223,6 +230,32 @@ export const createRosterSlice = (
   setFormation: (f) => set({ pendingFormation: f }),
 
   clearPending: () => set({ pendingParty: null, pendingFormation: null }),
+
+  /*
+    ── 짜 둔 편성을 **지금 넣는다** ──
+
+    예약은 원래 판이 바뀔 때 저절로 들어간다 (`commitPending`). 그런데 그때가
+    언제인지가 사람 쪽에서는 안 보인다 — 마지막 판을 도는 사람은 판 번호가
+    안 바뀌므로 한참을 기다렸고, 기다리는 동안 "안 눌린 건가" 를 알 방법이
+    없었다.
+
+    그래서 **누르면 그 자리에서** 들어가는 길을 하나 낸다. 대신 지금 판은
+    처음부터 다시 선다 (`restartFor`) — 판 도중에 사람이 바뀌면 그동안 모은
+    코스트와 걸려 있던 것이 누구 것인지가 사라지고, 위험할 때마다 편성을
+    바꾸는 것이 늘 최선이 된다. 다시 세우는 값이 그걸 막는다.
+
+    **여기서 옮기지 않는다.** 막이 다 내려간 뒤 `enterStage` 가 돌면서
+    `costSeq` 가 오르고, 그것을 본 틱이 옮긴다 (`battleTickOnce`). 여기서
+    미리 옮기면 막이 내려가는 `MOVE_MS` 동안 새 편성이 옛 판에서 싸운다.
+  */
+  applyPending: () => {
+    const st = get();
+    if (st.pendingParty == null && st.pendingFormation == null) return false;
+    const next = restartFor(st.battle);
+    if (next === st.battle) return false;
+    set({ battle: next });
+    return true;
+  },
 
   setPartySlot: (slot, id) => {
     if (slot < 0 || slot >= PARTY_SIZE) return;

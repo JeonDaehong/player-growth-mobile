@@ -721,6 +721,8 @@ export interface GameActions {
   equipTitle: (t: TitleId | null) => void;
   /** 대형을 바꾼다 (`core/party` 의 `FORMATIONS`) */
   setFormation: (f: FormationId) => void;
+  /** 짜 둔 편성을 그 자리에서 들여보낸다 — 지금 판은 처음부터 다시 선다 */
+  applyPending: () => boolean;
   /** 가득 찬 게이지를 받는다 (`core/idle`) */
   claimIdle: () => boolean;
   /** 다이아로 게이지를 그 자리에서 채워 받는다 — 하루 세 번 */

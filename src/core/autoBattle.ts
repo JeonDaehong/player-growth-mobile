@@ -3316,6 +3316,23 @@ export function leaveFor(st: BattleState, stage: number): BattleState {
 }
 
 /**
+ * **지금 판을 처음부터 다시** 연다 — 판 번호는 그대로.
+ *
+ * `leaveFor` 와 하는 일이 같고 갈 곳만 제자리다. 저쪽은 같은 판을 고르면
+ * 아무 일도 안 하는데(`stage === st.stage`), 그건 `< >` 로 고르는 자리에서는
+ * 맞다 — 지금 판을 다시 누른다고 판이 되감기면 곤란하다.
+ *
+ * 여기는 반대다. **편성을 갈아 끼우고 그 자리에서 다시 세우는** 길이라
+ * (`state/slices/roster` 의 `applyPending`), 갈 곳이 제자리인 것이 목적이다.
+ *
+ * 화면을 먼저 덮는 것도 같다. 그 자리에서 갈아 치우면 서 있던 사람이
+ * 사라지고 새 사람이 튀어나오는 것이 그대로 보인다.
+ */
+export function restartFor(st: BattleState): BattleState {
+  return { ...st, clearIn: MOVE_MS, clearKind: 'move', goTo: st.stage };
+}
+
+/**
  * 자리별로 노려지는 확률. 앞에서부터 1·2·3·4번 자리.
  *
  * **앞에 설수록 많이 맞는다.** 그게 줄을 세우는 유일한 이유다 — 누가 앞에

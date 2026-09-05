@@ -1355,6 +1355,17 @@ export function MarkNotes({
         같은 이유로 효과 문구도 짧다 (`core/status` 의 `STATUS_WHAT`) —
         인물 하나 폭에 한 줄로 들어가야 한다.
       */
+      /*
+        ── 빈 글자는 안 띄운다 ──
+
+        로고는 뜨는데 **말은 안 하는** 것이 있다 (`core/status` 의
+        `STATUS_WHAT` — 지금은 요정 하나다). 한 기술이 둘을 한꺼번에 거는데
+        둘 다 말하면 좁은 머리 위에 두 줄이 쌓이기 때문이다.
+
+        `had` 에는 이미 넣었으므로 (위에서 `now.add`) 다음 프레임에 다시
+        걸리지도 않는다 — 여기서 걸러야 하는 것은 **말**뿐이다.
+      */
+      if (!m.what) continue;
       fresh.push({ key: seq.current++, text: m.what, good: m.good });
     }
     had.current = now;

@@ -314,6 +314,16 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     status={marksOf(
                       c.id, hpOf(c, hpMap), statOf(c).hp, hexOf(hexMap, c.id),
                       alive, fadeMap,
+                      /*
+                        **보호막은 안 넘긴다.** 여기는 바로 위에서 체력 막대
+                        아래에 하늘색 띠로 이미 그리고 있고, 저건 로고보다
+                        많은 말을 한다 — 걸렸나뿐 아니라 얼마나 남았나까지
+                        보인다. 로고를 하나 더 얹으면 같은 말이 두 번이다.
+
+                        무대 쪽은 반대라 넘긴다 (`BattleView` 의 `markOf`) —
+                        저기는 띠를 그릴 자리가 없어서, 안 넘기면 코스트
+                        10짜리 기술이 머리 위에 아무 말도 안 하고 지나간다.
+                      */
                     )}
                   />
 

@@ -256,14 +256,16 @@ export const CROSS_MS = 460;
 /**
  * 무대 가로 자리 `x` 를 화살촉이 지나가는 시각 (ms).
  *
- * 화살은 촉이 왼쪽 끝(0)에 있는 데서 시작해 오른쪽 끝을 지나 `size` 만큼 더
- * 간다. 맞는 놈마다 터지는 고리가 이 시각에 맞춰 열려야 (`PierceAura` 의
- * `delay`) 기운이 **화살을 따라** 번지는 것으로 보인다 — 한꺼번에 터뜨리면
- * 그냥 화면이 한 번 번쩍인다.
+ * @param from 화살촉이 출발하는 자리 — **쏘는 사람의 활** (`GiantArrow` 의 `from`)
+ * @param to   화살촉이 도착하는 자리 — 무대 오른쪽 밖
+ *
+ * 맞는 놈마다 터지는 고리가 이 시각에 맞춰 열려야 (`PierceAura` 의 `delay`)
+ * 기운이 **화살을 따라** 번지는 것으로 보인다 — 한꺼번에 터뜨리면 그냥
+ * 화면이 한 번 번쩍인다.
  */
-export function crossDelay(x: number, w: number, size: number): number {
-  const span = Math.max(1, w + size);
-  return Math.round(CROSS_MS * Math.min(1, Math.max(0, x / span)));
+export function crossDelay(x: number, from: number, to: number): number {
+  const span = Math.max(1, to - from);
+  return Math.round(CROSS_MS * Math.min(1, Math.max(0, (x - from) / span)));
 }
 
 /**
@@ -277,13 +279,21 @@ export function crossDelay(x: number, w: number, size: number): number {
  *           맞춘다 — `Sprite` 가 정사각 상자에 비율을 지켜 넣으므로
  *           (`contain`) 그림은 상자 한가운데에 놓인다
  */
-export function GiantArrow({ set, name, size, w, y }: {
+export function GiantArrow({ set, name, size, from, to, y }: {
   set: string;
   name: string;
   /** 몇 px 짜리로 그릴까 — 몸의 세 배다 (`SkillDef.projMul`) */
   size: number;
-  /** 무대 폭 */
-  w: number;
+  /**
+   * 화살촉이 출발하는 무대 자리 — **쏘는 사람의 활 끝**이다.
+   *
+   * 무대 왼쪽 밖(0)에서 시작했었다. "가로지른다" 는 그걸로 되지만, 화살이
+   * 리안느와 아무 상관 없는 데서 튀어나와 **누가 쐈는지가 화면에 없었다.**
+   * 쏘는 동작과 나가는 자리가 이어져야 한 사람이 한 일로 보인다.
+   */
+  from: number;
+  /** 화살촉이 도착하는 자리 — 무대 오른쪽 밖 */
+  to: number;
   y: number;
 }) {
   const t = useRef(new Animated.Value(0)).current;
@@ -301,10 +311,16 @@ export function GiantArrow({ set, name, size, w, y }: {
     return () => a.stop();
   }, [t]);
 
-  /* 촉이 왼쪽 끝에 선 데서 시작해 오른쪽 밖으로 나간다 */
+  /*
+    촉이 활 끝에 선 데서 시작해 오른쪽 밖으로 나간다.
+
+    상자는 정사각이고 그림이 그 안에 가로로 꽉 차므로 (`contain`), **촉은
+    상자의 오른쪽 끝**이다 — 그래서 상자를 `size` 만큼 왼쪽으로 물려 놓아야
+    촉이 `from` 에 선다.
+  */
   const fly = useMemo(() => t.interpolate({
-    inputRange: [0, 1], outputRange: [-size, w],
-  }), [t, size, w]);
+    inputRange: [0, 1], outputRange: [from - size, to - size],
+  }), [t, size, from, to]);
   /*
     **나갈 때만 스러진다.**
 
@@ -330,7 +346,18 @@ export function GiantArrow({ set, name, size, w, y }: {
         transform: [{ translateX: fly }],
       }}
     >
-      <Sprite set={set} name={name} size={size} />
+      {/*
+        ── 이 그림만 뒤집는다 ──
+
+        `elfarcher_dragon` 시트가 **촉이 왼쪽을 보고** 들어왔다. 평소 화살
+        (`elfarcher_shot`)은 오른쪽을 보고 있어서 `SwordWave` 는 원거리
+        것을 안 뒤집는데, 이 한 장만 반대다.
+
+        여기서 뒤집는 이유는 이 부품이 **거대 화살 하나만** 그리기 때문이다
+        (`SkillDef.projMul >= 2`). 시트를 다시 자르거나 `SwordWave` 의
+        규칙을 건드리면 평타 화살과 검기까지 같이 돌아눕는다.
+      */}
+      <Sprite set={set} name={name} size={size} flip />
     </Animated.View>
   );
 }

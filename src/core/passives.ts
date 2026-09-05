@@ -428,11 +428,39 @@ export function marksOf(
    * 사그라들 것도 없다.
    */
   fade?: Record<string, number>,
+  /**
+   * 지금 두르고 있는 **보호막** (`BattleState.ward` 의 이 사람 몫).
+   *
+   * 상태(`Hex`)가 아니라 따로 세는 체력 주머니라, 여기 주지 않으면 화면
+   * 어디에도 안 나온다 — 코스트 10짜리 수호의 결의를 쓰고도 파티 칸에
+   * 로고 하나 안 뜨고 머리 위에 한 줄도 안 떴다.
+   *
+   * 안 주면 없는 것으로 본다. 캐릭터 창 미리보기처럼 판이 안 도는 곳에서는
+   * 두를 것도 없다.
+   */
+  ward?: { hp: number; ms: number },
 ): readonly Mark[] {
   /* 쓰러진 사람에게는 아무것도 안 뜬다 — 시체에 붙은 버프는 거짓말이다 */
   if (cur <= 0) return NO_MARK;
 
   const good: Mark[] = [];
+  /*
+    ── 보호막이 제일 먼저 ──
+
+    이 사람에게 붙은 것 중 **제일 급한 것**이다. 남은 체력 위에 한 겹이
+    더 있다는 뜻이라, 이게 있고 없고가 지금 몇 대를 더 버티나를 바꾼다.
+
+    그림은 `status_icon/st_shield` 다 — `st_guard`(견고)와 다른 칸이다.
+    저건 방어력을 올리는 것이고 이건 **대신 맞아 주는 주머니**라, 같은
+    그림을 쓰면 둘이 같이 걸렸을 때 구분이 안 된다.
+  */
+  if (ward && ward.hp > 0 && ward.ms > 0) {
+    good.push({
+      set: 'status_icon', name: 'st_shield', good: true,
+      label: '보호막', what: '피해 흡수',
+      blink: dying(ward.ms),
+    });
+  }
   const mark = (p: PassiveDef, blink: boolean): Mark => ({
     set: 'passive_icon', name: p.art, good: true,
     label: p.name, what: p.short, blink,
