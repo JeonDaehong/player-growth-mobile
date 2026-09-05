@@ -31,6 +31,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, View } from 'react-native';
 
+import { Sprite } from '@/ui/Sprite';
 import { WHITE } from '@/ui/theme';
 
 /** 한 자리에서 기운이 퍼졌다 스러지는 데 걸리는 시간 (ms) */
@@ -225,5 +226,111 @@ export function PierceBand({ w, y, h }: { w: number; y: number; h: number }) {
           { scaleY: thin }],
       }}
     />
+  );
+}
+
+/**
+ * 거대 화살이 **무대를 가로지르는** 데 걸리는 시간 (ms).
+ *
+ * ## 왜 몸에서 안 그리나
+ *
+ * 다른 날아가는 것들은 인물 안에서 그린다 (`SwordWave`) — 그 사람이 선
+ * 자리에서 나가야 검과 따로 놀지 않기 때문이다. 그 대신 **날아가는 높이가
+ * 검끝 높이로 묶이고**, 거리도 노린 놈까지다.
+ *
+ * 거대 화살은 그 둘이 다 안 맞았다. 화살은 리안느 어깨 높이에서 나가 제일
+ * 가까운 놈 앞에서 멎었고, 길에 선 것을 전부 꿴다는 기술인데 화면에서는
+ * **줄의 앞부분만 지나갔다.** 크기를 세 배로 키워도(`SkillDef.projMul`)
+ * 지나간 거리가 짧으면 "가로질렀다" 가 안 된다.
+ *
+ * 그래서 이것만 **무대가 직접 그린다.** 무대 왼쪽 밖에서 들어와 오른쪽 밖으로
+ * 나가고, 높이는 화면 한가운데다 — 인물 위치와 상관없는 한 줄이라 어느
+ * 대형에서 쏘든 같은 길을 지난다.
+ *
+ * 460ms 다. 화살 한 대가 가는 시간(`SwordWave` 의 `WAVE_MAX_MS` — 260ms)보다
+ * 길게 잡았다. 저건 눈으로 좇을 필요가 없는 물건이지만 이건 **좇으라고**
+ * 그리는 것이라, 화면 폭을 지나가는 것이 눈에 남아야 한다.
+ */
+export const CROSS_MS = 460;
+
+/**
+ * 무대 가로 자리 `x` 를 화살촉이 지나가는 시각 (ms).
+ *
+ * 화살은 촉이 왼쪽 끝(0)에 있는 데서 시작해 오른쪽 끝을 지나 `size` 만큼 더
+ * 간다. 맞는 놈마다 터지는 고리가 이 시각에 맞춰 열려야 (`PierceAura` 의
+ * `delay`) 기운이 **화살을 따라** 번지는 것으로 보인다 — 한꺼번에 터뜨리면
+ * 그냥 화면이 한 번 번쩍인다.
+ */
+export function crossDelay(x: number, w: number, size: number): number {
+  const span = Math.max(1, w + size);
+  return Math.round(CROSS_MS * Math.min(1, Math.max(0, x / span)));
+}
+
+/**
+ * ── 무대를 가로지르는 거대 화살 ──
+ *
+ * 한 장을 등속으로 민다. `SwordWave` 와 같은 태도다 — 시트에 세 칸이 있지만
+ * 40px 로 줄여 지나가면 프레임이 안 읽히고, 이 크기에서는 **한 장을 잘
+ * 움직이는 쪽**이 낫다.
+ *
+ * @param y  화살촉이 지나가는 높이 (무대 좌표). 상자를 이 줄에 **가운데로**
+ *           맞춘다 — `Sprite` 가 정사각 상자에 비율을 지켜 넣으므로
+ *           (`contain`) 그림은 상자 한가운데에 놓인다
+ */
+export function GiantArrow({ set, name, size, w, y }: {
+  set: string;
+  name: string;
+  /** 몇 px 짜리로 그릴까 — 몸의 세 배다 (`SkillDef.projMul`) */
+  size: number;
+  /** 무대 폭 */
+  w: number;
+  y: number;
+}) {
+  const t = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    t.setValue(0);
+    const a = Animated.timing(t, {
+      toValue: 1,
+      duration: CROSS_MS,
+      /* 날아가는 물체는 등속이다 (`SwordWave` 에 같은 이야기가 있다) */
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+    a.start();
+    return () => a.stop();
+  }, [t]);
+
+  /* 촉이 왼쪽 끝에 선 데서 시작해 오른쪽 밖으로 나간다 */
+  const fly = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [-size, w],
+  }), [t, size, w]);
+  /*
+    **나갈 때만 스러진다.**
+
+    가는 도중에 옅어지면 무대 한가운데에서 증발한 것으로 보인다. 마지막
+    한 뼘에서만 꺼진다 — 그 구간은 이미 화면 밖이라 "지나갔다" 로 읽힌다.
+  */
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.86, 1], outputRange: [1, 1, 0],
+  }), [t]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: Math.round(y - size / 2),
+        width: size,
+        height: size,
+        /* 맞는 놈마다 터지는 고리(46)보다 위 — 지나가는 것이 앞장서야 한다 */
+        zIndex: 47,
+        opacity: fade,
+        transform: [{ translateX: fly }],
+      }}
+    >
+      <Sprite set={set} name={name} size={size} />
+    </Animated.View>
   );
 }

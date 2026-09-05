@@ -165,6 +165,20 @@ export function SwordWave({
   }, [nonce, t, dist]);
 
   if (!on) return null;
+  /*
+    ── 아주 큰 것은 **무대가 직접 그린다** ── (`PierceAura` 의 `GiantArrow`)
+
+    여기는 인물 안이라 두 가지가 몸에 묶인다: 나가는 높이가 검끝이고
+    (`TIP_Y`), 가는 거리가 노린 놈까지다. 손가락만 한 화살에는 그게 맞지만,
+    몸의 세 배짜리 거대 화살은 그 규칙 아래에서 **어깨 높이로 나가 제일
+    가까운 놈 앞에서 멎었다** — 길에 선 것을 전부 꿴다는 기술인데 화면에서는
+    줄의 앞부분만 지나갔다.
+
+    크기를 문턱으로 쓴다 (`SkillDef.projMul`). 꿰뚫는 기운을 켜는 조건과
+    **같은 값**이라 (`BattleView` 의 `onSkill`), 둘이 갈라져 화살은 몸에서
+    나가는데 고리만 무대에서 퍼지는 일이 안 생긴다.
+  */
+  if ((mul ?? 1) >= 2) return null;
 
   return (
     <Animated.View

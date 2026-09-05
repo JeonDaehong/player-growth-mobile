@@ -260,14 +260,24 @@ export const hpOf = (c: OwnedChar, hp: Record<string, number>): number => {
  *   2-2  뒤 ②④  · 앞 ②④     넷이 가운데 두 줄에 네모로 모인다
  *   1-3  뒤 ③   · 앞 ①③⑤    앞 셋이 위아래로 퍼지고 그 왼쪽에 하나가 선다
  *
- * ## 앞에 서는 사람은 누구인가
+ * ## 앞에 서는 사람은 누구인가 — **파티 칸 순서**다
  *
- * 고르게 하지 않는다. **막는 순서**가 그대로 앞줄이다 (`defenseOrder` — 방어가
- * 먼저, 그다음 공격, 마지막이 보조). 사람이 자리까지 고르게 하면 최적해가
- * 하나로 굳고, 그러면 대형을 고르는 일이 그 하나를 찾는 일이 된다.
+ * 오랫동안 `defenseOrder` 였다 (방어가 먼저, 그다음 공격, 마지막이 보조).
+ * 사람이 자리까지 고르면 최적해가 하나로 굳는다는 이유였다.
  *
- * 대형을 고르는 것으로 정하는 것은 **몇 명이 맞을 자리에 서나**다. 그게
- * 이 선택의 내용이다.
+ * 그런데 쓰는 쪽에서는 그게 **자리가 제멋대로 잡히는 것**으로 보였다. 역할
+ * 순서는 화면 어디에도 안 적혀 있고, 파티 칸을 아무리 바꿔 놔도 무대에 선
+ * 차례는 그대로다 — 대형을 바꿔도 "누가 앞에 서나" 는 손댈 수 없는 값이었다.
+ *
+ * 이제 **파티 칸 왼쪽부터 앞줄을 채운다.** `2-2` 면 1·2번 칸이 앞, 3·4번
+ * 칸이 뒤다. 자리를 바꾸는 방법은 이미 있다 — 파티 칸을 서로 맞바꾸면 된다
+ * (`state/slices/roster` 의 `setPartySlot`).
+ *
+ * 최적해가 굳는 걱정은 남지만, 그건 **고를 수 있어야 생기는 걱정**이다.
+ * 고를 수 없는 규칙은 최적해가 아니라 그냥 안 보이는 규칙이었다.
+ *
+ * 대형이 정하는 것은 그대로다 — **몇 명이 맞을 자리에 서나**
+ * (`FormationDef.frontAim`). 거기에 "그 자리에 누가 서나" 가 하나 붙었다.
  */
 export type FormationId = '3-1' | '2-2' | '1-3';
 
@@ -381,7 +391,7 @@ export interface FormSpot {
 /**
  * 지금 파티를 대형에 앉힌다.
  *
- * **앞줄부터 채운다** (`defenseOrder` 순서로). 파티가 덜 찼으면 뒷줄이 먼저
+ * **앞줄부터 채운다** (파티 칸 왼쪽부터). 파티가 덜 찼으면 뒷줄이 먼저
  * 빈다 — 둘뿐인 파티가 `3-1` 을 고르면 앞 하나 · 뒤 하나가 된다. 앞을 비우면
  * 뒷줄이 곧 앞줄이 되어 대형이 뜻을 잃는다.
  *
@@ -397,14 +407,47 @@ export function formationSpots(
   hp?: Record<string, number>,
 ): FormSpot[] {
   const def = FORMATIONS[form] ?? FORMATIONS[DEFAULT_FORMATION];
-  let line = defenseOrder(party, chars);
+  /*
+    **파티 칸에 놓인 순서 그대로다** (`members`).
+
+    `defenseOrder` 였다. 역할로 줄을 세우면 파티 칸을 어떻게 바꿔 놔도
+    무대의 차례가 안 변해서, 자리를 정하는 방법이 게임 안에 없었다.
+  */
+  let line = members(party, chars);
   if (hp) line = line.filter((c) => hpOf(c, hp) > 0);
 
-  const nFront = Math.min(def.front, line.length);
-  const front = line.slice(0, nFront);
-  const back = line.slice(nFront);
+  return formationSeats(form, line.length).map((s, i) => ({ c: line[i], ...s }));
+}
 
-  const seat = (list: readonly OwnedChar[], lanes: readonly number[], row: 'front' | 'back') => {
+/** 대형이 만든 자리 하나 — **누가 서는지는 모른다** */
+export interface FormSeat {
+  row: 'front' | 'back';
+  lane: number;
+}
+
+/**
+ * 이 대형에서 **몇 번째 파티 칸이 어디에 서나** — 사람 없이 자리만.
+ *
+ * 돌려주는 차례가 곧 파티 칸 차례다: 0 번이 1번 칸, 1 번이 2번 칸이다.
+ * 앞줄이 먼저 채워지므로 (`FormationDef.front`), `2-2` 면 1·2번 칸이 앞이고
+ * 3·4번 칸이 뒤다.
+ *
+ * ## 왜 사람과 갈라 놨나
+ *
+ * 대형 고르는 칸이 **자리마다 번호를 적어야** 하기 때문이다
+ * (`screens/home/FormationPicker`). 저기는 그리는 시점에 누가 설지를 알
+ * 필요가 없고 — 알아야 하는 것은 "1번 칸은 어느 점인가" 하나다.
+ *
+ * 저쪽에서 규칙을 다시 쓰면 둘이 갈라진다. 갈라져도 아무 데서도 안 터지고,
+ * 화면의 번호와 무대의 자리가 조용히 어긋난다 — 사람이 자리를 고르게 만든
+ * 뒤로는 그게 제일 나쁜 종류의 어긋남이다.
+ */
+export function formationSeats(form: FormationId, count: number): FormSeat[] {
+  const def = FORMATIONS[form] ?? FORMATIONS[DEFAULT_FORMATION];
+  const n = Math.max(0, Math.min(PARTY_SIZE, count));
+  const nFront = Math.min(def.front, n);
+
+  const seat = (take: number, lanes: readonly number[], row: 'front' | 'back'): FormSeat[] => {
     /*
       쓸 줄이 인원보다 많으면 가운데를 낀 만큼만 골라 쓴다.
 
@@ -412,13 +455,16 @@ export function formationSpots(
       — 목록의 한가운데를 기준으로 잘라 낸다. 그래야 어느 대형에서도 파티가
       화면 한가운데에 선다.
     */
-    const take = Math.min(list.length, lanes.length);
-    const from = Math.floor((lanes.length - take) / 2);
-    const use = lanes.slice(from, from + take);
-    return list.slice(0, take).map((c, i) => ({ c, row, lane: use[i] ?? 2 }));
+    const use2 = Math.min(take, lanes.length);
+    const from = Math.floor((lanes.length - use2) / 2);
+    const use = lanes.slice(from, from + use2);
+    return use.map((lane) => ({ row, lane }));
   };
 
-  return [...seat(front, def.frontLanes, 'front'), ...seat(back, def.backLanes, 'back')];
+  return [
+    ...seat(nFront, def.frontLanes, 'front'),
+    ...seat(n - nFront, def.backLanes, 'back'),
+  ];
 }
 
 /** 지금 앞줄에 선 사람들의 이름표 — 전투가 이걸로 맞을 확률을 가른다 */

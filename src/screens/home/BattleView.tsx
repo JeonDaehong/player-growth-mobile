@@ -69,7 +69,7 @@ import {
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
-  PIERCE_MS, PIERCE_SWEEP_MS, PierceAura, PierceBand, pierceDelay,
+  CROSS_MS, GiantArrow, PIERCE_MS, PierceAura, PierceBand, crossDelay,
 } from './PierceAura';
 import {
   BOSS_W, DEPTH_LIFT, EDGE, FOE_W, GROUND_H, Ground, PARTY_W, STAGE_H, ZOOM, depthAt,
@@ -286,6 +286,19 @@ function FuseWrap(
   if (ms === undefined || !Number.isFinite(ms)) return <>{children}</>;
   return <Fuse ms={ms}>{children}</Fuse>;
 }
+
+/**
+ * 흩어져 떨어지는 기술의 **한 발과 다음 발 사이** (ms).
+ *
+ * 화살비 하나가 쓴다 (`core/chars` 의 `rain` — `pick: 'random'`). 세 발이
+ * 같은 놈에게 몰릴 수 있는데 (`SkillDef.stack`), 한 프레임에 같이 꽂으면
+ * 화살 셋과 숫자 셋이 정확히 겹쳐 **한 대 맞은 것과 화면이 같아진다.**
+ *
+ * 150ms 다. 100 아래면 눈이 못 가르고 (한 번에 떨어진 것으로 보인다), 250 을
+ * 넘으면 마지막 발이 다음 평타와 섞인다 — 다섯 발까지 나가는 기술이라
+ * (강화한 화살비) 끝까지 0.6초 안에 들어와야 한다.
+ */
+const RAIN_GAP = 150;
 
 /** 한 줄이 먹는 높이 */
 const NUM_STEP = 12;
@@ -879,6 +892,16 @@ export function BattleView({ top, corner }: Props = {}) {
   const allyMidRef = useRef<(back: number) => number>(() => 0);
   /** 그 사람이 파티 줄 몇 번째 뒤에 서 있나 */
   const backRef = useRef<Record<string, number>>({});
+  /**
+   * 맨 앞 아군의 몸 길이와 무대 폭 — **거대 화살이 쓴다.**
+   *
+   * 렌더 값(`partyW`·`stageW`)을 그대로 읽으면 안 된다. 스킬 콜백은 딱 한 번
+   * 만들어져 `Fighter` 의 타이머에 물려 있으므로 (`onSkill` 의 갈래는
+   * `[skillFoe, shake, spotOf]` 뿐이다), 그 안에서 읽은 값은 **첫 렌더의
+   * 것으로 굳는다** — 무대를 아직 안 쟀을 때라 폭이 0 이다. 화살이 지나가는
+   * 시각을 그 0 으로 나누면 맞는 놈들이 전부 같은 순간에 터진다.
+   */
+  const crossRef = useRef({ w: 0, party: PARTY_W });
   /** 이번 박자에 날릴 것들을 재는 함수 — 렌더마다 최신으로 갈아 끼운다 */
   const shotsRef = useRef<(hurt: string[]) => {
     key: number; art: string; x: number; y: number; size: number; dist: number;
@@ -1437,15 +1460,42 @@ export function BattleView({ top, corner }: Props = {}) {
    */
   const [pierce, setPierce] = useState<{
     no: number;
-    /** 띠가 설 높이 — 맞는 놈들의 가슴 높이 */
+    /**
+     * 화살이 지나가는 높이 — **무대 한가운데**다.
+     *
+     * 맞는 놈들의 가슴 높이였다. 그러면 적이 어느 줄에 섰느냐에 따라 길이
+     * 오르내려서, 같은 기술이 판마다 다른 데를 지나갔다. 이건 인물이 아니라
+     * **화면을 가로지르는** 한 줄이므로 어디서 쏘든 같은 높이가 맞다.
+     */
     y: number;
     /** 띠 두께의 기준이 되는 몸 길이 */
     size: number;
+    /** 화살 그림 — 몇 px 짜리로, 어느 시트를 (`SkillDef.proj`) */
+    arrow: { set: string; name: string; size: number } | null;
     at: readonly { x: number; y: number; size: number; delay: number }[];
   } | null>(null);
   const pierceNo = useRef(0);
   const pierceT = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (pierceT.current) clearTimeout(pierceT.current); }, []);
+
+  /*
+    화살비의 **두 번째 발부터**를 미뤄 두는 시계들 (`RAIN_GAP`).
+
+    한 자리에 하나만 두면 안 된다 — 세 발이 각자 제 시계를 갖고, 다 떨어지기
+    전에 다시 쓰면 앞엣것들이 아직 돌고 있다. 모아 뒀다가 화면을 떠날 때 전부
+    끈다.
+
+    `aliveRef` 는 그 시계가 깨어났을 때 **이 화면이 아직 있나**를 묻는 자리다.
+    `setHits` 는 사라진 컴포넌트에서 불러도 조용히 무시되지만, 그 앞의
+    `shake.fire` 는 값을 건드린다.
+  */
+  const rainT = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const aliveRef = useRef(true);
+  useEffect(() => () => {
+    aliveRef.current = false;
+    rainT.current.forEach(clearTimeout);
+    rainT.current = [];
+  }, []);
 
   /**
    * 그 **자리**가 무대 어디인가 (목록 순서가 아니라 `FoeSlot.pos`).
@@ -1754,30 +1804,59 @@ export function BattleView({ top, corner }: Props = {}) {
       못 쓰는 것**만 여기 들어온다. 그래서 크기를 그대로 문턱으로 쓴다 —
       깃발을 하나 더 만들면 크기와 연출이 따로 놀 자리가 생긴다.
 
-      맞는 놈들을 한 묶음으로 넘긴다. 왼쪽 끝과 오른쪽 끝을 알아야
-      **왼쪽부터 차례로** 터뜨릴 수 있는데 (`pierceDelay`), 그 차례가 곧
-      "화살을 따라 기운이 흘렀다" 다.
+      맞는 놈들을 한 묶음으로 넘긴다. 화살촉이 그 자리를 지나는 시각에
+      맞춰 하나씩 터뜨려야 (`crossDelay`) 기운이 **화살을 따라** 흐르는
+      것으로 보인다.
+
+      ── 화살도 여기서 그린다 ──
+
+      인물 안에서 그리던 것을 무대로 옮겼다 (`SwordWave` 는 이 크기를 보고
+      비켜 준다). 까닭은 `PierceAura` 의 `CROSS_MS` 에 적어 두었다 — 요약하면
+      저기서는 **어깨 높이에서 나가 제일 가까운 놈 앞에서 멎어서**, 길에 선
+      것을 전부 꿴다는 기술이 화면에서는 줄의 앞부분만 지나갔다.
     */
     if ((sk.projMul ?? 1) >= 2 && sk.flies && spots.length) {
-      const xs = spots.map((sp) => sp.x);
-      const from = Math.min(...xs);
-      const to = Math.max(...xs);
-      /* 띠는 제일 앞에 선 놈의 가슴 높이에 건다 — 화살이 지나가는 높이다 */
+      /* 몸 길이의 몇 배로 그릴까 — 계산과 그림이 같은 값을 봐야 한다 */
+      const { w: stageNow, party: bodyW } = crossRef.current;
+      const arrowSize = Math.round(bodyW * (sk.projMul ?? 1));
       const lead = spots.reduce((a, b) => (a.x < b.x ? a : b));
       pierceNo.current += 1;
       setPierce({
         no: pierceNo.current,
-        y: lead.y + lead.size * 0.46,
+        /*
+          **맨 앞줄 가슴 높이 — 무대를 가로지르는 붙박이 한 줄이다.**
+
+          제일 앞에 선 놈의 가슴이었다 (`lead.y + lead.size * 0.46`). 그러면
+          적이 어느 줄에 섰느냐에 따라 길이 오르내려서, 같은 궁극기가 판마다
+          다른 데를 지나갔다.
+
+          무대 한가운데(`STAGE_H * 0.5`)로 잡아 봤다가 물렀다. 저 상자는
+          423px 인데 아랫동네 185px 만 땅이고 나머지는 하늘이라 (`Ground` 의
+          `GROUND_H`), 절반은 **인물들 머리 한참 위**다 — 화살이 아무도 없는
+          하늘을 가로질렀다.
+
+          바닥선에서 몸 길이의 절반쯤 올라온 자리가 맨 앞줄 가슴이고, 거기가
+          화면에서 싸움이 벌어지는 띠의 한가운데다.
+        */
+        y: STAGE_H - FLOOR - Math.round(bodyW * 0.55),
         size: lead.size,
+        arrow: {
+          set: sk.proj || projSet(me.id),
+          name: projFrame(me.id),
+          size: arrowSize,
+        },
         at: spots.map((sp) => ({
-          x: sp.x, y: sp.y, size: sp.size, delay: pierceDelay(sp.x, from, to),
+          x: sp.x,
+          y: sp.y,
+          size: sp.size,
+          delay: crossDelay(sp.x, stageNow, arrowSize),
         })),
       });
       /* 다 스러지면 비운다 — 안 비우면 마지막 것이 판이 끝날 때까지 붙어 있다 */
       if (pierceT.current) clearTimeout(pierceT.current);
       pierceT.current = setTimeout(
         () => setPierce(null),
-        PIERCE_MS + PIERCE_SWEEP_MS + 60,
+        CROSS_MS + PIERCE_MS + 60,
       );
     }
 
@@ -1835,9 +1914,53 @@ export function BattleView({ top, corner }: Props = {}) {
       };
       /* 바닥 폭발이 먼저 — 뒤에 오는 숫자가 그 위에 쌓인다 */
       for (const g of ground) put(g, 0, true);
-      for (const spot of spots) put(spot, dmg, false);
+      /*
+        ── 흩어져 떨어지는 것은 **한 발씩 시차를 두고** 꽂힌다 ──
+
+        화살비는 세 발(강화하면 다섯)이 따로 떨어지는 기술인데
+        (`core/chars` 의 `rain` — `hits`), 세 발이 같은 놈에게 몰릴 수
+        있다 (`SkillDef.stack`). 그때 셋을 한 프레임에 같이 꽂으면 화살
+        세 대와 숫자 셋이 정확히 겹쳐서 **한 대 맞은 것과 화면이 같다** —
+        정작 이 기술의 내용인 "여러 발" 이 안 보인다.
+
+        그래서 두 번째 발부터 `RAIN_GAP` 씩 미룬다. 다른 놈에게 흩어질
+        때도 왼쪽부터 툭툭 떨어지는 것으로 읽혀서 손해가 없다.
+
+        **미루는 것은 그림뿐이다.** 피해는 이미 위에서 한 번에 들어갔다
+        (`skillFoe`) — 화면이 계산을 미루면 그사이 죽은 놈에게 화살이
+        꽂히거나, 판이 넘어간 뒤에 숫자가 뜬다.
+      */
+      const drip = sk.pick === 'random' && spots.length > 1;
+      spots.forEach((spot, n) => {
+        if (drip && n > 0) return;
+        put(spot, dmg, false);
+      });
       return [...live, ...add];
     });
+    if (sk.pick === 'random' && spots.length > 1) {
+      spots.slice(1).forEach((spot, n) => {
+        rainT.current.push(setTimeout(() => {
+          /* 몸이 화면에서 빠졌으면 아무 데도 안 꽂는다 */
+          if (!aliveRef.current) return;
+          shake.fire(0.6);
+          setHits((old) => {
+            const live = old.slice(-6);
+            const f = now.current.battle.foes[idx[n + 1]];
+            return [...live, {
+              erupt: sk.cast === 'erupt',
+              id, fx: sk.fx ?? CHARS[me.id].fx,
+              dmg, key: hitSeq.current++, ...spot,
+              blast: false,
+              fey: 0,
+              arrow: CHARS[me.id].range === 'ranged' && !sk.flies ? projSet(me.id) : '',
+              row: rowFor(live, spot.x), born: Date.now(),
+              ping: (f?.gim?.shield ?? 0) > 0,
+              dx: -10 + Math.random() * 20, dy: -6 + Math.random() * 20,
+            }];
+          });
+        }, RAIN_GAP * (n + 1)));
+      });
+    }
     setFlinch(idx.map(posAt));
     if (flinchT.current) clearTimeout(flinchT.current);
     flinchT.current = setTimeout(() => setFlinch([]), 180);
@@ -2526,6 +2649,8 @@ export function BattleView({ top, corner }: Props = {}) {
   */
   const fit = fitOf(stageW, allyW1, foeW1);
   const partyW = PARTY_W * fit;
+  /* 거대 화살이 스킬 콜백 안에서 읽어 갈 자리 (`crossRef`) */
+  crossRef.current = { w: stageW, party: partyW };
   const foeW = (cur.boss ? BOSS_W : FOE_W) * fit;
   const edge = EDGE * fit;
   /** 실제로 그리는 적 격자 — 배율을 먹인 값 */
@@ -3415,8 +3540,24 @@ export function BattleView({ top, corner }: Props = {}) {
                       */
                       fallbackSet={foeFrame === 'skill1' ? kf.art : 'creature'}
                       fallbackName={foeFrame === 'skill1' ? 'attack' : 'slime'}
-                      /* 광폭화한 우두머리만 붉다 — 흰 픽셀이라 한 줄로 물든다 */
-                      tint={bossOne && rage ? BAD_C : undefined}
+                      /*
+                        ── 광폭화하면 **서 있는 전부**가 붉다 ──
+
+                        `bossOne && rage` 였다. 그 값은 줄의 첫째 자리만
+                        참이므로 (`back === 0`), 갈라진 판에서는 한 마리만
+                        물들었다 — 30판 바알이 허물을 벗고 둘이 된 뒤
+                        광폭화하면 본체만 붉고 분신은 평소 색이었다.
+
+                        계산은 이미 전부에게 걸린다 (`core/autoBattle` 의
+                        `foeNow` — 거기도 `rage && f.boss` 였다가 같은 이유로
+                        넓혔다). 화면만 옛 조건에 남아서, 분신은 두 배로
+                        치는데 화면에서는 안 광폭화한 것으로 보였다.
+
+                        `rage` 는 우두머리와 싸우는 동안에만 참이라
+                        (`bossMs`), 지금 서 있는 것은 우두머리이거나 그가
+                        남긴 것뿐이다 — 잡몹이 잘못 물들 자리가 없다.
+                      */
+                      tint={rage ? BAD_C : undefined}
                     />
                     </FuseWrap>
                   </Animated.View>
@@ -3697,6 +3838,21 @@ export function BattleView({ top, corner }: Props = {}) {
         {!down && !!pierce && stageW > 0 && (
           <React.Fragment key={`pierce-${pierce.no}`}>
             <PierceBand w={stageW} y={pierce.y} h={pierce.size} />
+            {/*
+              ── 화살 자체 ── 무대 왼쪽 밖에서 들어와 오른쪽 밖으로 나간다.
+
+              띠와 **같은 높이**다 (`pierce.y`). 둘이 어긋나면 띠는 지나간
+              자국이 아니라 따로 그려진 선이 된다.
+            */}
+            {!!pierce.arrow && (
+              <GiantArrow
+                set={pierce.arrow.set}
+                name={pierce.arrow.name}
+                size={pierce.arrow.size}
+                w={stageW}
+                y={pierce.y}
+              />
+            )}
             {pierce.at.map((p, i) => (
               <View
                 /* 한 번 만들면 안 바뀌는 목록이라 자리 번호로 충분하다 */

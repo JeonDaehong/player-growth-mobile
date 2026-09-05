@@ -1100,6 +1100,19 @@ export function HurtTint({
 export const NOTE_MS = 1600;
 
 /**
+ * 판이 열린 뒤 **첫 줄을 띄우기까지** 기다리는 시간 (ms).
+ *
+ * 걸어 들어오는 데 걸리는 시간보다 조금 길다 (`core/autoBattle` 의
+ * `OPEN_WALK_MS` — 500ms). 그 안에 띄우면 글이 인물을 따라 화면 밖에 있다가
+ * 스러져서, 켜져 있는데 한 번도 안 보이는 줄이 된다 (`MarkNotes` 의
+ * `settled`).
+ *
+ * 넉넉히 잡을 이유는 없다. 이 줄이 하는 말은 "판이 시작될 때 이게 걸려
+ * 있다" 이므로 판이 시작되고 한참 뒤에 뜨면 다른 사건에 묻힌다.
+ */
+const SETTLE_MS = 700;
+
+/**
  * ── 걸리는 순간 머리 위에 뜨는 한 줄 ──
  *
  * ## 로고만으로는 안 통했다
@@ -1274,6 +1287,23 @@ export function MarkNotes({
   const had = useRef<Set<string>>(new Set());
   const told = useRef<Set<string>>(new Set());
   /*
+    ── 판이 열리자마자는 아무 말도 안 한다 ── (`SETTLE_MS`)
+
+    상시효과(아녜스의 `공격력 증가` · 리안느의 `공격속도 증가`)는 판이
+    시작되는 그 순간에 이미 걸려 있으므로, 막이 걷히는 프레임에 통째로
+    떴다가 사라졌다.
+
+    그런데 막이 걷히는 순간은 **양쪽이 아직 화면 밖에서 걸어 들어오는
+    중**이다 (`OPEN_WALK_MS`). 글은 인물 머리 위에 붙어 있으니 인물과 같이
+    왼쪽 밖에 있었고, 다 들어와 섰을 때는 이미 스러진 뒤였다 — 켜져 있는데
+    한 번도 못 본 줄이었다.
+
+    그래서 **다 들어와 선 뒤에** 한 번 말한다. 그동안 `had` 가 비어 있으므로
+    그 사이에 걸린 것도 하나도 안 놓치고 같이 나온다 (걸어 들어오는 동안은
+    아무도 안 때리니 그럴 일도 거의 없다).
+  */
+  const [settled, setSettled] = useState(false);
+  /*
     줄을 걷는 시계들.
 
     예전에는 갈래의 정리 함수에서 껐다. 그런데 이 갈래는 상태가 바뀔 때마다
@@ -1287,6 +1317,13 @@ export function MarkNotes({
     timers.current = [];
   }, []);
 
+  /* 막이 걷히면 걸어 들어오는 동안만 기다렸다 연다 (`SETTLE_MS`) */
+  useEffect(() => {
+    if (!live) { setSettled(false); return undefined; }
+    const t = setTimeout(() => setSettled(true), SETTLE_MS);
+    return () => clearTimeout(t);
+  }, [live]);
+
   useEffect(() => {
     if (!live) {
       had.current = new Set();
@@ -1295,6 +1332,8 @@ export function MarkNotes({
       setNotes((old) => (old.length ? [] : old));
       return;
     }
+    /* 아직 걸어 들어오는 중 — 걸린 것은 `had` 에 안 적고 그대로 둔다 */
+    if (!settled) return;
     const now = new Set<string>();
     const fresh: { key: number; text: string; good: boolean }[] = [];
     for (const m of marks) {
@@ -1330,7 +1369,7 @@ export function MarkNotes({
       끊임없이 돈다 (`markKey` 가 그 자리를 대신한다).
     */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markKey, live]);
+  }, [markKey, live, settled]);
 
   if (!notes.length) return null;
   return (

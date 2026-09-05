@@ -28,35 +28,97 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { FORMATIONS, FORMATION_IDS, FORM_LANES } from '@/core/party';
+import {
+  FORMATIONS, FORMATION_IDS, FORM_LANES, PARTY_SIZE, formationSeats,
+} from '@/core/party';
+import type { FormationId } from '@/core/party';
 import { Row, T } from '@/ui/atoms';
 import { sfx } from '@/ui/sfx';
 import { BORDER, BORDER_HI, C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 
 /**
- * 점 하나.
+ * 자리 하나 — **파티 칸 번호를 그 안에 적는다.**
  *
- * **앞줄은 속이 찼고 뒷줄은 비었다.** 자리만으로 앞뒤를 말하면 (왼쪽이 뒤,
- * 오른쪽이 앞) 4px 짜리 점 열 개에서 그 좌우를 세어야 하는데, 아래 한 줄로
- * 적어 둔 설명(`앞줄 …` · `뒷줄 …`)과 모양을 맞춰 두면 세지 않아도 읽힌다.
+ * ## 왜 번호를 적나
  *
- * 안 쓰는 자리는 아주 흐린 점으로 남긴다. 지우면 대형마다 그림의 높이가
- * 달라져서 셋을 나란히 못 견준다.
+ * 오랫동안 속이 찬 점과 빈 점이었다. 그것으로 말할 수 있는 것은 "앞줄이
+ * 몇, 뒷줄이 몇" 까지였고, **누가 거기 서는지**는 화면 어디에도 없었다 —
+ * 역할 순서로 저절로 잡히던 시절에는 그게 맞았다 (`core/party` 의
+ * `formationSpots` 머리말).
+ *
+ * 이제 파티 칸 순서가 그대로 자리다. 그러면 이 그림이 **누르기 전에**
+ * 답해야 하는 물음이 하나 생긴다: 내 3번 칸 캐릭터는 이 대형에서 어디에
+ * 서는가. 번호를 적는 것 말고 그 물음에 답하는 방법이 없다.
+ *
+ * ## 안 쓰는 자리는 점으로 남긴다
+ *
+ * 지우면 대형마다 그림의 높이가 달라져서 셋을 나란히 못 견준다. 아주 흐리게
+ * 두면 자리는 지키면서 번호가 적힌 칸만 눈에 들어온다.
  */
-function Dot({ on, front, inv }: { on: boolean; front?: boolean; inv: boolean }) {
+/**
+ * 자리 한 칸의 크기 (px).
+ *
+ * 9 였다. 테두리 1px 을 빼면 7px 이 남는데 거기 8px 글자를 넣으니 숫자가
+ * 상자에 끼여 눌렸다 — 넷을 견주는 그림에서 번호가 안 읽히면 이 그림이
+ * 하려던 일이 통째로 안 된다.
+ */
+const SEAT = 11;
+
+function Seat({ n, front, inv }: { n: number; front: boolean; inv: boolean }) {
   const ink = inv ? C.fgInv : WHITE;
+  /* 빈 자리 — 예전의 그 점 그대로다 */
+  if (!n) {
+    return (
+      <View
+        style={{
+          width: SEAT,
+          height: SEAT,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={{
+            width: 4,
+            height: 4,
+            borderRadius: R.round,
+            borderWidth: 1,
+            borderColor: ink,
+            opacity: 0.16,
+          }}
+        />
+      </View>
+    );
+  }
   return (
     <View
       style={{
-        width: 5,
-        height: 5,
-        borderRadius: R.round,
+        width: SEAT,
+        height: SEAT,
+        borderRadius: 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        /*
+          **앞줄은 속이 차고 뒷줄은 테두리만.**
+
+          번호를 적어도 이 구분은 남긴다. 왼쪽이 뒤 · 오른쪽이 앞이라는 것은
+          가로 자리로만 말하는데, 9px 짜리 칸 여덟 개에서 그 좌우를 세어야
+          읽히는 것은 아래 설명 줄(`앞줄 …` · `뒷줄 …`)과 안 이어진다.
+        */
         borderWidth: 1,
         borderColor: ink,
-        backgroundColor: on && front ? ink : 'transparent',
-        opacity: on ? 1 : 0.16,
+        backgroundColor: front ? ink : 'transparent',
       }}
-    />
+    >
+      <T
+        size={8}
+        bold
+        /* 찬 칸 위에서는 글자가 바탕색이어야 읽힌다 */
+        style={{ color: front ? (inv ? WHITE : C.bg) : ink, lineHeight: 9 }}
+      >
+        {String(n)}
+      </T>
+    </View>
   );
 }
 
@@ -65,30 +127,41 @@ function Dot({ on, front, inv }: { on: boolean; front?: boolean; inv: boolean })
  *
  * 위에서 아래로 4→0 번 줄이다. 무대에서 뒤에 선 사람이 위에 그려지므로
  * (`Ground` 의 `depthAt`) 같은 순서로 놓아야 그림과 무대가 겹쳐 읽힌다.
+ *
+ * **자리는 `core/party` 가 계산해 준다** (`formationSeats`). 여기서 규칙을
+ * 다시 쓰면 화면의 번호와 무대의 자리가 조용히 갈릴 수 있다 — 사람이 그
+ * 번호를 보고 파티를 짜게 된 뒤로는 제일 나쁜 종류의 어긋남이다.
  */
-function Grid({ back, front, inv }: {
-  back: readonly number[]; front: readonly number[]; inv: boolean;
-}) {
+function Grid({ form, inv }: { form: FormationId; inv: boolean }) {
   const lanes = Array.from({ length: FORM_LANES }, (_v, i) => FORM_LANES - 1 - i);
+  /* 자리 → 파티 칸 번호 (1부터). 늘 넷을 다 앉힌다 */
+  const at = React.useMemo(() => {
+    const out: Record<string, number> = {};
+    formationSeats(form, PARTY_SIZE).forEach((sp, i) => {
+      out[`${sp.row}:${sp.lane}`] = i + 1;
+    });
+    return out;
+  }, [form]);
+
   return (
     <Row gap={5} style={{ alignItems: 'center' }}>
-      <View style={{ gap: 3 }}>
+      <View style={{ gap: 2 }}>
         {lanes.map((ln) => (
-          <Row key={ln} gap={4}>
-            <Dot on={back.includes(ln)} inv={inv} />
-            <Dot on={front.includes(ln)} front inv={inv} />
+          <Row key={ln} gap={3}>
+            <Seat n={at[`back:${ln}`] ?? 0} front={false} inv={inv} />
+            <Seat n={at[`front:${ln}`] ?? 0} front inv={inv} />
           </Row>
         ))}
       </View>
       {/*
-        적 — 늘 오른쪽 가운데다. 세로 막대 하나로 두는 이유는 파티 점과
-        같은 모양이면 안 되기 때문이다. 이게 사람인지 벽인지가 아니라,
-        **어느 쪽이 적인가**만 말하면 된다.
+        적 — 늘 오른쪽 가운데다. 파티 칸과 같은 모양이면 안 되기 때문에
+        세로 막대 하나로 둔다. 이게 사람인지 벽인지가 아니라, **어느 쪽이
+        적인가**만 말하면 된다.
       */}
       <View
         style={{
           width: 2,
-          height: FORM_LANES * 5 + (FORM_LANES - 1) * 3,
+          height: FORM_LANES * SEAT + (FORM_LANES - 1) * 2,
           borderRadius: R.round,
           backgroundColor: inv ? C.fgInv : WHITE,
           opacity: O.dim,
@@ -125,7 +198,6 @@ export function FormationPicker() {
 
       <Row gap={SP.xs}>
         {FORMATION_IDS.map((id) => {
-          const def = FORMATIONS[id];
           const on = id === form;
           return (
             <Pressable
@@ -151,11 +223,27 @@ export function FormationPicker() {
               ]}
             >
               <T size={FS.label} bold dim={on ? 'full' : 'sub'}>{id}</T>
-              <Grid back={def.backLanes} front={def.frontLanes} inv={false} />
+              <Grid form={id} inv={false} />
             </Pressable>
           );
         })}
       </Row>
+
+      {/*
+        ── 번호가 곧 파티 칸이다 ──
+
+        이 한 줄이 없으면 칸 안의 `1 2 3 4` 가 그냥 자리 번호로 읽힌다.
+        그러면 대형을 골라도 **누구를 앞에 세울지**는 여전히 못 정하는 것으로
+        보이는데, 지금은 정할 수 있다 (`core/party` 의 `formationSeats`).
+
+        고르는 방법까지 같이 적는다. 파티 칸을 서로 맞바꾸는 것이 그 방법인데
+        (`state/slices/roster` 의 `setPartySlot`), 그건 아래 칸에서 하는
+        일이라 여기 적어 두지 않으면 이어지지 않는다.
+      */}
+      <T size={FS.tiny} dim="dim">
+        칸 안의 번호가 아래 파티 자리입니다 — 자리를 눌러 서로 바꾸면
+        서는 곳도 같이 바뀝니다
+      </T>
 
       {/*
         ── 줄이 몸을 바꾼다 ──

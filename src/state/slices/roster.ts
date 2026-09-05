@@ -535,15 +535,31 @@ export const createRosterSlice = (
     if (JSON.stringify(battle) === JSON.stringify(st.battle)) return;
 
     /*
-      ── 판이 넘어갔으면 짜 둔 편성이 들어간다 ──
+      ── 판이 **다시 열리면** 짜 둔 편성이 들어간다 ──
 
-      `battle.stage` 가 바뀌는 순간이 유일한 방아쇠다. 우두머리를 잡아
-      저절로 넘어가는 것도, 전멸해서 되돌아가는 것도 여기를 지난다.
+      한동안 `battle.stage` 가 바뀌는 것만 봤다. 그런데 판 번호는 마지막
+      판에서 안 바뀐다 — `nextStage` 가 `STAGE_CAP` 에 걸려 제자리에
+      머물기 때문이다 (지금은 30판). 그래서 **마지막 판을 도는 사람은
+      대형을 바꿔도 영영 안 들어갔다.** 눌리기는 눌리고 (`pendingFormation`
+      에 남는다) 무대에서는 아무 일도 안 일어나는, 화면에 아무 표시도 없는
+      고장이었다.
+
+      이제 `costSeq` 를 본다. 저건 **판이 처음부터 세워질 때마다** 오르는
+      번호이고 (`core/autoBattle` 의 `openStage`), 그게 곧 "지금 편성을
+      갈아 끼워도 되는 순간" 이다 — 판을 넘어가든, 같은 판을 다시 돌든,
+      전멸해서 다시 서든 셋 다 여기를 지난다.
+
+      판 번호도 같이 본다. 둘 중 하나만으로 충분해 보이지만, 저 번호는
+      낡은 저장본에서 없을 수 있어 `Number.isFinite` 로 걸러진 뒤 0 으로
+      눌러앉을 수 있다.
 
       `set({ battle })` **앞에** 부른다. 뒤에 부르면 새 판의 첫 틱이 옛
       파티로 한 번 돌고, 그 한 틱에 맞은 사람은 편성표에 없는 사람이다.
     */
-    if (battle.stage !== st.battle.stage) commitPending(set, get);
+    if (
+      battle.stage !== st.battle.stage
+      || battle.costSeq !== st.battle.costSeq
+    ) commitPending(set, get);
 
     if (!ev.killed) {
       set({ battle });
