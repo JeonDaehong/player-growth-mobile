@@ -64,8 +64,8 @@ import {
   ShotKind, Tide, blowFx, castFx, useLeap,
 } from './BossFx';
 import {
-  BossCall, DamageNumber, FallingArrow, FOE_SHOT_MS, FoeShot, HitBurst, MarkNotes,
-  RageCall, SkillShout, shotMsOf, useShake,
+  BossCall, DamageNumber, FallingArrow, FeyDart, FOE_SHOT_MS, FoeShot, HitBurst,
+  MarkNotes, RageCall, SkillShout, shotMsOf, useShake,
 } from './HitFx';
 import { Fighter, Swing } from './Fighter';
 import {
@@ -656,22 +656,43 @@ export function BattleView({ top, corner }: Props = {}) {
 
     **열쇠만 이어 붙인 글자를 같이 만든다.** 배열은 매번 새로 만들어지므로
     참조로는 "바뀌었나" 를 물을 수가 없다 (`Fighter` 의 `markKey`).
+
+    ## 같은 것은 **한 사람만** 말한다
+
+    파티 전체에 걸리는 것이 많다 — 요정의 축제는 넷에게 `공격속도 증가` 와
+    `미니 화살 추가타` 를 한꺼번에 걸고, 우두머리 전원기도 넷을 같이 물들인다.
+    그때 넷이 각자 제 머리 위에 같은 글을 띄우면 여덟 줄이 한꺼번에 뜬다.
+
+    한글은 글자가 전각이라 여덟 자짜리 한 줄이 인물 두 배 폭이다. 넷이 겨우
+    50px 씩 떨어져 서 있으므로, 같은 글 넷은 반드시 서로 맞붙어
+    `미니 화살 추가타미니 화살 추가타` 같은 덩어리가 된다 — 높이를 어긋내
+    봐도 (`noteLiftOf`) 두 줄에 둘씩 붙을 뿐이다.
+
+    **그래서 이미 나온 것은 뒷사람이 안 말한다.** 이 줄이 하는 말은 "이게
+    지금 걸렸다" 하나이고, 그건 한 번만 들으면 된다. 누구에게 걸렸는지는
+    파티 칸의 로고가 사람마다 따로 그린다 (`PartyBar` → `StatusRow`) —
+    저기는 늘 있는 자리라 겹칠 일이 없다.
   */
   const markOf = React.useMemo(() => {
     const out: Record<string, { marks: readonly Mark[]; key: string }> = {};
+    /* 앞사람이 이미 말한 것 — 파티 자리 순서대로 채워진다 */
+    const said = new Set<string>();
     for (const c of members(party, chars)) {
-      const marks = marksOf(
+      const mine: Mark[] = [];
+      for (const m of marksOf(
         c.id,
         hpOf(c, battle.hp),
         statOf(c).hp,
         hexOf(battle.hex, c.id),
         aliveLine,
         battle.fade,
-      );
-      out[c.id] = {
-        marks,
-        key: marks.map((m) => `${m.set}:${m.name}`).join(','),
-      };
+      )) {
+        const k = `${m.set}:${m.name}`;
+        if (said.has(k)) continue;
+        said.add(k);
+        mine.push(m);
+      }
+      out[c.id] = { marks: mine, key: mine.map((m) => `${m.set}:${m.name}`).join(',') };
     }
     return out;
   }, [party, chars, battle.hp, battle.hex, battle.fade, aliveLine]);
@@ -726,6 +747,13 @@ export function BattleView({ top, corner }: Props = {}) {
        * 떨어진 것이라, 검기 한 줄기와 같은 크기로 터지면 밋밋하다.
        */
       blast: boolean;
+      /**
+       * 요정의 화살이 이 대에 터진 만큼 (`TickEvent.fey`). 0 이면 안 터졌다.
+       *
+       * 피해 숫자와 **따로** 담는다 — 같은 자리에 두 숫자가 뜨는 것이
+       * 이 연출의 전부다. 하나로 합치면 그냥 "이번엔 좀 더 아팠다" 가 된다.
+       */
+      fey: number;
       /**
        * 이 자리에서 **아래에서 위로 솟는** 것이 있나 (비앙카의 화산).
        *
@@ -1568,8 +1596,13 @@ export function BattleView({ top, corner }: Props = {}) {
       막이 받았다.
     */
     const shielded = (now.current.battle.foes[at]?.gim?.shield ?? 0) > 0;
-    /* 이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 (`Swing.mul`) */
-    strikeFoe(sw.id, at, sw.mul, ally);
+    /*
+      이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 (`Swing.mul`).
+
+      **요정의 화살이 터진 만큼을 돌려받는다** (`TickEvent.fey`). 계산만
+      아는 값이라 (40% 를 거기서 굴린다) 화면이 따로 물을 방법이 없다.
+    */
+    const fey = strikeFoe(sw.id, at, sw.mul, ally) || 0;
 
     /*
       ── 아군을 친 대는 **적 쪽에 아무것도 안 그린다** ──
@@ -1589,7 +1622,7 @@ export function BattleView({ top, corner }: Props = {}) {
       const live = old.slice(-7);
       return [...live, {
         /* 과열의 둘째 대는 크게 터진다 — 같은 그림이면 넷 중 어느 것이 150% 인지 모른다 */
-        ...sw, key, ...spot, blast: !!sw.blast, arrow: '', erupt: false, ping: shielded,
+        ...sw, key, ...spot, blast: !!sw.blast, arrow: '', erupt: false, ping: shielded, fey,
         row: rowFor(live, spot.x), born: Date.now(),
         dx: -14 + Math.random() * 24, dy: -6 + Math.random() * 20,
       }];
@@ -1709,16 +1742,23 @@ export function BattleView({ top, corner }: Props = {}) {
     /*
       ── 길에 선 것을 전부 꿴다 ──
 
-      **날아가면서 줄을 통째로 치는 기술**에만 붙는다 — 지금은 거대 화살
-      하나다 (`bigshot`). 화살비(`rain`)는 `flies` 가 아니고, 검기는
-      `pick` 이 하나라 여기 안 들어온다.
+      **아주 큰 것이 날아가는 기술에만** 붙는다 (`SkillDef.projMul`).
+
+      처음엔 "날아가면서 줄을 통째로 친다" 로 골랐다 (`flies && pick==='all'`).
+      그런데 그 조건에 **이졸데의 검기가 같이 들어왔다** — 코스트 4 짜리
+      평범한 기술인데 잡몹마다 궁극기 고리가 퍼졌고, 화면이 무엇이 큰 일인지
+      말할 수 없게 되었다 ("잡몹들한테 파동 나오는 거 이상하다").
+
+      크기가 곧 무게다 (`core/chars` 의 `projMul` 머리말). 몸의 두 배가 넘는
+      것을 날리는 기술은 지금 거대 화살 하나뿐이고, 앞으로도 **한 판에 몇 번
+      못 쓰는 것**만 여기 들어온다. 그래서 크기를 그대로 문턱으로 쓴다 —
+      깃발을 하나 더 만들면 크기와 연출이 따로 놀 자리가 생긴다.
 
       맞는 놈들을 한 묶음으로 넘긴다. 왼쪽 끝과 오른쪽 끝을 알아야
       **왼쪽부터 차례로** 터뜨릴 수 있는데 (`pierceDelay`), 그 차례가 곧
-      "화살을 따라 기운이 흘렀다" 다. 한꺼번에 터뜨리면 화면이 한 번
-      번쩍이고 마는, 광역기 아무거나와 같은 그림이 된다.
+      "화살을 따라 기운이 흘렀다" 다.
     */
-    if (sk.flies && sk.pick === 'all' && spots.length) {
+    if ((sk.projMul ?? 1) >= 2 && sk.flies && spots.length) {
       const xs = spots.map((sp) => sp.x);
       const from = Math.min(...xs);
       const to = Math.max(...xs);
@@ -1767,6 +1807,8 @@ export function BattleView({ top, corner }: Props = {}) {
           id, fx: sk.fx ?? CHARS[me.id].fx,
           dmg: amount, key: hitSeq.current++, ...spot,
           blast: big,
+          /* 기술에는 안 붙인다 — 요정의 화살은 평타에서만 그린다 */
+          fey: 0,
           /*
             화살비는 맞는 자리마다 화살이 **위에서** 한 대 꽂힌다 (`FallingArrow`).
 
@@ -2359,6 +2401,26 @@ export function BattleView({ top, corner }: Props = {}) {
       allyXOf(oi) < allyXOf(me) && hpOf(o2.c, battle.hp) > 0
     ));
   };
+  /**
+   * 그 자리 사람의 머리 위 한 줄을 **몇 번째 줄에 놓을까** (px).
+   *
+   * 파티 전체에 걸리는 버프는 넷에게 같은 글이 동시에 뜬다. 한글은 전각이라
+   * 여덟 자면 인물 두 배 폭이므로, 넷이 같은 높이에 서면 옆 사람 글과 맞붙어
+   * 읽을 수 없는 덩어리가 된다 (`screens/home/HitFx` 의 `StatusNote`).
+   *
+   * **가로로 왼쪽부터 센 순서**로 두 줄을 번갈아 쓴다. 자리 번호로 세면 안
+   * 된다 — 대형은 앞뒤로도 서므로 (`formLayout`) 0번과 2번이 가로로는 겨우
+   * 43px 떨어져 있고, 그 둘의 홀짝이 같으면 그대로 맞붙는다.
+   */
+  const noteLiftOf = React.useMemo(() => {
+    const order = spots.map((_sp, i) => i)
+      .sort((a, b) => (form1.x[a] ?? 0) - (form1.x[b] ?? 0));
+    const row: number[] = [];
+    order.forEach((seat, rank) => { row[seat] = (rank % 2) * 26; });
+    return row;
+    /* `form1` 은 렌더마다 새로 만들어지므로 자리 배열 자체를 열쇠로 쓴다 */
+  }, [spots, form1.x]);
+
   const allySizeOf = (i: number) => Math.round(partyW * depthAt(depthOf(i)).scale);
   /**
    * 그 사람이 적 쪽으로 나와 있는 거리 (px).
@@ -2706,6 +2768,8 @@ export function BattleView({ top, corner }: Props = {}) {
                     ch={c}
                     back={depthOf(i)}
                     x={allyXOf(i)}
+                    /* 나란히 선 사람끼리 머리 위 한 줄이 안 겹치게 */
+                    noteLift={noteLiftOf[i] ?? 0}
                     /* 무대가 좁으면 사람도 같이 줄어든다 */
                     width={partyW}
                     down={down}
@@ -3488,6 +3552,34 @@ export function BattleView({ top, corner }: Props = {}) {
                 />
               </View>
             )}
+            {/*
+              ── 요정의 화살 ── 40% 로 한 대 더 (`HitFx` 의 `FeyDart`).
+
+              **평타 자국 위에 얹는다.** 같은 놈이 같은 순간에 두 대를 맞는
+              것이므로 자리가 같아야 하고, 다른 데서 그리면 다른 사람이 친
+              것으로 보인다.
+
+              쏜 사람이 누구든 **리안느의 화살**을 그린다 (`elfarcher`).
+              이건 그 사람의 무기가 아니라 리안느가 걸어 준 것이라, 도끼를
+              든 비앙카가 때려도 날아오는 것은 화살이 맞다.
+            */}
+            {h.fey > 0 && (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: h.x + h.size * 0.5,
+                  top: h.y + h.size * 0.42,
+                  zIndex: 62,
+                }}
+              >
+                <FeyDart
+                  set={projSet('elfarcher')}
+                  name={projFrame('elfarcher')}
+                  size={h.size}
+                />
+              </View>
+            )}
             {h.dmg > 0 && (
               <View
                 pointerEvents="none"
@@ -3509,6 +3601,29 @@ export function BattleView({ top, corner }: Props = {}) {
                   big={cur.boss}
                   onDone={NOOP}
                 />
+              </View>
+            )}
+            {/*
+              요정의 화살 몫은 **숫자도 따로** 뜬다.
+
+              평타 숫자 오른쪽 위에, 한 단 작게. 합쳐서 하나로 띄우면 "이번엔
+              좀 더 아팠다" 로 끝나서, 40% 로 한 대가 더 들어갔다는 것이 화면
+              어디에도 안 남는다 — 화살만 그리고 숫자를 안 띄우면 이번에는
+              반대로 "그림만 있고 아무 일도 안 일어난 것" 으로 보인다.
+            */}
+            {h.fey > 0 && (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: h.x + h.size * 0.42,
+                  width: h.size,
+                  alignItems: 'center',
+                  top: numTop(h.y, h.row) - 11,
+                  zIndex: 71,
+                }}
+              >
+                <DamageNumber text={`-${h.fey}`} dx={0} dy={0} onDone={NOOP} />
               </View>
             )}
           </React.Fragment>

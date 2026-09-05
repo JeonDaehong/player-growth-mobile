@@ -3490,6 +3490,17 @@ export interface TickEvent {
   /** 이번에 회복한 총량 (사제의 기도) */
   healed: number;
   /**
+   * ── 요정의 화살이 터졌나 ── 터진 만큼 (`feyShot`). 안 터졌으면 0.
+   *
+   * `hit` 안에 이미 더해져 있다. 그런데도 따로 내보내는 이유는 **화면이
+   * 그릴 것이 있기 때문**이다 — 여태 이 한 대가 숫자 하나에 조용히 섞여
+   * 들어가서, 40% 로 터지는 그 순간이 화면 어디에도 안 나왔다. 코스트 15
+   * 짜리 기술의 절반이 눈에 안 보이는 셈이었다.
+   *
+   * 숫자로 내보낸다 (참·거짓이 아니라) — 화면이 그 값을 그대로 띄운다.
+   */
+  fey: number;
+  /**
    * 이번 틱에 나간 우두머리 특수기의 이름. 안 나갔으면 `null`.
    *
    * 화면이 이걸 보고 이름을 띄운다. 이름이 없으면 전원이 한꺼번에 맞는
@@ -3518,7 +3529,7 @@ export interface TickResult {
 
 const NOTHING: TickEvent = {
   hit: 0, taken: 0, hurt: null, fell: null, killed: 0, cleared: false, elixir: 0,
-  bossCame: false, wiped: false, gold: 0, healed: 0, pattern: null,
+  bossCame: false, wiped: false, gold: 0, healed: 0, pattern: null, fey: 0,
   applied: false,
 };
 
@@ -4510,6 +4521,8 @@ export function battleTick(
       ev: {
         hit, taken, hurt: hurtId, fell, pattern,
         killed, cleared: false, elixir: 0, bossCame, wiped: true, gold, healed,
+        /* 적이 때린 틱이다 — 요정의 화살은 아군이 때릴 때만 터진다 */
+        fey: 0,
         applied: true,
       },
     };
@@ -4570,6 +4583,8 @@ export function battleTick(
     },
     ev: {
       hit, taken, hurt: hurtId, fell, pattern,
+      /* 적이 때린 틱이다 — 요정의 화살은 아군이 때릴 때만 터진다 */
+      fey: 0,
       killed: gimCleared ? killed + 1 : killed,
       cleared: gimCleared,
       elixir: gimCleared ? rollElixir(st.stage, rand) : 0,
@@ -4813,8 +4828,11 @@ export function applyHit(
   if (foes[at].hp > 0) {
     return {
       battle: { ...st, foes, hp, target: at },
-      /* 요정의 화살까지 합쳐서 한 숫자로 뜬다 — 두 줄로 뜨면 뭐가 뭔지 모른다 */
-      ev: { ...NOTHING, hit: dmg + fey },
+      /*
+        합쳐서 한 숫자로 보낸다. 다만 요정의 화살 몫은 **따로도** 내보낸다 —
+        화면이 그 한 대만 작은 화살로 따로 그린다 (`ev.fey`).
+      */
+      ev: { ...NOTHING, hit: dmg + fey, fey },
     };
   }
 

@@ -211,7 +211,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
-  live, hitNo, hitKind, cc, bound, boundWeb, charmed, warded, shock, turn,
+  live, hitNo, hitKind, cc, bound, boundWeb, charmed, warded, shock, turn, noteLift = 0,
   x, width, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -396,6 +396,13 @@ function FighterView({
    * 켜지면 그림을 뒤집고 내딛는 걸음도 반대로 간다.
    */
   turn: boolean;
+  /**
+   * 머리 위 상태 한 줄을 얼마나 더 올릴까 (px) — 무대가 정한다.
+   *
+   * 나란히 선 사람끼리 **같은 줄을 안 쓰게** 하는 값이다. 자세한 것은
+   * 아래 `MarkNotes` 를 그리는 자리에 적어 두었다.
+   */
+  noteLift?: number;
   /**
    * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
    *
@@ -1248,13 +1255,31 @@ function FighterView({
       {/*
         ── 방금 걸린 것이 무엇인지 ──
 
-        `디버프:지속 피해` 처럼 한 줄이 머리 위에 떴다 사라진다. 걸리는 그
-        순간에만 뜨고, 그다음부터는 파티 칸의 로고가 맡는다 (`StatusRow`).
+        `지속 피해` 처럼 한 줄이 머리 위에 떴다 사라진다. 걸리는 그 순간에만
+        뜨고, 그다음부터는 파티 칸의 로고가 맡는다 (`StatusRow`).
+
+        **좋은 것인지 나쁜 것인지는 색이 말한다** — 그래서 `버프:` 같은
+        머리말을 안 붙인다 (`MarkNotes`).
 
         적 머리 위에도 **같은 부품**이 붙는다 (`BattleView`) — 두 규칙이
         다르면 보는 사람이 규칙을 두 벌 익혀야 한다.
       */}
-      <MarkNotes marks={marks} markKey={markKey} live={live} />
+      {/*
+        ── **옆 사람과 한 줄을 안 쓴다** ──
+
+        파티 전체에 걸리는 버프는 넷에게 **같은 글이 동시에** 뜬다
+        (요정의 축제가 거는 `공격속도 증가` · `미니 화살 추가타`). 한글은
+        글자가 전각이라 여덟 자짜리 한 줄이 인물 두 배 폭이라, 넷이 같은
+        높이에 서면 옆 사람 글과 맞붙어 `미니 화살 추가타미니 화살 추가타`
+        같은 덩어리가 된다.
+
+        **왼쪽부터 센 순서**로 두 줄을 번갈아 쓴다 (`noteLift` — 무대가
+        정해서 넘긴다). 자리 번호(`back`)로 세면 안 된다: 대형이 앞뒤로
+        서므로 0번과 2번이 가로로는 43px 밖에 안 떨어져 있어서, 홀짝이 같은
+        그 둘이 그대로 맞붙는다. 가로 자리로 세야 나란히 선 둘이 언제나
+        다른 줄에 온다.
+      */}
+      <MarkNotes marks={marks} markKey={markKey} live={live} lift={noteLift} />
 
       {/*
         ── 기술이 나갈 때의 큰 연출 ──
@@ -1522,6 +1547,7 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.warded === b.warded
   && a.shock === b.shock
   && a.turn === b.turn
+  && a.noteLift === b.noteLift
   && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge

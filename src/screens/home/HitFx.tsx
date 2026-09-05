@@ -1128,13 +1128,25 @@ export const NOTE_MS = 1600;
  * 그림자만 지워서 밝은 배경에서도 읽히게 한다.
  */
 export function StatusNote({
-  text, good, i,
+  text, good, i, lift = 0,
 }: {
   text: string;
   /** 좋은 것인가 — 초록과 빨강으로 갈린다 (`ui/theme`) */
   good: boolean;
   /** 몇 번째 줄인가 — 한꺼번에 여럿 걸리면 위로 쌓인다 */
   i: number;
+  /**
+   * 이 사람 몫을 얼마나 더 올릴까 (px).
+   *
+   * **자리마다 다른 값을 준다** (`Fighter` 가 제 자리 번호로 넘긴다).
+   * 파티 전체에 걸리는 버프는 넷에게 **같은 글이 한꺼번에** 뜨는데, 넷이
+   * 같은 높이면 옆 사람 글과 가로로 겹쳐서 `미니 화살 추가타미니 화살 추가타`
+   * 처럼 읽을 수 없는 덩어리가 된다.
+   *
+   * 높이를 어긋내면 겹치더라도 각각이 제 줄에서 읽힌다. 자리를 옮기는 것보다
+   * 이쪽이 낫다 — 인물 위가 아닌 데 뜨면 누구에게 걸린 것인지 알 수 없다.
+   */
+  lift?: number;
 }) {
   const t = useRef(new Animated.Value(0)).current;
 
@@ -1174,10 +1186,16 @@ export function StatusNote({
           가려진다.
         */
         bottom: '100%',
-        marginBottom: 16 + i * 12,
-        /* 인물보다 넓어도 좋다 — `받는 치유 감소` 는 한 줄이 인물 두 배다 */
-        left: -30,
-        right: -30,
+        marginBottom: 16 + i * 12 + lift,
+        /*
+          **인물 폭에서 조금만 넘긴다.**
+
+          -30 이었다. 문구가 길던 시절에는 그래야 한 줄에 들어갔는데
+          (`받는 치유 감소`), 지금은 전부 두세 낱말이라 (`core/status` 의
+          `STATUS_WHAT`) 그 폭이 그대로 **옆 사람 자리를 먹는 여유**가 된다.
+        */
+        left: -14,
+        right: -14,
         alignItems: 'center',
         opacity: fade,
         transform: [{ translateY: rise }],
@@ -1185,6 +1203,7 @@ export function StatusNote({
       }}
     >
       <Animated.Text
+        numberOfLines={1}
         style={{
           color: good ? GOOD_C : BAD_C,
           fontFamily: MONO,
@@ -1235,9 +1254,11 @@ export function StatusNote({
  * 붙는 것처럼 보이는데, 규칙상으로도 실제로 그렇다.
  */
 export function MarkNotes({
-  marks, markKey, live,
+  marks, markKey, live, lift = 0,
 }: {
   marks: readonly Mark[];
+  /** 이 사람 몫을 얼마나 더 올릴까 — 옆 사람과 겹치지 않게 (`StatusNote`) */
+  lift?: number;
   /**
    * `marks` 를 줄인 열쇠 (`set:name` 을 이어 붙인 것).
    *
@@ -1285,11 +1306,17 @@ export function MarkNotes({
         if (told.current.has(k)) continue;
         told.current.add(k);
       }
-      fresh.push({
-        key: seq.current++,
-        text: `${m.good ? '버프' : '디버프'}:${m.what}`,
-        good: m.good,
-      });
+      /*
+        ── 앞에 `버프:` `디버프:` 를 안 붙인다 ──
+
+        **색이 이미 그 말을 한다.** 좋은 것은 초록, 나쁜 것은 붉은색으로
+        뜨므로 (`StatusNote` 의 `good`), 낱말을 앞에 또 붙이면 좁은 줄에서
+        정작 봐야 하는 효과 쪽이 밀려 말줄임으로 잘렸다.
+
+        같은 이유로 효과 문구도 짧다 (`core/status` 의 `STATUS_WHAT`) —
+        인물 하나 폭에 한 줄로 들어가야 한다.
+      */
+      fresh.push({ key: seq.current++, text: m.what, good: m.good });
     }
     had.current = now;
     if (!fresh.length) return;
@@ -1309,7 +1336,7 @@ export function MarkNotes({
   return (
     <>
       {notes.map((n, k) => (
-        <StatusNote key={n.key} text={n.text} good={n.good} i={k} />
+        <StatusNote key={n.key} text={n.text} good={n.good} i={k} lift={lift} />
       ))}
     </>
   );
@@ -1450,6 +1477,79 @@ export function AfterImage({ children, on }: { children: React.ReactNode; on: An
       }}
     >
       <View>{children}</View>
+    </Animated.View>
+  );
+}
+
+/** 요정의 화살이 날아와 꽂히기까지 (ms) */
+export const FEY_MS = 300;
+
+/**
+ * ── 요정의 화살 ── 때릴 때마다 40% 로 한 대 더 (`core/status` 의 `st_fey`).
+ *
+ * ## 여태 화면에 없었다
+ *
+ * 리안느의 요정의 축제는 이 게임에서 제일 비싼 기술인데 (코스트 15), 그
+ * 절반인 이 한 대가 **아무 그림도 없었다.** 계산은 터진 만큼을 원래 피해에
+ * 더해서 한 숫자로 보냈고 (`applyHit`), 그러니 화면에서는 어떤 대는 조금 더
+ * 아프고 어떤 대는 아니라는 것 말고 알 방법이 없었다 — 40% 라는 확률이
+ * 눈으로 확인되지 않으면 걸려 있는지조차 모른다.
+ *
+ * 이제 계산이 그 몫을 따로 알려 주고 (`TickEvent.fey`), 여기서 **작은 화살
+ * 한 대가 날아와 꽂힌다.**
+ *
+ * ## 작게, 그러나 확실하게
+ *
+ * 몸의 절반 크기다. 평타 화살과 같은 크기면 "한 대를 두 번 그렸나" 로
+ * 보이고, 더 작으면 40px 짜리 적 위에서 먼지가 된다.
+ *
+ * **위에서 비스듬히** 들어온다. 평타 화살은 옆으로 곧게 오므로 (`SwordWave`)
+ * 같은 길로 오면 겹쳐서 한 대로 보인다. 요정이 쏜 것은 다른 데서 와야 한다.
+ *
+ * 꽂히고 나서 잠깐 서 있는다 — 지나가기만 하면 "빗나갔다" 로 읽힌다
+ * (`FallingArrow` 와 같은 이유).
+ */
+export function FeyDart({ set, name, size }: { set: string; name: string; size: number }) {
+  const t = useRef(new Animated.Value(0)).current;
+  const [on, setOn] = useState(true);
+
+  useEffect(() => {
+    const a = Animated.timing(t, {
+      toValue: 1, duration: FEY_MS, easing: Easing.out(Easing.quad), useNativeDriver: true,
+    });
+    a.start();
+    const end = setTimeout(() => setOn(false), FEY_MS);
+    return () => { clearTimeout(end); a.stop(); };
+  }, [t]);
+
+  /* 오른쪽 위에서 몸 가운데로. 끝의 0 이 곧 꽂힌 자리다 */
+  const dx = useMemo(() => t.interpolate({
+    inputRange: [0, 0.55, 1], outputRange: [size * 1.1, 0, 0], extrapolate: 'clamp',
+  }), [t, size]);
+  const dy = useMemo(() => t.interpolate({
+    inputRange: [0, 0.55, 1], outputRange: [-size * 0.9, 0, 0], extrapolate: 'clamp',
+  }), [t, size]);
+  /* 날아오는 동안은 또렷하고, 꽂힌 뒤에 스러진다 */
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.08, 0.62, 1], outputRange: [0, 1, 1, 0], extrapolate: 'clamp',
+  }), [t]);
+
+  if (!on) return null;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        opacity: fade,
+        transform: [
+          { translateX: dx },
+          { translateY: dy },
+          /* 오른쪽 위에서 왼쪽 아래로 — 그림은 오른쪽을 보고 누워 있다 */
+          { rotate: '160deg' },
+        ],
+      }}
+    >
+      <Sprite set={set} name={name} size={size * 0.5} />
     </Animated.View>
   );
 }

@@ -81,7 +81,13 @@ export interface RosterActions {
    */
   /** @param aim 화면이 이미 고른 자리. 없으면 확률대로 여기서 고른다 */
   /** @param mul 이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 */
-  strikeFoe: (who: string, aim?: number, mul?: number, ally?: string | null) => void;
+  /**
+   * 한 대 친다. **요정의 화살이 터진 만큼**을 돌려준다 (`TickEvent.fey`).
+   *
+   * 돌려주는 이유는 화면이 그릴 것이 있어서다 — 그 한 대만 작은 화살로
+   * 따로 그린다 (`BattleView` 의 `FeyDart`). 안 터졌으면 0.
+   */
+  strikeFoe: (who: string, aim?: number, mul?: number, ally?: string | null) => number;
   /**
    * 스킬 — 횡으로 베며 검기를 날린다. 앞의 세 마리를 1.5배로 친다.
    *
@@ -386,7 +392,7 @@ export const createRosterSlice = (
   strikeFoe: (who, aim, mul, ally) => {
     const st = get();
     /* 판 연출 중에는 안 때린다 — 막 뒤에서 적이 녹아 있으면 안 된다 */
-    if (fightHeld(st.battle)) return;
+    if (fightHeld(st.battle)) return 0;
     const { battle, ev } = applyHit(
       st.battle, who, st.party, seated(st), Math.random, aim, mul, ally,
     );
@@ -404,13 +410,13 @@ export const createRosterSlice = (
     if (ev.taken > 0 && ev.hurt) {
       useBattleUi.getState().hitByAlly(who, ev.hurt);
       set({ battle });
-      return;
+      return 0;
     }
-    if (ev.hit <= 0) return;
+    if (ev.hit <= 0) return 0;
 
     if (!ev.killed) {
       set({ battle });
-      return;
+      return ev.fey;
     }
 
     /*
@@ -428,6 +434,8 @@ export const createRosterSlice = (
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
     set({ battle, money: st.money + ev.gold, elixir: st.elixir + ev.elixir });
+    /* 요정의 화살이 터진 만큼 — 화면이 그 한 대만 따로 그린다 (`ev.fey`) */
+    return ev.fey;
   },
 
   skillFoe: (who, at, slot) => {

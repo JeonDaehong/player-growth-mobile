@@ -385,13 +385,19 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                           ))}
                         </Row>
                         {/*
-                          ── 이름은 줄이고, 숫자는 안 줄인다 ──
+                          ── 숫자를 아예 안 적는다 ──
 
-                          한 덩어리로 적었더니 (`거대 화살 8/12`) 좁은 칸에서
-                          말줄임이 **뒤에서부터** 먹어 들어와 정작 봐야 하는
-                          숫자가 사라졌다. 둘을 갈라 놓고 이름 쪽에만
-                          `flexShrink` 를 주면, 모자랄 때 이름이 줄고 숫자는
-                          끝까지 남는다.
+                          `거대 화살 8/12` 였다. 칸이 화면 폭의 4분의 1 이라
+                          이름이 긴 기술은 그 숫자 때문에 말줄임으로 잘렸고,
+                          잘린 이름은 어느 기술인지조차 말하지 못한다.
+
+                          **막대가 이미 같은 말을 한다.** 바로 위 여덟 칸이
+                          찬 만큼 밝아지므로 (`lit`) "얼마나 남았나" 는 그것으로
+                          읽힌다 — 8/12 라는 정확한 수는 여기서 아무 판단도
+                          바꾸지 않는다. 정확한 값이 필요하면 캐릭터 창이 있다.
+
+                          이름 옆에 남는 것은 **지금 그 칸이 무엇인가** 뿐이다.
+                          다 차면 `준비`, 아직 안 열렸으면 몇 성이 필요한지.
                         */}
                         <Row gap={2} style={{ marginTop: 1, justifyContent: 'center' }}>
                           <T
@@ -402,9 +408,11 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                           >
                             {sk.name}
                           </T>
-                          <T size={8} numberOfLines={1} dim={full ? 'full' : 'dim'}>
-                            {!open ? `${si + 1}성` : full ? '준비' : `${on}/${sk.cost}`}
-                          </T>
+                          {(!open || full) && (
+                            <T size={8} numberOfLines={1} dim={full ? 'full' : 'dim'}>
+                              {open ? '준비' : `${si + 1}성`}
+                            </T>
+                          )}
                         </Row>
                       </View>
                     );
