@@ -150,7 +150,12 @@ export function HeroScreen() {
         위쪽 안전영역도 이 띠가 제 안에서 준다 (`TopBar` 의 `MIN_TOP`) —
         홈이 위 여백을 안 빼는 것과 같은 까닭이다 (`HomeScreen` 의 `edges`).
       */}
-      <TopBar />
+      {/*
+        **문 여섯은 안 그린다** (`gates`). 저 줄은 "무대에서 어디로 갈까" 를
+        말하는 것이라, 이미 들어와 있는 화면에서 또 보이면 여기가 무엇을
+        하는 자리인지가 흐려진다. 이름과 지갑만 남는다.
+      */}
+      <TopBar gates={false} />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: SP.md, paddingBottom: SP.xl }}

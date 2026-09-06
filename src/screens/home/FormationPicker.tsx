@@ -123,8 +123,39 @@ function Seat({ n, front, inv }: { n: number; front: boolean; inv: boolean }) {
  * 다시 쓰면 화면의 번호와 무대의 자리가 조용히 갈릴 수 있다 — 사람이 그
  * 번호를 보고 파티를 짜게 된 뒤로는 제일 나쁜 종류의 어긋남이다.
  */
+/** 이 대형이 **실제로 쓰는 가로줄들** — 위에서 아래로 (4 → 0) */
+function usedLanes(form: FormationId): number[] {
+  const on = new Set(formationSeats(form, PARTY_SIZE).map((sp) => sp.lane));
+  return Array.from({ length: FORM_LANES }, (_v, i) => FORM_LANES - 1 - i)
+    .filter((ln) => on.has(ln));
+}
+
+/**
+ * 그림이 쓰는 줄 수 — **셋 중 제일 많은 것**에 맞춘다.
+ *
+ * 대형마다 쓰는 줄이 다르다 (`3-1`·`1-3` 은 셋, `2-2` 는 둘). 있는 만큼만
+ * 그리면 세 칸의 높이가 서로 달라져서, 나란히 놓은 단추 셋이 들쭉날쭉해진다.
+ * 제일 큰 것에 맞춰 두고 가운데로 모으면 셋이 같은 높이다.
+ */
+const GRID_ROWS = Math.max(...FORMATION_IDS.map((id) => usedLanes(id).length));
+const GRID_H = GRID_ROWS * SEAT + (GRID_ROWS - 1) * 2;
+
+/**
+ * 대형 미리보기 — **빈 줄은 안 그린다.**
+ *
+ * 무대에는 다섯 가로줄이 있고 대형은 그중 몇 줄만 쓴다 (`FORM_LANES`).
+ * 여태 다섯 줄을 다 그리고 안 쓰는 줄은 빈 칸으로 뒀는데, 그러면 번호와
+ * 번호 사이가 한 칸씩 벌어져서 **셋이 흩어져 서 있는 것**으로 보였다.
+ *
+ * 무대에서 실제로 벌어져 서는 것은 맞다. 그런데 이 그림이 하는 말은 "누가
+ * 앞이고 누가 뒤인가" 이지 **얼마나 떨어져 서는가**가 아니다 — 간격까지
+ * 그리려다 정작 앞뒤가 안 읽혔다.
+
+ * 쓰는 줄만 붙여 그린다. 위아래 차례는 그대로라 (뒤에 선 사람이 위에)
+ * 무대와 겹쳐 읽히는 것은 안 깨진다.
+ */
 function Grid({ form, inv }: { form: FormationId; inv: boolean }) {
-  const lanes = Array.from({ length: FORM_LANES }, (_v, i) => FORM_LANES - 1 - i);
+  const lanes = React.useMemo(() => usedLanes(form), [form]);
   /* 자리 → 파티 칸 번호 (1부터). 늘 넷을 다 앉힌다 */
   const at = React.useMemo(() => {
     const out: Record<string, number> = {};
@@ -136,7 +167,8 @@ function Grid({ form, inv }: { form: FormationId; inv: boolean }) {
 
   return (
     <Row gap={5} style={{ alignItems: 'center' }}>
-      <View style={{ gap: 2 }}>
+      {/* 높이를 못 박고 가운데로 모은다 — 세 칸이 같은 키여야 한다 */}
+      <View style={{ height: GRID_H, gap: 2, justifyContent: 'center' }}>
         {lanes.map((ln) => (
           <Row key={ln} gap={3}>
             <Seat n={at[`back:${ln}`] ?? 0} front={false} inv={inv} />
@@ -152,7 +184,7 @@ function Grid({ form, inv }: { form: FormationId; inv: boolean }) {
       <View
         style={{
           width: 2,
-          height: FORM_LANES * SEAT + (FORM_LANES - 1) * 2,
+          height: GRID_H,
           borderRadius: R.round,
           backgroundColor: inv ? C.fgInv : WHITE,
           opacity: O.dim,

@@ -182,7 +182,19 @@ function Fade() {
   );
 }
 
-export function TopBar() {
+export function TopBar({ gates = true }: {
+  /**
+   * 아랫줄의 **문 여섯**을 그릴까 (랭킹 · 이벤트 … 설정).
+   *
+   * 메인에서만 참이다. 저 여섯은 **무대에서 어디로 갈까**를 말하는 줄이라,
+   * 이미 어딘가에 들어와 있는 화면에서는 뜻이 흐려진다 — 영웅에서 다시
+   * 문 여섯이 보이면 여기가 무엇을 하는 화면인지가 갈린다.
+   *
+   * 윗줄(이름 · 지갑)은 어디서나 그대로다. 저건 갈 곳이 아니라 **내가 지금
+   * 무엇을 가지고 있나**라서, 캐릭터를 키우는 화면에서 오히려 더 필요하다.
+   */
+  gates?: boolean;
+} = {}) {
   const insets = useSafeAreaInsets();
   const money = useGame((s) => s.money);
   const dia = useGame((s) => s.dia);
@@ -305,24 +317,26 @@ export function TopBar() {
           나란히 놓인 것들은 설명 없이 한 벌로 읽힌다. 칸마다 네모를 두르거나
           세로줄로 가르면 작은 상자 여섯, 또는 표가 된다. 둘 다 해 봤다.
         */}
-        <Row
-          gap={2}
-          style={{
-            paddingHorizontal: SP.xs,
-            paddingVertical: 2,
-            borderRadius: R.lg,
-            backgroundColor: SURF.veil,
-          }}
-        >
-          {GATES.map((g) => (
-            <Gate
-              key={g.id}
-              label={g.label}
-              art={g.art}
-              onPress={() => (g.id === 'config' ? setConfig(true) : soon(g.label))}
-            />
-          ))}
-        </Row>
+        {gates && (
+          <Row
+            gap={2}
+            style={{
+              paddingHorizontal: SP.xs,
+              paddingVertical: 2,
+              borderRadius: R.lg,
+              backgroundColor: SURF.veil,
+            }}
+          >
+            {GATES.map((g) => (
+              <Gate
+                key={g.id}
+                label={g.label}
+                art={g.art}
+                onPress={() => (g.id === 'config' ? setConfig(true) : soon(g.label))}
+              />
+            ))}
+          </Row>
+        )}
       </View>
 
       <ProfilePopup visible={profile} onClose={() => setProfile(false)} />
