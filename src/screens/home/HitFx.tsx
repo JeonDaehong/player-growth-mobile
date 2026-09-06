@@ -937,7 +937,7 @@ export function DamageNumber({
     inputRange: [0, 0.55, 1], outputRange: [1, 1, 0],
   }), [t]);
   const rise = useMemo(() => t.interpolate({
-    inputRange: [0, 0.2, 1], outputRange: [0, -9, -20],
+    inputRange: [0, 0.2, 1], outputRange: [0, -5, -12],
   }), [t]);
   const pop = useMemo(() => t.interpolate({
     inputRange: [0, 0.15, 0.35, 1], outputRange: [0.6, 1.4, 1, 1],
@@ -974,10 +974,17 @@ export function DamageNumber({
             /*
               **조금만 떠오른다.**
 
-              38px 까지 올라갔었다. 캐릭터가 54px 이니 머리 한참 위, 거의 몸
-              하나만큼 떨어진 자리에서 대부분의 시간을 보냈다 — 누가 맞았는지
-              가 안 읽힌다. 20px 이면 머리 위에서 뜨는 것으로 보이면서도
-              숫자끼리 겹치지 않는다.
+              38 → 20 → **12** 이다. 캐릭터가 76px 이니 20 도 머리에서 4분의
+              1 만큼 떨어진 자리였고, 숫자는 뜨자마자 거기로 가서 남은 시간을
+              전부 거기서 보낸다 — 시작 자리를 내려도 (`numTop`) 이걸 안
+              줄이면 결국 같은 데 떠 있다.
+
+              12 면 머리에 붙어 뜨면서도 줄끼리 안 겹친다 (한 줄이 12px 씩
+              쌓인다 — `BattleView` 의 `NUM_STEP`).
+
+              시작 자리(`numTop` 의 -11)는 그대로다. 15px 글자의 아랫줄이
+              머리에 닿는 자리라 그건 맞았고, 문제는 **거기서 얼마나 멀리
+              가느냐**였다.
             */
             translateY: rise,
           },
@@ -1141,9 +1148,19 @@ const SETTLE_MS = 700;
  * 그림자만 지워서 밝은 배경에서도 읽히게 한다.
  */
 export function StatusNote({
-  text, good, i, lift = 0,
+  text, good, i, lift = 0, head = 0,
 }: {
   text: string;
+  /**
+   * 상자 꼭대기에서 **그림 머리까지** 비어 있는 높이 (px).
+   *
+   * 이 글은 상자 꼭대기를 기준으로 뜨는데 (`bottom: '100%'`), 잡몹은
+   * 정사각 상자 안에 납작한 그림이 들어 있어 위쪽 30~40px 이 빈다
+   * (`BattleView` 의 `foeAt.head`). 그만큼 내려와야 머리 바로 위다.
+   *
+   * 아군은 그림이 세로로 길어 (`SPRITE_RATIO` 가 대부분 1 이상) 0 이다.
+   */
+  head?: number;
   /** 좋은 것인가 — 초록과 빨강으로 갈린다 (`ui/theme`) */
   good: boolean;
   /** 몇 번째 줄인가 — 한꺼번에 여럿 걸리면 위로 쌓인다 */
@@ -1185,7 +1202,7 @@ export function StatusNote({
   }), [t]);
   /* 아주 조금 떠오른다 — 많이 올리면 숫자와 자리를 다툰다 */
   const rise = useMemo(() => t.interpolate({
-    inputRange: [0, 1], outputRange: [0, -7],
+    inputRange: [0, 1], outputRange: [0, -4],
   }), [t]);
 
   return (
@@ -1199,7 +1216,7 @@ export function StatusNote({
           가려진다.
         */
         bottom: '100%',
-        marginBottom: 16 + i * 12 + lift,
+        marginBottom: 16 + i * 12 + lift - head,
         /*
           **인물 폭에서 조금만 넘긴다.**
 
@@ -1267,11 +1284,13 @@ export function StatusNote({
  * 붙는 것처럼 보이는데, 규칙상으로도 실제로 그렇다.
  */
 export function MarkNotes({
-  marks, markKey, live, lift = 0,
+  marks, markKey, live, lift = 0, head = 0,
 }: {
   marks: readonly Mark[];
   /** 이 사람 몫을 얼마나 더 올릴까 — 옆 사람과 겹치지 않게 (`StatusNote`) */
   lift?: number;
+  /** 상자 꼭대기에서 그림 머리까지 비어 있는 높이 (`StatusNote` 의 `head`) */
+  head?: number;
   /**
    * `marks` 를 줄인 열쇠 (`set:name` 을 이어 붙인 것).
    *
@@ -1370,8 +1389,18 @@ export function MarkNotes({
     }
     had.current = now;
     if (!fresh.length) return;
-    /* 한꺼번에 셋 넘게 걸리면 앞엣것부터 버린다 — 넷이 쌓이면 벽이 된다 */
-    setNotes((old) => [...old, ...fresh].slice(-3));
+    /*
+      한꺼번에 **둘 넘게** 걸리면 앞엣것부터 버린다.
+
+      셋이었다. 그런데 이 덩어리 높이가 곧 옆 사람과 어긋내야 하는 층
+      간격이라 (`BattleView` 의 `noteLiftOf`), 셋을 허용하는 동안은 층이
+      46px 아래로 못 내려갔다 — 둘째 층 사람의 윗줄이 머리 위 86px 이었다.
+
+      둘이면 덩어리가 23px 이고 층이 28 이면 된다. 한 사람에게 세 가지가
+      **같은 순간에** 새로 걸리는 일은 판이 열릴 때뿐이고, 그때 셋째 줄은
+      어차피 위쪽 띠에 가려 잘 안 보였다.
+    */
+    setNotes((old) => [...old, ...fresh].slice(-2));
     timers.current.push(setTimeout(() => {
       setNotes((old) => old.filter((n) => !fresh.some((f) => f.key === n.key)));
     }, NOTE_MS));
@@ -1386,7 +1415,14 @@ export function MarkNotes({
   return (
     <>
       {notes.map((n, k) => (
-        <StatusNote key={n.key} text={n.text} good={n.good} i={k} lift={lift} />
+        <StatusNote
+          key={n.key}
+          text={n.text}
+          good={n.good}
+          i={k}
+          lift={lift}
+          head={head}
+        />
       ))}
     </>
   );

@@ -308,7 +308,7 @@ const NUM_STEP = 12;
  * 놓인 자리에서 위로 20px 을 더 간다. 그러니 놓는 자리가 그보다 낮으면
  * 떠오르는 동안 무대 밖으로 나가고, 거기는 잘린다 (`overflow: hidden`).
  */
-const NUM_RISE = 22;
+const NUM_RISE = 14;
 
 /**
  * 피해 숫자를 **어느 높이에** 놓을까.
@@ -337,6 +337,14 @@ const NUM_RISE = 22;
  * 정하는 일**이라서다. 우두머리를 더 키우거나 잡몹을 키워도 따라온다.
  */
 function numTop(y: number, row: number): number {
+  /*
+    글자 상자 꼭대기를 머리에서 11px 위에 둔다 — 15px 글자의 **아랫줄이
+    머리에 닿는** 자리다. 여기서 위로 12px 을 더 떠오르므로 (`NUM_RISE`)
+    끝나는 자리가 머리 바로 위 몇 px 이다.
+
+    이 값은 그대로 두고 **떠오르는 거리**를 20 에서 12 로 줄였다
+    (`HitFx` 의 `DamageNumber`). 시작 자리는 맞았고 가는 거리가 문제였다.
+  */
   const head = y - 11;
   const fits = Math.max(1, Math.floor((head - NUM_RISE) / NUM_STEP) + 1);
   return row < fits
@@ -780,6 +788,13 @@ export function BattleView({ top, corner }: Props = {}) {
       /** 맞은 자리 — 무대 기준으로 못 박아 둔다 */
       x: number; y: number; size: number;
       /**
+       * 상자 꼭대기에서 **그림의 머리까지** 비어 있는 높이 (`spotOf`).
+       *
+       * 피해 숫자가 이걸 더해서 내려온다 — 안 더하면 납작한 잡몹 위에서
+       * 숫자가 머리와 40px 떨어져 뜬다.
+       */
+      head: number;
+      /**
        * 위에서 떨어진 화살이 꽂혔나 — 꽂히는 그림을 한 대 얹는다.
        *
        * 빈 문자열이면 안 얹는다. 활잡이의 화살비에서만 붙는다.
@@ -989,6 +1004,18 @@ export function BattleView({ top, corner }: Props = {}) {
     adv: [] as number[],
     /** 자리별 제 크기 배수 (`FoeKind.scale`) — 없는 자리는 1 */
     scale: [] as number[],
+    /**
+     * 자리별 **그림이 상자 안에서 실제로 차지하는 높이의 비율** (0~1).
+     *
+     * `Sprite` 는 정사각 상자에 비율을 지켜 넣고 (`contain`) 발을 바닥에
+     * 맞춰 내리므로 (`spriteGap`), 가로로 넓은 그림은 **상자 위쪽이 통째로
+     * 빈다.** 잡몹은 대부분 납작해서 (`sw_grub/idle` 이 0.43) 73px 짜리
+     * 상자에서 42px 이 빈 하늘이다.
+     *
+     * 머리 위에 무언가를 놓는 것들이 이걸 봐야 한다 — 안 그러면 숫자와
+     * 글이 **머리에서 한 뼘 떨어진 허공에** 뜬다.
+     */
+    head: {} as Record<number, number>,
   });
   /*
     맞은 직후 잠깐 자세가 무너지는 **적들의 자리**.
@@ -1572,6 +1599,11 @@ export function BattleView({ top, corner }: Props = {}) {
       /* 격자는 바닥에서 `FLOOR` 만큼 떠 있고, 뒷줄은 `lift` 만큼 더 올라간다 */
       y: STAGE_H - FLOOR - (L.lift[pos] ?? 0) - size,
       size,
+      /*
+        상자 위쪽에 **비어 있는 높이** (px). 상자 꼭대기에서 이만큼 내려와야
+        그림의 머리다 (`foeAt.head`). 머리 위에 뜨는 숫자가 이걸 더한다.
+      */
+      head: Math.round(size * (1 - (a.head[pos] ?? 1))),
     };
   }, []);
 
@@ -2615,12 +2647,17 @@ export function BattleView({ top, corner }: Props = {}) {
    * 어긋내면 옆 사람 석 줄과 사이사이에 끼어 여섯 줄이 한 덩어리가 된다 —
    * 실제로 판이 열릴 때 그렇게 보였다.
    *
-   * 46 이다. 석 줄(36px)보다 크므로 이웃한 둘은 세로로 안 겹치고, 같은 층을
-   * 쓰는 것끼리는 (넷 중 1·3번째, 2·4번째) 가로로 120px 넘게 떨어진다 —
-   * 한 줄이 `공격속도 증가` 여섯 자(≈54px)라 어느 쪽으로도 안 붙는다.
+   * 46 이었다. 석 줄(36px)보다 커야 했으므로 그 아래로는 못 내려갔는데,
+   * 그러면 **둘째 층 사람의 제일 윗줄이 머리 위 86px** 이다 (16 + 24 + 46).
+   * 인물이 76px 이니 제 키만큼 위다 — "너무 머리에서부터 위에서 뜨는거
+   * 같아" 가 정확히 이 줄이다.
    *
-   * 제일 높은 줄이 머리 위 86px 이다 (16 + 24 + 46). 하늘이 238px 이므로
-   * (`Ground` 의 머리말) 위쪽 띠에 안 닿는다.
+   * 층 간격을 내리려면 **한 사람이 쓰는 높이**부터 줄여야 한다. 한꺼번에
+   * 뜨는 줄을 셋에서 둘로 줄였으므로 (`HitFx` 의 `MarkNotes`) 한 덩어리가
+   * 23px 이고, 28 이면 그보다 크다.
+   *
+   * 제일 높은 줄이 머리 위 51px 이다 (16 + 12 + 28에서 윗줄 기준 40 + 글
+   * 높이). 86 에서 절반쯤 내려왔다.
    *
    * ## 한동안은 아예 **한 사람만 말하게** 해서 피했다
    *
@@ -2632,7 +2669,7 @@ export function BattleView({ top, corner }: Props = {}) {
     const order = spots.map((_sp, i) => i)
       .sort((a, b) => (form1.x[a] ?? 0) - (form1.x[b] ?? 0));
     const row: number[] = [];
-    order.forEach((seat, rank) => { row[seat] = (rank % 2) * 46; });
+    order.forEach((seat, rank) => { row[seat] = (rank % 2) * 28; });
     return row;
     /* `form1` 은 렌더마다 새로 만들어지므로 자리 배열 자체를 열쇠로 쓴다 */
   }, [spots, form1.x]);
@@ -2867,6 +2904,20 @@ export function BattleView({ top, corner }: Props = {}) {
     지난 렌더의 마릿수로 자리를 쟀다. 그 한 프레임이 "뿅" 으로 보인다.
     상태가 아니라 계산에 쓰는 값이라 렌더 중에 넣어도 안전하다.
   */
+  /*
+    자리마다 **쉬는 자세**의 비율을 잰다 (`foeAt.head`).
+
+    지금 자세로 재면 안 된다 — 맞을 때마다 `down` 으로 바뀌고 비율도 같이
+    달라지므로, 머리 위에 뜬 숫자가 **적이 움찔할 때마다 위아래로 튄다.**
+  */
+  const foeHead: Record<number, number> = {};
+  for (const f of battle.foes) {
+    const kf = kindAt(battle, f);
+    foeHead[f.pos ?? 0] = Math.min(
+      1, SPRITE_RATIO[`${kf.art}/${kf.pose ?? 'idle'}`] ?? 1,
+    );
+  }
+
   foeAt.current = {
     stageW,
     count: battle.foes.length,
@@ -2876,6 +2927,7 @@ export function BattleView({ top, corner }: Props = {}) {
     base: foeW,
     scale: foeScale,
     edge,
+    head: foeHead,
   };
 
   return (
@@ -3486,6 +3538,13 @@ export function BattleView({ top, corner }: Props = {}) {
                       marks={foeNoteOf[f.id]?.marks ?? NO_MARK}
                       markKey={foeNoteOf[f.id]?.key ?? ''}
                       live={!held && !down}
+                      /*
+                        상자 꼭대기가 아니라 **그림 꼭대기** 위에 뜬다
+                        (`headH`). 회복 숫자가 쓰는 것과 같은 값이다 —
+                        납작한 놈은 상자 위쪽 30~40px 이 통째로 비어서,
+                        안 빼면 글이 머리와 한 뼘 떨어져 뜬다.
+                      */
+                      head={foeSize - headH}
                     />
 
                     {/*
@@ -3865,8 +3924,13 @@ export function BattleView({ top, corner }: Props = {}) {
                   left: h.x,
                   width: h.size,
                   alignItems: 'center',
-                  /* 적도 머리 바로 위 — 아군과 같은 규칙 */
-                  top: numTop(h.y, h.row),
+                  /*
+                    적도 머리 바로 위 — 아군과 같은 규칙.
+
+                    `h.head` 를 더해 **그림의 머리**까지 내려온다. 상자
+                    꼭대기에 놓으면 납작한 잡몹 위에서 40px 떠 버린다.
+                  */
+                  top: numTop(h.y + h.head, h.row),
                   zIndex: 70,
                 }}
               >
@@ -3895,7 +3959,7 @@ export function BattleView({ top, corner }: Props = {}) {
                   left: h.x + h.size * 0.42,
                   width: h.size,
                   alignItems: 'center',
-                  top: numTop(h.y, h.row) - 11,
+                  top: numTop(h.y + h.head, h.row) - 11,
                   zIndex: 71,
                 }}
               >
