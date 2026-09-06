@@ -113,7 +113,17 @@ export function frameStyle({ hi, sunk, pressed }: FrameLook = {}): ViewStyle {
  * 손가락을 안 먹는다 (`pointerEvents`). 안 그러면 이 판이 상자를 통째로
  * 덮어서 아래 있는 것들이 안 눌린다.
  */
-export function FrameArt({ hi }: { hi?: boolean }) {
+export function FrameArt({ hi, noBottom }: {
+  hi?: boolean;
+  /**
+   * **아래를 안 닫는다.**
+   *
+   * 띠 위로 솟은 칸이 쓴다 (`BottomNav` 의 메인). 그 칸의 아래쪽은 띠 안에
+   * 잠겨 있어서, 거기에 줄을 긋거나 꺾쇠를 붙이면 **띠 한가운데에 선이 그어진**
+   * 꼴이 된다 — 솟은 것이 띠에서 자라난 것이 아니라 위에 얹힌 것으로 보인다.
+   */
+  noBottom?: boolean;
+}) {
   /*
     그림이 없을 때 — 안쪽 흐린 줄 하나. 이것만으로도 판때기로 읽힌다.
   */
@@ -126,8 +136,9 @@ export function FrameArt({ hi }: { hi?: boolean }) {
           left: BEVEL,
           right: BEVEL,
           top: BEVEL,
-          bottom: BEVEL,
+          bottom: noBottom ? -1 : BEVEL,
           borderWidth: 1,
+          borderBottomWidth: noBottom ? 0 : 1,
           borderRadius: R.sm,
           borderColor: hi ? LINE.mid : LINE.low,
         }}
@@ -148,8 +159,8 @@ export function FrameArt({ hi }: { hi?: boolean }) {
     >
       <Corner x="left" y="top" hi={hi} />
       <Corner x="right" y="top" hi={hi} />
-      <Corner x="left" y="bottom" hi={hi} />
-      <Corner x="right" y="bottom" hi={hi} />
+      {!noBottom && <Corner x="left" y="bottom" hi={hi} />}
+      {!noBottom && <Corner x="right" y="bottom" hi={hi} />}
     </View>
   );
 }

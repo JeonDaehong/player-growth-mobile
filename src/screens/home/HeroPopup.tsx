@@ -44,6 +44,7 @@ import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
 import { BORDER, C, FS, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
+import { NAV_RISE } from './BottomNav';
 import { CharPopup } from './CharPopup';
 import { HeroManage } from './HeroManage';
 import { HeroBook } from './HeroBook';
@@ -145,7 +146,12 @@ function SubTabs({ at, onGo }: { at: Sub; onGo: (s: Sub) => void }) {
         flexDirection: 'row',
         gap: SP.xs,
         paddingHorizontal: SP.sm,
-        paddingVertical: SP.xs + 2,
+        paddingTop: SP.xs + 2,
+        /*
+          아래 띠의 메인 칸이 여기까지 솟아 있다 (`NAV_RISE`). 그만큼 물러나
+          있지 않으면 가운데 알약의 아랫도리가 그 판에 덮인다.
+        */
+        paddingBottom: SP.xs + 2 + NAV_RISE,
         borderTopWidth: 1,
         borderTopColor: LINE.low,
         backgroundColor: C.bg,

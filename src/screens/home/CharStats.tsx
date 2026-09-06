@@ -47,6 +47,14 @@ import { BAD_C, GOOD_C, LINE, SP } from '@/ui/theme';
 const IC = 9;
 
 /**
+ * 두 칸 사이에 파 두는 홈 — 한쪽당 이만큼.
+ *
+ * 가운데 줄이 여기 선다. 홈이 없으면 오른쪽 칸의 로고가 줄 자리에 그대로
+ * 서서 줄을 덮는다.
+ */
+const GUT = SP.sm;
+
+/**
  * 수치 한 줄 — 로고 · 이름 · 값 · 차이.
  *
  * `KV` 를 안 쓴다. 저건 왼쪽이 글자 하나뿐인 줄을 위한 것이라 로고 자리가
@@ -265,8 +273,16 @@ export function CharStats({ c, party, chars, cols = 1, live = true }: {
         왼쪽 값의 오른쪽 끝과 오른쪽 이름의 왼쪽 끝이 맞닿아 있어서, 훑을 때
         `1127 방어력` 이 한 덩어리로 읽혔다. 줄 하나면 그 눈길이 끊긴다.
 
-        **제일 옅은 선**이다 (`LINE.low`). 이건 가르는 것이지 무엇을 말하는
-        것이 아니라, 보이는 줄 모르게 있어야 맞다.
+        **줄만 그어서는 안 됐다.** 한 번 `LINE.low` 로 그어 봤더니 오른쪽 칸의
+        로고가 정확히 그 자리에 서서 줄을 덮었다 — 칸이 폭의 절반을 그대로
+        쓰고 있었으므로, 오른쪽 칸의 왼쪽 끝이 곧 줄이 서는 자리였다.
+
+        그래서 **홈을 먼저 판다** (`GUT`). 양쪽 칸이 가운데로 그만큼씩 물러나
+        16px 짜리 빈 띠가 생기고, 줄은 그 한가운데 선다. 어느 쪽 로고와도
+        8px 씩 떨어져 있으므로 이제 가릴 것이 없다.
+
+        밝기도 한 단 올렸다. `LINE.low` 는 "있는 줄 모르게" 인데, 여기서는
+        **보여야** 가르는 일을 한다.
 
         칸이 하나일 때는 안 그린다 — 가를 것이 없다.
       */}
@@ -279,7 +295,7 @@ export function CharStats({ c, party, chars, cols = 1, live = true }: {
             top: 2,
             bottom: 2,
             width: 1,
-            backgroundColor: LINE.low,
+            backgroundColor: LINE.mid,
           }}
         />
       )}
@@ -288,8 +304,14 @@ export function CharStats({ c, party, chars, cols = 1, live = true }: {
           key={i}
           style={{
             width: cols === 2 ? '50%' : '100%',
-            /* 두 칸일 때만 사이를 벌린다 — 한 칸이면 오른쪽 끝이 안으로 밀린다 */
-            paddingRight: cols === 2 && i % 2 === 0 ? SP.sm : 0,
+            /*
+              가운데 홈 — 줄이 설 자리다 (위 세로줄 주석).
+
+              왼쪽 칸은 오른쪽으로, 오른쪽 칸은 왼쪽으로 물러난다. 한 칸일
+              때는 물러나지 않는다 — 그러면 오른쪽 끝이 괜히 안으로 밀린다.
+            */
+            paddingRight: cols === 2 && i % 2 === 0 ? GUT : 0,
+            paddingLeft: cols === 2 && i % 2 === 1 ? GUT : 0,
           }}
         >
           {node}
