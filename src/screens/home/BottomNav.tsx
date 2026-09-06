@@ -30,7 +30,7 @@
  * 칸마다 두르던 테두리는 지웠다. 다섯이 각자 네모를 두르면 띠 하나가 아니라
  * 작은 상자 다섯이 된다.
  */
-import React, { useState } from 'react';
+import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '@/ui/atoms';
@@ -38,8 +38,10 @@ import { Sprite } from '@/ui/Sprite';
 import { NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
-import { HeroPopup } from './HeroPopup';
 import { C, FS, LINE, O, R, SP, SURF } from '@/ui/theme';
+
+/** 아래 띠가 여는 화면들 — 지금 실제로 있는 것은 둘이다 */
+export type TabId = 'main' | 'hero';
 
 const TABS: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
   { id: 'hero', label: '영웅', art: 'hero' },
@@ -49,18 +51,20 @@ const TABS: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
   { id: 'content', label: '컨텐츠', art: 'more' },
 ];
 
-export function BottomNav() {
+/**
+ * ── 아래 띠 ──
+ *
+ * **어느 칸인지는 밖에서 정한다** (`tab`). 여기 상태로 들고 있으면 띠가
+ * 화면을 여는 셈이 되는데, 실제로 화면을 갈아 끼우는 것은 그 위(`HomeScreen`)
+ * 라서 두 곳이 같은 것을 따로 기억하게 된다.
+ *
+ * 영웅과 메인만 실제로 있다. 나머지 셋은 아직 화면이 없어 준비중이다 —
+ * 눌러도 탭은 안 바뀌고 안내만 뜬다 (`soon`).
+ */
+export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => void }) {
   const insets = useSafeAreaInsets();
-  /*
-    ── 영웅만 실제로 열린다 ──
-
-    편성(누가 서나 · 어떻게 서나)이 여기로 왔다 (`HeroPopup`). 나머지 넷은
-    아직 화면이 없어 준비중이다.
-  */
-  const [hero, setHero] = useState(false);
 
   return (
-    <>
     <View
       style={{
         flexDirection: 'row',
@@ -78,14 +82,14 @@ export function BottomNav() {
       }}
     >
       {TABS.map((t) => {
-        const here = t.id === 'main';
+        const here = t.id === tab;
         return (
           <Pressable
             key={t.id}
             disabled={here}
             onPress={() => {
               sfx('tap');
-              if (t.id === 'hero') { setHero(true); return; }
+              if (t.id === 'hero' || t.id === 'main') { onTab(t.id as TabId); return; }
               soon(t.label);
             }}
             style={({ pressed }) => ({
@@ -124,8 +128,5 @@ export function BottomNav() {
         );
       })}
       </View>
-
-      <HeroPopup visible={hero} onClose={() => setHero(false)} />
-    </>
   );
 }

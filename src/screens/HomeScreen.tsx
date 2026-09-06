@@ -57,11 +57,27 @@ import { CharPopup } from './home/CharPopup';
 import { RewardBar } from './home/RewardBar';
 import { Ticker } from './home/Ticker';
 import { TopBar } from './home/TopBar';
-import { BottomNav } from './home/BottomNav';
+import { BottomNav, TabId } from './home/BottomNav';
+import { HeroScreen } from './home/HeroPopup';
 
 export default function HomeScreen() {
   const tickOnce = useGame((s) => s.battleTickOnce);
   const [slot, setSlot] = useState<number | null>(null);
+  /*
+    ── 아래 띠가 고른 화면 ──
+
+    영웅이 **창이 아니라 화면**이 되면서 생긴 값이다. 팝업이던 시절에는
+    무대 위에 막을 덮었는데, 그러면 뒤에서 인물 넷이 계속 휘두르고 이펙트가
+    돌았다 — 안 보이는 것을 그리느라 계속 일한 셈이다.
+
+    이제 탭에 따라 **몸통을 통째로 갈아 끼운다.** 영웅으로 가면 무대와 상자
+    줄과 파티 칸이 다 내려간다.
+
+    **전투는 그대로 돈다.** 계산은 아래 시계가 돌리고 (`tickOnce`) 그것은
+    화면이 무엇을 그리든 상관없다 — 영웅에서 편성을 짜는 동안에도 판은
+    흐르고 상자는 찬다. 돌아오면 무대가 그 자리에 다시 선다.
+  */
+  const [tab, setTab] = useState<TabId>('main');
 
   /*
     전투를 굴린다.
@@ -82,6 +98,15 @@ export default function HomeScreen() {
       준다 (`TopBar` 의 `MIN_TOP`).
     */
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['left', 'right']}>
+      {/*
+        ── 탭이 몸통을 갈아 끼운다 ──
+
+        메인이면 무대와 그 아래가, 영웅이면 편성 화면이 통째로 선다. 안 보이는
+        쪽은 **그려지지 않는다** — 겹쳐 두고 가리면 뒤엣것이 계속 도는데,
+        무대는 그리는 값이 제일 비싼 화면이다.
+      */}
+      {tab === 'main' ? (
+        <>
       {/* ── 붙박이 무대 ── 위 띠와 채팅을 안에 얹는다 */}
       <BattleView top={<TopBar />} corner={<Ticker />} />
 
@@ -130,7 +155,12 @@ export default function HomeScreen() {
         */}
       </ScrollView>
 
-      <BottomNav />
+        </>
+      ) : (
+        <HeroScreen />
+      )}
+
+      <BottomNav tab={tab} onTab={setTab} />
 
       {/*
         ── 홈에서 여는 창은 **읽기만 한다** ── (`CharPopup` 의 `readOnly`)

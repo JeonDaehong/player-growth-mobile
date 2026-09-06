@@ -1,7 +1,21 @@
 /**
  * ── 영웅 ── 누가 서고 어떻게 서나.
  *
- * 아래 띠의 첫 칸이 여는 창이다 (`BottomNav` 의 `hero`).
+ * 아래 띠의 첫 칸이 여는 **화면**이다 (`HomeScreen` 의 `tab`).
+ *
+ * ## 창이 아니라 화면이다
+ *
+ * 검은 막 위에 뜨는 팝업이었다 (`Popup`). 그러면 뒤에서 무대가 계속 그려진다 —
+ * 인물 넷이 휘두르고 이펙트가 돌고 숫자가 뜨는데, 그 위를 막으로 덮어 놓은
+ * 셈이라 **안 보이는 것을 그리느라 계속 일한다.**
+ *
+ * 이제 무대를 아예 **내린다** (`HomeScreen` 이 탭에 따라 갈아 끼운다).
+ * 전투는 그대로 돈다 — 계산은 스토어가 하고 (`battleTickOnce`) 그리기만
+ * 없어지는 것이라, 여기서 편성을 짜는 동안에도 판은 흐르고 상자는 찬다.
+ *
+ * 돌아가면 무대가 다시 선다. 그때 인물이 새로 걸어 들어오지는 않는다 —
+ * 판 열기 연출은 `openIn` 이 남아 있을 때만 도는 것이라 (`useStageStaging`),
+ * 한창인 판으로 돌아가면 그냥 그 자리에 서 있다.
  *
  * ## 왜 홈에서 여기로 옮겼나
  *
@@ -21,7 +35,8 @@
  * 들어갔다는 사실. 뒤엣것이 없으면 "바꿨는데 왜 그대로지" 가 된다.
  */
 import React, { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '@/state/store';
 import { CHARS, FREE_ENHANCE, capOf, maxStar } from '@/core/chars';
 import { PARTY_SIZE } from '@/core/party';
@@ -88,7 +103,7 @@ function Slot({ id, n, onPress }: {
   );
 }
 
-export function HeroPopup({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+export function HeroScreen() {
   /*
     ── 짜 둔 것을 보여 준다 ──
 
@@ -107,18 +122,43 @@ export function HeroPopup({ visible, onClose }: { visible: boolean; onClose: () 
   const setGrowth = useGame((s) => s.setGrowth);
   const toast = useGame((s) => s.toast);
 
+  const insets = useSafeAreaInsets();
+
   const [slot, setSlot] = useState<number | null>(null);
   /* 저장을 누르면 뜨는 확인 창 — 판이 다시 서는 것은 되돌릴 수 없다 */
   const [asking, setAsking] = useState(false);
-
-  if (!visible) return null;
 
   /* 짜 두었지만 아직 안 들어간 것이 있나 */
   const waiting = pendingParty !== null || pendingForm !== null;
 
   return (
     <>
-      <Popup visible title="영웅" onClose={onClose}>
+      {/*
+        화면 하나를 통째로 쓴다. 아래 띠는 밖에 있으므로 (`HomeScreen`)
+        여기서는 굴러가는 몸통만 그린다.
+      */}
+      {/*
+        ── 위쪽 안전영역을 **여기서 준다** ──
+
+        홈은 위 여백을 안 뺀다 (`HomeScreen` 의 `edges`). 무대가 화면 맨
+        위까지 올라가고 노치 아래 여백은 위 띠가 제 안에서 주기 때문인데
+        (`TopBar` 의 `MIN_TOP`), 이 화면에는 그 띠가 없다 — 안 주면 첫 줄이
+        노치 밑으로 들어간다.
+      */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          padding: SP.md,
+          paddingTop: insets.top + SP.md,
+          paddingBottom: SP.xl,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/*
+          제목 한 줄. 아래 띠가 어느 탭인지 이미 말하지만, 굴려 내려가면
+          띠는 화면 밖이라 **여기가 어디인지**를 맨 위에서 한 번 말한다.
+        */}
+        <T size={FS.hero} bold style={{ marginBottom: SP.sm }}>영웅</T>
         {/*
           ── 언제 들어가나 ──
 
@@ -246,7 +286,7 @@ export function HeroPopup({ visible, onClose }: { visible: boolean; onClose: () 
             </Row>
           </>
         )}
-      </Popup>
+      </ScrollView>
 
       {/* 칸을 누르면 그 위에 겹쳐 열린다 */}
       <CharPopup slot={slot} onClose={() => setSlot(null)} />
@@ -281,8 +321,14 @@ export function HeroPopup({ visible, onClose }: { visible: boolean; onClose: () 
               sfx('tap');
               applyPending();
               setAsking(false);
-              /* 창을 닫는다 — 판이 다시 서는 것을 봐야 눌린 것이 보인다 */
-              onClose();
+              /*
+                여기서 화면을 안 떠난다.
+
+                창이던 시절에는 닫았다 — 판이 다시 서는 것을 봐야 눌린 것이
+                보이기 때문이다. 이제는 탭이라 떠나는 것이 **아래 띠를 누르는
+                일**이고, 그건 사람이 정한다. 저장한 뒤에 대형을 마저 만지는
+                일이 흔한데 거기서 화면이 튕겨 나가면 다시 들어와야 한다.
+              */
             }}
           />
         </Row>
