@@ -300,66 +300,17 @@ export function StageVeil({
   );
 }
 
-/** 한 번 빤짝이는 데 걸리는 시간 (ms) */
-const GLOW_MS = 1100;
+/*
+  ── 여기 `BossCallBtn` 이 있었다 ──
 
-/**
- * "우두머리 토벌" — 1분을 사냥하면 나오는 단추.
- *
- * **빤짝인다.** 이 화면은 켜 두고 딴 데 보는 화면이라, 가만히 있는 단추는
- * 배경이 된다. 판이 끝없이 굴러가는 중에 "이제 여기서 멈추고 눌러라" 를
- * 말하려면 움직이는 것 하나가 필요하다.
- *
- * 빛은 **테두리와 글씨의 투명도**로만 낸다. 흑백 2색이라 색으로 강조할
- * 방법이 없고, 크기를 흔들면 옆의 진행 막대가 같이 밀린다.
- */
-export function BossCallBtn({ onPress }: { onPress: () => void }) {
-  const t = useRef(new Animated.Value(0)).current;
+  "우두머리 토벌" — 사냥 시간이 다 되면 무대 위에 뜨고, 빤짝이면서 "이제
+  여기서 멈추고 눌러라" 를 말하던 단추다.
 
-  useEffect(() => {
-    /*
-      끝없이 왕복한다. `Animated.loop` 은 멈추라고 할 때까지 도는데, 화면을
-      떠날 때 안 멈추면 사라진 화면의 값을 계속 건드린다.
-    */
-    const a = Animated.loop(Animated.sequence([
-      Animated.timing(t, {
-        toValue: 1, duration: GLOW_MS / 2, easing: Easing.inOut(Easing.quad),
-        useNativeDriver: false,
-      }),
-      Animated.timing(t, {
-        toValue: 0, duration: GLOW_MS / 2, easing: Easing.inOut(Easing.quad),
-        useNativeDriver: false,
-      }),
-    ]));
-    a.start();
-    return () => a.stop();
-  }, [t]);
+  이제 시간이 다 되면 저절로 불린다 (`core/autoBattle` 의 `bossReady` 에
+  그 이야기가 있다) — 방치형에서 사람이 눌러야 다음이 오는 자리는 방치가
+  아니다. 부르는 사람이 없어졌으므로 단추도 같이 걷었다.
+*/
 
-  /*
-    `interpolate()` 는 부를 때마다 `t` 에 자식 노드를 매단다. `t` 가 이
-    컴포넌트만큼 오래 사는데 그리기마다 부르면 노드가 끝없이 쌓인다
-    (`HitBurst` 에서 겪은 그것) — 여기는 계속 도는 값이라 더 위험하다.
-  */
-  const glow = useMemo(() => t.interpolate({
-    inputRange: [0, 1], outputRange: [0.35, 1],
-  }), [t]);
-
-  return (
-    <Pressable onPress={() => { sfx('tap'); onPress(); }} style={{ marginTop: SP.sm }}>
-      <Animated.View
-        style={{
-          borderWidth: 1,
-          borderColor: WHITE,
-          opacity: glow,
-          paddingVertical: SP.xs + 2,
-          alignItems: 'center',
-        }}
-      >
-        <T size={12} bold>우두머리 토벌</T>
-      </Animated.View>
-    </Pressable>
-  );
-}
 
 /**
  * `< 3 >` — 판을 골라 가는 단추.

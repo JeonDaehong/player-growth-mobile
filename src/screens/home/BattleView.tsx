@@ -4481,7 +4481,7 @@ export function BattleView({ top, corner }: Props = {}) {
                 dim={battle.repeat ? 'full' : 'sub'}
                 style={battle.repeat ? { color: C.bg } : undefined}
               >
-                {battle.repeat ? '반복 ON' : '반복 OFF'}
+                {battle.repeat ? '스테이지 반복 ON' : '스테이지 반복 OFF'}
               </T>
             </Pressable>
           </Row>
@@ -4528,11 +4528,11 @@ export function BattleView({ top, corner }: Props = {}) {
             >
               <T size={FS.tiny} dim="sub" numberOfLines={1}>
                 {battle.boss
-                  ? (rage ? '광폭화 — 두 배' : `광폭화 ${rageSec}초`)
+                  ? (rage ? '광폭화 — 두 배' : `광폭화까지 ${rageSec}초`)
                   : battle.called
                     /* 저절로 불렸다 — 서 있던 잡몹만 마저 잡으면 걸어 나온다 */
-                    ? '남은 적을 정리하면 우두머리'
-                    : `우두머리 ${secLeft}초`}
+                    ? '남은 적을 정리하면 BOSS 등장'
+                    : `BOSS 등장까지 ${secLeft}초`}
               </T>
               {/*
                 우두머리 구간에서는 **광폭화까지**를 그린다.

@@ -26,7 +26,7 @@ import {
 import { fmtShort } from '@/core/currency';
 import { hasProfanity } from '@/core/profanity';
 import { REFILLS, refillMax, refillPrice, usedToday } from '@/core/refill';
-import { AVATAR_NAME, AVATAR_PRICE, AVATAR_SOURCE } from '@/core/avatars';
+import { AVATAR_NAME, AVATAR_PRICE, AVATAR_SOURCE, avatarsFor } from '@/core/avatars';
 import { dayKey, dayKeyNow, selMaxStamina } from '../helpers';
 
 /** 이 뭉치가 맡는 액션들 */
@@ -115,9 +115,25 @@ export const createAccountSlice = (
    * 안 가진 로고는 못 낀다. 화면(로고 선택)이 이미 잠긴 칸을 막지만,
    * 여기서 한 번 더 본다 — 저장본을 손댄 상태로 들어올 수 있고, 무엇보다
    * "남의 화면에 뜨는 그림" 은 화면 한 곳만 믿고 열어 둘 자리가 아니다.
+   *
+   * ## 가졌다는 것이 두 갈래다
+   *
+   * `ownedAvatars` 하나만 봤다. 그런데 로고가 **모집한 캐릭터**로 바뀌면서
+   * (`core/avatars` 의 `avatarsFor`) 그 목록에 안 들어 있는 얼굴이 생겼다 —
+   * 캐릭터 얼굴은 캐릭터를 가지면 열리는 것이지 로고를 따로 받는 것이
+   * 아니기 때문이다.
+   *
+   * 그래서 넷을 다 모아 놓고도 **하나도 안 골라졌다.** 누를 때마다 "아직
+   * 가지고 있지 않은 로고입니다" 가 떴다.
+   *
+   * 이제 둘 다 본다: 받아 둔 로고(`ownedAvatars`)이거나, 고를 수 있는
+   * 목록에 있거나 (`avatarsFor` — 게임 로고와 모집한 캐릭터).
    */
   setAvatar: (a) => {
-    if (!get().ownedAvatars.includes(a)) {
+    const st = get();
+    const can = st.ownedAvatars.includes(a)
+      || avatarsFor(Object.keys(st.chars)).includes(a);
+    if (!can) {
       get().toast('아직 가지고 있지 않은 로고입니다', 'bad');
       return;
     }

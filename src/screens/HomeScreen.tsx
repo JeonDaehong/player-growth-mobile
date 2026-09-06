@@ -124,22 +124,24 @@ export default function HomeScreen() {
         </View>
 
         {/*
-          ── 시험 중 표시 ──
-
-          이 빌드는 **다듬는 중인 판**이다. 받아 보는 사람이 "이게 완성본인가"
-          를 헷갈리지 않게 한 줄 걸어 둔다. 내보낼 때 이 블록만 지운다.
-
-          맨 아래다. 무대 바로 밑은 상자 줄 자리라 (`RewardBar`) 거기에 임시
-          표시를 두면, 눈이 무대에서 내려오자마자 이 줄부터 읽게 된다.
+          여기 `TEST 진행중` 한 줄이 있었다. 받아 보는 사람이 "이게 완성본인가"
+          를 헷갈리지 않게 걸어 둔 것인데, 화면 아래에 늘 붙어 있는 글이라
+          한 번 읽고 나면 자리만 먹었다.
         */}
-        <View style={{ paddingTop: SP.sm, alignItems: 'center' }}>
-          <T size={9} bold dim="dim">TEST 진행중</T>
-        </View>
       </ScrollView>
 
       <BottomNav />
 
-      <CharPopup slot={slot} onClose={() => setSlot(null)} />
+      {/*
+        ── 홈에서 여는 창은 **읽기만 한다** ── (`CharPopup` 의 `readOnly`)
+
+        싸움을 보다가 "쟤가 누구더라" 로 여는 자리다. 알고 싶은 것은 누구이고
+        무엇을 쓰고 지금 수치가 얼마인가 셋이라, 강화 단추와 캐릭터 목록이
+        같이 있으면 보다가 눌러서 파티가 바뀐다.
+
+        키우는 것은 영웅 탭이 맡는다 (`HeroPopup` 이 같은 창을 그대로 연다).
+      */}
+      <CharPopup slot={slot} onClose={() => setSlot(null)} readOnly />
     </SafeAreaView>
   );
 }

@@ -440,7 +440,7 @@ export function RageCall({ nonce }: { nonce: number }) {
           textShadowRadius: 2,
         }}
       >
-        {'전투 시간이 길어져\n보스가 마기의 기운을 받아 광폭화 하였습니다'}
+        {'전투 시간이 길어져\nBOSS 가 마기의 기운을 받아 광폭화 하였습니다'}
       </Animated.Text>
     </Animated.View>
   );
@@ -1806,8 +1806,19 @@ export const FEY_MS = 300;
  * 몸의 절반 크기다. 평타 화살과 같은 크기면 "한 대를 두 번 그렸나" 로
  * 보이고, 더 작으면 40px 짜리 적 위에서 먼지가 된다.
  *
- * **위에서 비스듬히** 들어온다. 평타 화살은 옆으로 곧게 오므로 (`SwordWave`)
- * 같은 길로 오면 겹쳐서 한 대로 보인다. 요정이 쏜 것은 다른 데서 와야 한다.
+ * **왼쪽 위에서 비스듬히** 들어온다. 평타 화살은 옆으로 곧게 오므로
+ * (`SwordWave`) 같은 길로 오면 겹쳐서 한 대로 보인다 — 높이를 달리해서
+ * 가른다.
+ *
+ * ## 오른쪽에서 오고 있었다
+ *
+ * 처음엔 오른쪽 위에서 왼쪽 아래로 그었다. 평타와 다른 길이기만 하면
+ * 된다고 봤는데, 이 무대에서 **오른쪽은 적이 서 있는 쪽**이다 (`BattleView`) —
+ * 아군이 걸어 준 버프로 나가는 화살이 적진에서 날아오는 꼴이라, 누가 쏜
+ * 것인지가 거꾸로 읽혔다.
+ *
+ * 왼쪽 위에서 온다. 쏘는 사람이 왼쪽에 서 있으니 그쪽에서 와야 한다 —
+ * 하늘에서 떨어지는 화살비도 같은 방향이다 (`FallingArrow` 의 `DROP_DEG`).
  *
  * 꽂히고 나서 잠깐 서 있는다 — 지나가기만 하면 "빗나갔다" 로 읽힌다
  * (`FallingArrow` 와 같은 이유).
@@ -1825,9 +1836,9 @@ export function FeyDart({ set, name, size }: { set: string; name: string; size: 
     return () => { clearTimeout(end); a.stop(); };
   }, [t]);
 
-  /* 오른쪽 위에서 몸 가운데로. 끝의 0 이 곧 꽂힌 자리다 */
+  /* 왼쪽 위에서 몸 가운데로. 끝의 0 이 곧 꽂힌 자리다 */
   const dx = useMemo(() => t.interpolate({
-    inputRange: [0, 0.55, 1], outputRange: [size * 1.1, 0, 0], extrapolate: 'clamp',
+    inputRange: [0, 0.55, 1], outputRange: [-size * 1.1, 0, 0], extrapolate: 'clamp',
   }), [t, size]);
   const dy = useMemo(() => t.interpolate({
     inputRange: [0, 0.55, 1], outputRange: [-size * 0.9, 0, 0], extrapolate: 'clamp',
@@ -1847,8 +1858,12 @@ export function FeyDart({ set, name, size }: { set: string; name: string; size: 
         transform: [
           { translateX: dx },
           { translateY: dy },
-          /* 오른쪽 위에서 왼쪽 아래로 — 그림은 오른쪽을 보고 누워 있다 */
-          { rotate: '160deg' },
+          /*
+            왼쪽 위에서 오른쪽 아래로. 그림이 오른쪽을 보고 누워 있으므로
+            (`elfarcher_shot`) 내려오는 각도만큼 시계 방향으로 돌린다 —
+            촉이 가는 쪽을 봐야 꽂힌 것으로 보인다.
+          */
+          { rotate: '39deg' },
         ],
       }}
     >

@@ -30,6 +30,21 @@
  * 얼굴 위에 얹으면 그 둘이 **높이를 안 먹는다** — 44px 짜리 얼굴 안에서
  * 아래쪽 12px 은 어차피 발치라 글자 한 줄과 막대 하나가 들어갈 자리가 있다.
  *
+ * ## 칸 높이가 **늘 같다**
+ *
+ * 사람마다 기술 수가 달라서 (`skillsFor` — 둘에서 넷) 칸 높이가 서로 달랐다.
+ * 넷을 `stretch` 로 묶어 두었으므로 겉높이는 같았지만, 남는 자리가 **짧은
+ * 칸 아래**에 생기므로 상태 로고 줄이 사람마다 다른 높이에 떴다 — "버프창
+ * 위치가 다 제각각" 이 그것이다. 스킬 트리에서 하나를 찍는 순간 파티 줄
+ * 전체가 갑자기 길어지기도 했다.
+ *
+ * 이제 **자리를 미리 잡아 둔다** (`SKILL_ROWS`). 기술이 둘뿐인 사람의 칸에도
+ * 네 줄 자리가 있고, 빈 줄은 아무것도 안 그린다. 막 줄도 마찬가지다 —
+ * 없어도 자리는 남는다.
+ *
+ * 몇 px 을 빈 채로 두는 값이다. 그 대신 **아무것도 안 움직인다** — 기술을
+ * 찍어도, 막을 둘러도, 넷이 서로 다른 기술 수를 가져도 칸이 그대로다.
+ *
  * ## 숫자를 아예 안 적는다
  *
  * 여기 `27679 / 27679` 를 만·억으로 접어 넣는 함수가 있었다 (`short`).
@@ -43,14 +58,14 @@ import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
-import { CHARS, skillOpen, skillsFor, statOf } from '@/core/chars';
+import { CHARS, maxStar, skillOpen, skillsFor, statOf } from '@/core/chars';
 import {
   PARTY_SIZE, hpOf, livingMembers, partyPower, seatRows,
 } from '@/core/party';
 import { fitCharge } from '@/core/chars';
 import { hexOf } from '@/core/status';
 import { marksOf } from '@/core/passives';
-import { Row, T, Tag } from '@/ui/atoms';
+import { Row, Stars, T, Tag } from '@/ui/atoms';
 import { StatusRow } from './StatusRow';
 import { Sprite } from '@/ui/Sprite';
 import { BORDER, FS, LINE, O, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
@@ -61,6 +76,19 @@ const FACE = 46;
 const HP_H = 4;
 /** 막과 기술 칸의 두께 — 체력보다 얇아야 "덤으로 붙은 겹" 으로 읽힌다 */
 const THIN = 2;
+/**
+ * 기술 줄을 **몇 개 자리 잡아 둘까**.
+ *
+ * 사람마다 기술이 둘에서 넷이다 (`skillsFor` — 트리를 어떻게 찍었느냐가
+ * 정한다). 있는 만큼만 그리면 칸 높이가 사람마다 다르고, 하나를 새로 찍는
+ * 순간 파티 줄 전체가 길어진다.
+ *
+ * 넷이다 — 트리가 네 단계라 (`core/skillTree`) 액티브를 다 골라도 넷을
+ * 안 넘는다. 남는 줄은 아무것도 안 그린다.
+ */
+const SKILL_ROWS = 4;
+/** 기술 줄 하나의 높이 — 로고가 들어가는 만큼 */
+const SK_H = 10;
 
 export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
   const party = useGame((s) => s.party);
@@ -187,6 +215,30 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                       opacity={down ? O.dim : 1}
                     />
                     {/*
+                      ── 별 ── 얼굴 **위쪽에 겹친다.**
+
+                      3성인 희귀와 3성인 신화는 전혀 다른 상태인데 (`maxStar`),
+                      가진 만큼만 그리면 화면에서 똑같아 보인다 — 그래서 자리는
+                      늘 그 등급이 갈 수 있는 만큼이다.
+
+                      밑으로 쌓으면 한 줄이 곧 칸 높이다. 얼굴 정수리 쪽은
+                      대개 비어 있으므로 거기에 얹으면 공짜고, 어두운 판을
+                      깔아서 밝은 그림 위에서도 별이 읽히게 한다.
+                    */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        alignItems: 'center',
+                        paddingVertical: 1,
+                        backgroundColor: SURF.veil,
+                      }}
+                    >
+                      <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={8} />
+                    </View>
+                    {/*
                       레벨 — 얼굴 **오른쪽 아래**에 작은 판으로.
 
                       `Lv 40 / 60` 이었다. 상한은 성이 정하는 값이라
@@ -243,20 +295,21 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     말한다 (`ui/theme` 의 `SHIELD_C`). 무대의 발밑 막대와
                     같은 규칙이다 (`Fighter`).
 
-                    **없으면 자리도 없다.** 여기 빈 홈을 남겨 두면 넷 중
-                    한 명만 막을 둘렀을 때 그 사람 칸만 2px 길어진다.
+                    **없어도 자리는 지킨다.** 안 그리면 막을 두르는 순간
+                    그 사람 칸만 4px 길어져서 넷이 어긋난다 — 자리만 비워
+                    두면 아무것도 안 움직인다.
                   */}
-                  {ward > 0 && (
-                    <View
-                      style={{
-                        alignSelf: 'stretch',
-                        height: THIN,
-                        marginTop: 2,
-                        borderRadius: 1,
-                        backgroundColor: SURF.down,
-                        overflow: 'hidden',
-                      }}
-                    >
+                  <View
+                    style={{
+                      alignSelf: 'stretch',
+                      height: THIN,
+                      marginTop: 2,
+                      borderRadius: 1,
+                      backgroundColor: ward > 0 ? SURF.down : 'transparent',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {ward > 0 && (
                       <View
                         style={{
                           width: `${ward * 100}%`,
@@ -264,8 +317,8 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                           backgroundColor: SHIELD_C,
                         }}
                       />
-                    </View>
-                  )}
+                    )}
+                  </View>
 
                   {/*
                     ── 이름 ──
@@ -300,35 +353,68 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                     순서는 그대로다 — 위에서부터 첫째 · 둘째 · 셋째 기술이라,
                     창을 한 번 보면 어느 줄이 무엇인지가 묶인다.
                   */}
-                  {skillsFor(c).map((sk, si) => {
+                  {Array.from({ length: SKILL_ROWS }, (_v, si) => {
+                    const list = skillsFor(c);
+                    const sk = list[si];
+                    /*
+                      ── 없는 줄도 자리를 지킨다 ──
+
+                      사람마다 기술이 둘에서 넷이라, 있는 만큼만 그리면 칸
+                      높이가 갈리고 상태 로고 줄이 사람마다 다른 데 뜬다.
+                      빈 줄은 아무것도 안 그리고 높이만 차지한다.
+                    */
+                    if (!sk) return <View key={`e${si}`} style={{ height: SK_H, marginTop: 2 }} />;
                     const open = skillOpen(c, si);
                     const on = fitCharge(c, charge[c.id])[si] ?? 0;
                     const full = open && on >= sk.cost;
                     const at = open ? Math.min(1, on / Math.max(1, sk.cost)) : 0;
                     return (
-                      <View
+                      <Row
                         key={sk.name}
+                        gap={3}
                         style={{
                           alignSelf: 'stretch',
-                          height: THIN,
+                          height: SK_H,
                           marginTop: 2,
-                          borderRadius: 1,
-                          backgroundColor: SURF.down,
-                          overflow: 'hidden',
                           /* 아직 못 쓰는 기술은 흐리다 — 지우면 칸 높이가 갈린다 */
                           opacity: open ? 1 : O.faint,
                         }}
                       >
+                        {/*
+                          ── 어느 기술인가 ── 막대 **왼쪽에 로고 하나.**
+
+                          이름을 적었다가 걷었다. 칸이 좁아 대개 말줄임으로
+                          잘렸고, 잘린 이름은 어느 기술인지조차 말하지 못한다.
+
+                          로고는 **잘리지 않는다.** 10px 짜리 그림 하나라
+                          자리를 거의 안 먹으면서, 캐릭터 창에서 본 것과 같은
+                          그림이라 (`SkillPanel` 도 `skill_icon` 을 쓴다) 한
+                          번 보면 묶인다.
+
+                          그림이 아직 없으면 빈 자리로 남고 막대만 남는다 —
+                          `Sprite` 가 그렇게 떨어뜨린다.
+                        */}
+                        <Sprite set="skill_icon" name={sk.art} size={SK_H} />
                         <View
                           style={{
-                            width: `${at * 100}%`,
-                            height: '100%',
-                            backgroundColor: WHITE,
-                            /* 다 차면 꽉 찬다 — 그 순간이 눈에 띄어야 한다 */
-                            opacity: full ? 1 : O.sub,
+                            flex: 1,
+                            height: THIN,
+                            borderRadius: 1,
+                            backgroundColor: SURF.down,
+                            overflow: 'hidden',
                           }}
-                        />
-                      </View>
+                        >
+                          <View
+                            style={{
+                              width: `${at * 100}%`,
+                              height: '100%',
+                              backgroundColor: WHITE,
+                              /* 다 차면 꽉 찬다 — 그 순간이 눈에 띄어야 한다 */
+                              opacity: full ? 1 : O.sub,
+                            }}
+                          />
+                        </View>
+                      </Row>
                     );
                   })}
 
@@ -350,7 +436,14 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                   />
                 </>
               ) : (
-                <View style={{ height: FACE + 30, justifyContent: 'center', gap: 4 }}>
+                /* 찬 칸과 **같은 높이** — 얼굴 · 이름 · 막 · 기술 넷 · 로고 줄 */
+                <View
+                  style={{
+                    height: FACE + 14 + (THIN + 2) + SKILL_ROWS * (SK_H + 2) + 19,
+                    justifyContent: 'center',
+                    gap: 4,
+                  }}
+                >
                   {/*
                     빈 칸의 `+` 는 **동그라미 안에** 넣는다. 글자만 덩그러니
                     있으면 그게 단추인지 그냥 표시인지 모르겠는데, 실제로

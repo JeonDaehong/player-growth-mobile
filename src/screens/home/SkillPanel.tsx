@@ -143,11 +143,19 @@ function targetText(sk: SkillDef): string {
 }
 
 export function SkillPanel({
-  c, party, chars,
+  c, party, chars, readOnly,
 }: {
   c: OwnedChar;
   party: Party;
   chars: Record<string, OwnedChar>;
+  /**
+   * **보기만 하는 창인가** (`CharPopup` 의 같은 이름).
+   *
+   * 켜져 있으면 정화의 "언제 쓸까" 칸을 안 그린다. 저건 읽는 것이 아니라
+   * **고르는 것**이라, 보러 연 창에 있으면 무엇을 하는 창인지 흐려진다 —
+   * 키우러 들어간 창(영웅 탭)에는 그대로 있다.
+   */
+  readOnly?: boolean;
 }) {
   /** 펴 놓은 기술. 하나만 편다 — 둘을 나란히 펴면 비교가 아니라 벽이 된다 */
   const [open, setOpen] = useState<string | null>(null);
@@ -367,7 +375,7 @@ export function SkillPanel({
                     </T>
                   </>
                 )}
-                {sk.opt && <CleanseOption who={c.id} slot={slot} />}
+                {sk.opt && !readOnly && <CleanseOption who={c.id} slot={slot} />}
               </View>
             )}
           </View>

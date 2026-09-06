@@ -31,7 +31,7 @@ import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { ICONS } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
-import { BORDER, C, MONO, SP, WHITE } from '@/ui/theme';
+import { BORDER, LINE, MONO, SP, WHITE } from '@/ui/theme';
 
 /** 로고 칸 하나 */
 /*
@@ -53,9 +53,19 @@ function AvatarCell({
         {
           padding: 2,
           alignItems: 'center',
-          /* 고른 것만 굵은 테두리 — 흑백이라 굵기가 곧 강조다 */
+          /*
+            ── 고른 칸은 **테두리만** 밝다 ──
+
+            흰 바탕으로 뒤집고 있었다. 그러면 그 한 칸이 창에서 제일 밝은
+            덩어리가 되는데, 정작 봐야 하는 것은 **그 안의 얼굴**이다 —
+            흰 판 위에 얹힌 도트 그림은 바탕과 붙어서 오히려 덜 보였다.
+
+            테두리만 밝히면 "골랐다" 는 그대로 읽히면서 얼굴은 원래 배경
+            위에 남는다. 대형 고르는 칸이 같은 이유로 같은 규칙을 쓴다
+            (`FormationPicker`).
+          */
           borderWidth: on ? 2 : 1,
-          backgroundColor: on ? C.bgInv : 'transparent',
+          borderColor: on ? WHITE : LINE.mid,
         },
       ]}
     >
@@ -158,12 +168,20 @@ export function ProfilePopup({ visible, onClose }: { visible: boolean; onClose: 
             />
           ))}
         </View>
-        <T size={9} dim="dim">
-          모집한 캐릭터의 얼굴이 여기에 하나씩 늘어납니다.
-        </T>
       </View>
 
-      <Btn label="닫기" onPress={onClose} fill />
+      {/*
+        ── 단추 앞에 한 뼘 ──
+
+        로고 칸 바로 밑에 단추가 붙어 있었다. 마지막 얼굴을 누르려던 손가락이
+        그대로 "확인" 에 닿는 거리라, 고르다가 창이 닫힌다.
+      */}
+      <Btn
+        label="확인"
+        onPress={onClose}
+        fill
+        style={{ marginTop: SP.lg }}
+      />
     </Popup>
   );
 }

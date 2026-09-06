@@ -7,6 +7,21 @@
  * 둘을 나누지 않은 이유가 있다. 파티 칸을 눌렀을 때 하고 싶은 일은 "이 자리를
  * 어떻게 할까" 하나고, 그 답이 사람을 바꾸는 것일 수도 키우는 것일 수도 있다.
  * 창을 둘로 나누면 누를 때마다 어느 창을 열지 먼저 정해 줘야 한다.
+ *
+ * ## 다만 **어디서 열었느냐**로 갈린다 (`readOnly`)
+ *
+ * 이 창을 여는 곳이 둘이다 — 홈의 파티 칸과 영웅 탭.
+ *
+ * 영웅 탭은 **키우러 들어가는 화면**이다. 거기서는 레벨을 올리고 합성하고
+ * 트리를 찍고 자리를 바꾼다.
+ *
+ * 홈의 파티 칸은 다르다. 싸움을 보다가 "쟤가 누구더라" 로 여는 자리라,
+ * 알고 싶은 것은 **누구이고 · 무엇을 쓰고 · 지금 수치가 얼마인가** 셋이다.
+ * 거기에 강화 단추와 캐릭터 목록이 같이 있으면 싸움을 보다 눌렀다가 파티가
+ * 바뀐다 — 실제로 그럴 자리가 아니다.
+ *
+ * 그래서 홈에서 열면 **읽기만 한다.** 창 하나에 두 얼굴을 두는 것이,
+ * 같은 내용을 두 파일로 나눠 놓고 한쪽만 고치게 두는 것보다 낫다.
  */
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -36,8 +51,22 @@ import { STATUS_NAME, hexOf } from '@/core/status';
 import { hpOf, livingMembers, seatRows } from '@/core/party';
 
 export function CharPopup({
-  slot, onClose,
-}: { slot: number | null; onClose: () => void }) {
+  slot, onClose, readOnly,
+}: {
+  slot: number | null;
+  onClose: () => void;
+  /**
+   * **보기만 하는 창인가** — 홈의 파티 칸에서 열면 참이다.
+   *
+   * 꺼져 있으면 (영웅 탭) 여태 하던 것을 다 한다. 켜져 있으면 **누르는
+   * 것이 전부 사라진다** — 레벨 · 합성 · 각성 · 스킬 트리 · 월페이퍼 ·
+   * 자리 비우기 · 캐릭터 바꾸기, 그리고 머리말의 골드까지.
+   *
+   * 골드를 빼는 이유도 같다. 저건 **쓸 것이 있을 때** 보는 값이라, 아무것도
+   * 못 사는 창에 걸려 있으면 무엇을 살 수 있나 찾게 만든다.
+   */
+  readOnly?: boolean;
+}) {
   /*
     ── 짜 둔 편성을 고친다 ──
 
@@ -190,7 +219,8 @@ export function CharPopup({
       visible
       title={`${slot + 1}번 자리`}
       onClose={close}
-      right={<Money amount={money} size={11} />}
+      /* 살 것이 없는 창에는 지갑도 없다 (`readOnly`) */
+      right={readOnly ? undefined : <Money amount={money} size={11} />}
     >
       {c && d ? (
         <>
@@ -228,7 +258,7 @@ export function CharPopup({
                 없는 사람에게 눌리지 않는 단추를 남겨 두면, 그게 "아직 안
                 나왔다" 인지 "고장" 인지 알 수가 없다.
               */}
-              {hasWallpaper(c.id) && (
+              {hasWallpaper(c.id) && !readOnly && (
                 <Btn
                   label="월페이퍼 보기"
                   size="sm"
@@ -239,6 +269,16 @@ export function CharPopup({
             </View>
           </Row>
 
+          {/*
+            ── 키우는 것은 **영웅 탭에서만** ── (`readOnly`)
+
+            레벨 · 합성 · 각성 · 스킬 트리가 여기 있었다. 홈의 파티 칸에서
+            열었을 때는 통째로 안 뜬다 — 싸움을 보다가 "쟤가 누구더라" 로
+            연 창에서 강화 단추를 누를 일은 없고, 잘못 눌러 조각을 쓰는
+            일은 있다.
+          */}
+          {!readOnly && (
+            <>
           <Sep />
 
           {/*
@@ -387,7 +427,9 @@ export function CharPopup({
             onPress={() => setTree(true)}
           />
 
-          <SkillPanel c={c} party={party} chars={chars} />
+            </>
+          )}
+          <SkillPanel c={c} party={party} chars={chars} readOnly={readOnly} />
 
           {/*
             여기 **전용무기(고유장비) 강화**가 있었다 — 이름 붙은 무기 한
@@ -545,6 +587,14 @@ export function CharPopup({
 
             ⚠ 출시 전에 `FREE_ENHANCE` 를 끄면 이 줄은 통째로 사라진다.
           */}
+          {/*
+            ── 여기부터도 **영웅 탭에서만** ── (`readOnly`)
+
+            테스트 단추와 "이 자리 비우기" 다. 둘 다 누르면 파티가 바뀌는
+            것이라, 싸움을 보다 연 창에 있으면 안 된다.
+          */}
+          {!readOnly && (
+            <>
           {FREE_ENHANCE && (
             <>
               {/*
@@ -605,11 +655,22 @@ export function CharPopup({
             style={{ marginTop: SP.xs }}
             onPress={() => setPartySlot(slot, null)}
           />
+            </>
+          )}
         </>
       ) : (
         <T size={11} dim="sub">빈 자리입니다. 세울 캐릭터를 고르세요.</T>
       )}
 
+      {/*
+        ── 누구를 세울까 ── **영웅 탭에서만** (`readOnly`).
+
+        홈의 파티 칸에서 열었을 때는 안 뜬다. 싸움을 보다 "쟤가 누구더라" 로
+        연 창 맨 아래에 가진 캐릭터가 전부 늘어서 있으면, 스크롤하다 하나를
+        눌러 파티가 통째로 바뀐다.
+      */}
+      {!readOnly && (
+        <>
       <Sep />
       <T size={11} bold style={{ marginBottom: SP.xs }}>
         {c ? '다른 캐릭터로 바꾸기' : '세울 캐릭터'}
@@ -639,6 +700,8 @@ export function CharPopup({
           />
         );
       })}
+        </>
+      )}
     </Popup>
     </>
   );
