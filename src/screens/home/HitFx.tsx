@@ -1539,6 +1539,21 @@ export function MarkNotes({
     아무도 안 때리니 그럴 일도 거의 없다).
   */
   const [settled, setSettled] = useState(false);
+  /**
+   * 아직 **한 번도 안 알린** 상태인가.
+   *
+   * 이 부품은 걸리는 **그 순간**을 말한다 (`had` 에 없던 것이 새로 걸린
+   * 것이다). 그런데 그 기억은 붙어 있는 동안만 있으므로, 화면이 내려갔다
+   * 다시 서면 **이미 걸려 있던 것이 전부 방금 걸린 것**이 된다.
+   *
+   * 영웅 탭을 만들면서 실제로 그렇게 됐다 (`HomeScreen` 이 무대를 내린다) —
+   * 돌아오면 넷의 머리 위에 패시브 문구가 한꺼번에 다시 떴다.
+   *
+   * 처음 한 바퀴는 **적어만 두고 말하지 않는다.** 판이 열릴 때는 그 전에
+   * `live` 가 거짓이 되면서 이 값이 꺼지므로 (아래), 그때는 그대로 알린다 —
+   * 판마다 패시브를 새로 알리는 것은 살려야 하는 쪽이다.
+   */
+  const first = useRef(true);
   /*
     줄을 걷는 시계들.
 
@@ -1564,6 +1579,11 @@ export function MarkNotes({
     if (!live) {
       had.current = new Set();
       told.current = new Set();
+      /*
+        판이 열리는 길로 들어섰다 — 그때는 지금 걸려 있는 것을 **알려야**
+        한다. 화면이 다시 서는 것과 판이 새로 서는 것을 여기서 가른다.
+      */
+      first.current = false;
       /* 이미 떠 있던 줄도 같이 걷는다 — 막 위에 남으면 다음 판까지 따라온다 */
       setNotes((old) => (old.length ? [] : old));
       return;
@@ -1605,6 +1625,19 @@ export function MarkNotes({
       fresh.push({ key: seq.current++, text: m.what, good: m.good });
     }
     had.current = now;
+    /*
+      ── 처음 한 바퀴는 **적어만 둔다** ── (`first`)
+
+      화면이 다시 섰을 뿐인데 이미 걸려 있던 것을 새로 걸린 것으로 말하면,
+      영웅 탭에 다녀올 때마다 넷의 머리 위에 패시브가 다시 뜬다.
+    */
+    if (first.current) {
+      first.current = false;
+      for (const m of marks) {
+        if (m.set === 'passive_icon') told.current.add(`${m.set}:${m.name}`);
+      }
+      return;
+    }
     if (!fresh.length) return;
     /*
       한꺼번에 **둘 넘게** 걸리면 앞엣것부터 버린다.

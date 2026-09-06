@@ -36,7 +36,6 @@
  */
 import React, { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '@/state/store';
 import { CHARS, FREE_ENHANCE, capOf, maxStar } from '@/core/chars';
 import { PARTY_SIZE } from '@/core/party';
@@ -47,6 +46,7 @@ import { sfx } from '@/ui/sfx';
 import { BORDER, FS, LINE, R, SP, SURF } from '@/ui/theme';
 import { CharPopup } from './CharPopup';
 import { FormationPicker } from './FormationPicker';
+import { TopBar } from './TopBar';
 
 /** 자리 하나 — 얼굴 · 이름 · 별 · 레벨 */
 function Slot({ id, n, onPress }: {
@@ -122,8 +122,6 @@ export function HeroScreen() {
   const setGrowth = useGame((s) => s.setGrowth);
   const toast = useGame((s) => s.toast);
 
-  const insets = useSafeAreaInsets();
-
   const [slot, setSlot] = useState<number | null>(null);
   /* 저장을 누르면 뜨는 확인 창 — 판이 다시 서는 것은 되돌릴 수 없다 */
   const [asking, setAsking] = useState(false);
@@ -138,20 +136,24 @@ export function HeroScreen() {
         여기서는 굴러가는 몸통만 그린다.
       */}
       {/*
-        ── 위쪽 안전영역을 **여기서 준다** ──
+        ── 위 띠는 **여기에도 있다** ──
 
-        홈은 위 여백을 안 뺀다 (`HomeScreen` 의 `edges`). 무대가 화면 맨
-        위까지 올라가고 노치 아래 여백은 위 띠가 제 안에서 주기 때문인데
-        (`TopBar` 의 `MIN_TOP`), 이 화면에는 그 띠가 없다 — 안 주면 첫 줄이
-        노치 밑으로 들어간다.
+        무대 안에 얹혀 있던 것이라 (`BattleView` 의 `top`) 탭을 옮기면 같이
+        사라졌다. 그런데 저 띠에 있는 것 — 지갑 · 프로필 · 설정 — 은 무대에
+        딸린 것이 아니라 **어느 화면에서나 있어야 하는 것**이다. 영웅에서
+        캐릭터를 키우는 동안 골드가 안 보이면, 얼마나 남았는지 보려고 메인에
+        갔다 와야 한다.
+
+        굴러가는 몸통 **밖**이다. 안에 넣으면 내리는 순간 지갑이 위로
+        사라진다.
+
+        위쪽 안전영역도 이 띠가 제 안에서 준다 (`TopBar` 의 `MIN_TOP`) —
+        홈이 위 여백을 안 빼는 것과 같은 까닭이다 (`HomeScreen` 의 `edges`).
       */}
+      <TopBar />
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{
-          padding: SP.md,
-          paddingTop: insets.top + SP.md,
-          paddingBottom: SP.xl,
-        }}
+        contentContainerStyle={{ padding: SP.md, paddingBottom: SP.xl }}
         showsVerticalScrollIndicator={false}
       >
         {/*

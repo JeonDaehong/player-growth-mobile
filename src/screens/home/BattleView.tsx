@@ -788,8 +788,14 @@ export function BattleView({ top, corner }: Props = {}) {
   const seq = useRef(0);
   /** 지난 틱의 사람별 체력 — 얼마나 깎였는지 재려고 */
   const prevHp = useRef<Record<string, number>>({});
-  /** 지난번에 본 "적이 실제로 친 횟수" — 지속 피해와 가르려고 */
-  const prevSwing = useRef(0);
+  /**
+   * 지난번에 본 "적이 실제로 친 횟수" — 지속 피해와 가르려고.
+   *
+   * `-1` 로 시작한다. 0 으로 두면 화면이 다시 설 때 (`HomeScreen` 이 탭을
+   * 옮기면 무대를 내린다) 이미 쌓여 있던 횟수가 **방금 친 것**으로 읽혀서,
+   * 돌아오자마자 적이 허공에 한 번 팔을 휘두른다.
+   */
+  const prevSwing = useRef(-1);
 
   /** 맨 앞 적이 맞고 밀리는 동작 */
   const knock = useRef(new Animated.Value(0)).current;
@@ -1040,6 +1046,14 @@ export function BattleView({ top, corner }: Props = {}) {
     들고 있으면 그때 멀쩡히 서 있던 놈들이 갑자기 다시 걸어 들어온다.
   */
   const walk = useRef(new Map<number, Animated.Value>()).current;
+  /**
+   * 아직 **첫 그림 전인가**.
+   *
+   * 무대는 탭을 옮기면 내려갔다 다시 선다 (`HomeScreen`). 그때 서 있던
+   * 놈들을 "방금 나타난 것" 으로 보지 않기 위한 값이다 — 아래 걸어
+   * 들어오기 자리에 그 이야기를 적어 두었다.
+   */
+  const first = useRef(true);
   /** 이미 걸어 들어온 놈들 — 두 번 걷지 않게 */
   const walked = useRef(new Set<number>()).current;
   /** 걸음을 이미 시작시킨 놈들 — 값 만들기와 움직이기가 따로라 따로 센다 */
@@ -2422,6 +2436,15 @@ export function BattleView({ top, corner }: Props = {}) {
       기록은 **연출을 안 하는 때에도** 남긴다 (전멸·빈 파티). 안 그러면 다시
       싸울 때 그동안의 변화가 통째로 "방금 맞은 것" 으로 뜬다.
     */
+    /*
+      ── 처음 한 바퀴는 **적어만 둔다** ──
+
+      기록이 비어 있으면 견줄 것이 없다. 그대로 두면 이미 쌓여 있던 휘두른
+      횟수가 "방금 쳤다" 로 읽혀서, 화면이 다시 설 때마다 적이 허공에 팔을
+      한 번 휘두른다 (`prevSwing` 이 -1 로 시작하는 까닭).
+    */
+    const firstLook = prevSwing.current < 0;
+
     const hurt: [string, number][] = [];
     /* 살아 있는 사람들 — 누가 아팠는지 모를 때 연출을 걸 자리다 */
     const livingIds: string[] = [];
@@ -2443,7 +2466,7 @@ export function BattleView({ top, corner }: Props = {}) {
       실제로 친 횟수는 계산이 세어 준다 (`BattleState.swingSeq`).
       숫자가 그대로면 이번에 줄어든 것은 걸려 있던 것 때문이다.
     */
-    const swung = battle.swingSeq !== prevSwing.current;
+    const swung = !firstLook && battle.swingSeq !== prevSwing.current;
     prevSwing.current = battle.swingSeq;
 
     /*
@@ -3048,6 +3071,28 @@ export function BattleView({ top, corner }: Props = {}) {
     움직이기 시작하는 것은 effect 에서 한다. 그리는 중에 애니메이션을 걸면
     렌더가 부수 효과를 갖게 된다.
   */
+  /*
+    ── **처음 붙는 순간에 서 있던 놈들은 안 걷는다** ──
+
+    걸어 들어오는 것은 "방금 나타났다" 를 말하는 연출이다 (`walked` 가
+    한 놈당 한 번만 걷게 잡아 준다). 그런데 그 기억은 이 화면이 살아 있는
+    동안만 있으므로, 화면이 내려갔다 다시 서면 **서 있던 놈들이 전부 방금
+    나타난 것으로 보인다.**
+
+    영웅 탭을 만들면서 실제로 그렇게 됐다 (`HomeScreen` 이 무대를 내린다) —
+    돌아오면 한창 싸우던 잡몹들이 오른쪽 끝에서 우르르 걸어 들어왔다.
+
+    첫 그림에서 서 있는 놈은 **이미 걸어 들어온 놈**이다. 걸었다고 적어만
+    두고 값은 안 만든다.
+  */
+  if (stageW && first.current) {
+    first.current = false;
+    for (const f of battle.foes) {
+      walked.add(f.id);
+      started.add(f.id);
+    }
+  }
+
   if (stageW) {
     for (const f of battle.foes) {
       if (walked.has(f.id)) continue;
@@ -3102,6 +3147,8 @@ export function BattleView({ top, corner }: Props = {}) {
     walk.clear();
     walked.clear();
     started.clear();
+    /* 다시 설 때도 "서 있던 놈은 안 걷는다" 가 되게 (`first`) */
+    first.current = true;
   }, [walk, walked, started]);
 
   /*
