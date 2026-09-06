@@ -37,6 +37,15 @@ import { sfx } from '@/ui/sfx';
 import { BORDER, BORDER_HI, C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 
 /**
+ * 자리 한 칸의 크기 (px).
+ *
+ * 9 였다. 테두리 1px 을 빼면 7px 이 남는데 거기 8px 글자를 넣으니 숫자가
+ * 상자에 끼여 눌렸다 — 넷을 견주는 그림에서 번호가 안 읽히면 이 그림이
+ * 하려던 일이 통째로 안 된다.
+ */
+const SEAT = 11;
+
+/**
  * 자리 하나 — **파티 칸 번호를 그 안에 적는다.**
  *
  * ## 왜 번호를 적나
@@ -50,46 +59,28 @@ import { BORDER, BORDER_HI, C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/them
  * 답해야 하는 물음이 하나 생긴다: 내 3번 칸 캐릭터는 이 대형에서 어디에
  * 서는가. 번호를 적는 것 말고 그 물음에 답하는 방법이 없다.
  *
- * ## 안 쓰는 자리는 점으로 남긴다
+ * ## 안 쓰는 자리는 **아무것도 안 그린다**
  *
- * 지우면 대형마다 그림의 높이가 달라져서 셋을 나란히 못 견준다. 아주 흐리게
- * 두면 자리는 지키면서 번호가 적힌 칸만 눈에 들어온다.
- */
-/**
- * 자리 한 칸의 크기 (px).
+ * 여기 아주 흐린 점이 있었다. 자리를 지키려던 것인데, 열 칸 중 여섯이
+ * 빈자리라 그림의 대부분이 **아무 뜻도 없는 점**이었다 — 정작 봐야 하는
+ * 번호 넷보다 점이 더 많았다.
  *
- * 9 였다. 테두리 1px 을 빼면 7px 이 남는데 거기 8px 글자를 넣으니 숫자가
- * 상자에 끼여 눌렸다 — 넷을 견주는 그림에서 번호가 안 읽히면 이 그림이
- * 하려던 일이 통째로 안 된다.
+ * 자리는 점이 아니라 **빈 상자**가 지킨다. 크기가 같은 것을 그리지 않은
+ * 채로 두면 셋을 나란히 견주는 것은 그대로 되고, 화면에는 실제로 사람이
+ * 서는 넷만 남는다.
+ *
+ * 없어져서 아쉬운 것도 없다. 저 점이 말하던 "여기도 설 수 있는 자리다" 는
+ * 세 대형을 나란히 놓은 것 자체가 이미 말하고 있다.
  */
-const SEAT = 11;
-
 function Seat({ n, front, inv }: { n: number; front: boolean; inv: boolean }) {
   const ink = inv ? C.fgInv : WHITE;
-  /* 빈 자리 — 예전의 그 점 그대로다 */
-  if (!n) {
-    return (
-      <View
-        style={{
-          width: SEAT,
-          height: SEAT,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <View
-          style={{
-            width: 4,
-            height: 4,
-            borderRadius: R.round,
-            borderWidth: 1,
-            borderColor: ink,
-            opacity: 0.16,
-          }}
-        />
-      </View>
-    );
-  }
+  /*
+    빈 자리 — **자리만 지키고 아무것도 안 그린다.**
+
+    지우면 (아예 안 그리면) 대형마다 그림의 폭과 높이가 달라져서 셋을
+    나란히 못 견준다. 크기가 같은 빈 상자면 그 문제가 없다.
+  */
+  if (!n) return <View style={{ width: SEAT, height: SEAT }} />;
   return (
     <View
       style={{
