@@ -4340,16 +4340,17 @@ export function BattleView({ top, corner }: Props = {}) {
               */}
               <T size={FS.tiny} dim="sub">{stageOf(battle.stage).zone}</T>
             </Row>
-            <View
-              style={{
-                paddingHorizontal: SP.xs + 2,
-                paddingVertical: 3,
-                borderRadius: R.round,
-                backgroundColor: SURF.veil,
-              }}
-            >
-              <T size={FS.tiny} dim="sub">최고 {battle.best}</T>
-            </View>
+            {/*
+              ── 여기 있던 `최고 N` 알약을 걷었다 ──
+
+              깬 데까지의 최고 판을 오른쪽 위에 늘 띄우고 있었다. 그런데 그
+              숫자를 쓸 데가 **판을 고를 때**뿐이고, 거기는 이미 그 숫자를
+              안다 (`StagePicker` 가 `best` 를 받아 갈 수 있는 데까지만
+              열어 준다).
+
+              무대 위에 얹히는 것은 적을수록 좋다. 늘 떠 있으면서 아무
+              판단에도 안 쓰이는 값은 무대를 가리는 값일 뿐이다.
+            */}
           </Row>
 
           {/* 가운데는 무대가 그대로 보여야 한다 */}

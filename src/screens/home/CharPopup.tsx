@@ -16,7 +16,7 @@ import {
   AWAKEN_COPIES, AWAKEN_ELIXIR, BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId,
   DMG_NAME, ELIXIR_NAME, FREE_ENHANCE, RARITY_NAME, STAR_CAP,
   anyPierce, battleTypeOf, blowOf, canAwaken, capOf, charPower,
-  lvCost, maxStar, starUpCost, statOf, swingMs,
+  lvCost, maxStar, starUpCost, statOf,
 } from '@/core/chars';
 import { Bar, Btn, KV, ListItem, Row, Sep, Stars, T, Tag } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
@@ -418,30 +418,37 @@ export function CharPopup({
             안 걸려 있으면 괄호가 아예 안 뜬다 — 넷의 여섯 줄에 `(+0)` 이
             붙어 있으면 정작 달라진 줄이 안 보인다 (`deltaText`).
           */}
+          {/*
+            ── 종류는 **라벨 쪽**에 붙는다 ──
+
+            값 뒤에 있었다 (`152 (+28) (물리)`). 그러면 오른쪽 끝이 숫자 ·
+            차이 · 종류 셋으로 길어지고, 정작 눈이 먼저 가야 하는 숫자가
+            가운데에 끼인다.
+
+            왼쪽은 **안 변하는 쪽**이다. 이 사람이 물리로 때리는지 마법으로
+            때리는지는 판이 도는 동안 안 바뀌므로 이름 옆이 맞고, 그 자리에
+            있으면 아래 방어력 · 마법저항력 두 줄과 세로로 이어져 읽힌다.
+          */}
           <KV
-            k="공격력"
+            k={`공격력 (${DMG_NAME[blowOf(c.id).type]})`}
             v={`${base!.atk}`}
             delta={now ? deltaText(base!.atk, now.atk) : ''}
-            tail={`(${DMG_NAME[blowOf(c.id).type]})`}
           />
           {/*
             공격속도가 빠져 있었다. 이 게임에서 **스킬 주기까지 정하는 값**이라
             (`SkillDef.every` 가 횟수로 도므로) 없으면 왜 어떤 사람이 기술을
             자주 쓰는지 설명이 안 된다.
 
-            배수만 적으면 "0.8" 이 빠른 건지 느린 건지 알 수 없어서 실제 간격을
-            같이 적는다 — `core/chars` 의 `swingMs` 와 같은 값이다.
-          */}
-          {/*
-            간격은 **지금 값으로** 적는다. 저건 "얼마나 자주 휘두르나" 라서,
-            원래 간격을 적어 두고 옆에 차이를 붙이면 두 숫자를 나눠야 실제
-            박자가 나온다 — 그건 읽는 사람이 할 일이 아니다.
+            **실제 간격(`1333ms 마다`)은 뺐다.** 배수만으로는 0.8 이 빠른지
+            느린지 모른다고 봤는데, 이 줄에서 견주는 것은 애초에 **넷끼리**다 —
+            리안느 1.1 과 아녜스 0.5 를 나란히 보면 그걸로 충분하고, ms 는
+            그 판단에 아무것도 안 보태면서 줄만 길게 만들었다.
+            (`core/chars` 의 `swingMs` 는 그대로 있다.)
           */}
           <KV
             k="공격속도"
             v={`${base!.spd}`}
             delta={now ? deltaText(base!.spd, now.spd, 1) : ''}
-            tail={`(${swingMs(now ? now.spd : base!.spd)}ms 마다)`}
           />
           {/*
             체력은 **대형이 올린 것까지가 최대치**다 (`seat`). 전투가 그 값을
@@ -457,13 +464,11 @@ export function CharPopup({
             k="방어력"
             v={`${base!.def}`}
             delta={now ? deltaText(base!.def, now.def) : ''}
-            tail="(물리 피해를 막는다)"
           />
           <KV
             k="마법저항력"
             v={`${base!.res}`}
             delta={now ? deltaText(base!.res, now.res) : ''}
-            tail="(마법 피해를 막는다)"
           />
           {/*
             ── 치명타 두 줄은 **늘 뜬다** ──
@@ -488,12 +493,10 @@ export function CharPopup({
             k="치명타 확률"
             v={`${Math.round(base!.crit * 100)}%`}
             delta={now ? deltaText(base!.crit * 100, critNow * 100) : ''}
-            tail={base!.crit <= 0 && critNow <= 0 ? '(집중이 걸리면 오른다)' : ''}
           />
           <KV
             k="치명타 피해"
             v={`${Math.round(base!.critDmg * 100)}%`}
-            tail="(터지면 이 배율로 들어간다)"
           />
           {(() => {
             /* 관통은 **가진 사람에게만** 뜬다 — 0 짜리 줄이 넷에게 다 붙으면 잡음이다 */
@@ -503,17 +506,22 @@ export function CharPopup({
             if (p.magic) on.push('마법관통');
             return on.length ? <KV k="관통" v={on.join(' · ')} /> : null;
           })()}
-          <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
-            방어력은 물리 피해를, 마법저항력은 마법 피해를 그 수만큼 깎습니다
-            (비율이 아니라 뺄셈이고, 아무리 깎여도 최소 1은 들어갑니다).
-            관통이 있으면 그 방어를 통째로 무시합니다.
-          </T>
-          <T size={9} dim="dim" style={{ marginTop: 2 }}>
-            초록 (+) 과 붉은 (−) 은 지금 이 사람이 원래 몸보다 얼마나 오르내려
-            있는지입니다 — 대형이 앉힌 줄, 파티 패시브, 액티브 스킬이 건 버프,
-            적이 건 디버프가 전부 여기 들어갑니다. 실시간으로 바뀌고, 판이
-            끝나거나 걸린 것이 풀리면 사라집니다.
-          </T>
+          {/*
+            ── 여기 있던 설명 두 문단을 걷었다 ──
+
+            "방어력은 물리 피해를 그 수만큼 깎습니다…" 와 "초록 (+) 과 붉은
+            (−) 은…" 이었다. 둘 다 맞는 말인데, 이 절은 **넷을 견주려고
+            여는 자리**다 — 수치 여덟 줄을 보러 와서 다섯 줄짜리 설명을
+            두 번 지나야 했다.
+
+            규칙은 한 번 알면 되는 것이고, 알 자리는 여기가 아니다.
+            (`core/chars` 의 `Armor`·`Blow` 에 그대로 적혀 있다.)
+
+            대신 화면이 스스로 말하게 뒀다 — 공격력 옆의 `(물리)`·`(마법)`
+            이 방어력·마법저항력 두 줄과 이어지고, 아래 "지금 걸려 있는 것"
+            이 초록·붉은 괄호가 어디서 왔는지를 이름으로 말한다. 저건 설명이
+            아니라 **지금 실제로 일어나는 일**이라 남긴다.
+          */}
           {/*
             ── 지금 무엇이 그러고 있나 ──
 

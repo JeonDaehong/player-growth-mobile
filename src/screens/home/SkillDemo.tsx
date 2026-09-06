@@ -118,6 +118,27 @@ const SPAN = 150;
 const DUMMY = { set: 'cr_slime', name: 'idle' } as const;
 
 /**
+ * 아군을 돕는 기술일 때 **오른쪽에 세우는 사람**.
+ *
+ * ## 왜 적을 안 세우나
+ *
+ * 기도와 정화는 적을 아예 안 건드린다 (`pick: 'none'`). 그런데 오른쪽에
+ * 슬라임이 서 있으면 화면이 "저놈에게 뭔가 한다" 로 읽힌다 — 아무 일도
+ * 안 일어나는 슬라임을 보면서 "이 기술은 뭘 하는 거지" 가 된다.
+ *
+ * 받는 쪽을 아군으로 바꾸면 그 자리에서 회복 표시가 오르고 머리 위에 글이
+ * 뜬다. **누구에게 가는 기술인가**가 그림 하나로 갈린다.
+ *
+ * ## 쓰는 사람이 아닌 아무나
+ *
+ * 넷 중 앞에서부터 고른다 — 쓰는 사람 자신이면 다음 사람으로 넘어간다.
+ * 같은 사람 둘이 서 있으면 "제 몸에 쓰는 기술" 로 보이기 때문이다.
+ * 파티에 누가 있는지는 안 본다: 이 창은 **이 기술이 어떻게 생겼나**를
+ * 보는 자리지 지금 누구와 다니는지를 보는 자리가 아니다.
+ */
+const MATES: readonly string[] = ['nun', 'elfarcher', 'knightgirl', 'bunnyaxe'];
+
+/**
  * 성검을 그릴 때 넘기는 몸 길이.
  *
  * `HolySword` 는 받은 길이의 **3.4배**로 검을 그린다 (그쪽 머리말). 적
@@ -266,6 +287,19 @@ export function SkillDemo({
   */
   const rains = hurts && CHARS[c.id].range === 'ranged' && !sk.flies;
   const notes = useMemo(() => notesOf(sk), [sk]);
+  /*
+    ── 오른쪽에 누가 서나 ──
+
+    아군에게 가는 기술이면 아군을, 아니면 적을 세운다. **도발은 적 쪽이다** —
+    적을 안 때리기는 하지만(`pick: 'none'`) 걸리는 것은 적이라, 그 글이 뜰
+    자리가 있어야 한다 (`notesOf` 가 `theirs` 에 담는다).
+
+    자기 몸에만 거는 기술(광란)도 적 쪽이다. 옆에 아군을 세우면 그 사람에게
+    뭔가 해 주는 것으로 읽히는데, 저건 혼자 세지는 기술이다.
+  */
+  const helps = sk.heal > 0 || !!sk.cleanse || !!sk.ward
+    || !!sk.party || !!sk.partyProc || !!(sk.partyAlso ?? []).length;
+  const mate = MATES.find((id) => id !== c.id) ?? MATES[0];
 
   /* 뛰어드는 거리 — 적 앞에서 멎는다 (몸이 겹치면 누가 누군지 안 보인다) */
   const leapTo = SPAN - FOE_W * 0.5;
@@ -438,7 +472,12 @@ export function SkillDemo({
           {sk.cast !== 'erupt' && (
             <SkillFx kind={sk.cast} nonce={cast} size={ME_W} />
           )}
-          {sk.heal > 0 && <HealMarks nonce={heal} size={ME_W} />}
+          {/*
+            **회복은 받는 쪽에서 오른다.** 아군을 세웠으면 그쪽이므로
+            (아래 `helps`) 여기서는 안 그린다 — 쓰는 사람 몸에서 오르면
+            제 몸을 채우는 기술로 보인다.
+          */}
+          {sk.heal > 0 && !helps && <HealMarks nonce={heal} size={ME_W} />}
           {/*
             날아가는 것 — 검기와 화살. 몸에서 나가 적 앞에서 멎는다.
 
@@ -507,7 +546,29 @@ export function SkillDemo({
             height: FOE_W,
           }}
         >
-          <Sprite set={DUMMY.set} name={DUMMY.name} size={FOE_W} />
+          {helps ? (
+            /*
+              아군은 **적을 보고 선다** — 무대에서 넷이 다 그렇다. 시트가
+              오른쪽을 보고 그려져 있으므로 안 뒤집는다.
+            */
+            <Sprite
+              set={mate}
+              name="guard"
+              size={FOE_W}
+              fallbackSet="duel"
+              fallbackName="guard"
+            />
+          ) : (
+            /*
+              ── 적은 **뒤집어야 앞을 본다** ──
+
+              시트가 전부 오른쪽을 보고 그려져 있다 (`ui/Sprite` 의 `flip`).
+              적은 왼쪽의 아군을 봐야 하므로 무대도 뒤집어서 그리는데
+              (`BattleView` 의 `scaleX: -1`), 여기서는 그걸 안 해서 슬라임이
+              **아군에게 등을 돌리고** 서 있었다.
+            */
+            <Sprite set={DUMMY.set} name={DUMMY.name} size={FOE_W} flip />
+          )}
           {/* 발밑에서 솟는 것 — 화산 하나다 */}
           {sk.cast === 'erupt' && <SkillFx kind="erupt" nonce={cast} size={FOE_W} />}
           {/* 하늘에서 내려오는 것 — 성검 하나다 (`SWORD_W` 참고) */}
@@ -572,13 +633,28 @@ export function SkillDemo({
               </View>
             </>
           )}
-          {/* ── 맞는 놈에게 걸리는 것 ── 도발 · 시듦 · 지옥불 */}
-          {land > 0 && notes.theirs.map((n, i) => (
+          {/*
+            ── 받는 쪽에서 오르는 것 ── 기도의 `+` 표시.
+
+            쓰는 사람이 아니라 **채워지는 사람** 몸에서 오른다 (무대와 같은
+            규칙 — `BattleView` 가 사람마다 제 자리에 띄운다).
+          */}
+          {helps && sk.heal > 0 && <HealMarks nonce={heal} size={FOE_W} />}
+          {/*
+            ── 걸리는 쪽에 뜨는 글 ──
+
+            아군에게 가는 기술이면 **여기도** 뜬다. 파티 전체에 걸리는
+            것이라 쓰는 사람과 받는 사람 둘 다에게 걸리는 것이 맞고, 둘에
+            같이 뜨는 그림이 곧 "전체" 다.
+
+            적 쪽 글(도발 · 시듦)은 늘 여기다.
+          */}
+          {land > 0 && (helps ? notes.mine : notes.theirs).map((n, i, all) => (
             <StatusNote
               key={`${n.text}${land}`}
               text={n.text}
               good={n.good}
-              i={notes.theirs.length - 1 - i}
+              i={all.length - 1 - i}
             />
           ))}
         </View>
