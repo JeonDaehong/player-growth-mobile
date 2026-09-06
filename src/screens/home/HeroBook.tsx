@@ -20,28 +20,130 @@
  * 하면 방금 고른 것을 한 번 더 고르는 셈이다.
  *
  * 안 가진 사람은 안 눌린다. 갈 데가 없다 — 모집은 다른 화면이다.
+ *
+ * ## 갈래와 차례
+ *
+ * 위에 **역할 갈래 다섯**(전체 · 탱커 · 근접 딜러 · 원거리 딜러 · 서포터)과
+ * **차례 셋**(등급 · 성 · 레벨)이 있다.
+ *
+ * 둘이 다른 일을 한다. 갈래는 **무엇을 볼까**이고 차례는 **무엇을 먼저
+ * 볼까**다. 그래서 갈래를 바꿔도 차례는 안 바뀌고 그 반대도 그렇다 — 탱커만
+ * 레벨 순으로 보는 것이 자연스러운 물음이다.
+ *
+ * 차례의 기본은 **등급**이다. 도감을 여는 이유가 대개 "뭐가 더 있나" 라서,
+ * 좋은 것이 위에 있어야 한다. 성과 레벨은 **내가 키운 순서**라 안 가진 사람이
+ * 전부 바닥으로 밀리는데, 그건 도감이 하려는 말과 반대다.
+ *
+ * 세 차례 모두 **같은 값이면 표에 적힌 차례**로 떨어진다 (`CHAR_IDS`). 안
+ * 그러면 성이 같은 둘의 앞뒤가 볼 때마다 달라져서, 목록이 가만히 있질 않는다.
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import {
-  BATTLE_TYPE_ART, CHARS, CharId, RARITY_NAME,
+  BATTLE_TYPE_ART, BattleType, CHARS, CharId, RARITY_IDS, RARITY_NAME,
   battleTypeOf, charPower, maxStar,
 } from '@/core/chars';
 import { Row, Stars, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
+import { FrameArt, frameStyle } from '@/ui/Frame';
 import { BORDER, FS, LINE, O, SP, SURF } from '@/ui/theme';
 
 /** 한 줄에 둘 — 얼굴이 작아지면 누구인지가 안 보인다 */
 const COLS = 2;
 
+/** 역할 갈래 — `null` 이 전체다 */
+const KINDS: readonly { id: BattleType | null; label: string }[] = [
+  { id: null, label: '전체' },
+  { id: 'tank', label: '탱커' },
+  { id: 'melee', label: '근접' },
+  { id: 'ranged', label: '원거리' },
+  { id: 'support', label: '서포터' },
+];
+
+type SortId = 'rarity' | 'star' | 'lv';
+
+const SORTS: readonly { id: SortId; label: string }[] = [
+  { id: 'rarity', label: '등급' },
+  { id: 'star', label: '성' },
+  { id: 'lv', label: '레벨' },
+];
+
+/**
+ * 갈래와 차례를 고르는 알약 한 줄.
+ *
+ * 두 줄이 같은 모양이다. 하는 일이 다르므로 (무엇을 볼까 · 무엇을 먼저 볼까)
+ * 갈라 그리고 싶어지는데, **둘 다 "이 목록을 어떻게 볼까"** 라서 같은 손짓이다
+ * — 모양을 다르게 하면 둘 중 하나는 다른 종류의 단추로 읽힌다.
+ *
+ * 고른 것만 반전된다. 흑백에서 "지금 이것" 을 말하는 제일 짧은 방법이다.
+ */
+function PickRow<T extends string | null>({ items, at, onGo }: {
+  items: readonly { id: T; label: string }[];
+  at: T;
+  onGo: (v: T) => void;
+}) {
+  return (
+    <Row gap={3} style={{ marginBottom: SP.xs }}>
+      {items.map((it) => {
+        const here = it.id === at;
+        return (
+          <Pressable
+            key={String(it.id)}
+            disabled={here}
+            onPress={() => { sfx('tap'); onGo(it.id); }}
+            style={({ pressed }) => [
+              frameStyle({ hi: here, pressed }),
+              { flex: 1, alignItems: 'center', paddingVertical: 4 },
+            ]}
+          >
+            <FrameArt hi={here} />
+            <T size={FS.tiny} bold={here} dim={here ? 'full' : 'dim'} numberOfLines={1}>
+              {it.label}
+            </T>
+          </Pressable>
+        );
+      })}
+    </Row>
+  );
+}
+
 export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
   const raw = useGame((s) => s.chars);
+
+  /** 어느 역할만 볼까 — `null` 이면 전부 */
+  const [kind, setKind] = useState<BattleType | null>(null);
+  /** 무엇을 먼저 볼까. 기본은 등급 (머리말) */
+  const [sort, setSort] = useState<SortId>('rarity');
 
   /* 표에 적힌 차례 그대로 — 가진 순서로 두면 뽑을 때마다 목록이 뒤섞인다 */
   const all = useMemo(() => Object.keys(CHARS) as CharId[], []);
   const got = all.filter((id) => !!raw[id]).length;
+
+  /*
+    ── 갈래로 거르고 차례로 세운다 ──
+
+    세는 숫자(`got / all`)는 **거르기 전 값**이다. 저건 "이 게임의 몇을
+    모았나" 이지 "지금 보이는 것 중 몇" 이 아니다 — 탱커만 보고 있다고
+    도감의 진행률이 바뀌면 안 된다.
+
+    안 가진 사람은 성도 레벨도 없으므로 0 으로 친다. 그러면 성·레벨 차례에서
+    바닥으로 모이는데, 그게 맞다: 저 둘은 **내가 키운 순서**를 보는 자다.
+  */
+  const list = useMemo(() => {
+    const seen = kind ? all.filter((id) => battleTypeOf(id) === kind) : all.slice();
+    const rank = (id: CharId) => {
+      const c = raw[id];
+      if (sort === 'star') return c ? c.star : 0;
+      if (sort === 'lv') return c ? c.lv : 0;
+      /* 등급은 표에 적힌 차례가 곧 세기 순이다 (`RARITY_IDS`) */
+      return RARITY_IDS.indexOf(CHARS[id].rarity);
+    };
+    /* 같은 값이면 표 차례로 — 안 그러면 볼 때마다 앞뒤가 달라진다 */
+    const home = new Map(all.map((id, i) => [id, i]));
+    return seen.sort((a, b) => (rank(b) - rank(a)) || (home.get(a)! - home.get(b)!));
+  }, [all, raw, kind, sort]);
 
   return (
     <View>
@@ -54,8 +156,13 @@ export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
         <T size={FS.label} bold>{`${got} / ${all.length}`}</T>
       </Row>
 
+      {/* 무엇을 볼까 */}
+      <PickRow items={KINDS} at={kind} onGo={setKind} />
+      {/* 무엇을 먼저 볼까 */}
+      <PickRow items={SORTS} at={sort} onGo={setSort} />
+
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SP.xs }}>
-        {all.map((id) => {
+        {list.map((id) => {
           const d = CHARS[id];
           const c = raw[id];
           const have = !!c;
@@ -142,6 +249,13 @@ export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
           );
         })}
       </View>
+
+      {/* 갈래를 좁혀 아무도 안 남는 일이 있다 — 빈 화면은 고장으로 읽힌다 */}
+      {!list.length && (
+        <View style={{ paddingVertical: SP.xl, alignItems: 'center', width: '100%' }}>
+          <T size={11} dim="sub">이 역할은 아직 없습니다.</T>
+        </View>
+      )}
 
       <T size={FS.tiny} dim="dim" style={{ marginTop: SP.sm }}>
         가진 사람을 누르면 영웅 관리에서 그 사람이 섭니다.

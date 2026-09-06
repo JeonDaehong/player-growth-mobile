@@ -62,6 +62,18 @@
  * 여기 있던 한 줄 소개(`CharDef.quote`)를 걷고 그 자리를 이걸로 대신한다.
  * 늘 같은 한 마디는 두 번째 볼 때부터 안 읽힌다 — 자세한 까닭은 `core/lines`
  * 머리말에.
+ *
+ * ## 머리를 쓰다듬으면 다른 말을 한다
+ *
+ * 인물의 **위쪽**을 누르면 (`PAT_ZONE`) 평소 대사 대신 쓰다듬기 대사가 나오고
+ * (`patOf`), 그동안 부끄러워하는 그림으로 바뀐다 (`char_shy`). 아래쪽을
+ * 누르면 여느 때처럼 다음 말이다.
+ *
+ * 과녁을 둘로 나눈 티는 안 낸다. 테두리도 안내도 없다 — 눌러 보다 알게 되는
+ * 편이 낫고, 무엇보다 **모르고 지나가도 손해가 없다.** 위를 눌러도 말은
+ * 나오니까.
+ *
+ * 그림이 아직 없으면 평소 그림 그대로다 (`fallbackSet`). 대사만 바뀐다.
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -72,7 +84,7 @@ import {
   battleTypeOf, canAwaken, capOf, charPower, lvCost, maxStar, starUpCost,
 } from '@/core/chars';
 import { fmtShort } from '@/core/currency';
-import { linesOf } from '@/core/lines';
+import { linesOf, patOf } from '@/core/lines';
 import { passiveOf } from '@/core/passives';
 import { seatRows } from '@/core/party';
 import { openPicks } from '@/core/skillTree';
@@ -183,6 +195,15 @@ function ActBtn({ art, label, onPress }: {
   );
 }
 
+/**
+ * 인물 그림에서 **머리로 치는** 위쪽 비율.
+ *
+ * 넷 다 7~8등신으로 그려져 있어 (`docs/CHAR_FULL_PROMPTS.md`) 머리는 위
+ * 8분의 1 남짓이다. 조금 넉넉하게 잡는다 — 정확히 머리만 과녁으로 두면
+ * 손가락이 자꾸 빗나가고, 조금 넘겨 잡아도 "머리 쪽을 눌렀다" 로 읽힌다.
+ */
+const PAT_ZONE = 0.22;
+
 /** 말풍선이 떠 있는 시간 · 사라져 있는 시간 */
 const TALK_ON = 5000;
 const TALK_OFF = 5000;
@@ -199,38 +220,67 @@ const TALK_OFF = 5000;
  * 안 바뀐 것처럼 보여서 "고장" 으로 읽힌다. 순서를 통째로 섞어 돌리는 방법도
  * 있지만 열 줄짜리에 그건 과하다 — 앞엣것 하나만 피하면 충분하다.
  */
-function useTalk(id: string, lines: readonly string[]) {
+function useTalk(id: string, lines: readonly string[], pats: readonly string[]) {
   const [at, setAt] = useState(() => Math.floor(Math.random() * lines.length));
   const [on, setOn] = useState(true);
+  /**
+   * 쓰다듬어서 나온 한 마디. 있으면 이게 평소 대사를 **덮는다.**
+   *
+   * 목록의 번호가 아니라 글 자체를 들고 있다. 쓰다듬기 대사는 셋뿐이라
+   * 번호로 돌리면 순서가 뻔히 보이는데, 그러면 세 번 만에 다 본 것이 아니라
+   * **세 번 만에 규칙이 들킨다.**
+   */
+  const [shy, setShy] = useState<string | null>(null);
+  /**
+   * 눌린 횟수.
+   *
+   * 시계를 다시 걸 때가 되었다는 신호다. 같은 대사가 두 번 연달아 뽑히면
+   * `shy` 값이 안 바뀌어서 시계가 안 풀리는데, 이 값은 늘 바뀌므로 그때도
+   * 5초가 새로 시작된다.
+   */
+  const [beat, setBeat] = useState(0);
 
   /* 사람이 바뀌면 처음부터 — 앞사람의 말이 남아 있으면 안 된다 */
   useEffect(() => {
     setAt(Math.floor(Math.random() * lines.length));
     setOn(true);
+    setShy(null);
   }, [id, lines.length]);
 
   const bump = () => {
+    setShy(null);
     setAt((i) => (lines.length < 2 ? i : (i + 1 + Math.floor(Math.random() * (lines.length - 1))) % lines.length));
     setOn(true);
+    setBeat((n) => n + 1);
+  };
+
+  /*
+    쓰다듬기 — 대사가 없는 사람은 그냥 다음 말로 넘긴다. 눌렀는데 아무 일도
+    안 일어나는 것보다 낫다.
+  */
+  const pat = () => {
+    if (!pats.length) { bump(); return; }
+    setShy(pats[Math.floor(Math.random() * pats.length)] ?? null);
+    setOn(true);
+    setBeat((n) => n + 1);
   };
 
   /*
     떠 있으면 5초 뒤에 지우고, 지워져 있으면 5초 뒤에 다음 말로 띄운다.
 
-    `on` 과 `at` 이 바뀔 때마다 시계를 다시 건다. 인물을 눌러 `bump` 가
-    돌면 그 자리에서 5초가 새로 시작된다 — 방금 띄운 말이 0.2초 뒤에 사라지면
-    안 된다.
+    지울 때 부끄러운 얼굴도 같이 푼다 — 말풍선은 사라졌는데 얼굴만 계속
+    붉어 있으면 왜 저러고 있는지 알 수가 없다.
   */
   useEffect(() => {
     const t = setTimeout(() => {
-      if (on) setOn(false);
+      if (on) { setOn(false); setShy(null); }
       else bump();
     }, on ? TALK_ON : TALK_OFF);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [on, at, id]);
+  }, [on, at, beat, id]);
 
-  return { text: lines[at] ?? '', on, bump };
+  return { text: shy ?? lines[at] ?? '', on, shy: !!shy, bump, pat };
 }
 
 /**
@@ -409,7 +459,8 @@ export function HeroManage({ pick, onPick }: {
     안 그린다.
   */
   const lines = useMemo(() => linesOf(id ?? '', d?.quote), [id, d?.quote]);
-  const talk = useTalk(id ?? '', lines);
+  const pats = useMemo(() => patOf(id ?? ''), [id]);
+  const talk = useTalk(id ?? '', lines, pats);
 
   if (!c || !d) {
     return (
@@ -538,24 +589,52 @@ export function HeroManage({ pick, onPick }: {
           빌 뿐이다. 발 높이는 넷이 같다.
         */}
         {/*
-          누르면 다음 말이 나온다 (`useTalk` 의 `bump`). 과녁이 인물 그림
-          통째라 빗나갈 일이 없다 — 말풍선 자체를 과녁으로 두면 사라져
-          있는 5초 동안 누를 데가 없어진다.
+          ── 인물이 과녁이다 ── 위는 쓰다듬기, 아래는 말 걸기.
+
+          말풍선 자체를 과녁으로 두면 사라져 있는 5초 동안 누를 데가 없어진다.
+          그래서 그림 통째가 과녁이고, 그 안에서 위아래로 갈린다.
+
+          가르는 티는 안 낸다 — 테두리도 안내도 없다. 눌러 보다 알게 되는
+          편이 낫고, 모르고 지나가도 손해가 없다: 위를 눌러도 말은 나온다.
         */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${d.name}에게 말 걸기`}
-          onPress={talk.bump}
-          style={{ width: FULL_W, height: FULL_H, marginBottom: SP.sm }}
-        >
+        <View style={{ width: FULL_W, height: FULL_H, marginBottom: SP.sm }}>
           <Sprite
-            set="char_full"
+            /*
+              부끄러워하는 그림이 있으면 그걸로 바꾼다. 없으면 평소 그림
+              그대로다 (`fallbackSet`) — 대사만 바뀐다.
+              프롬프트는 `docs/CHAR_SHY_PROMPTS.md`.
+            */
+            set={talk.shy ? 'char_shy' : 'char_full'}
             name={d.art}
-            fallbackSet="avatar"
+            fallbackSet={talk.shy ? 'char_full' : 'avatar'}
             size={FULL_W}
             style={{ width: FULL_W, height: FULL_H }}
           />
-        </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${d.name} 머리 쓰다듬기`}
+            onPress={talk.pat}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 0,
+              height: FULL_H * PAT_ZONE,
+            }}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${d.name}에게 말 걸기`}
+            onPress={talk.bump}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: FULL_H * PAT_ZONE,
+              bottom: 0,
+            }}
+          />
+        </View>
 
         {/*
           ── 등급 문장 ── 한가운데 위.
