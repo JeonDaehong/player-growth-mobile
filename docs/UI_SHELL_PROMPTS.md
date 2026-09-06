@@ -424,9 +424,9 @@ SHEET LAYOUT:
 
 | | 가르는 것 |
 |---|---|
-| 코스튬 | 옷걸이에 걸린 옷 — 유일하게 **위로 솟은 갈고리 하나** |
-| 인연 | 맞물린 고리 둘 — 유일하게 **둥근 것 둘이 겹친 것** |
-| 월페이퍼 | 액자 속 산 — 유일하게 **안에 삼각 봉우리** |
+| 코스튬 | 옷걸이 — 유일하게 **위로 솟은 갈고리** |
+| 인연 | 하트 — 유일하게 **위가 봉우리 둘, 아래가 뾰족한 것** |
+| 월페이퍼 | 갤러리 — 유일하게 **액자 안에 해와 산** |
 
 ### 프롬프트
 
@@ -444,26 +444,25 @@ variants of one.
 
 The 3 cells, in this exact order:
 
-Cell 1 — A GARMENT ON A HANGER, outlined. At the top, a small HOOK: a short vertical
-post rising from a narrow loop, standing clear above everything else. Below it a
-straight horizontal hanger bar, and hanging from that bar a simple dress or tunic —
-shoulders sloping out from the bar, then straight sides down to a flat hem that spans
-most of the cell width. It is the only icon with a small hook standing up on top of
-it. Squint test: a T with a skirt.
+Cell 1 — A CLOTHES HANGER, outlined, and NOTHING HANGING ON IT. At the top, a small
+HOOK: a narrow loop with a short neck, standing clear above everything else. Below it
+a wide flat triangle — two shoulders sloping down and out from the neck to a straight
+horizontal bar that spans most of the cell width. The inside of the triangle is EMPTY
+BLACK. No garment, no dress, no shirt. It is the only icon with a small hook standing
+up on top of it. Squint test: a wire triangle with a hook.
 
-Cell 2 — TWO INTERLOCKING RINGS, outlined, side by side and OVERLAPPING in the middle
-so that the two circles cross. Each ring is a plain circular band with EMPTY BLACK in
-its centre; where they overlap the two bands cross and the small lens-shaped area
-between them stays black. Two rings, nothing else — no heart, no chain links, no
-gems. It is the only icon made of round shapes, and the only one where two shapes
-overlap. Squint test: a figure eight lying flat, hollow at both ends.
+Cell 2 — A HEART, outlined. Two round lobes at the top meeting in a small notch at the
+centre, the sides sweeping down and in to a single point at the bottom. Drawn as a
+band with EMPTY BLACK inside — not a solid filled heart. No arrow through it, no
+smaller heart inside, no sparkles. It is the only icon that is wide at the top and
+comes to one point at the bottom. Squint test: a hollow heart.
 
-Cell 3 — A FRAMED PICTURE, outlined. An upright rectangular frame filling the cell,
-its band the same width as every other stroke on the sheet. INSIDE the frame, resting
-on its bottom edge, TWO TRIANGULAR PEAKS drawn as an unbroken zigzag line — a mountain
-skyline, the taller peak on the left. The area inside the frame above the peaks stays
-empty black. It is the only icon with a triangle inside it. Squint test: a window with
-mountains in it.
+Cell 3 — A FRAMED PICTURE, outlined — a gallery frame. An upright rectangular frame
+filling the cell, its band the same width as every other stroke on the sheet. INSIDE
+the frame: a small SQUARE SUN high in the upper left, and along the bottom edge TWO
+TRIANGULAR PEAKS drawn as an unbroken zigzag line — a mountain skyline, the taller
+peak on the left. The rest inside the frame stays empty black. It is the only icon
+with a triangle inside it. Squint test: a window with a sun and mountains in it.
 
 STYLE (strict, non-negotiable):
 - 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
@@ -506,7 +505,8 @@ same screen as a navigation bar containing a trophy, a calendar, an envelope, a 
 box, a document, a gear, a helmet, a bag, a castle, a flag, and a 2x2 grid of squares.
 None of the three may resemble any of those eleven. In particular the framed picture
 must NOT read as the document (which is a plain rectangle with horizontal rules) —
-the triangular peaks inside it are what keep them apart, so draw them large.
+the triangular peaks inside it are what keep them apart, so draw them large. The
+heart must NOT read as the gift box (which is a square with a cross and two ears).
 
 SHEET LAYOUT:
 - Arrange the cells in an exact uniform grid: 3 columns x 1 row.

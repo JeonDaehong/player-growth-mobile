@@ -41,7 +41,7 @@ import {
 } from '@/core/skillOpt';
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
-import { BLACK, BORDER, FS, LINE, O, SP, SURF, WHITE } from '@/ui/theme';
+import { BLACK, BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 import { SkillDemo } from './SkillDemo';
 
 /**
@@ -153,9 +153,18 @@ const PV_KEY = '[passive]';
 /**
  * ── 기술 한 칸 ── 칸 모드에서만 쓴다 (`SkillPanel` 의 `grid`).
  *
- * 로고 · 이름 · 값 한 줄. 그 이상은 안 넣는다 — 칸이 셋씩 서므로 폭이
- * 화면의 3분의 1 이고, 거기에 피해 종류까지 넣으면 이름이 잘린다. 자세한
- * 것은 누르면 아래에 펴진다.
+ * **이름이 맨 위, 그 아래 액자에 로고, 그 아래 값** — 받은 시안 그대로다
+ * (`assets/2026-09-06/123123.jpg`).
+ *
+ * 이름을 위로 올린 이유가 있다. 로고는 아직 그림이 안 온 것도 있어서 빈
+ * 자리가 나는데, 이름이 아래에 있으면 그때 칸이 **위가 텅 빈 상자**로
+ * 보인다. 이름이 위에 있으면 로고가 없어도 칸이 무엇인지 읽힌다.
+ *
+ * 로고를 액자에 넣는 것도 같은 이유다 — 액자가 있으면 "여기 그림이 들어간다"
+ * 가 보이고, 없으면 그냥 여백이다.
+ *
+ * 그 셋뿐이다. 칸이 셋씩 서므로 폭이 화면의 3분의 1 이고, 거기에 피해 종류
+ * 까지 넣으면 이름이 잘린다. 자세한 것은 누르면 아래에 펴진다.
  *
  * 고른 칸은 테두리가 밝아지고 면이 한 단 올라온다. 흑백에서 "지금 이걸
  * 보고 있다" 를 말하는 제일 조용한 방법이다.
@@ -191,8 +200,22 @@ function SkCard({ set, art, name, tag, on, off, onPress }: {
         },
       ]}
     >
-      <Sprite set={set} name={art} size={26} />
       <T size={FS.tiny} bold center numberOfLines={1}>{name}</T>
+      {/* 액자 — 로고가 아직 없어도 "여기 그림이 들어간다" 가 보인다 */}
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: R.sm,
+          borderWidth: 1,
+          borderColor: LINE.low,
+          backgroundColor: SURF.down,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Sprite set={set} name={art} size={24} />
+      </View>
       <T size={9} dim="dim" numberOfLines={1}>{tag}</T>
     </Pressable>
   );
