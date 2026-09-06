@@ -4588,6 +4588,33 @@
       ],
       "size": 512,
       "allowFilled": true
+    },
+    {
+      "file": "ui-frame.jpg",
+      "name": "ui_frame",
+      "expect": [
+        2,
+        1
+      ],
+      "labels": [
+        "corner",
+        "corner_hi"
+      ],
+      "size": 24,
+      "maskRects": [
+        [
+          0.65,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0.68,
+          1,
+          1
+        ]
+      ]
     }
   ],
   "_srcDirs": []
