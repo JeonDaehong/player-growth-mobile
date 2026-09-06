@@ -19,14 +19,16 @@
  * 같게 맞춰 두었으므로 둘이 같이 끝난다.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
+import {
+  Animated, Easing, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, View,
+} from 'react-native';
 import {
   BattleState, CLEAR_MS, MOVE_MS, OPEN_MS, OPEN_WALK_MS, stageOf,
 } from '@/core/autoBattle';
-import { Row, T } from '@/ui/atoms';
+import { Btn, Row, T } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { sfx } from '@/ui/sfx';
-import { BORDER, C, LINE, MONO, SP, SURF, WHITE } from '@/ui/theme';
+import { LINE, MONO, SP, SURF, WHITE } from '@/ui/theme';
 
 /**
  * 지금 무슨 연출 중인가.
@@ -385,29 +387,46 @@ export function StagePicker({
   );
 }
 
-/** 목록에서 판 하나가 차지하는 칸 폭 (px) — 한 줄에 다섯이 선다 */
-const CELL = 56;
+/** 다이얼 한 칸의 높이 (px) — 손가락으로 집어 돌리는 크기다 */
+const ROW = 46;
+/** 한 번에 보이는 칸 수 — 가운데 하나와 위아래 둘씩 */
+const SEEN = 5;
+/** 다이얼 전체 높이 */
+const DIAL_H = ROW * SEEN;
+/** 첫 칸과 마지막 칸도 가운데에 설 수 있게 위아래로 비워 두는 만큼 */
+const DIAL_PAD = (DIAL_H - ROW) / 2;
 
 /**
- * ── 깬 데까지 늘어놓고 고른다 ──
+ * ── 판 고르기 ── **가운데 한 칸을 두고 돌리는 다이얼.**
  *
- * ## 왜 목록이 필요한가
+ * ## 격자였다 — 복잡했다
  *
- * 판을 옮기는 길이 화살표뿐이었다. 30판에서 3판으로 내려가려면 스물일곱 번을
- * 누르는데, 한 번 누를 때마다 **판이 실제로 옮겨진다** (`goStage` — 검은 막이
- * 내렸다 올라가고 양쪽이 새로 걸어 들어온다). 지나가는 스물일곱 판을 다
- * 겪으면서 가는 셈이다.
+ * 깬 판을 전부 칸으로 늘어놓았다 (한 줄에 다섯, 서른 판이면 여섯 줄). 한
+ * 화면에 다 보이는 것이 장점이라고 봤는데, 실제로는 **서른 개 중에 하나를
+ * 찾는 일**이 되었다 — 번호가 다섯씩 접혀 있어서 눈이 줄을 옮겨 다니며
+ * 세어야 하고, 지역 이름까지 붙어 있으니 칸 하나가 두 줄짜리 카드였다.
+ *
+ * 판 고르기는 **한 줄 위를 오가는 일**이다. 1에서 30까지가 순서대로 있고
+ * 고르는 것은 그중 한 점이라, 자리를 아는 물건이 아니라 **눈금**이다.
+ *
+ * ## 가운데만 진짜다
+ *
+ * 다이얼은 늘 한 칸을 가리킨다. 위아래로 스쳐 가는 것들은 "여기서 더 가면
+ * 저기가 나온다" 를 말할 뿐이라 옅고 작다 — 멀수록 더 옅다 (`dim`).
+ *
+ * 가운데에 가로줄 둘을 긋는다. 그 사이가 고른 자리라는 것을, 손가락을
+ * 떼기 전에도 알 수 있어야 한다.
+ *
+ * ## 돌리는 것과 가는 것은 다르다
+ *
+ * 굴리는 동안에는 아무 데도 안 간다. 판을 옮기는 것은 막이 내렸다 올라가는
+ * 일이라 (`goStage`) 스쳐 가는 칸마다 그것을 하면 다이얼을 한 번 돌릴 때마다
+ * 스무 판을 지난다. 아래 단추를 눌러야 간다.
  *
  * ## 깬 데까지만
  *
  * `best` 까지다 (`core/autoBattle` 의 `canGoStage` 와 같은 규칙). 안 깬 판을
- * 회색으로 늘어놓지 않는다 — 30판까지 깼으면 서른 칸이지만 1판만 깼으면 한
- * 칸이라, 목록의 길이 자체가 "어디까지 왔나" 를 말한다.
- *
- * ## 지금 판은 반전
- *
- * 흑백이라 켜짐을 말할 수단이 몇 없다 (`ui/theme`). 흰 바탕에 검은 글씨는
- * 이 게임에서 **지금 여기** 하나만 뜻한다.
+ * 흐리게 끼워 두지 않는다 — 다이얼의 길이 자체가 "어디까지 왔나" 다.
  */
 function StageListPopup({
   visible, stage, best, onClose, onGo,
@@ -419,57 +438,128 @@ function StageListPopup({
   onGo: (stage: number) => void;
 }) {
   const top = Math.max(1, best);
-  const all = useMemo(
-    () => Array.from({ length: top }, (_v, i) => i + 1),
-    [top],
-  );
+  const all = useMemo(() => Array.from({ length: top }, (_v, i) => i + 1), [top]);
+  /** 지금 가운데 있는 칸 (0부터) */
+  const [at, setAt] = useState(Math.min(top, Math.max(1, stage)) - 1);
+  const ref = useRef<ScrollView>(null);
+
+  /*
+    ── 열 때 **지금 판에 맞춰 세운다** ──
+
+    맨 위에서 시작하면 30판에 있는 사람이 창을 열 때마다 스물아홉 칸을 굴려
+    내려와야 한다. 굴림은 그리기가 끝난 뒤라야 먹으므로 (`scrollTo` 가 아직
+    높이를 모르는 채로 불린다) 한 프레임 뒤에 세운다.
+  */
+  useEffect(() => {
+    if (!visible) return undefined;
+    const n = Math.min(top, Math.max(1, stage)) - 1;
+    setAt(n);
+    const id = setTimeout(() => {
+      ref.current?.scrollTo({ y: n * ROW, animated: false });
+    }, 0);
+    return () => clearTimeout(id);
+  }, [visible, stage, top]);
+
+  /* 굴리는 동안 가운데 칸이 어디인지 — 옅기와 크기가 이 값을 본다 */
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const n = Math.round(e.nativeEvent.contentOffset.y / ROW);
+    const clamped = Math.max(0, Math.min(all.length - 1, n));
+    if (clamped !== at) setAt(clamped);
+  };
+
+  /*
+    ── 손을 떼면 한 칸에 **딱 선다** ──
+
+    `snapToInterval` 이 플랫폼마다 다르게 먹는다 (웹에서는 CSS 로 흉내 낸다).
+    믿고 두면 어떤 화면에서는 칸 사이에 어정쩡하게 멈추고, 그러면 가운데
+    줄 사이에 숫자가 반씩 걸린다. 여기서 직접 세운다.
+  */
+  const snap = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const n = Math.round(e.nativeEvent.contentOffset.y / ROW);
+    const clamped = Math.max(0, Math.min(all.length - 1, n));
+    setAt(clamped);
+    ref.current?.scrollTo({ y: clamped * ROW, animated: true });
+  };
+
+  const picked = all[at] ?? stage;
 
   return (
     <Popup visible={visible} title="스테이지 고르기" onClose={onClose}>
-      <T size={10} dim="sub" style={{ marginBottom: SP.sm }}>
-        {`깬 데까지 갈 수 있습니다 — 지금 ${top}스테이지까지`}
-      </T>
-      {/*
-        높이를 묶어 둔다. 서른 칸이면 여섯 줄이라 창이 화면을 넘어가는데,
-        `Popup` 은 스스로 안 굴린다.
-      */}
-      <ScrollView style={{ maxHeight: 260 }} showsVerticalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SP.xs }}>
-          {all.map((n) => {
-            const here = n === stage;
+      <View style={{ height: DIAL_H, justifyContent: 'center' }}>
+        {/*
+          ── 가운데 칸을 가리키는 두 줄 ──
+
+          다이얼 뒤에 깔린다. 상자로 두르면 그 안이 한 칸이 아니라 **작은
+          창**으로 보여서, 굴러가는 숫자가 창 밖으로 나가는 것처럼 읽힌다.
+          줄 둘이면 "이 사이" 만 말한다.
+        */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: DIAL_PAD,
+            height: ROW,
+            borderTopWidth: 1,
+            borderBottomWidth: 1,
+            borderColor: LINE.hi,
+            backgroundColor: SURF.up,
+          }}
+        />
+        <ScrollView
+          ref={ref}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={ROW}
+          decelerationRate="fast"
+          scrollEventThrottle={16}
+          onScroll={onScroll}
+          onMomentumScrollEnd={snap}
+          onScrollEndDrag={snap}
+          contentContainerStyle={{ paddingVertical: DIAL_PAD }}
+        >
+          {all.map((n, i) => {
+            const away = Math.abs(i - at);
+            const here = away === 0;
             return (
-              <Pressable
+              <View
                 key={n}
-                onPress={() => { sfx('tap'); if (!here) onGo(n); else onClose(); }}
-                style={({ pressed }) => [
-                  BORDER,
-                  {
-                    width: CELL,
-                    paddingVertical: SP.xs + 1,
-                    alignItems: 'center',
-                    borderColor: here ? WHITE : LINE.mid,
-                    backgroundColor: here ? WHITE : (pressed ? SURF.up : 'transparent'),
-                  },
-                ]}
+                style={{
+                  height: ROW,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  /* 멀수록 옅다 — 스쳐 가는 것들은 "더 가면 저기" 를 말할 뿐이다 */
+                  opacity: here ? 1 : Math.max(0.18, 1 - away * 0.34),
+                }}
               >
-                <T size={12} bold style={here ? { color: C.bg } : undefined}>{n}</T>
+                <T size={here ? 17 : 14} bold={here}>{`${n}스테이지`}</T>
                 {/*
-                  다섯 판마다 지역이 바뀐다 (`stageOf`). 번호만 늘어놓으면
-                  서른 칸이 그냥 숫자밭이라, 어디로 가는 길인지가 안 보인다.
+                  지역 이름은 **가운데 칸에만**. 다섯 줄에 다 붙이면 다이얼이
+                  글자밭이 되고, 스쳐 가는 칸에서 읽을 것도 아니다.
                 */}
-                <T
-                  size={8}
-                  numberOfLines={1}
-                  dim={here ? 'full' : 'dim'}
-                  style={here ? { color: C.bg } : undefined}
-                >
-                  {stageOf(n).zone}
-                </T>
-              </Pressable>
+                {here && <T size={9} dim="sub">{stageOf(n).zone}</T>}
+              </View>
             );
           })}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
+
+      {/*
+        ── 굴리는 것과 가는 것은 다르다 ──
+
+        스쳐 가는 칸마다 옮기면 다이얼 한 번에 스무 판을 지난다 (`goStage` 는
+        막을 내렸다 올린다). 여기를 눌러야 간다.
+
+        지금 있는 판을 고르고 누르면 그냥 닫힌다 — 같은 자리로 옮기는 것은
+        판을 처음부터 다시 여는 일이라 (`leaveFor` 가 막는다) 아무 일도 안
+        일어나는데, 단추가 안 눌리면 고장으로 보인다.
+      */}
+      <Btn
+        label={picked === stage ? '닫기' : `${picked}스테이지로 이동`}
+        fill={picked !== stage}
+        style={{ marginTop: SP.md }}
+        onPress={() => (picked === stage ? onClose() : onGo(picked))}
+      />
     </Popup>
   );
 }

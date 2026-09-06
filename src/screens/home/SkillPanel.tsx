@@ -142,6 +142,14 @@ function targetText(sk: SkillDef): string {
   return `무작위 ${sk.targets}마리`;
 }
 
+/**
+ * 펴 놓은 것이 **패시브**임을 나타내는 열쇠.
+ *
+ * 기술 이름과 같은 칸을 쓰므로 (`open`) 이름과 안 겹치는 값이어야 한다 —
+ * 기술 이름에 대괄호가 들어갈 일은 없다.
+ */
+const PV_KEY = '[passive]';
+
 export function SkillPanel({
   c, party, chars, readOnly,
 }: {
@@ -157,8 +165,14 @@ export function SkillPanel({
    */
   readOnly?: boolean;
 }) {
-  /** 펴 놓은 기술. 하나만 편다 — 둘을 나란히 펴면 비교가 아니라 벽이 된다 */
+  /**
+   * 펴 놓은 것. 하나만 편다 — 둘을 나란히 펴면 비교가 아니라 벽이 된다.
+   *
+   * 기술은 이름으로, 패시브는 `PV_KEY` 로 잡는다. 같은 칸을 쓰므로 패시브를
+   * 펴면 기술이 접히고 그 반대도 그렇다 — 창에 펴진 것은 늘 하나다.
+   */
   const [open, setOpen] = useState<string | null>(null);
+  const openPv = open === PV_KEY;
 
   /* 트리가 손본 것을 보여 준다 — 창에 적힌 코스트와 실제 코스트가 같아야 한다 */
   const list = skillsFor(c);
@@ -197,9 +211,16 @@ export function SkillPanel({
             <T size={11} bold>패시브</T>
             {passiveOff && <T size={9} dim="dim">파쇄의 태세가 껐습니다</T>}
           </Row>
+          {/*
+            ── 패시브도 **누르면 편다** ── 액티브 목록과 같은 규칙이다.
+
+            설명이 늘 붙어 있었다 (`체력이 낮을수록 공격속도 증가 (체력
+            10%에서 1.5배)`). 한 줄이지만 접혀 있는 목록에서 읽는 것은
+            이름이고, 무엇보다 **아래 액티브 목록과 다른 규칙**이면 같은
+            창에서 접히는 것과 안 접히는 것을 따로 배워야 한다.
+          */}
           <ListItem
             title={pv.name}
-            sub={pv.text}
             /*
               **제 로고를 쓴다** (`passive_icon`). 상태 로고를 빌려 쓰면
               비앙카와 리안느가 같은 그림이 된다 —
@@ -209,7 +230,13 @@ export function SkillPanel({
             */
             left={<Sprite set="passive_icon" name={pv.art} size={22} />}
             right={<Tag label={passiveOff ? '꺼짐' : '항상'} />}
+            onPress={() => setOpen(openPv ? null : PV_KEY)}
           />
+          {openPv && (
+            <View style={[BORDER, { padding: SP.sm, marginBottom: SP.xs }]}>
+              <T size={10} dim="sub">{pv.text}</T>
+            </View>
+          )}
           {/*
             켜져 있을 때의 한 줄(`파티에 서 있고 살아 있는 동안만…`)을 걷었다.
             패시브가 그렇다는 것은 한 번 알면 되는 규칙인데, 창을 열 때마다
