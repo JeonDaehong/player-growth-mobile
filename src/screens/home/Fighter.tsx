@@ -444,7 +444,7 @@ function FighterView({
    * 자리가 안 잡혀 화면 어딘가로 새 나갔다 — 체력 막대는 여기서 잘 뜨니
    * 숫자도 같은 자리에서 그리는 게 확실하다.
    */
-  damage: { key: number; text: string }[];
+  damage: { key: number; text: string; ward?: boolean }[];
   /**
    * 회복을 받은 횟수.
    *
@@ -1493,8 +1493,19 @@ function FighterView({
             **붉게 뜬다** (`bad`). 적 위에 뜨는 숫자는 흰색이라, 색만 보고도
             어느 쪽이 깎였는지 안다 — 한 화면에 숫자 여섯 개가 같이 뜨는 일이
             흔하고, 전부 흰색이던 동안은 자리로만 짐작해야 했다.
+
+            **막이 먹은 대는 하늘색이다** (`ward`). 둘 다 "아군이 맞았다" 지만
+            한쪽은 몸이 깎인 것이고 한쪽은 몸이 안 깎인 것이라, 같은 색이면
+            막이 있으나 없으나 화면이 똑같다.
           */}
-          <DamageNumber text={dm.text} dx={0} dy={0} bad onDone={NOOP} />
+          <DamageNumber
+            text={dm.text}
+            dx={0}
+            dy={0}
+            bad={!dm.ward}
+            ward={dm.ward}
+            onDone={NOOP}
+          />
         </View>
       ))}
 

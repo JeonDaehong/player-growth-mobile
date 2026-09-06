@@ -541,6 +541,11 @@ export interface GameActions {
    */
   callBossNow: () => boolean;
   /**
+   * 이 판을 반복할까 — 켜면 우두머리를 잡아도 안 넘어간다
+   * (`core/autoBattle` 의 `BattleState.repeat`).
+   */
+  setRepeat: (on: boolean) => void;
+  /**
    * ⚠ **테스트용** — 광폭화를 그 자리에서 켜다 (`core/autoBattle` 의 `forceRage`).
    *
    * 우두머리와 싸우는 중이 아니거나 이미 광폭화였으면 아무 일도 안 하고

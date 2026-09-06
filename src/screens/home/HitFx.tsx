@@ -24,7 +24,7 @@ import { Animated, Easing, Text, View } from 'react-native';
 import type { HitFx } from '@/core/chars';
 import type { Mark } from '@/core/passives';
 import { Sprite } from '@/ui/Sprite';
-import { BAD_C, BLACK, GOOD_C, MONO, WHITE } from '@/ui/theme';
+import { BAD_C, BLACK, GOOD_C, MONO, SHIELD_C, WHITE } from '@/ui/theme';
 import { NOTE_SHIFT, noteNeedsRoom } from './noteLane';
 
 /** 이펙트 한 판의 길이 */
@@ -895,7 +895,7 @@ export function FallingArrow({
  * 자리는 부르는 쪽(`BattleView`)이 잡는다. 여기서는 뜨는 동작만 한다.
  */
 export function DamageNumber({
-  text, dx, dy, big, good, bad, crit, onDone,
+  text, dx, dy, big, good, bad, ward, crit, onDone,
 }: {
   text: string;
   dx: number;
@@ -946,6 +946,17 @@ export function DamageNumber({
    * 쪽을 살려야 정보가 남는다.
    */
   bad?: boolean;
+  /**
+   * **보호막이 먹은 대**인가 — 하늘색으로 뜬다 (`ui/theme` 의 `SHIELD_C`).
+   *
+   * 이 게임에서 하늘색이 말하는 것은 하나다: **저 겹은 체력이 아니다.**
+   * 발밑 막대의 막과 같은 색이라, 숫자와 막대가 같은 것을 가리킨다.
+   *
+   * 붉은 것(`bad`)과 갈라야 한다. 둘 다 "아군이 맞았다" 지만 한쪽은 몸이
+   * 깎인 것이고 한쪽은 **몸이 안 깎인 것**이라, 같은 색이면 막이 있으나
+   * 없으나 화면이 똑같다.
+   */
+  ward?: boolean;
   onDone: () => void;
 }) {
   const t = useRef(new Animated.Value(0)).current;
@@ -1004,7 +1015,22 @@ export function DamageNumber({
     비껴간다. 배율은 상자 한가운데를 두고 커지므로 그 치우침을 반으로 준다.
   */
   const size = (big ? 20 : 15) * (crit ? 1.35 : 1);
-  const tone = good ? GOOD_C : (bad ? BAD_C : WHITE);
+  const tone = good ? GOOD_C : (ward ? SHIELD_C : (bad ? BAD_C : WHITE));
+  /*
+    ── 치명타에는 **깜짝 표시**가 붙는다 ──
+
+    크기와 번짐과 흔들림으로 갈라 놨는데도 "좀 더 티가 나야 될 것 같다" 는
+    말이 나왔다. 셋 다 **정도의 차이**라서다 — 큰 숫자와 더 큰 숫자, 흔들리는
+    것과 더 흔들리는 것. 옆에 다른 숫자가 없으면 무엇과 견줄지가 없다.
+    (한 대만 터지는 기술이 특히 그렇다. 성검 발현이 딱 그것이다.)
+
+    느낌표는 **있고 없고**다. 하나만 떠 있어도 이번 것이 다른 종류라는 것이
+    읽힌다 — 견줄 것이 필요 없는 유일한 표시다.
+
+    붙이는 자리는 여기다. 부르는 쪽마다 붙이면 (`BattleView` 의 두 군데와
+    시연) 언젠가 한 곳만 빠지고, 그때 그 자리에서만 치명타가 조용해진다.
+  */
+  const shown = crit ? `${text}!` : text;
   const move = [
     { translateX: jolt },
     { translateY: rise },
@@ -1044,7 +1070,7 @@ export function DamageNumber({
             transform: [{ scale: 1.5 }],
           }}
         >
-          {text}
+          {shown}
         </Animated.Text>
         <Text
           style={{
@@ -1058,7 +1084,7 @@ export function DamageNumber({
             textShadowRadius: 4,
           }}
         >
-          {text}
+          {shown}
         </Text>
       </Animated.View>
     );
@@ -1113,7 +1139,7 @@ export function DamageNumber({
         ],
       }}
     >
-      {text}
+      {shown}
     </Animated.Text>
   );
 }

@@ -85,16 +85,32 @@ interface BattleUi {
   dot: { no: number; at: readonly { at: number; dmg: number }[] };
   /** 틱을 부른 쪽이 넣어 준다 (`slices/roster` 의 `battleTickOnce`) */
   foeBurned: (at: readonly { at: number; dmg: number }[]) => void;
+
+  /**
+   * ── 이번 틱에 **막이 깎인 만큼** ── 사람별로 (`TickEvent.soaked`).
+   *
+   * `dot` 과 같은 이유로 여기 있다. 막이 먹은 대는 체력을 안 줄이므로,
+   * 체력 기록만 보는 무대는 그 대를 **아예 못 본다** — 막을 두르면 머리
+   * 위에 숫자가 통째로 안 떴다.
+   */
+  soak: { no: number; at: Readonly<Record<string, number>> };
+  /** 틱을 부른 쪽이 넣어 준다 (`slices/roster` 의 `battleTickOnce`) */
+  wardSoaked: (at: Readonly<Record<string, number>>) => void;
 }
 
 export const useBattleUi = create<BattleUi>((set) => ({
   charge: {},
   charmHit: {},
   dot: { no: 0, at: [] },
+  soak: { no: 0, at: {} },
 
   foeBurned: (at) => set((st) => (
     /* 탄 놈이 없으면 아무 일도 안 한다 — 매 틱 새 객체를 만들면 화면이 헛돈다 */
     at.length ? { dot: { no: st.dot.no + 1, at } } : {}
+  )),
+
+  wardSoaked: (at) => set((st) => (
+    Object.keys(at).length ? { soak: { no: st.soak.no + 1, at } } : {}
   )),
 
   hitByAlly: (who, id) => set((st) => ({

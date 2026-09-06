@@ -76,6 +76,11 @@ export interface RosterActions {
    */
   callBossNow: () => boolean;
   /**
+   * 이 판을 반복할까 — 켜면 우두머리를 잡아도 안 넘어간다
+   * (`core/autoBattle` 의 `BattleState.repeat`).
+   */
+  setRepeat: (on: boolean) => void;
+  /**
    * ⚠ **테스트용** — 광폭화를 그 자리에서 켜다 (`core/autoBattle` 의 `forceRage`).
    *
    * 우두머리와 싸우는 중이 아니거나 이미 광폭화였으면 아무 일도 안 하고
@@ -543,6 +548,12 @@ export const createRosterSlice = (
     return true;
   },
 
+  setRepeat: (on) => {
+    const st = get();
+    if ((st.battle.repeat ?? false) === on) return;
+    set({ battle: { ...st.battle, repeat: on } });
+  },
+
   callBossNow: () => {
     const st = get();
     const next = callBoss(st.battle);
@@ -570,6 +581,8 @@ export const createRosterSlice = (
       조용히 줄어든 결과뿐이다 (`state/battleUi` 의 `dot`).
     */
     useBattleUi.getState().foeBurned(ev.landed);
+    /* 막이 먹은 대도 같은 이유로 알린다 — 체력이 안 줄어서 무대가 못 본다 */
+    useBattleUi.getState().wardSoaked(ev.soaked);
 
     /*
       아무것도 안 바뀌었으면 `set` 을 부르지 않는다 — 파티가 비어 있을 때

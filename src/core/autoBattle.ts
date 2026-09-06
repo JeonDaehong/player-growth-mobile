@@ -80,7 +80,7 @@ export const TICK_MS = 500;
  * 골드를 모으고 싶어도 못 한다. 이제 시간은 **문을 여는 것**까지만 하고,
  * 언제 들어갈지는 사람이 정한다.
  */
-export const STAGE_MS = 60_000;
+export const STAGE_MS = 120_000;
 
 /**
  * 판이 열릴 때 검은 막이 떴다 걷히고 양쪽에서 걸어 들어오기까지 (ms).
@@ -2811,6 +2811,23 @@ export interface BattleState {
    */
   called: boolean;
   /**
+   * ── 이 판을 **반복할까** ── (`screens/home/BattleView` 의 오른쪽 위 단추)
+   *
+   * 켜 두면 우두머리를 잡아도 다음 판으로 안 넘어가고 **같은 판을 다시**
+   * 연다.
+   *
+   * ## 왜 필요한가
+   *
+   * 이 게임은 켜 두면 알아서 다음 판으로 올라간다. 그런데 올라가는 것이
+   * 늘 이득은 아니다 — 지금 판은 넉넉히 도는데 다음 판이 벅차면, 자리를
+   * 비운 사이에 전멸한 채로 시간을 버리게 된다. 그때 하고 싶은 일은
+   * "여기서 더 벌기" 하나인데, 그러려면 판이 넘어가는 것을 막아야 한다.
+   *
+   * 판마다 따로 안 둔다. "지금 여기 머물래" 라는 한 번의 뜻이지 판의
+   * 성질이 아니라서, 판을 손으로 옮기면 그 판에 그대로 따라온다.
+   */
+  repeat: boolean;
+  /**
    * 지금 서 있는 적들. **앞에서부터** 순서대로.
    * 우두머리 단계에서는 한 칸뿐이다.
    */
@@ -3161,7 +3178,8 @@ export const newBattle = (): BattleState => {
     foes: first.foes, seq: first.seq,
     slain: 0, target: 0, hp: {}, down: 0, spawnIn: 0,
     openIn: OPEN_MS, clearIn: 0, clearKind: null, goTo: null,
-    called: false, pat: null, patId: null, patSeq: 0, charm: null, burst: 0, rip: 0,
+    called: false, repeat: false,
+    pat: null, patId: null, patSeq: 0, charm: null, burst: 0, rip: 0,
     ward: {},
     hex: {}, cut: {}, bossMs: 0, swingSeq: 0,
     fade: {}, taunt: null, foeHex: {}, foeHeal: { seq: 0, amt: 0 },
@@ -3193,6 +3211,18 @@ export const fightHeld = (st: BattleState): boolean => (
 /** 다음 판. `STAGE_CAP` 에 걸리면 그 자리에 머문다 */
 export const nextStage = (stage: number): number => (
   STAGE_CAP === null ? stage + 1 : Math.min(STAGE_CAP, stage + 1)
+);
+
+/**
+ * 우두머리를 잡고 **어느 판으로 갈까**.
+ *
+ * 반복을 켜 두었으면 제자리다 (`BattleState.repeat`). 잡는 자리가 셋이라
+ * (`applyHit` · `applySkill` · `battleTick` 의 기믹 처치) 각자 `nextStage`
+ * 를 부르고 있었는데, 그러면 반복을 넣을 때 한 곳만 빠뜨려도 **어떤
+ * 방법으로 잡았느냐에 따라** 넘어가고 안 넘어가고가 갈린다.
+ */
+export const goAfterBoss = (st: BattleState): number => (
+  st.repeat ? st.stage : nextStage(st.stage)
 );
 
 /** 골라 갈 수 있는 판인가 — **깬 판과 지금 판까지** */
@@ -3274,20 +3304,29 @@ export function enterStage(
   };
 }
 
-/** 우두머리를 부를 수 있나 — 사냥 시간이 다 됐고 아직 안 불렀다 */
 /**
- * **테스트 모드 — 사냥 시간을 안 기다리고 우두머리를 부를 수 있다.**
+ * 우두머리가 **이제 나올 때인가** — 사냥 시간이 다 됐고 아직 안 불렀다.
  *
- * 평소에는 1분을 사냥해야 단추가 생긴다 (`STAGE_MS`). 스무 판을 손으로 굴려
- * 보려면 그 1분이 판마다 붙어서 스무 번이면 20분이다.
+ * ## 사람이 부르던 것이었다
  *
- * ⚠ **출시 전에 false 로 되돌린다.** `core/chars` 의 `FREE_ENHANCE` 와 짝이다 —
- * 둘 다 직접 굴려 보려고 켜 둔 스위치다.
+ * 시간이 다 되면 "우두머리 토벌" 단추가 뜨고, 누르는 것은 사람이었다.
+ * 더 사냥해서 골드를 모으고 들어가도 되고 바로 눌러도 되는, 판단이 하나
+ * 있는 자리로 두려던 것이다.
+ *
+ * 실제로는 판단이 아니었다. 이 게임은 **켜 두면 알아서 도는** 방치형이라
+ * (`core/autoBattle` 머리말) 화면을 안 보고 있는 시간이 대부분인데, 그동안
+ * 단추가 떠 있으면 전투는 거기서 멈춰 선다 — 사냥을 더 하는 것도 아니고
+ * 우두머리를 잡는 것도 아닌 채로 기다린다. 방치형에서 사람이 눌러야 다음이
+ * 오는 자리는 방치가 아니다.
+ *
+ * 이제 시간이 다 되면 **저절로** 불린다 (`battleTick`). 이 함수는 그 판단을
+ * 한 곳에 두는 자리로 남는다.
+ *
+ * (여기 `FREE_BOSS` 라는 테스트 스위치가 있었다 — 기다리지 않고 바로 부를
+ * 수 있게 하던 값이다. 저절로 불리게 되면서 쓸 데가 없어져 걷었다.)
  */
-export const FREE_BOSS = true;
-
 export const bossReady = (st: BattleState): boolean => (
-  !st.boss && !st.called && (FREE_BOSS || st.msLeft <= 0) && !fightHeld(st)
+  !st.boss && !st.called && st.msLeft <= 0 && !fightHeld(st)
 );
 
 /**
@@ -3561,6 +3600,17 @@ export interface TickEvent {
    * (`BattleView`), 치명타면 다르게 그린다 (`HitFx` 의 `DamageNumber`).
    */
   landed: readonly Landed[];
+  /**
+   * 이번 틱에 **보호막이 깎인 만큼** — 사람별로 (`BattleState.ward`).
+   *
+   * 막이 먹은 대는 체력을 안 줄인다. 그래서 화면이 체력 기록만 보고 있으면
+   * (`BattleView` 가 그렇다) 막을 두른 동안은 **아무 일도 안 일어난 것**으로
+   * 보인다 — 실제로 머리 위에 숫자가 통째로 안 떴다.
+   *
+   * 여기로 내보내면 화면이 하늘색 숫자로 띄운다 (`ui/theme` 의 `SHIELD_C` —
+   * "저 겹은 체력이 아니다").
+   */
+  soaked: Readonly<Record<string, number>>;
 }
 
 /**
@@ -3595,10 +3645,13 @@ export interface TickResult {
 /** 아무 데도 안 맞았다 — 매번 새 배열을 만들면 화면이 헛돈다 (`NO_MARK` 와 같은 이유) */
 export const NO_LAND: readonly Landed[] = [];
 
+/** 막이 아무것도 안 먹었다 — 매번 새 객체를 만들면 화면이 헛돈다 */
+const NO_SOAK: Readonly<Record<string, number>> = {};
+
 const NOTHING: TickEvent = {
   hit: 0, taken: 0, hurt: null, fell: null, killed: 0, cleared: false, elixir: 0,
   bossCame: false, wiped: false, gold: 0, healed: 0, pattern: null, fey: 0,
-  applied: false, landed: NO_LAND,
+  applied: false, landed: NO_LAND, soaked: NO_SOAK,
 };
 
 /**
@@ -3972,6 +4025,18 @@ export function battleTick(
 
   // ── 시간이 흐른다 ──
   if (!isBoss) msLeft = Math.max(0, msLeft - TICK_MS);
+  /*
+    ── 시간이 다 되면 **저절로** 부른다 ──
+
+    사람이 단추를 눌러 불렀다 (`bossReady` 머리말에 그 이야기가 있다).
+    방치형에서 사람이 눌러야 다음이 오는 자리는 방치가 아니라서, 시간이
+    다 되는 그 순간에 여기서 부른다.
+
+    부르는 것과 세우는 것은 여전히 다르다 — 여기서는 깃발만 세우고
+    (`called`), 서 있던 잡몹을 마저 잡아야 우두머리가 걸어 나온다 (아래).
+  */
+  let called = st.called;
+  if (!isBoss && !called && msLeft <= 0 && !fightHeld(st)) called = true;
 
   /*
     ── 잡몹이 걸어 들어온다 ──
@@ -4200,6 +4265,14 @@ export function battleTick(
     `hp` 와 같은 얼개다: 위에서 베껴 쓰고 아래에서 그대로 내보낸다.
   */
   const ward: Record<string, Ward> = { ...(st.ward ?? {}) };
+  /*
+    ── 이번 틱에 **막이 깎인 만큼** ── 사람별로 (`TickEvent.soaked`)
+
+    막이 먹은 대는 체력을 안 줄이므로, 화면이 체력 기록만 봐서는 **아무 일도
+    안 일어난 것**과 구분할 수가 없다 — 실제로 막을 두르면 머리 위에 숫자가
+    통째로 안 떴다. 여기서 세어 내보내고 화면이 하늘색으로 띄운다.
+  */
+  const soaked: Record<string, number> = {};
   /** 막이 되돌린 피해 — 때린 놈에게 나중에 한 번에 넣는다 (`Ward.back`) */
   const backTo: Record<number, number> = {};
   let charm = st.charm ?? null;
@@ -4447,6 +4520,8 @@ export function battleTick(
       */
       const wd = ward[who2.id];
       const wdOn = !!wd && wd.ms > 0 && wd.hp > 0;
+      /** 이 사람이 이번 대에 **몸으로** 받은 양 — 흡혈이 이걸 본다 */
+      let hurtNow = 0;
       const armor0 = liveArmor(who2, hex[who2.id] ?? []);
       const armor = wdOn && wd.def > 0
         ? { def: armor0.def + wd.def, res: armor0.res }
@@ -4457,7 +4532,6 @@ export function battleTick(
         `strikeFor` 에 넣으면 최소 1 이 나와서, 피해가 없어야 할 기술에서
         숫자가 뜬다.
       */
-      const hit0 = base > 0 ? strikeFor(base, 1, armor, blow) : 0;
       /*
         ── 광폭화의 이빨 ── 맞는 사람 최대 체력의 5% 를 **그대로** 더한다.
 
@@ -4467,8 +4541,20 @@ export function battleTick(
         없는 판이 된다.
       */
       const bite = rage ? Math.max(1, Math.round(statOf(who2).hp * RAGE_BITE)) : 0;
-      const dmg = hit0 + bite;
-      if (dmg > 0) {
+      /*
+        ── 막은 **깎이기 전 피해**를 받는다 ──
+
+        방어력도 마법저항력도 안 탄다. 여태 반대였다 — 방어를 먼저 빼고
+        남은 것을 막이 먹었으므로, 방어가 두꺼운 사람일수록 같은 막이 더
+        여러 대를 버텼다. 그러면 막은 "한 겹 더" 가 아니라 **방어의 배수**가
+        되고, 제일 안 필요한 사람에게 제일 크게 걸린다.
+
+        막은 몸에 닿기 전에 받는 것이라 몸이 두꺼운 것과 상관이 없다.
+        `Ward.def`(수호신의 가호의 +10)는 그대로 남는다 — 저건 막이 아니라
+        **막이 서 있는 동안 몸이 두꺼워지는 것**이라 넘어온 몫에 걸린다.
+      */
+      const raw = base + bite;
+      if (raw > 0) {
         /*
           ── 막이 먼저 받는다 ──
 
@@ -4479,16 +4565,32 @@ export function battleTick(
           입은 피해가 아니라 막아 낸 양을 기준으로 하는 이유: 막이 다 깎인
           뒤로는 반격도 없어야 "막이 하는 일" 이 하나로 읽힌다.
         */
-        let left = dmg;
+        let over = raw;
         if (wdOn && wd) {
-          const eat = Math.min(wd.hp, left);
-          left -= eat;
+          const eat = Math.min(wd.hp, over);
+          over -= eat;
           const rest = wd.hp - eat;
           if (rest > 0) ward[who2.id] = { ...wd, hp: rest };
           else delete ward[who2.id];
           if (wd.back > 0 && eat > 0) {
             backTo[h.id] = (backTo[h.id] ?? 0) + Math.round(eat * wd.back);
           }
+          /* 막이 깎인 만큼 — 화면이 하늘색 숫자로 띄운다 (`TickEvent.soaked`) */
+          if (eat > 0) soaked[who2.id] = (soaked[who2.id] ?? 0) + eat;
+        }
+        /*
+          ── 막을 넘어온 몫만 방어가 깎는다 ──
+
+          이빨은 방어를 안 지나므로 (`RAGE_BITE`) 넘어온 것 중 이빨에
+          해당하는 만큼은 그대로 두고 나머지에만 방어를 건다. 막이 평타 몫을
+          **먼저** 먹는 셈인데, 반대로 두면 막이 얇을 때 이빨만 막고 평타가
+          통째로 들어온다 — 막이 제일 급한 순간에 제일 안 막는 꼴이다.
+        */
+        let left = 0;
+        if (over > 0) {
+          const biteLeft = Math.min(over, bite);
+          const baseLeft = over - biteLeft;
+          left = biteLeft + (baseLeft > 0 ? strikeFor(baseLeft, 1, armor, blow) : 0);
         }
         if (left > 0) {
           hp[who2.id] = Math.max(0, hp[who2.id] - left);
@@ -4496,6 +4598,7 @@ export function battleTick(
           hurtId = who2.id;
           if (hp[who2.id] <= 0) fell = who2.id;
         }
+        hurtNow = left;
       }
 
       /* ── 걸고 가는 것 ── */
@@ -4507,7 +4610,8 @@ export function battleTick(
           (`Fighter` 의 스윙 횟수), 그 박자는 틱과 무관하다. 신호만 남긴다.
         */
         if (h.pat.gauge) cut[who2.id] = (cut[who2.id] ?? 0) + 1;
-        if (h.pat.drain) drained += Math.round(dmg * h.pat.drain);
+        /* 빨아 가는 것은 **실제로 몸에서 나간 만큼** — 막이 먹은 몫은 몸이 아니다 */
+        if (h.pat.drain) drained += Math.round(hurtNow * h.pat.drain);
       } else if (pas?.onHit) {
         /* 평타에 붙는 것 — 10판 오염된 점성 하나뿐이다. 겹친다 */
         list = putHex(list, hexFrom(pas.onHit, h.atk, 'phys'), pas.onHit.stack ?? 1);
@@ -4609,6 +4713,7 @@ export function battleTick(
         fey: 0,
         /* 불타고 있던 놈들 — 전멸한 틱에도 태운 것은 태운 것이다 */
         landed: burned,
+        soaked,
         applied: true,
       },
     };
@@ -4633,7 +4738,7 @@ export function battleTick(
   return {
     battle: {
       ...st,
-      msLeft, boss: isBoss, foes, slain, target, seq,
+      msLeft, called, boss: isBoss, foes, slain, target, seq,
       hp, down: 0, spawnIn,
       /*
         나간 특수기를 상태에 남긴다 — 화면은 틱 결과를 못 보고 상태만 본다.
@@ -4664,7 +4769,7 @@ export function battleTick(
         target: 0,
         clearIn: CLEAR_MS,
         clearKind: 'boss' as const,
-        goTo: nextStage(st.stage),
+        goTo: goAfterBoss(st),
       } : null),
     },
     ev: {
@@ -4673,6 +4778,8 @@ export function battleTick(
       fey: 0,
       /* 이 틱에 지속 피해로 태운 만큼 — 화면이 숫자로 띄운다 (`burned`) */
       landed: burned,
+      /* 막이 깎인 만큼 — 화면이 하늘색 숫자로 띄운다 */
+      soaked,
       killed: gimCleared ? killed + 1 : killed,
       cleared: gimCleared,
       elixir: gimCleared ? rollElixir(st.stage, rand) : 0,
@@ -4996,7 +5103,7 @@ export function applyHit(
         target: 0,
         clearIn: CLEAR_MS,
         clearKind: 'boss',
-        goTo: nextStage(st.stage),
+        goTo: goAfterBoss(st),
       },
       ev: {
         ...NOTHING, hit: dmg, killed: 1, cleared: true, gold, landed,
@@ -5725,7 +5832,7 @@ export function applySkill(
         foeHex,
         clearIn: CLEAR_MS,
         clearKind: 'boss',
-        goTo: nextStage(st.stage),
+        goTo: goAfterBoss(st),
       },
       ev: {
         ...NOTHING, hit, killed, cleared: true, gold, landed,

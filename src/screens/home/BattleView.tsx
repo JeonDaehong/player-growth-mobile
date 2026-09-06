@@ -38,7 +38,7 @@ import { Animated, Easing, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  BOSS_SKILLS, MOB_CAP, STAGE_MS, bossReady, fightHeld, foeAt as kindAt, foeCell,
+  BOSS_SKILLS, MOB_CAP, STAGE_MS, fightHeld, foeAt as kindAt, foeCell,
   foeHexOf, foeOf, healPlan, mobCap, pickAim,
   RAGE_MS, rageIn, raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
@@ -55,7 +55,8 @@ import { cleanseOptOf, cleanseTargets } from '@/core/skillOpt';
 import { Bar, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
-import { BAD_C, C, FS, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
+import { BAD_C, C, FS, LINE, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
+import { sfx } from '@/ui/sfx';
 import { FoeMarks } from './StatusRow';
 import { HolySword, SkillFx, SWORD_HIT, SWORD_MS } from './SkillFx';
 import {
@@ -76,7 +77,7 @@ import {
   BOSS_W, DEPTH_LIFT, EDGE, FOE_W, GROUND_H, Ground, PARTY_W, STAGE_H, ZOOM, depthAt,
 } from './Ground';
 import {
-  BossCallBtn, StagePicker, StageVeil, useStageStaging, walkInX,
+  StagePicker, StageVeil, useStageStaging, walkInX,
 } from './StageIntro';
 
 /** 무대 높이 */
@@ -573,6 +574,13 @@ interface Pop {
   /** 맞은 사람 (CharId) — 그 사람 머리 위에 뜬다 */
   who: string;
   text: string;
+  /**
+   * **보호막이 먹은 대**인가 — 하늘색으로 뜬다 (`HitFx` 의 `DamageNumber`).
+   *
+   * 이 대는 체력을 안 줄이므로 체력 기록만 보는 갈래에서는 안 나온다.
+   * 계산이 따로 알려 준다 (`state/battleUi` 의 `soak`).
+   */
+  ward?: boolean;
 }
 
 /**
@@ -602,7 +610,8 @@ export function BattleView({ top, corner }: Props = {}) {
   /* 앞줄·뒷줄을 나누는 값 — 계산도 화면도 같은 것을 본다 (`core/party`) */
   const form = useGame((s) => s.formation);
   const goStage = useGame((s) => s.goStage);
-  const callBossNow = useGame((s) => s.callBossNow);
+  /* 이 판을 반복할까 — 오른쪽 위 단추 (`BattleState.repeat`) */
+  const setRepeat = useGame((s) => s.setRepeat);
   /*
     ── 화면도 **앉힌 명부**를 본다 ──
 
@@ -639,8 +648,6 @@ export function BattleView({ top, corner }: Props = {}) {
     () => seatRows(party, rawChars, form),
     [party, rawChars, form],
   );
-  /* ⚠ 테스트용 — 아래 TEST 단추가 부른다. 출시 전에 같이 지운다 */
-  const rageNow = useGame((s) => s.rageNow);
 
   const mob = foeOf(battle.stage, false);
   /*
@@ -1210,6 +1217,13 @@ export function BattleView({ top, corner }: Props = {}) {
     조용히 줄어든 결과뿐이다. 계산을 부른 쪽이 넣어 준다.
   */
   const dot = useBattleUi((s) => s.dot);
+  /*
+    ── 막이 깎인 만큼 ── (`state/battleUi` 의 `soak`)
+
+    막이 먹은 대는 체력을 안 줄이므로 아래 체력 갈래가 **그 대를 아예 못
+    본다** — 막을 두르면 머리 위에 숫자가 통째로 안 떴다.
+  */
+  const soak = useBattleUi((s) => s.soak);
   const lastCharmHit = useRef<Record<string, number>>({});
   useEffect(() => {
     for (const [who, hit] of Object.entries(charmHit)) {
@@ -1894,6 +1908,32 @@ export function BattleView({ top, corner }: Props = {}) {
     /* `dot.at` 은 매번 새 배열이라 갈래에 못 건다 — 번호가 그 자리를 대신한다 */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dot.no, spotOf]);
+
+  /*
+    ── 막이 깎인 숫자 ── 하늘색으로 머리 위에.
+
+    아래 체력 갈래(`battle.hp` 를 견주는 것)가 이 대를 못 본다. 막이 먹으면
+    체력이 안 줄기 때문이다 — 그래서 막을 두른 동안은 맞아도 숫자가 하나도
+    안 떴고, 화면만 봐서는 **적이 안 때리는 것**과 구분이 안 됐다.
+
+    붉은 숫자와 **같은 자리에** 띄운다 (`pops`). 한 대가 막을 다 깎고 몸까지
+    가면 하늘색과 붉은색이 나란히 뜨는데, 그게 실제로 일어난 일이다.
+  */
+  useEffect(() => {
+    if (soak.no <= 0) return;
+    const made = Object.entries(soak.at)
+      .filter(([, v]) => v > 0)
+      .map(([id, v]) => ({ key: seq.current++, who: id, text: `-${v}`, ward: true }));
+    if (!made.length) return;
+    setPops((old) => [...old.slice(-4), ...made]);
+    const off = setTimeout(() => {
+      setPops((old) => old.filter((x) => !made.some((m) => m.key === x.key)));
+    }, 750);
+    /* eslint-disable-next-line consistent-return */
+    return () => clearTimeout(off);
+    /* `soak.at` 은 매번 새 객체라 갈래에 못 건다 — 번호가 그 자리를 대신한다 */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soak.no]);
 
   // 화면을 떠날 때 남은 타이머를 치운다
   useEffect(() => () => {
@@ -4404,16 +4444,46 @@ export function BattleView({ top, corner }: Props = {}) {
               <T size={FS.tiny} dim="sub">{stageOf(battle.stage).zone}</T>
             </Row>
             {/*
-              ── 여기 있던 `최고 N` 알약을 걷었다 ──
+              ── 이 판 반복 ── (`BattleState.repeat`)
 
-              깬 데까지의 최고 판을 오른쪽 위에 늘 띄우고 있었다. 그런데 그
-              숫자를 쓸 데가 **판을 고를 때**뿐이고, 거기는 이미 그 숫자를
-              안다 (`StagePicker` 가 `best` 를 받아 갈 수 있는 데까지만
-              열어 준다).
+              여기 `최고 N` 알약이 있었다. 그 숫자를 쓸 데가 판을 고를 때
+              뿐이고 거기는 이미 그 숫자를 아는데 (`StagePicker`), 무대 위에
+              늘 떠 있었다. 아무 판단에도 안 쓰이는 값이 자리를 먹던 셈이라
+              걷고, 그 자리에 **누르는 것**을 놓는다.
 
-              무대 위에 얹히는 것은 적을수록 좋다. 늘 떠 있으면서 아무
-              판단에도 안 쓰이는 값은 무대를 가리는 값일 뿐이다.
+              ## 왜 이 자리인가
+
+              판 번호 바로 맞은편이다. "몇 판" 과 "여기 머물래" 는 같은 것을
+              두고 하는 두 마디라, 눈이 한 줄 안에서 오간다.
+
+              ## 켜짐을 반전으로 말한다
+
+              흑백이라 켜고 꺼짐을 말할 수단이 몇 없다 (`ui/theme`). 흰 바탕에
+              검은 글씨는 이 화면에서 **켜져 있다** 하나만 뜻한다 — 말풍선과
+              같은 규칙이다.
             */}
+            <Pressable
+              onPress={() => { sfx('tap'); setRepeat(!battle.repeat); }}
+              hitSlop={8}
+              style={({ pressed }) => ({
+                paddingHorizontal: SP.xs + 2,
+                paddingVertical: 3,
+                borderRadius: R.round,
+                borderWidth: 1,
+                borderColor: battle.repeat ? WHITE : LINE.mid,
+                backgroundColor: battle.repeat ? WHITE : SURF.veil,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <T
+                size={FS.tiny}
+                bold={battle.repeat}
+                dim={battle.repeat ? 'full' : 'sub'}
+                style={battle.repeat ? { color: C.bg } : undefined}
+              >
+                {battle.repeat ? '반복 ON' : '반복 OFF'}
+              </T>
+            </Pressable>
           </Row>
 
           {/* 가운데는 무대가 그대로 보여야 한다 */}
@@ -4460,10 +4530,9 @@ export function BattleView({ top, corner }: Props = {}) {
                 {battle.boss
                   ? (rage ? '광폭화 — 두 배' : `광폭화 ${rageSec}초`)
                   : battle.called
-                    ? '남은 적을 정리하면'
-                    : battle.msLeft > 0
-                      ? `우두머리 ${secLeft}초`
-                      : '우두머리를 부를 수 있다'}
+                    /* 저절로 불렸다 — 서 있던 잡몹만 마저 잡으면 걸어 나온다 */
+                    ? '남은 적을 정리하면 우두머리'
+                    : `우두머리 ${secLeft}초`}
               </T>
               {/*
                 우두머리 구간에서는 **광폭화까지**를 그린다.
@@ -4486,39 +4555,16 @@ export function BattleView({ top, corner }: Props = {}) {
               />
 
               {/*
-                ── 우두머리 토벌 ──
+                ── 여기 단추가 둘 있었다 ──
 
-                1분을 사냥하면 나온다 (`bossReady`). **저절로 안 나온다** —
-                언제 들어갈지는 사람이 정한다. 더 사냥해서 골드를 모으고
-                들어가도 되고, 바로 눌러도 된다.
+                **우두머리 토벌** — 시간이 다 되면 뜨고, 누르는 것은 사람이었다.
+                이제 시간이 다 되면 저절로 불린다 (`core/autoBattle` 의
+                `bossReady` 에 그 이야기가 있다) — 방치형에서 사람이 눌러야
+                다음이 오는 자리는 방치가 아니다.
 
-                자리를 미리 안 비워 둔다. 안 보일 때 빈 칸이 남아 있으면
-                화면이 늘 허전하고, 나타났을 때 "생겼다" 가 안 읽힌다.
+                **TEST · 광폭화** — 두 분을 안 기다리고 광폭화를 보려던
+                테스트 단추다. 무대 위에 늘 얹혀 있던 것이라 같이 걷었다.
               */}
-              {bossReady(battle) && <BossCallBtn onPress={callBossNow} />}
-
-              {/*
-                ⚠ ── 테스트 단추 ── 출시 전에 통째로 지운다
-
-                광폭화를 보려면 두 분을 버텨야 한다 (`RAGE_MS`). 고치고
-                확인하는 한 바퀴가 사 분이라 손이 안 간다.
-              */}
-              {battle.boss && !rage && (
-                <Pressable onPress={rageNow}>
-                  <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: BAD_C,
-                      borderRadius: R.sm,
-                      paddingVertical: 2,
-                      alignItems: 'center',
-                      backgroundColor: C.bg,
-                    }}
-                  >
-                    <T size={8} bold style={{ color: BAD_C }}>TEST · 광폭화</T>
-                  </View>
-                </Pressable>
-              )}
             </View>
           </View>
         </View>
