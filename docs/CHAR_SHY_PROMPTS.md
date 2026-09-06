@@ -27,7 +27,7 @@
 | | |
 |---|---|
 | 이졸데 | 이런 걸 겪어 본 적이 없어 말이 막힌다 |
-| 비앙카 | 웃어 넘기려다 제 얼굴이 빨개진 걸 먼저 들킨다 |
+| 비앙카 | 늘 걸치고 있던 웃음이 사라진다. 그 빈자리가 곧 신호다 |
 | 리안느 | 표정이 짧다. 딴 데를 본다 |
 | 아녜스 | 늘 내리깔던 눈이 위로 올라간다 |
 
@@ -230,14 +230,25 @@ She is EIGHT HEADS TALL, the tallest of the four. Hips at the exact vertical
 midpoint. NOT chibi, NOT stubby. Same height in the frame as the reference.
 
 WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
-She tries to laugh it off and her own face gives her away first.
-SHE IS EMBARRASSED, NOT ANGRY. Not glaring, not scowling, not threatening.
-- HER FACE: eyes WIDE and OPEN — never narrowed — looking off to one side.
-  Eyebrows UP AT THE INNER ENDS. Mouth open in a grin that has gone crooked and
-  helpless: she started the joke and lost it halfway. The blush is the loudest
-  thing on her face.
-  TWO OR THREE SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes,
-  not a filled patch.
+The joke she was about to make does not arrive.
+
+SHE IS EMBARRASSED. Draw the SAME KIND OF FLUSTERED FACE you would draw for any
+shy anime girl: wide eyes, worried brows, a small open mouth, a deep blush.
+Nothing clever, nothing knowing.
+
+SHE IS NOT ANGRY — not glaring, not scowling, not threatening.
+SHE IS NOT AMUSED — NOT GRINNING, NOT SMIRKING, NOT SMILING AT ALL, not winking,
+not teasing, not enjoying it. THIS IS THE MOST COMMON WAY THIS CELL FAILS. In her
+normal artwork she is always half-smiling; here that smile is GONE, and its
+absence is the entire point. A confident grin on this face makes her look like
+she is playing along, which is the opposite of the drawing.
+- HER FACE: eyes WIDE and OPEN — never narrowed, never half-lidded — looking off
+  to one side, away from the viewer. Eyebrows UP AT THE INNER ENDS, the worried
+  slant. Mouth SMALL AND SLIGHTLY OPEN, an ordinary startled "o" — a word that
+  did not come. Exactly the mouth the other three characters have.
+  TWO OR THREE SHORT DIAGONAL HATCH LINES across each cheekbone, HEAVIER than on
+  the others — she blushes harder than anyone, and on her the blush is doing the
+  work the smile usually does. Clean strokes, not a filled patch.
 - HER RABBIT EARS: BOTH FOLD BACK AND DOWN, flattened the way a startled rabbit
   lays its ears. THE ONE BENT TIP IS STILL BENT — that is who she is. The ears
   must still fit inside the frame; nothing is cropped.
@@ -428,6 +439,11 @@ a small sprite.
 **화난 얼굴을 그립니다.** 이게 제일 자주 납니다. 눈꼬리가 올라가고 눈이
 가늘어지고 입이 일자로 굳으면 그건 노려보는 얼굴입니다 — 부끄러운 얼굴은
 눈이 **커지고** 눈썹 안쪽이 **올라갑니다**. 눈썹이 팔자인지부터 보세요.
+
+**비앙카만 웃깁니다.** 평소 그림에서 늘 웃고 있는 사람이라, 레퍼런스를 붙이면
+그 웃음을 그대로 옮겨 놓습니다. 그러면 부끄러운 게 아니라 **받아 주는 얼굴**이
+되어 넷 중 혼자 겉돕니다. 이 칸에서 웃음은 **없어야** 하고, 없어진 것이 곧
+신호입니다 — 입은 나머지 셋과 똑같이 작고 살짝 벌어진 모양입니다.
 
 **좋아하는 얼굴을 그립니다.** 반대쪽 실패입니다. 눈웃음이나 유혹하는 표정으로
 가면 이 그림이 "계속 누르라" 가 됩니다. 노리는 자리는 그 둘 사이입니다.
