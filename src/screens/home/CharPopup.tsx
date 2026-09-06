@@ -100,7 +100,6 @@ export function CharPopup({
   const levelUp = useGame((s) => s.levelUp);
   const starUp = useGame((s) => s.starUp);
   const awaken = useGame((s) => s.awaken);
-  const setGrowth = useGame((s) => s.setGrowth);
   /*
     지금 남은 체력과 걸려 있는 것들.
 
@@ -290,12 +289,12 @@ export function CharPopup({
               큰 이유는 성이 올려 주는 것이 스탯이 아니라 레벨 상한과 기술
               이라서다 — 한 번 오를 때마다 그 사람이 하는 일이 바뀐다.
             */}
-            <Row between>
-              <T size={FS.tiny} dim="sub">성 · 합성</T>
-              <T size={FS.tiny} dim="dim">
-                {`조각 ${c.copies}장 · ${RARITY_NAME[d.rarity]}는 ${maxStar(d.rarity)}성까지`}
-              </T>
-            </Row>
+            {/*
+              이름표 줄이 있었다 (`성 · 합성` · `조각 0장 · Epic는 4성까지`).
+              아래 단추가 이미 `3성으로 — 조각 8장` 이라고 말하므로 조각 수는
+              두 번 적힌 셈이었고, 갈 수 있는 마지막 성은 위의 별이 이미
+              그려 놓았다. 영웅 관리 화면과 같이 걷었다 (`HeroManage`).
+            */}
             {c.star >= maxStar(d.rarity) ? (
               /*
                 다 올린 사람에게는 **단추 대신 다음 이야기**를 보여 준다.
@@ -324,11 +323,14 @@ export function CharPopup({
                   </T>
                 </>
               ) : (
-                <T size={FS.tiny} dim="dim">
-                  {c.awake
-                    ? '각성까지 마쳤습니다 — 더 올릴 것이 없습니다.'
-                    : `${RARITY_NAME[d.rarity]} 등급이 갈 수 있는 마지막 성입니다.`}
-                </T>
+                /*
+                  다 올린 사람에게는 **아무것도 안 그린다.**
+
+                  `Epic 등급이 갈 수 있는 마지막 성입니다` 가 떴었다. 맞는
+                  말인데 아무것도 시키지 않는 말이라, 키우는 상자 안에 못
+                  키운다는 안내만 남았다 — 비어 있는 것이 곧 그 뜻이다.
+                */
+                null
               )
             ) : (
               <>
@@ -401,74 +403,18 @@ export function CharPopup({
           */}
           <CharStats c={c} party={party} chars={chars} />
           {/*
-            ── 테스트용 단추 ──
+            ── 여기부터는 **영웅 탭에서만** ── (`readOnly`)
 
-            `FREE_ENHANCE` 가 켜져 있을 때만 나온다 (`core/chars`).
+            "이 자리 비우기" 다. 누르면 파티가 바뀌는 것이라, 싸움을 보다
+            연 창에 있으면 안 된다.
 
-            ⚠ 출시 전에 `FREE_ENHANCE` 를 끄면 이 줄은 통째로 사라진다.
-          */}
-          {/*
-            ── 여기부터도 **영웅 탭에서만** ── (`readOnly`)
-
-            테스트 단추와 "이 자리 비우기" 다. 둘 다 누르면 파티가 바뀌는
-            것이라, 싸움을 보다 연 창에 있으면 안 된다.
+            성과 레벨을 건너뛰던 테스트 단추도 여기 있었다 (`FREE_ENHANCE`).
+            걷었다 — 키우는 칸 바로 밑에 "그냥 4성" 이 있으면, 조각을 모아
+            올리는 칸이 무엇을 위해 있는지가 흐려진다. 필요하면 `setGrowth`
+            가 그대로 있으므로 언제든 다시 붙일 수 있다.
           */}
           {!readOnly && (
             <>
-          {FREE_ENHANCE && (
-            <>
-              {/*
-                성과 레벨도 같은 이유로 건너뛸 수 있어야 한다. 각성 하나를
-                보려면 조각 마흔여덟 장(`AWAKEN_COPIES` + 5성까지 열여섯)이
-                필요하고, 레벨 140 은 백마흔 번을 눌러야 한다.
-              */}
-              {/*
-                ── 성을 오르내린다 ──
-
-                합성으로 올리면 조각이 들고, 내릴 방법은 아예 없다. 성이
-                여는 것이 레벨 상한과 **스킬 트리 단계**라 (`core/growth`),
-                1성과 4성을 오가며 보지 않으면 트리를 확인할 수가 없다.
-
-                레벨은 같이 조여진다 — 4성 Lv100 에서 1성으로 내리면 상한이
-                35 이므로 35 가 된다.
-              */}
-              <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
-                <T size={FS.tiny} dim="dim">성</T>
-                {Array.from({ length: maxStar(d.rarity) }, (_v, i) => i + 1).map((n) => (
-                  <Btn
-                    key={n}
-                    label={`${n}`}
-                    size="sm"
-                    fill={c.star === n}
-                    style={{ flex: 1 }}
-                    onPress={() => setGrowth(c.id, { star: n })}
-                  />
-                ))}
-              </Row>
-              <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
-                <Btn
-                  label="조각 +48"
-                  size="sm"
-                  style={{ flex: 1 }}
-                  onPress={() => setGrowth(c.id, { copies: c.copies + 48 })}
-                />
-                <Btn
-                  label="Lv 최대"
-                  size="sm"
-                  style={{ flex: 1 }}
-                  disabled={c.lv >= capOf(c)}
-                  onPress={() => setGrowth(c.id, { lv: capOf(c) })}
-                />
-                <Btn
-                  label="Lv 1 로"
-                  size="sm"
-                  style={{ flex: 1 }}
-                  onPress={() => setGrowth(c.id, { lv: 1 })}
-                />
-              </Row>
-            </>
-          )}
-
           <Btn
             label="이 자리 비우기"
             size="sm"

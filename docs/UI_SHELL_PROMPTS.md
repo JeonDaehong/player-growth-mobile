@@ -2,20 +2,21 @@
 
 **이 파일은 손으로 씁니다** — 생성기가 없습니다.
 
-**세 프롬프트가 각자 온전합니다.** 한동안 B·C 장이 "위 A장과 같습니다" 로
+**네 프롬프트가 각자 온전합니다.** 한동안 B·C 장이 "위 A장과 같습니다" 로
 스타일 지시를 참조하고 있었는데, 그러면 복사할 때 두 군데를 오려 붙여야 하고
 한쪽만 붙이면 조용히 다른 화풍이 나옵니다. 다른 로고 문서(`ICON_PROMPTS.md` ·
-`STATUS_ICON_PROMPTS.md`)는 게임 수치에서 만들어지는데, 이 열셋은 수치가 아니라
-**화면 구조**에서 나오므로 읽어 올 소스가 없습니다.
+`STATUS_ICON_PROMPTS.md`)는 게임 수치에서 만들어지는데, 이 열여섯은 수치가
+아니라 **화면 구조**에서 나오므로 읽어 올 소스가 없습니다.
 
-새 뼈대의 단추 열하나와 재화 둘입니다 (`screens/home/TopBar` ·
-`BottomNav` · `RewardBar`).
+새 뼈대의 단추 열하나와 재화 둘, 그리고 영웅 관리의 셋입니다
+(`screens/home/TopBar` · `BottomNav` · `RewardBar` · `HeroManage`).
 
 | 시트 | 폴더 | 어디에 쓰나 | 칸 |
 |---|---|---|---|
 | A | `assets/sprites/nav_top/` | 위 띠의 문 여섯 | 6 |
 | B | `assets/sprites/nav_bot/` | 아래 띠의 다섯 칸 | 5 |
 | C | `assets/sprites/coin_ui/` | 보물 상자와 다이아 | 2 |
+| D | `assets/sprites/hero_ui/` | 영웅 관리에서 얼굴 옆 셋 | 3 |
 
 ## 지금은 12x12 윤곽선 도트로 서 있습니다
 
@@ -399,6 +400,127 @@ SHEET LAYOUT:
 - EVERY CELL MUST BE SQUARE — the whole sheet is 2:1, output it at 1024x512.
 ```
 
+---
+
+## D장 — 영웅 관리의 얼굴 옆 셋
+
+### 셀 순서
+
+| 셀 | 1 | 2 | 3 |
+|---|---|---|---|
+| | 코스튬 | 인연 | 월페이퍼 |
+| id | `costume` | `bond` | `paper` |
+
+영웅 → 영웅 관리에서 인물 바로 아래 나란히 서는 단추 셋입니다
+(`screens/home/HeroManage` 의 `ActBtn`). 20px 로 뜹니다.
+
+**글자가 아니라 로고여야 하는 까닭.** 한동안 `코스튬` · `인연` · `월페이퍼`
+라는 한글 단추였습니다. 셋이 나란히 서니 얼굴 밑에 글자 여덟 자가 한 줄로
+깔렸고, 그 줄이 이름·별·레벨보다 무거워서 **눈이 인물에서 글자로 내려갔습니다.**
+이 셋은 자주 누르는 것이 아니라 "여기 있다" 만 알면 되는 것들입니다.
+
+**A장·B장의 열하나와도 안 닮아야 합니다** — 같은 화면에 아래 띠와 같이 뜹니다.
+지금은 코드 도트로 서 있습니다 (`ui/sprites` 의 `HERO_ACT`).
+
+| | 가르는 것 |
+|---|---|
+| 코스튬 | 옷걸이에 걸린 옷 — 유일하게 **위로 솟은 갈고리 하나** |
+| 인연 | 맞물린 고리 둘 — 유일하게 **둥근 것 둘이 겹친 것** |
+| 월페이퍼 | 액자 속 산 — 유일하게 **안에 삼각 봉우리** |
+
+### 프롬프트
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single sheet of EXACTLY 3 ICONS in ONE row, left to right. Three cells.
+Not four, not two. Do not repeat an icon anywhere on the sheet and do not add
+variants of one.
+
+The 3 cells, in this exact order:
+
+Cell 1 — A GARMENT ON A HANGER, outlined. At the top, a small HOOK: a short vertical
+post rising from a narrow loop, standing clear above everything else. Below it a
+straight horizontal hanger bar, and hanging from that bar a simple dress or tunic —
+shoulders sloping out from the bar, then straight sides down to a flat hem that spans
+most of the cell width. It is the only icon with a small hook standing up on top of
+it. Squint test: a T with a skirt.
+
+Cell 2 — TWO INTERLOCKING RINGS, outlined, side by side and OVERLAPPING in the middle
+so that the two circles cross. Each ring is a plain circular band with EMPTY BLACK in
+its centre; where they overlap the two bands cross and the small lens-shaped area
+between them stays black. Two rings, nothing else — no heart, no chain links, no
+gems. It is the only icon made of round shapes, and the only one where two shapes
+overlap. Squint test: a figure eight lying flat, hollow at both ends.
+
+Cell 3 — A FRAMED PICTURE, outlined. An upright rectangular frame filling the cell,
+its band the same width as every other stroke on the sheet. INSIDE the frame, resting
+on its bottom edge, TWO TRIANGULAR PEAKS drawn as an unbroken zigzag line — a mountain
+skyline, the taller peak on the left. The area inside the frame above the peaks stays
+empty black. It is the only icon with a triangle inside it. Squint test: a window with
+mountains in it.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur.
+- Chunky, clearly visible square pixels — every pixel a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in solid pure white.
+- NEVER put a white or filled panel behind a subject — the ground is always black.
+- Retro handheld / early-1990s monochrome LCD game aesthetic.
+- No watermarks, no signatures, no sparkle marks, no borders around the whole image.
+
+ICON RULES — this is a symbol, not a picture.
+
+IT WILL BE SHOWN AT 20 PIXELS. Everything below follows from that one fact.
+
+- ONE SHAPE. The whole icon reads as a single silhouette at a glance.
+- FILL THE CELL. The shape nearly touches all four sides, with a margin of about
+  one twelfth of the cell left empty all the way around.
+- OUTLINED, NOT SOLID. Draw the shape as a BAND of solid white about one eighth
+  of the cell wide, with EMPTY BLACK inside it. A filled shape at this size is a
+  black-and-white blob; an outline keeps its form.
+- THE STROKE IS THE SAME WIDTH EVERYWHERE, on every icon in the sheet. Do not
+  taper, do not thin a line to fit — if a shape needs a thinner line to work,
+  simplify the shape instead.
+- INTERIOR MARKS ONLY WHERE THEY MEAN SOMETHING. The mountains inside the frame,
+  the crossing of the two rings. At most three, each at least a sixth of the cell
+  long. No rivets, no shading, no highlights, no texture.
+- STRAIGHT AND CHUNKY. Hard angles, flat ends. Curves only where the object is
+  genuinely round — which on this sheet is the two rings and nothing else.
+- NO PERSPECTIVE. Flat and front-on, like a road sign.
+- CENTRED and upright. These sit in a row of three and a tilted one looks broken.
+
+NO DITHERING. NO CHECKERBOARD. NO STIPPLING. Every edge is a HARD STEP between
+solid white and solid black.
+
+THEY ALL WEIGH THE SAME. Same stroke width, same amount of white on screen.
+Nothing in the drawing says which is important.
+
+THEY MUST NOT BE CONFUSABLE — and not only with each other. These three appear on the
+same screen as a navigation bar containing a trophy, a calendar, an envelope, a gift
+box, a document, a gear, a helmet, a bag, a castle, a flag, and a 2x2 grid of squares.
+None of the three may resemble any of those eleven. In particular the framed picture
+must NOT read as the document (which is a plain rectangle with horizontal rules) —
+the triangular peaks inside it are what keep them apart, so draw them large.
+
+SHEET LAYOUT:
+- Arrange the cells in an exact uniform grid: 3 columns x 1 row.
+- Separate every cell with 4px-wide solid MAGENTA (#FF00FF) lines, including a
+  magenta border around the outer edge of the whole sheet.
+- Magenta appears ONLY on these separator lines, never inside a cell.
+- Every cell is exactly the same size. Reading order is left to right.
+- Do not add extra rows of variants. Exactly 1 row, exactly 3 cells.
+- EVERY CELL MUST BE SQUARE. With a 3x1 grid that means the whole sheet is
+  3:1 — output it at 1536x512.
+```
+
+---
+
 ## 슬라이서 설정
 
 ```json
@@ -407,8 +529,13 @@ SHEET LAYOUT:
 { "file": "nav-bot.jpg", "name": "nav_bot", "expect": [5, 1],
   "labels": ["hero", "item", "main", "guild", "content"] },
 { "file": "coin-ui.jpg", "name": "coin_ui", "expect": [2, 1],
-  "labels": ["chest", "gem"] }
+  "labels": ["chest", "gem"] },
+{ "file": "hero-ui.jpg", "name": "hero_ui", "expect": [3, 1],
+  "labels": ["costume", "bond", "paper"] }
 ```
+
+**캐릭터 전신**은 여기 없습니다 — 껍데기가 아니라 사람이라
+[CHAR_FULL_PROMPTS.md](CHAR_FULL_PROMPTS.md) 에 따로 있습니다.
 
 ## 안 만든 것
 
