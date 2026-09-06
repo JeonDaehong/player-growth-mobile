@@ -394,7 +394,7 @@ export function HeroManage({ pick, onPick }: {
         여덟 줄이 한 칸으로 서면 세로를 여덟 줄만큼 먹는다. 두 칸이면 넷이고,
         그 차이가 곧 아래 키우는 단추가 화면 안에 있느냐 밖에 있느냐다.
       */}
-      <CharStats c={c} party={party} chars={chars} cols={2} />
+      <CharStats c={c} party={party} chars={chars} cols={2} deltas={false} />
       <Sep />
 
       {/*

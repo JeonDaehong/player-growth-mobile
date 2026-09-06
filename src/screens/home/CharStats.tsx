@@ -14,6 +14,8 @@
  * 줄을 떼어 낸 몸을 기준으로 두고, 줄이 준 몫부터 지금 걸린 것까지를 전부
  * 괄호 하나에 담는다 (`deltaText`) — 초록은 오른 것, 붉은색은 깎인 것이다.
  *
+ * **영웅 관리에서는 그 괄호를 안 붙인다** (`deltas`). 까닭은 그 이름표에.
+ *
  * ## 두 칸으로 선다 (`cols`)
  *
  * 한 칸으로 늘어놓으면 여덟 줄이 세로를 여덟 줄만큼 먹는다. 영웅 관리는 그
@@ -78,12 +80,24 @@ function StatRow({ art, k, v, delta, tail }: {
   );
 }
 
-export function CharStats({ c, party, chars, cols = 1 }: {
+export function CharStats({ c, party, chars, cols = 1, deltas = true }: {
   c: OwnedChar;
   party: Party;
   chars: Record<string, OwnedChar>;
   /** 한 줄에 몇 칸. 영웅 관리는 2, 캐릭터 창은 1 (머리말) */
   cols?: 1 | 2;
+  /**
+   * **초록·붉은 괄호를 붙이나** (`(+11)` · `(-3)`).
+   *
+   * 영웅 관리는 끈다. 저 괄호는 **지금 판에서 걸려 있는 것**을 말하는데,
+   * 거기는 판을 보는 자리가 아니라 키우는 자리다 — 레벨을 올릴까 성을
+   * 올릴까를 정하려고 보는 숫자 옆에서 저쪽 무대의 함성이 얹은 몫이
+   * 오르내리면, **어느 것이 이 사람의 값인지**가 흐려진다.
+   *
+   * 캐릭터 창은 켜 둔다. 거기는 싸움을 보다 "쟤 왜 저러지" 로 여는 자리라
+   * 지금 걸려 있는 것이 곧 답이다.
+   */
+  deltas?: boolean;
 }) {
   /*
     지금 남은 체력과 걸려 있는 것들.
@@ -140,7 +154,7 @@ export function CharStats({ c, party, chars, cols = 1 }: {
       art="atk"
       k={`공격력 (${DMG_NAME[blowOf(c.id).type]})`}
       v={`${base.atk}`}
-      delta={now ? deltaText(base.atk, now.atk) : ''}
+      delta={deltas && now ? deltaText(base.atk, now.atk) : ''}
     />,
     /*
       **실제 간격(`1333ms 마다`)은 안 적는다.** 배수만으로는 0.8 이 빠른지
@@ -152,7 +166,7 @@ export function CharStats({ c, party, chars, cols = 1 }: {
       art="spd"
       k="공격속도"
       v={`${base.spd}`}
-      delta={now ? deltaText(base.spd, now.spd, 1) : ''}
+      delta={deltas && now ? deltaText(base.spd, now.spd, 1) : ''}
     />,
     /*
       체력은 **대형이 올린 것까지가 최대치**다 (`seat`). 전투가 그 값을
@@ -164,21 +178,21 @@ export function CharStats({ c, party, chars, cols = 1 }: {
       art="hp"
       k="체력"
       v={`${cur > 0 ? `${Math.ceil(cur)} / ` : ''}${seat.hp}`}
-      delta={deltaText(base.hp, seat.hp)}
+      delta={deltas ? deltaText(base.hp, seat.hp) : ''}
     />,
     <StatRow
       key="def"
       art="def"
       k="방어력"
       v={`${base.def}`}
-      delta={now ? deltaText(base.def, now.def) : ''}
+      delta={deltas && now ? deltaText(base.def, now.def) : ''}
     />,
     <StatRow
       key="res"
       art="res"
       k="마법저항력"
       v={`${base.res}`}
-      delta={now ? deltaText(base.res, now.res) : ''}
+      delta={deltas && now ? deltaText(base.res, now.res) : ''}
     />,
     /*
       ── 치명타 두 줄은 **늘 뜬다** ──
@@ -202,7 +216,7 @@ export function CharStats({ c, party, chars, cols = 1 }: {
       art="crit"
       k="치명타 확률"
       v={`${Math.round(base.crit * 100)}%`}
-      delta={now ? deltaText(base.crit * 100, critNow * 100) : ''}
+      delta={deltas && now ? deltaText(base.crit * 100, critNow * 100) : ''}
     />,
     <StatRow
       key="cdmg"
