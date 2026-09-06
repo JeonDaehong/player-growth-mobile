@@ -212,7 +212,7 @@ function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
   live, hitNo, hitKind, cc, bound, boundWeb, charmed, warded, shock, turn,
-  x, width, onAim, onSwing, onSkill,
+  x, width, noteShift = 0, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
   /**
@@ -321,11 +321,15 @@ function FighterView({
    */
   markKey: string;
   /**
-   * 지금 실제로 싸우는 중인가 (`core/autoBattle` 의 `fightHeld` 를 뒤집은 값).
+   * 머리 위에 한 줄을 띄워도 되는 때인가 (`BattleView` 의 `noteLive`).
    *
-   * 머리 위에 뜨는 한 줄이 이걸 본다 (`MarkNotes`). 검은 막이 걸려 있는 동안은
-   * 아무 말도 안 하고, 막이 걷혀 제자리에 서는 그 순간에 지금 걸려 있는 것을
-   * 통째로 알린다 — 판마다 패시브가 새로 붙는 것처럼 보인다.
+   * 이것만 `MarkNotes` 가 본다. 검은 막이 걸려 있는 동안은 아무 말도 안 하고,
+   * **막이 걷히는 그 순간부터** 지금 걸려 있는 것을 통째로 알린다 — 판마다
+   * 패시브가 새로 붙는 것처럼 보인다.
+   *
+   * 한동안 `fightHeld` 를 뒤집어 썼다. 그건 `openIn` 이 0 이 되는 순간이라
+   * 막이 걷히고 다 걸어 들어와 선 **뒤**여서, 판이 열릴 때 무엇이 걸려
+   * 있는지가 한참 늦게 나왔다.
    */
   live: boolean;
   /**
@@ -466,6 +470,16 @@ function FighterView({
    * 적 앞에서 멈추고 어떤 때는 적을 지나쳐 버린다.
    */
   leapTo: number;
+  /**
+   * 머리 위 한 줄이 **옆으로 얼마나 비켜설까** (px) — `noteLane` 이 셈한다.
+   *
+   * 나란히 선 둘에게 같은 글이 동시에 뜨면 맞붙어 읽을 수 없는 덩어리가
+   * 된다. 짝을 이룬 둘이 서로 반대쪽으로 반씩 물러난다.
+   *
+   * **무대가 미리 셈해서 넘긴다.** 여기서 뜨는 순간에 정하면 먼저 뜬 쪽이
+   * 가운데를 차지하고 나중 사람만 물러나서, 한 명이 한쪽으로 치우쳐 뜬다.
+   */
+  noteShift?: number;
   /**
    * 대상을 정한다. **쏘는 순간** 불리고, 그 대상까지의 거리(px)를 돌려준다.
    *
@@ -1281,22 +1295,16 @@ function FighterView({
         지금 실제로 글을 띄우고 있을 때만 한 층 올라가고, 아니면 0층 —
         머리 바로 위다.
 
-        **가로와 세로를 둘 다 넘긴다.** 무대는 쿼터뷰라 뒷줄이 24px 씩 위로
-        올라가 서므로 (`lift`), 가로만 보면 위아래로 한참 떨어진 둘이 서로
-        자리를 뺏는다 — 넷이 한꺼번에 말할 때 마지막 사람이 3층까지 밀리던
-        것이 그것이다.
-
-        `x` 는 아군 구역 왼쪽 끝에서 잰 값이고, 견주는 것도 같은 자를 쓰는
-        아군끼리뿐이다 (`zone`).
+        비키는 만큼은 **무대가 미리 셈해서** 넘긴다 (`noteShift`). 누가
+        누구와 부딪히는지는 대형이 정해지는 순간 이미 다 알기 때문이고,
+        미리 알면 짝을 이룬 둘이 **서로 반대쪽으로 반씩** 물러날 수 있다 —
+        뜨는 순간에 정하면 먼저 뜬 쪽이 가운데를 차지해서 한 명만 치우친다.
       */}
       <MarkNotes
         marks={marks}
         markKey={markKey}
         live={live}
-        who={ch.id}
-        zone="ally"
-        x={x}
-        y={lift}
+        shift={noteShift}
       />
 
       {/*
@@ -1576,6 +1584,7 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.onCharge === b.onCharge
   && a.bless === b.bless
   && a.x === b.x
+  && a.noteShift === b.noteShift
   && a.width === b.width
   && a.advance === b.advance
   && a.leapTo === b.leapTo

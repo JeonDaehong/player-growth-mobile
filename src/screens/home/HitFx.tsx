@@ -25,9 +25,7 @@ import type { HitFx } from '@/core/chars';
 import type { Mark } from '@/core/passives';
 import { Sprite } from '@/ui/Sprite';
 import { BAD_C, BLACK, GOOD_C, MONO, WHITE } from '@/ui/theme';
-import {
-  NOTE_SHIFT, NOTE_TIER, NoteSpot, NoteZone, claimNoteSpot,
-} from './noteLane';
+import { NOTE_SHIFT } from './noteLane';
 
 /** 이펙트 한 판의 길이 */
 export const FX_MS = 260;
@@ -1238,21 +1236,27 @@ export const NOTE_MS = 1600;
  */
 const NOTE_ROW = 12;
 
-/** 아무와도 안 부딪힌 자리 — 매번 새 객체를 만들면 갈래가 헛돈다 */
-const HOME_SPOT: NoteSpot = { lane: 0, shift: 0 };
 
 /**
  * 판이 열린 뒤 **첫 줄을 띄우기까지** 기다리는 시간 (ms).
  *
- * 걸어 들어오는 데 걸리는 시간보다 조금 길다 (`core/autoBattle` 의
- * `OPEN_WALK_MS` — 500ms). 그 안에 띄우면 글이 인물을 따라 화면 밖에 있다가
- * 스러져서, 켜져 있는데 한 번도 안 보이는 줄이 된다 (`MarkNotes` 의
- * `settled`).
+ * ## 700 이었다 — 이미 끝난 것을 기다리고 있었다
  *
- * 넉넉히 잡을 이유는 없다. 이 줄이 하는 말은 "판이 시작될 때 이게 걸려
- * 있다" 이므로 판이 시작되고 한참 뒤에 뜨면 다른 사건에 묻힌다.
+ * 걸어 들어오는 동안(`OPEN_WALK_MS`)에 띄우면 글이 인물을 따라 화면 밖에
+ * 있다가 스러진다고 봤다. 맞는 걱정인데 **자리가 틀렸다**: 걸어 들어오는
+ * 것은 판 열기의 마지막 한 틱이고 (`StageIntro` 의 `WALK_DONE` — 0.93),
+ * 이 갈래를 여는 `live` 는 그보다 **뒤에** 켜진다. 다 서고 나서 700ms 를
+ * 더 기다린 셈이다.
+ *
+ * 이제 0 이다. 부르는 쪽이 막이 걷힌 시점부터 `live` 를 켜므로
+ * (`BattleView` 의 `noteLive`) 여기서 또 미룰 이유가 없다 — 판이 열릴 때
+ * 무엇이 걸려 있는지는 **판이 열리는 그 자리에서** 말해야 다른 사건에
+ * 안 묻힌다.
+ *
+ * 0 이어도 갈래는 그대로 둔다. 값을 되돌리고 싶어질 때 고칠 자리가 하나로
+ * 남아 있는 편이 낫다.
  */
-const SETTLE_MS = 700;
+const SETTLE_MS = 0;
 
 /**
  * ── 걸리는 순간 머리 위에 뜨는 한 줄 ──
@@ -1443,27 +1447,17 @@ export function StatusNote({
  * 붙는 것처럼 보이는데, 규칙상으로도 실제로 그렇다.
  */
 export function MarkNotes({
-  marks, markKey, live, who, zone, x, y, head = 0,
+  marks, markKey, live, shift = 0, head = 0,
 }: {
   marks: readonly Mark[];
   /**
-   * 누구의 머리 위인가 — 층을 받을 때 쓰는 이름 (`noteLane`).
+   * 옆으로 얼마나 비켜설까 (px) — 나란히 선 사람과 안 맞붙게 (`noteLane`).
    *
-   * 구역 안에서 겹치지만 않으면 된다. 아군은 캐릭터 번호, 적은 무대 자리다.
+   * **무대가 미리 셈해서 넘긴다.** 뜨는 순간에 여기서 정하면 먼저 뜬 쪽이
+   * 가운데를 차지하고 나중 사람만 물러나서, 한 명이 한쪽으로 치우쳐 뜬다.
+   * 누가 누구와 부딪히는지는 대형이 정해지는 순간 이미 다 안다.
    */
-  who: string;
-  /** 아군 쪽인가 적 쪽인가 — 두 구역은 서로 안 견준다 (`noteLane`) */
-  zone: NoteZone;
-  /** 그 사람이 가로로 어디 서 있나 (같은 구역 안에서 같은 자로 잰 값) */
-  x: number;
-  /**
-   * 세로로 얼마나 올라가 서 있나 (`Ground` 의 `depthAt` 의 `lift`).
-   *
-   * 이게 없으면 위아래로 한참 떨어진 둘이 **가로로 가깝다는 이유만으로**
-   * 서로 자리를 뺏는다 — 넷이 한꺼번에 말할 때 마지막 사람이 3층까지
-   * 밀리던 것이 그것이다 (`noteLane` 의 `NEAR_Y`).
-   */
-  y: number;
+  shift?: number;
   /** 상자 꼭대기에서 그림 머리까지 비어 있는 높이 (`StatusNote` 의 `head`) */
   head?: number;
   /**
@@ -1477,17 +1471,6 @@ export function MarkNotes({
   live: boolean;
 }) {
   const [notes, setNotes] = useState<{ key: number; text: string; good: boolean }[]>([]);
-  /*
-    ── 어디에 뜰까 ── (`noteLane`)
-
-    글이 새로 뜨는 **그 순간에** 받는다. 자리 번호로 미리 정해 두면 옆 사람
-    머리 위가 비어 있어도 늘 비켜서 있고, 그게 "너무 머리에서 위에서 뜬다"
-    였다.
-
-    부딪히면 **옆으로** 비킨다 (`shift`). 위로 올리는 것은 셋 이상이 한 점에
-    몰릴 때뿐이라, 사실상 늘 머리 바로 위다.
-  */
-  const [spot, setSpot] = useState<NoteSpot>(HOME_SPOT);
   const seq = useRef(0);
   const had = useRef<Set<string>>(new Set());
   const told = useRef<Set<string>>(new Set());
@@ -1586,7 +1569,6 @@ export function MarkNotes({
       **같은 순간에** 새로 걸리는 일은 판이 열릴 때뿐이고, 그때 셋째 줄은
       어차피 위쪽 띠에 가려 잘 안 보였다.
     */
-    setSpot(claimNoteSpot(who, zone, x, y, NOTE_MS));
     setNotes((old) => [...old, ...fresh].slice(-2));
     timers.current.push(setTimeout(() => {
       setNotes((old) => old.filter((n) => !fresh.some((f) => f.key === n.key)));
@@ -1607,8 +1589,7 @@ export function MarkNotes({
           text={n.text}
           good={n.good}
           i={k}
-          lift={spot.lane * NOTE_TIER}
-          shift={spot.shift}
+          shift={shift}
           head={head}
         />
       ))}

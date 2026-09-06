@@ -38,7 +38,8 @@ import { Animated, Easing, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  BOSS_SKILLS, MOB_CAP, STAGE_MS, bossReady, fightHeld, foeAt as kindAt, foeCell,
+  BOSS_SKILLS, MOB_CAP, OPEN_WALK_MS, STAGE_MS, bossReady, fightHeld,
+  foeAt as kindAt, foeCell,
   foeHexOf, foeOf, healPlan, mobCap, pickAim,
   RAGE_MS, rageIn, raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
@@ -67,6 +68,7 @@ import {
   BossCall, DamageNumber, FallingArrow, FeyDart, FOE_SHOT_MS, FoeShot, HitBurst,
   MarkNotes, RageCall, SkillShout, shotMsOf, useShake,
 } from './HitFx';
+import { noteShiftsOf } from './noteLane';
 import { Fighter, Swing } from './Fighter';
 import {
   CROSS_MS, GiantArrow, PIERCE_MS, PierceAura, PierceBand, crossDelay,
@@ -754,6 +756,25 @@ export function BattleView({ top, corner }: Props = {}) {
   const held = fightHeld(battle);
 
   const down = battle.down > 0;
+
+  /*
+    ── 머리 위 한 줄은 **막이 걷히자마자** 뜬다 ──
+
+    여태 `!held` 를 봤다. 그건 `openIn` 이 0 이 되는 순간이라, 검은 막이
+    걷히고(`OPEN_MS - OPEN_WALK_MS` = 1500ms) 양쪽이 걸어 들어와 다 선
+    뒤다. 거기서 또 0.7초를 기다렸으므로 (`HitFx` 의 `SETTLE_MS`) 판이
+    열릴 때 무엇이 걸려 있는지가 **1.2초 늦게** 나왔다.
+
+    막이 걷히는 시점은 마지막 한 틱이 남은 때다 (`OPEN_WALK_MS`). 그때부터
+    켜면 걸어 들어오는 동안 글이 인물을 따라 같이 들어오고, 다 선 뒤에도
+    1초 넘게 또렷하게 떠 있다 (`NOTE_MS` 가 1.6초다).
+
+    시간을 재지 않는다 — 엔진이 내려 주는 `openIn` 을 그대로 읽으므로
+    화면의 시계와 엔진의 시계가 어긋날 자리가 없다.
+  */
+  const noteLive = !down
+    && !(Number.isFinite(battle.clearIn) && battle.clearIn > 0)
+    && (battle.openIn ?? 0) <= OPEN_WALK_MS;
   const empty = ps.count === 0;
 
   const [pops, setPops] = useState<Pop[]>([]);
@@ -2847,6 +2868,29 @@ export function BattleView({ top, corner }: Props = {}) {
     크기와 간격이 **다 같은 값을 탄다** — 하나만 줄이면 겹치거나 벌어진다.
   */
   const fit = fitOf(stageW, allyW1, foeW1);
+
+  /**
+   * 그 자리 사람의 머리 위 한 줄이 **옆으로 얼마나 비켜설까** (px).
+   *
+   * 파티 전체에 걸리는 버프는 넷에게 같은 글이 동시에 뜬다. 한글은 전각이라
+   * 여덟 자면 82px 인데 나란히 선 둘이 61px 밖에 안 떨어져 있어서, 그대로
+   * 두면 두 글이 맞붙는다 (`screens/home/HitFx` 의 `StatusNote`).
+   *
+   * **여기서 미리 셈한다.** 뜨는 순간에 정하면 먼저 뜬 쪽이 가운데를
+   * 차지하고 나중 사람만 물러나서, 화면에서는 한 명만 한쪽으로 치우쳐
+   * 뜬다 — 실제로 그렇게 보였다. 미리 알면 짝이 **반씩** 갈라선다.
+   *
+   * 규칙은 `screens/home/noteLane` 한 곳에 있다. 여기서는 자리만 넘긴다.
+   */
+  const noteShiftOf = React.useMemo(
+    () => noteShiftsOf(spots.map((sp, i) => ({
+      x: Math.round((form1.x[i] ?? 0) * fit),
+      lane: sp.lane,
+    }))),
+    /* `form1` 은 렌더마다 새로 만들어지므로 자리 배열 자체를 열쇠로 쓴다 */
+    [spots, form1.x, fit],
+  );
+
   const partyW = PARTY_W * fit;
   /*
     거대 화살이 스킬 콜백 안에서 읽어 갈 자리 (`crossRef`).
@@ -3204,7 +3248,8 @@ export function BattleView({ top, corner }: Props = {}) {
                       검은 막이 걸려 있는 동안 띄워 봐야 아무도 못 본다 —
                       상시효과를 알리는 줄이 딱 그랬다 (`MarkNotes`).
                     */
-                    live={!held && !down}
+                    live={noteLive}
+                    noteShift={noteShiftOf[i] ?? 0}
                     /*
                       우두머리가 **무엇으로** 쳤나 (`BossFx`). 암석이 떨어졌는지
                       덩쿨에 감겼는지 베였는지 — 붉은 깜빡임은 그걸 못 말한다.
@@ -3604,22 +3649,14 @@ export function BattleView({ top, corner }: Props = {}) {
                       /* 말은 한 마리만 한다 (`foeNoteOf`) — 로고는 위에서 마리마다 */
                       marks={foeNoteOf[f.id]?.marks ?? NO_MARK}
                       markKey={foeNoteOf[f.id]?.key ?? ''}
-                      live={!held && !down}
+                      live={noteLive}
                       /*
-                        ── 층은 뜨는 순간에 받는다 ── (`noteLane`)
+                        **적은 안 비킨다** (`shift` 를 안 준다).
 
-                        적끼리만 견준다 (`zone`). 아군 쪽 `x` 는 아군 구역
-                        왼쪽 끝에서 잰 값이라 여기 격자 좌표와 자가 다른데,
-                        섞어 재면 무대 양 끝에 선 둘이 "가까이 있다" 로
-                        잡힌다.
-
-                        지금은 말하는 놈이 한 마리뿐이라 (`foeNoteOf`) 늘
-                        0층이지만, 여럿이 말하게 되는 날 저절로 비켜 선다.
+                        말은 한 마리만 하므로 (`foeNoteOf`) 옆과 맞붙을 일이
+                        없다. 여럿이 말하게 되는 날 아군처럼 미리 셈해서
+                        넘기면 된다 (`noteLane` 의 `noteShiftsOf`).
                       */
-                      who={`foe${f.id}`}
-                      zone="foe"
-                      x={foeForm.x[back] ?? 0}
-                      y={foeForm.lift[back] ?? 0}
                       /*
                         상자 꼭대기가 아니라 **그림 꼭대기** 위에 뜬다
                         (`headH`). 회복 숫자가 쓰는 것과 같은 값이다 —
