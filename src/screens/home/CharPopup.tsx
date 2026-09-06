@@ -44,10 +44,9 @@ import { openPicks } from '@/core/skillTree';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
 import {
-  FRENZY_SHOW, critOf, deltaText, frenzyMul, liveArmor, liveAtk, liveSpd,
-  passiveOf,
+  critOf, deltaText, liveArmor, liveAtk, liveSpd,
 } from '@/core/passives';
-import { STATUS_NAME, hexOf } from '@/core/status';
+import { hexOf } from '@/core/status';
 import { hpOf, livingMembers, seatRows } from '@/core/party';
 
 export function CharPopup({
@@ -165,34 +164,6 @@ export function CharPopup({
   /* 집중이 올려 준 몫까지 — 굴리는 쪽과 같은 함수다 (`rollCrit`) */
   const critNow = base ? critOf(base.crit, hex) : 0;
   /*
-    ── 지금 무엇이 그러고 있나 ──
-
-    괄호 안의 숫자만으로는 **왜** 올랐는지 알 수가 없다. 아녜스가 서 있어서
-    인지, 뒷줄이라서인지, 방금 함성을 질러서인지가 다 같은 `(+28)` 이다.
-    한 줄로 늘어놓으면 그때그때 켜지고 꺼지는 것이 그대로 보인다.
-
-    쓰러져 있으면 아무것도 안 적는다 — 시체에 붙은 버프는 거짓말이다.
-  */
-  const from: string[] = [];
-  if (c && cur > 0) {
-    if (c.row === 'front') from.push('앞줄 (체력 +10% · 방어 +50%)');
-    if (c.row === 'back') from.push('뒷줄 (공격력 +15%)');
-    /* 제 패시브는 조건이 붙은 것만 — 늘 켜져 있는 것은 위 패시브 절에 이미 있다 */
-    const mine = passiveOf(c.id);
-    if (mine?.frenzy && frenzyMul(c.id, cur, statOf(c).hp) >= FRENZY_SHOW) {
-      from.push(mine.name);
-    }
-    for (const a of alive) {
-      const p = passiveOf(a.id);
-      if (!p || !(p.allyAtk || p.allySpd)) continue;
-      from.push(`${CHARS[a.id].name}의 ${p.name}`);
-    }
-    for (const h of hex) {
-      if (h.ms > 0) from.push(STATUS_NAME[h.id]);
-    }
-  }
-
-  /*
     아래 목록은 **맨 몸 명부**를 쓴다 (`raw`).
 
     여기는 캐릭터끼리 견주는 자리다. 파티에 선 넷만 대형 배수가 얹힌 전투력을
@@ -239,11 +210,16 @@ export function CharPopup({
                   label={RARITY_NAME[d.rarity]}
                   fill={d.rarity === 'mythic' || d.rarity === 'legendary'}
                 />
-                {/* 전투 타입 — 아이콘과 이름을 붙여서 한 덩어리로 */}
-                <Row gap={3} style={{ alignItems: 'center' }}>
-                  <Sprite set="role_icon" name={BATTLE_TYPE_ART[battleTypeOf(c.id)]} size={11} />
-                  <Tag label={BATTLE_TYPE_NAME[battleTypeOf(c.id)]} />
-                </Row>
+                {/*
+                  ── 전투 타입은 **로고만** ──
+
+                  `[로고] 방패` 처럼 이름을 붙여 뒀다. 등급 알약 바로 옆이라
+                  한 줄에 딱지가 둘이 되고, 이름 옆이 온통 알약이었다.
+
+                  로고 하나면 된다. 넷뿐이고 (`BATTLE_TYPE_ART`) 모양이 서로
+                  다르며, 이름은 창을 처음 여는 몇 번이면 묶인다.
+                */}
+                <Sprite set="role_icon" name={BATTLE_TYPE_ART[battleTypeOf(c.id)]} size={13} />
               </Row>
               <Row gap={SP.xs} style={{ marginTop: 2 }}>
                 <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={14} />
@@ -565,21 +541,18 @@ export function CharPopup({
             아니라 **지금 실제로 일어나는 일**이라 남긴다.
           */}
           {/*
-            ── 지금 무엇이 그러고 있나 ──
+            ── 여기 "지금 걸려 있는 것" 상자가 있었다 ──
 
-            괄호 안의 숫자는 **얼마나**만 말하고 **왜**는 말하지 않는다. 그
-            줄이 실시간으로 오르내리는 화면에서는 그게 특히 답답하다 — 아녜스가
-            쓰러져 공격력이 떨어졌는데 창에서는 숫자만 조용히 줄어든다.
+            `앞줄 (체력 +10% · 방어 +50%) · 리안느의 숲의 노래 · 아녜스의
+            헌신 · 신속` 처럼 켜져 있는 것을 전부 이름으로 늘어놓았다.
+            괄호 안의 숫자가 **얼마나**만 말하고 **왜**는 말하지 않으니
+            채워 주려던 것인데, 넷이 서 있으면 늘 서너 줄이라 수치 절보다
+            길었다.
 
-            지금 켜져 있는 것을 이름으로 늘어놓는다. 하나도 없으면 줄 자체가
-            안 뜬다 — 빈 목록은 자리만 먹는다.
+            초록·붉은 괄호는 그 자체로 "지금 뭔가 걸려 있다" 를 말한다.
+            무엇이 걸렸는지는 파티 칸의 로고 줄이 이미 그리고 있고
+            (`StatusRow`), 거기가 그걸 보는 자리다.
           */}
-          {from.length > 0 && (
-            <View style={[BORDER, { padding: SP.sm, marginTop: SP.xs }]}>
-              <T size={9} bold>지금 걸려 있는 것</T>
-              <T size={9} dim="sub" style={{ marginTop: 2 }}>{from.join(' · ')}</T>
-            </View>
-          )}
           {/*
             ── 테스트용 단추 ──
 

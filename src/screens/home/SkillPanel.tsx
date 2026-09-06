@@ -168,8 +168,6 @@ export function SkillPanel({
     갈래를 고른 값도 안 보인다.
   */
   const passiveOff = c.tree?.includes('kg3b') ?? false;
-  /* 지금 몇 개가 열려 있나 — 머리말이 이걸 적는다 (`core/chars` 의 `openSkills`) */
-  const openCount = list.filter((_sk, i) => skillOpen(c, i)).length;
   const st = statOf(c);
   /* 파티 패시브가 기술에도 걸린다 — 전투가 쓰는 것과 같은 값이다 */
   const sup = allyAtk(party, chars);
@@ -190,11 +188,14 @@ export function SkillPanel({
       */}
       {!!pv && (
         <View style={passiveOff ? { opacity: O.dim } : undefined}>
+          {/*
+            오른쪽에 `늘 켜져 있습니다` 가 있었다. 아래 `항상` 딱지가 같은
+            말을 하고 있어서 (`Tag`) 한 줄에 같은 말이 두 번이었다 — 꺼진
+            경우에만 이유를 적는다.
+          */}
           <Row between style={{ marginBottom: SP.xs }}>
             <T size={11} bold>패시브</T>
-            <T size={9} dim="dim">
-              {passiveOff ? '파쇄의 태세가 껐습니다' : '늘 켜져 있습니다'}
-            </T>
+            {passiveOff && <T size={9} dim="dim">파쇄의 태세가 껐습니다</T>}
           </Row>
           <ListItem
             title={pv.name}
@@ -209,11 +210,17 @@ export function SkillPanel({
             left={<Sprite set="passive_icon" name={pv.art} size={22} />}
             right={<Tag label={passiveOff ? '꺼짐' : '항상'} />}
           />
-          <T size={9} dim="dim" style={{ marginTop: 2, marginBottom: SP.sm }}>
-            {passiveOff
-              ? '파쇄의 태세를 찍어서 꺼졌습니다. 되돌리면 다시 걸립니다.'
-              : '파티에 서 있고 살아 있는 동안만 걸립니다 — 쓰러지면 그 자리에서 꺼집니다.'}
-          </T>
+          {/*
+            켜져 있을 때의 한 줄(`파티에 서 있고 살아 있는 동안만…`)을 걷었다.
+            패시브가 그렇다는 것은 한 번 알면 되는 규칙인데, 창을 열 때마다
+            네 사람 몫으로 네 번 읽게 된다. 꺼진 경우만 이유를 적는다 —
+            저건 규칙이 아니라 **지금 이 사람에게 일어난 일**이다.
+          */}
+          {passiveOff && (
+            <T size={9} dim="dim" style={{ marginTop: 2, marginBottom: SP.sm }}>
+              파쇄의 태세를 찍어서 꺼졌습니다. 되돌리면 다시 걸립니다.
+            </T>
+          )}
         </View>
       )}
 
@@ -226,10 +233,11 @@ export function SkillPanel({
 
         대신 흐리게 두고 몇 성이 필요한지를 오른쪽에 적는다.
       */}
-      <Row between style={{ marginBottom: SP.xs }}>
-        <T size={11} bold>액티브 스킬</T>
-        <T size={9} dim="dim">{`${c.star}성 — ${openCount}개 열림`}</T>
-      </Row>
+      {/*
+        오른쪽에 `4성 — 3개 열림` 이 있었다. 목록이 바로 아래에 있고 잠긴
+        것은 흐리게 뜨므로 (`skillOpen`) 세어 볼 것을 미리 세어 준 셈이다.
+      */}
+      <T size={11} bold style={{ marginBottom: SP.xs }}>액티브 스킬</T>
 
       {list.map((sk, slot) => {
         const unlocked = skillOpen(c, slot);

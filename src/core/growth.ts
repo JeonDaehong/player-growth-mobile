@@ -46,21 +46,39 @@ export type Rarity = 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
 export const RARITY_IDS: readonly Rarity[] =
   ['common', 'rare', 'epic', 'legendary', 'mythic'] as const;
 
+/**
+ * 화면에 뜨는 등급 이름.
+ *
+ * ## 한글이었다 (일반 · 희귀 · 영웅 · 전설 · 신화)
+ *
+ * 영문으로 바꿨다. 등급은 **낱말이 아니라 딱지**다 — 뜻을 읽는 것이 아니라
+ * 다섯 칸 중 어디인지를 알아보는 것이라, 이름표에서 다른 글과 섞이지 않는
+ * 편이 낫다. 이 화면의 나머지가 전부 한글이라 영문 한 덩이는 저절로
+ * 도드라진다.
+ *
+ * 글자 폭도 준다. 한글은 전각이라 `영웅` 이 `Epic` 보다 넓다 — 좁은 알약
+ * 안에서 그 차이가 크다 (`ui/atoms` 의 `Tag`).
+ */
 export const RARITY_NAME: Record<Rarity, string> = {
-  common: '일반',
-  rare: '희귀',
-  epic: '영웅',
-  legendary: '전설',
-  mythic: '신화',
+  common: 'Common',
+  rare: 'Rare',
+  epic: 'Epic',
+  legendary: 'Legendary',
+  mythic: 'Mythic',
 };
 
-/** 좁은 자리에 넣는 한 글자 — 파티 칸처럼 이름이 안 들어가는 곳 */
+/**
+ * 좁은 자리에 넣는 **한 글자** — 파티 칸처럼 이름이 안 들어가는 곳.
+ *
+ * 이름을 영문으로 옮기면서 여기도 첫 글자로 맞춘다. `L`(Legendary)과
+ * `M`(Mythic)이 갈리고, `Common`·`Rare`·`Epic` 은 서로 안 겹친다.
+ */
 export const RARITY_LETTER: Record<Rarity, string> = {
-  common: '일',
-  rare: '희',
-  epic: '영',
-  legendary: '전',
-  mythic: '신',
+  common: 'C',
+  rare: 'R',
+  epic: 'E',
+  legendary: 'L',
+  mythic: 'M',
 };
 
 /**
