@@ -307,8 +307,7 @@ export function migrateState(persisted: unknown): GameState {
       사람이 켠 뜻이라, 껐다 켜면 꺼져 있는 종류가 아니다 — 밤새 켜 두려고
       켠 것이 앱을 다시 여는 순간 풀리면 그게 제일 나쁘다.
     */
-    repeat: typeof (p.battle as { repeat?: unknown } | undefined)?.repeat === 'boolean'
-      ? ((p.battle as { repeat: boolean }).repeat) : false,
+    repeat: rawBattle.repeat === true,
     /* 지난 판에 나갔던 특수기 이름을 이어받을 이유가 없다 */
     pat: null,
     patId: null,

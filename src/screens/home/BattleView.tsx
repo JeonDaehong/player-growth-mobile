@@ -2339,7 +2339,25 @@ export function BattleView({ top, corner }: Props = {}) {
    * 나갔다" 를 못 본다.
    */
   const prevPatHp = useRef(battle.patSeq ?? 0);
-  /** 무대 폭 — 근접이 얼마나 나갈지 여기서 나온다 */
+  /**
+   * 무대 폭 — 근접이 얼마나 나갈지 여기서 나온다.
+   *
+   * ## 0 은 안 받는다
+   *
+   * 무대는 영웅 탭에 있는 동안 **켜진 채로 가려진다** (`HomeScreen` 의
+   * `display: 'none'`). 그때 이 자리는 재기를 0 으로 다시 알려 준다 — 화면에서
+   * 자리를 안 먹으니 폭이 0 인 것이 맞긴 하다.
+   *
+   * 그런데 이 값은 **그리는 자리를 정하는 값이 아니라, 무대가 얼마나 넓은지를
+   * 기억하는 값**이다. 0 이 되면 여기 걸린 것들이 통째로 멎는다:
+   *
+   *   · 새로 나온 놈을 "걸어 들어올 놈" 으로 적어 두는 자리 (`walked`)
+   *     — 가려져 있는 동안 나온 놈들이 안 적히므로, 돌아오는 순간 그놈들이
+   *     **그제서야** 오른쪽 끝에서 걸어 들어온다
+   *   · 대형 좁히기 · 날아가는 것의 거리 · 타격 자국의 자리
+   *
+   * 가려졌다고 무대가 좁아진 것이 아니므로 **마지막으로 잰 폭을 지킨다.**
+   */
   const [stageW, setStageW] = useState(0);
 
   /*
@@ -3211,7 +3229,11 @@ export function BattleView({ top, corner }: Props = {}) {
           overflow: 'hidden',
           justifyContent: 'flex-end',
         }, shake.style]}
-        onLayout={(e) => setStageW(e.nativeEvent.layout.width)}
+        onLayout={(e) => {
+          const w = e.nativeEvent.layout.width;
+          /* 가려지면 0 으로 온다 — 그때는 마지막으로 잰 폭을 지킨다 (`stageW`) */
+          if (w > 0) setStageW(w);
+        }}
       >
         {/*
           배경 — **그림의 지평선을 바닥판 뒤끝에 맞춘다.**

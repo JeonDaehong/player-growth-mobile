@@ -25,14 +25,16 @@
  * 화면에서 앞뒤는 **적을 바라본 좌우**다 (`core/party`). 그림과 무대가
  * 다른 방향을 가리키면 둘 중 하나는 반드시 틀리게 읽힌다.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import {
   FORMATIONS, FORMATION_IDS, FORM_LANES, PARTY_SIZE, formationSeats,
 } from '@/core/party';
 import type { FormationId } from '@/core/party';
-import { Row, T } from '@/ui/atoms';
+import { ROW_MOD } from '@/core/chars';
+import { Btn, Row, Sep, T } from '@/ui/atoms';
+import { Popup } from '@/ui/Popup';
 import { sfx } from '@/ui/sfx';
 import { BORDER, BORDER_HI, C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 
@@ -207,11 +209,41 @@ export function FormationPicker() {
   const form = useGame((s) => s.pendingFormation ?? s.formation);
   const live = useGame((s) => s.formation);
   const setFormation = useGame((s) => s.setFormation);
+  /** 규칙을 펴 놓았나 (`FormationHelp`) */
+  const [help, setHelp] = useState(false);
 
   return (
     <View style={{ gap: SP.xs }}>
       <Row between>
-        <T size={FS.title} bold>대형</T>
+        <Row gap={SP.xs}>
+          <T size={FS.title} bold>대형</T>
+          {/*
+            ── 규칙은 **물어봐야 나온다** ──
+
+            앞줄이 뭘 받고 뒷줄이 뭘 받는지, 어느 자리가 얼마나 맞는지를
+            아래에 늘 적어 두었다. 다 맞는 말인데 네 줄이라 대형 칸 셋보다
+            길었고, **한 번 읽으면 다시 안 읽는 종류**다.
+
+            물음표 하나로 접는다. 처음 고를 때 한 번 열어 보면 되고, 그
+            뒤로는 칸 셋만 남는다.
+          */}
+          <Pressable
+            hitSlop={8}
+            onPress={() => { sfx('tap'); setHelp(true); }}
+            style={({ pressed }) => ({
+              width: 16,
+              height: 16,
+              borderRadius: R.round,
+              borderWidth: 1,
+              borderColor: LINE.mid,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.5 : 1,
+            })}
+          >
+            <T size={9} bold dim="sub">?</T>
+          </Pressable>
+        </Row>
         {/*
           지금 고른 대형이 실제로 무엇을 뜻하는지 한 줄. 이름(`2-2`)은 모양을
           말하지 확률을 말하지 않는다 (`FormationDef.text`).
@@ -253,30 +285,14 @@ export function FormationPicker() {
       </Row>
 
       {/*
-        ── 번호가 곧 파티 칸이다 ──
+        ── 여기 설명 네 줄이 있었다 ──
 
-        이 한 줄이 없으면 칸 안의 `1 2 3 4` 가 그냥 자리 번호로 읽힌다.
-        그러면 대형을 골라도 **누구를 앞에 세울지**는 여전히 못 정하는 것으로
-        보이는데, 지금은 정할 수 있다 (`core/party` 의 `formationSeats`).
+        번호가 곧 파티 자리라는 것, 앞줄이 받는 것, 뒷줄이 받는 것. 다 맞는
+        말인데 **한 번 읽으면 다시 안 읽는 종류**라, 대형 칸 셋보다 긴 글이
+        늘 밑에 붙어 있었다. 위 물음표로 옮겼다 (`FormationHelp`).
 
-        고르는 방법까지 같이 적는다. 파티 칸을 서로 맞바꾸는 것이 그 방법인데
-        (`state/slices/roster` 의 `setPartySlot`), 그건 아래 칸에서 하는
-        일이라 여기 적어 두지 않으면 이어지지 않는다.
-      */}
-      <T size={FS.tiny} dim="dim">
-        칸 안의 번호가 아래 파티 자리입니다 — 자리를 눌러 서로 바꾸면
-        서는 곳도 같이 바뀝니다
-      </T>
-
-      {/*
-        ── 줄이 몸을 바꾼다 ──
-
-        확률만 적어 두면 대형을 고르는 일이 "누가 덜 맞나" 하나로 보인다.
-        실제로는 서는 자리가 스탯도 바꾸므로 (`core/party` 의 `ROW_MOD`)
-        그 한 줄이 같이 있어야 고를 수 있다.
-
-        세 칸 아래 한 줄로 둔다 — 칸마다 적으면 세 번 같은 말이 되고, 이건
-        대형에 따라 안 바뀌는 규칙이다.
+        지금 판과 다르다는 줄만 남는다. 저건 규칙이 아니라 **지금 벌어지고
+        있는 일**이라, 물어봐야 나오면 안 된다.
       */}
       {form !== live && (
         <T size={FS.tiny} dim="dim">
@@ -284,21 +300,85 @@ export function FormationPicker() {
         </T>
       )}
 
-      <Row gap={SP.xs}>
-        <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-          <View style={{ width: 3, height: 3, borderRadius: R.round, backgroundColor: WHITE }} />
-          <T size={FS.tiny} dim="dim">앞줄 방어 · 마저 x1.5, 체력 x1.1</T>
-        </View>
-        <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-          <View
-            style={{
-              width: 3, height: 3, borderRadius: R.round,
-              borderWidth: 1, borderColor: LINE.hi,
-            }}
-          />
-          <T size={FS.tiny} dim="dim">뒷줄 공격 x1.15</T>
-        </View>
-      </Row>
+      <FormationHelp visible={help} onClose={() => setHelp(false)} />
     </View>
+  );
+}
+
+/**
+ * ── 대형 규칙 ── 물음표를 누르면 열린다.
+ *
+ * 세 가지를 한자리에 적는다.
+ *
+ *   **번호가 곧 파티 자리다** — 이걸 모르면 대형을 골라도 누구를 앞에
+ *   세울지는 여전히 못 정하는 것으로 보인다. 바꾸는 방법(자리끼리 맞바꾸기)
+ *   까지 같이 적어야 이어진다
+ *
+ *   **줄이 몸을 바꾼다** — 확률만 알면 대형 고르기가 "누가 덜 맞나" 하나가
+ *   된다. 앞에 서면 실제로 더 단단해지므로 (`core/chars` 의 `ROW_MOD`)
+ *   그게 있어야 맷집과 화력 중 무엇을 살까가 된다
+ *
+ *   **대형마다 맞는 확률** — 여태 고른 대형 것만 한 줄 떴다
+ *   (`FormationDef.text`). 셋을 나란히 놓아야 견줄 수 있는 값인데 하나씩
+ *   보여 주면 세 번 눌러 가며 외워야 했다.
+ *
+ * 숫자는 표에서 그대로 읽는다 (`FORMATIONS` · `ROW_MOD`) — 여기 손으로
+ * 적어 두면 값을 고칠 때 이 창만 옛말이 된다.
+ */
+function FormationHelp({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  return (
+    <Popup visible={visible} title="대형" onClose={onClose}>
+      <T size={11} dim="sub">
+        칸 안의 번호가 파티 자리입니다 — 자리를 눌러 서로 바꾸면 서는 곳도
+        같이 바뀝니다.
+      </T>
+
+      <Sep />
+
+      <T size={11} bold style={{ marginBottom: SP.xs }}>줄이 몸을 바꾼다</T>
+      <Row gap={SP.xs} style={{ alignItems: 'center', marginBottom: 3 }}>
+        <View style={{ width: 5, height: 5, borderRadius: R.round, backgroundColor: WHITE }} />
+        <T size={11} dim="sub">
+          {`앞줄 — 방어 · 마법저항 ×${ROW_MOD.front.def}, 최대 체력 ×${ROW_MOD.front.hp}`}
+        </T>
+      </Row>
+      <Row gap={SP.xs} style={{ alignItems: 'center' }}>
+        <View
+          style={{
+            width: 5, height: 5, borderRadius: R.round,
+            borderWidth: 1, borderColor: LINE.hi,
+          }}
+        />
+        <T size={11} dim="sub">{`뒷줄 — 공격력 ×${ROW_MOD.back.atk}`}</T>
+      </Row>
+
+      <Sep />
+
+      {/*
+        ── 대형마다 **한 사람이** 맞을 확률 ──
+
+        합이 아니라 한 사람 몫이다 (`FormationDef.frontAim`·`backAim`).
+        앞에 많이 설수록 한 사람이 덜 맞는데, 그게 곧 앞줄을 늘리는 값이다.
+      */}
+      <T size={11} bold style={{ marginBottom: SP.xs }}>맞을 확률 (한 사람당)</T>
+      {FORMATION_IDS.map((id) => {
+        const d = FORMATIONS[id];
+        return (
+          <Row key={id} between style={{ paddingVertical: 2 }}>
+            <T size={11} bold>{id}</T>
+            <T size={10} dim="sub">
+              {`앞 ${d.front}명 ${Math.round(d.frontAim * 100)}% · `
+                + `뒤 ${PARTY_SIZE - d.front}명 ${Math.round(d.backAim * 100)}%`}
+            </T>
+          </Row>
+        );
+      })}
+      <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
+        합이 아니라 한 사람 몫입니다. 쓰러진 사람 몫은 남은 사람들이 원래
+        비율대로 나눠 갖습니다.
+      </T>
+
+      <Btn label="확인" fill style={{ marginTop: SP.md }} onPress={onClose} />
+    </Popup>
   );
 }

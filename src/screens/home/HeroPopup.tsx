@@ -37,7 +37,7 @@
 import React, { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { CHARS, FREE_ENHANCE, capOf, maxStar } from '@/core/chars';
+import { CHARS, capOf, maxStar } from '@/core/chars';
 import { PARTY_SIZE } from '@/core/party';
 import { Btn, Row, Stars, T } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
@@ -117,10 +117,6 @@ export function HeroScreen() {
   const clearPending = useGame((s) => s.clearPending);
   const applyPending = useGame((s) => s.applyPending);
   const stage = useGame((s) => s.battle.stage);
-  /* ⚠ 테스트용 — 아래 성 맞추기 단추가 쓴다. 출시 전에 같이 지운다 */
-  const chars = useGame((s) => s.chars);
-  const setGrowth = useGame((s) => s.setGrowth);
-  const toast = useGame((s) => s.toast);
 
   const [slot, setSlot] = useState<number | null>(null);
   /* 저장을 누르면 뜨는 확인 창 — 판이 다시 서는 것은 되돌릴 수 없다 */
@@ -239,60 +235,14 @@ export function HeroScreen() {
         <FormationPicker />
 
         {/*
-          ── ⚠ 테스트 단추 ── 출시 전에 통째로 지운다 (`FREE_ENHANCE`)
+          여기 `TEST · 전원 성 맞추기` 가 있었다 (성 넷 · 레벨 최대 · 조각
+          +48). 트리를 짜 보려면 넷을 4성으로 올려야 해서 둔 것인데, 출시
+          전에 지워야 하는 것이 화면에 늘어나기만 했다 — 무대 위의
+          `TEST · 광폭화` 와 같은 이유로 걷는다.
 
-          **가진 사람 전부**의 성을 한 번에 맞춘다. 캐릭터 창에도 같은 것이
-          있지만 (`CharPopup`) 거기는 한 명씩이라, 넷을 4성으로 올려 놓고
-          트리를 짜 보려면 창을 네 번 열었다 닫아야 한다.
-
-          등급 상한은 지킨다 — 넷 다 영웅이라 4성이 끝이다 (`maxStar`).
-          등급이 낮은 사람이 생기면 그 사람만 제 상한에서 멈춘다.
+          한 명씩 올리는 것은 캐릭터 창에 그대로 있다 (`CharPopup` 의
+          `FREE_ENHANCE`).
         */}
-        {FREE_ENHANCE && (
-          <>
-            <View style={{ height: 1, backgroundColor: LINE.low, marginVertical: SP.md }} />
-            <Row between style={{ marginBottom: SP.xs }}>
-              <T size={FS.tiny} bold>TEST · 전원 성 맞추기</T>
-              <T size={FS.tiny} dim="dim">레벨 상한도 같이 따라옵니다</T>
-            </Row>
-            <Row gap={SP.xs}>
-              {[1, 2, 3, 4].map((n) => (
-                <Btn
-                  key={n}
-                  label={`${n}성`}
-                  size="sm"
-                  style={{ flex: 1 }}
-                  onPress={() => {
-                    for (const c of Object.values(chars)) setGrowth(c.id, { star: n });
-                    toast(`전원 ${n}성`, 'plain');
-                  }}
-                />
-              ))}
-            </Row>
-            <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
-              <Btn
-                label="전원 Lv 최대"
-                size="sm"
-                style={{ flex: 1 }}
-                onPress={() => {
-                  for (const c of Object.values(chars)) setGrowth(c.id, { lv: 999 });
-                  toast('전원 레벨 최대', 'plain');
-                }}
-              />
-              <Btn
-                label="전원 조각 +48"
-                size="sm"
-                style={{ flex: 1 }}
-                onPress={() => {
-                  for (const c of Object.values(chars)) {
-                    setGrowth(c.id, { copies: c.copies + 48 });
-                  }
-                  toast('전원 조각 +48', 'plain');
-                }}
-              />
-            </Row>
-          </>
-        )}
       </ScrollView>
 
       {/* 칸을 누르면 그 위에 겹쳐 열린다 */}
