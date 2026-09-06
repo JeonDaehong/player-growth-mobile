@@ -37,14 +37,16 @@
 import React, { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { CHARS, capOf, maxStar } from '@/core/chars';
+import { CHARS, CharId, capOf, maxStar } from '@/core/chars';
 import { PARTY_SIZE } from '@/core/party';
 import { Btn, Row, Stars, T } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
-import { BORDER, FS, LINE, R, SP, SURF } from '@/ui/theme';
+import { BORDER, FS, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
 import { CharPopup } from './CharPopup';
+import { HeroManage } from './HeroManage';
+import { HeroBook } from './HeroBook';
 import { FormationPicker } from './FormationPicker';
 import { TopBar } from './TopBar';
 
@@ -103,7 +105,62 @@ function Slot({ id, n, onPress }: {
   );
 }
 
+/** 영웅 탭 안의 갈래 셋 */
+type Sub = 'manage' | 'party' | 'book';
+
+const SUBS: readonly { id: Sub; label: string }[] = [
+  { id: 'manage', label: '영웅 관리' },
+  { id: 'party', label: '편성' },
+  { id: 'book', label: '도감' },
+];
+
+/**
+ * ── 갈래 줄 ── 영웅 화면 맨 위.
+ *
+ * 아래 띠(`BottomNav`)와 **다른 모양이어야 한다.** 저건 화면을 옮기는
+ * 띠이고 이건 한 화면 안을 가르는 줄이라, 같은 알약으로 그리면 둘이 같은
+ * 층으로 읽혀서 "영웅 안의 영웅 관리" 라는 겹이 안 보인다.
+ *
+ * 밑줄로 가른다. 고른 것만 밝은 줄이 그어지고 나머지는 흐리다 — 흑백에서
+ * 제일 조용한 "지금 여기" 다.
+ */
+function SubTabs({ at, onGo }: { at: Sub; onGo: (s: Sub) => void }) {
+  return (
+    <Row gap={0} style={{ marginBottom: SP.sm }}>
+      {SUBS.map((t) => {
+        const here = t.id === at;
+        return (
+          <Pressable
+            key={t.id}
+            disabled={here}
+            onPress={() => { sfx('tap'); onGo(t.id); }}
+            style={({ pressed }) => ({
+              flex: 1,
+              alignItems: 'center',
+              paddingVertical: SP.xs + 2,
+              borderBottomWidth: 2,
+              borderBottomColor: here ? WHITE : LINE.low,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <T size={FS.body} bold={here} dim={here ? 'full' : 'dim'}>{t.label}</T>
+          </Pressable>
+        );
+      })}
+    </Row>
+  );
+}
+
 export function HeroScreen() {
+  /** 어느 갈래를 보고 있나 */
+  const [at, setAt] = useState<Sub>('manage');
+  /**
+   * 영웅 관리에서 세워 놓은 사람.
+   *
+   * **화면이 들고 있는다.** 관리 안에 두면 도감에서 하나를 눌러 넘어가도
+   * 그쪽이 그 값을 모르므로, 넘어가자마자 다시 첫 사람이 선다.
+   */
+  const [pick, setPick] = useState<CharId | null>(null);
   /*
     ── 짜 둔 것을 보여 준다 ──
 
@@ -162,6 +219,16 @@ export function HeroScreen() {
           띠는 화면 밖이라 **여기가 어디인지**를 맨 위에서 한 번 말한다.
         */}
         <T size={FS.hero} bold style={{ marginBottom: SP.sm }}>영웅</T>
+        <SubTabs at={at} onGo={setAt} />
+
+        {at === 'manage' && <HeroManage pick={pick} onPick={setPick} />}
+        {at === 'book' && (
+          <HeroBook
+            onPick={(id) => { setPick(id); setAt('manage'); }}
+          />
+        )}
+        {at === 'party' && (
+          <>
         {/*
           ── 언제 들어가나 ──
 
@@ -268,6 +335,8 @@ export function HeroScreen() {
           한 명씩 올리는 것은 캐릭터 창에 그대로 있다 (`CharPopup` 의
           `FREE_ENHANCE`).
         */}
+          </>
+        )}
       </ScrollView>
 
       {/* 칸을 누르면 그 위에 겹쳐 열린다 */}
