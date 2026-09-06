@@ -564,10 +564,14 @@ export function HeroManage({ pick, onPick }: {
           문장은 **읽는 것이 아니라 알아보는 것**이다 — 신화는 신화의 모양이
           있어서 글자를 안 읽어도 갈린다. 딱지는 그 모양을 아직 모르는 사람을
           위한 이름표다.
+
+          **글자는 안 붙인다.** 문장 밑에 `에픽` 이라고 적어 뒀었는데, 왼쪽
+          딱지가 이미 같은 말을 하고 있어서 한 화면에 세 번이었다. 그리고
+          그 한 줄만큼 문장 덩이가 아래로 내려와 말풍선과 부딪혔다 — 여기서
+          제일 좁은 것이 세로다.
         */}
         <View style={{ position: 'absolute', top: SP.xs, alignItems: 'center' }}>
           <Sprite set="rarity" name={d.rarity} size={26} />
-          <T size={9} bold dim="sub" style={{ marginTop: -2 }}>{RARITY_NAME[d.rarity]}</T>
         </View>
 
         {/*
@@ -657,7 +661,21 @@ export function HeroManage({ pick, onPick }: {
             position: 'absolute',
             left: SIDE_W + SP.sm,
             right: 44,
-            top: SP.lg,
+            /*
+              ── 위가 아니라 **머리에서** 잰다 ──
+
+              한동안 무대 위쪽에서 쟀는데 (`top`), 거기는 등급 문장이 앉은
+              자리라 둘이 겹쳤다. 말풍선은 두 줄이 되면 아래로 자라므로
+              위에서 재면 자랄수록 문장 쪽으로 밀려 올라간다.
+
+              바닥에서 재면 반대다. 아래 끝이 **인물 머리에 못 박히고**
+              두 줄짜리는 위로 자란다 — 꼬리는 늘 머리를 가리키고, 자라는
+              쪽은 빈 하늘이다.
+
+              4px 만큼 머리에 물린다. 딱 붙이면 사이에 검은 틈이 보여서
+              말풍선이 인물과 상관없이 떠 있는 것처럼 보인다.
+            */
+            bottom: FULL_H + SP.sm - 4,
             alignItems: 'center',
             opacity: talk.on && talk.text ? 1 : 0,
           }}
