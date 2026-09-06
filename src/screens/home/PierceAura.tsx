@@ -33,6 +33,7 @@ import { Animated, Easing, View } from 'react-native';
 
 import { Sprite } from '@/ui/Sprite';
 import { WHITE } from '@/ui/theme';
+import { WAVE_STROKE, wavePair } from './Wave';
 
 /** 한 자리에서 기운이 퍼졌다 스러지는 데 걸리는 시간 (ms) */
 export const PIERCE_MS = 560;
@@ -90,22 +91,20 @@ export function PierceAura({ size, delay }: { size: number; delay: number }) {
   const t = useSweep(delay, PIERCE_MS);
 
   /*
-    ── 고리 셋 ──
+    ── 고리 둘 ──
 
     `BossFx` 의 `Burst` 와 같은 식이다. 다른 것은 **납작하다**는 것 —
     가로로 퍼지는 기술이라 동그란 고리가 퍼지면 발밑에서 뭔가 솟은 것처럼
     보인다. 세로를 0.55 로 눌러 놓으면 옆으로 밀려 나가는 것으로 읽힌다.
+
+    셋이었다. 맞는 놈마다 세 겹이 도니 줄에 넷이 서 있으면 고리 열둘이
+    한꺼번에 돌았고, 그게 "무엇을 꿰뚫었나" 가 아니라 화면이 하얘지는
+    것으로 보였다. 나가는 곡선과 개수는 이제 `Wave` 가 정한다.
   */
-  const rings = useMemo(() => [0, 0.14, 0.28].map((d) => ({
-    scale: t.interpolate({
-      inputRange: [0, d, 1], outputRange: [0.15, 0.15, 2.6], extrapolate: 'clamp',
-    }),
-    fade: t.interpolate({
-      inputRange: [0, d, Math.min(1, d + 0.12), Math.min(1, d + 0.55), 1],
-      outputRange: [0, 0, 0.9, 0.15, 0],
-      extrapolate: 'clamp',
-    }),
-  })), [t]);
+  const rings = useMemo(
+    () => wavePair(t, { from: 0.4, to: 1.8, peak: 0.55, life: 0.62 }),
+    [t],
+  );
 
   /*
     ── 관통선 ──
@@ -157,7 +156,7 @@ export function PierceAura({ size, delay }: { size: number; delay: number }) {
             width: ring,
             height: ring * 0.55,
             borderRadius: ring,
-            borderWidth: 2,
+            borderWidth: WAVE_STROKE,
             borderColor: WHITE,
             opacity: r.fade,
             transform: [{ scale: r.scale }],

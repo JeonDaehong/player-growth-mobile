@@ -38,6 +38,7 @@ import { Animated, Easing, View } from 'react-native';
 import type { CastFx } from '@/core/chars';
 import { Sprite } from '@/ui/Sprite';
 import { GOOD_C, WHITE } from '@/ui/theme';
+import { WAVE_STROKE, wavePair, waveRing } from './Wave';
 
 /** 한 번 도는 데 걸리는 시간 (ms) — 기술 동작(510~700ms)보다 조금 길게 */
 const FX_MS = 760;
@@ -88,21 +89,16 @@ function useOnce(nonce: number, ms = FX_MS): { t: Animated.Value; on: boolean } 
  * 그러면 퍼지는 것이 아니라 커지는 것이 된다.
  */
 function Roar({ t, size }: { t: Animated.Value; size: number }) {
-  /* `interpolate` 는 부를 때마다 값에 가지를 단다 — 한 번만 만든다 */
-  const rings = useMemo(() => [0, 0.18, 0.36].map((delay) => ({
-    delay,
-    scale: t.interpolate({
-      inputRange: [0, delay, 1],
-      outputRange: [0.2, 0.2, 2.6],
-      extrapolate: 'clamp',
-    }),
-    fade: t.interpolate({
-      /* 나가자마자 진하고, 커지면서 사라진다 */
-      inputRange: [0, delay, Math.min(1, delay + 0.12), Math.min(1, delay + 0.55), 1],
-      outputRange: [0, 0, 0.9, 0.15, 0],
-      extrapolate: 'clamp',
-    }),
-  })), [t]);
+  /*
+    `interpolate` 는 부를 때마다 값에 가지를 단다 — 한 번만 만든다.
+
+    곡선은 `Wave` 에서 온다. 셋을 2.6배까지 등속으로 벌리던 것을 둘로
+    줄이고 1.7배까지만 보낸다 — 까닭은 `Wave` 머리말에 있다.
+  */
+  const rings = useMemo(
+    () => wavePair(t, { from: 0.45, to: 1.7, peak: 0.5, life: 0.6 }),
+    [t],
+  );
 
   const w = size * 1.1;
   return (
@@ -116,7 +112,7 @@ function Roar({ t, size }: { t: Animated.Value; size: number }) {
             /* 납작한 타원 — 쿼터뷰라 소리도 바닥을 따라 퍼진다 */
             height: w * 0.42,
             borderRadius: w,
-            borderWidth: 2,
+            borderWidth: WAVE_STROKE,
             borderColor: WHITE,
             opacity: r.fade,
             transform: [{ scale: r.scale }],
@@ -429,7 +425,37 @@ const ERUPT_MS = 420;
  * 하늘에서 내려와 박히는 것이라, 내려오는 동안이 눈에 남아야 "떨어졌다" 가
  * 된다. 코스트 12 짜리라 한 판에 두어 번 나오므로 길어도 지겹지 않다.
  */
-export const SWORD_MS = 820;
+export const SWORD_MS = 900;
+
+/**
+ * 검이 **박히는 순간**이 수명의 어디쯤인가 (0~1).
+ *
+ * 시트의 3번 칸이 시작하는 시각이다. 떨어지는 거리도, 착탄 빛도, 무대가
+ * 흔들리는 시각도(`BattleView`) 전부 이 하나를 본다 — 셋이 각자 숫자를
+ * 들고 있으면 검이 닿기 전에 땅이 흔들린다.
+ */
+export const SWORD_HIT = 0.3;
+
+/** 어느 칸이 몇 시에 나오나 — 나타남 · 낙하 · **박힘(길게)** · 퍼짐 · 스러짐 */
+const SWORD_CUE = [0.14, SWORD_HIT, 0.62, 0.82];
+
+/**
+ * 칸 안에서 **칼끝이 어느 높이인가** (0 = 칸 위, 1 = 칸 아래).
+ *
+ * 받은 시트를 픽셀로 재서 넣은 값이다. 다섯 칸의 칼끝이 제각각이라
+ * (0.69 · 0.89 · 0.75 · 0.77 · 0.83) 칸을 그냥 겹쳐 두면 **칼끝이 프레임마다
+ * 위아래로 튄다** — 박히는 칸으로 넘어가는 순간 검이 33px 뛰어오른다.
+ *
+ * 그리고 칸 아래쪽이 비어 있다는 것이 더 큰 문제였다. 상자 바닥을 적의 발
+ * 높이에 맞춰 두었으니 (`bottom: 0`) 그 빈 자리만큼 **검이 허공에서 멎었다**
+ * — 3번 칸은 4분의 1 이 비어 있어서, 248px 짜리로 키우면 칼끝이 발보다
+ * 62px 위에 박혔다. 커질수록 더 떠오르는 셈이라 크기를 올린 것이 오히려
+ * 어긋남을 키웠다.
+ *
+ * 그래서 상자를 **칼끝으로** 매단다 (`bottom: -h * (1 - foot)`). 어느 칸이든
+ * 칼끝이 정확히 발 높이에 오고, 칸이 넘어가도 그 점이 안 움직인다.
+ */
+const SWORD_FOOT = [0.687, 0.885, 0.75, 0.771, 0.833];
 
 /**
  * ── 성검 발현 ── 맞는 적 위에서 빛의 대검이 내리꽂힌다.
@@ -441,15 +467,45 @@ export const SWORD_MS = 820;
  * 떨어지므로, 쓰는 사람 발밑에 그리면 정작 아무 일도 안 일어난 자리에
  * 그림이 뜬다. 그래서 부르는 자리도 다르다 (`BattleView` 의 `hits`).
  *
- * ## 내려오는 것은 **시트가 한다**
+ * ## 내려오는 것은 **코드가 한다**
  *
- * 다른 다섯 칸 시트는 한자리에서 피었다 지므로 움직임을 코드가 얹는데
- * (`bfx_bolt` 등), 이 시트는 칸 안에서 이미 검이 위에서 아래로 내려온다
- * (1번은 위쪽, 2번은 가운데, 3번은 박힌 자리). 세로로 긴 칸을 그렇게
- * 받았다 (`docs/SKILL_FX_PROMPTS.md`).
+ * 한동안 시트에 맡겨 두었다. 칸 안에서 검이 위에서 아래로 내려오게 그려
+ * 받았으니 자리를 안 옮겨도 된다고 적어 두었는데, 받은 그림을 실제로 재
+ * 보니 **1번과 3번의 검 높이가 거의 같았다** (칸 위에서 12px · 18px).
+ * 2번만 조금 내려와 있고 그마저 위로 뻗은 궤적 줄기 때문에 상자가 늘어난
+ * 것이었다. 곧 화면에서는 **아무것도 안 떨어졌다** — 검이 그 자리에 뜬
+ * 채로 그림만 다섯 번 갈아 끼워졌다.
  *
- * 그래서 여기서는 **자리를 안 옮긴다.** 칸 바닥을 적의 발 높이에 붙여
- * 두기만 하면 그림이 알아서 떨어진다 — 코드가 한 번 더 밀면 두 번 내려온다.
+ * 그래서 낙하는 여기서 얹는다 (`drop`). 시트는 "그 순간의 모습" 다섯 장을
+ * 맡고, **어디서 어떻게 내려오나**는 코드가 맡는다 — 다른 다섯 칸 시트와
+ * 같은 갈림길이다 (`bfx_bolt` 등).
+ *
+ * ## 떨어지는 것은 **점점 빨라진다**
+ *
+ * 등속으로 내리면 검이 내려오는 것이 아니라 화면을 타고 미끄러진다.
+ * 떨어지는 거리는 시간의 제곱이므로 (`drop` 의 네 마디가 그 곡선이다)
+ * 마지막 한 뼘이 제일 빠르고, 그 순간에 박힌다.
+ *
+ * ## 몸의 세 배 반이다
+ *
+ * 2.3배였다. 그런데 `Sprite` 는 **정사각 상자에 `contain`** 으로 넣으므로,
+ * 세로가 가로의 두 배인 이 그림은 상자 한 변만큼만 높아진다 — 곧 화면에
+ * 나오는 검의 키가 곧 `h` 다. 게다가 칸 안에서 검이 실제로 차지하는 높이는
+ * 3분의 2 뿐이라, 73px 짜리 잡몹 위에 **113px 짜리 검**이 떴다. 한 대로
+ * 제일 센 기술이 화면에서는 평타 위의 작대기였다.
+ *
+ * 3.4배로 올린다. 상한(260)은 우두머리 때문이다 — 132px 짜리 몸에 배수를
+ * 그대로 곱하면 검 하나가 무대 높이(423)를 넘는다.
+ *
+ * ## 빛난다
+ *
+ * 에셋이 흰 픽셀이라 밝게 할 수가 없다 (`BodyFlash` 와 같은 문제다).
+ * 그래서 **같은 그림을 뒤에 두 장 더 깔고 키운다** — 1.12배와 1.28배가
+ * 옅게 겹치면 날 가장자리에서 빛이 번져 나온 것으로 읽힌다. 박히는
+ * 순간에 그 둘이 한 번 확 밝아지는 것이 "콰앙" 의 절반이다.
+ *
+ * 나머지 절반은 발밑이다 (`SwordHit`) — 그리고 무대가 흔들린다
+ * (`BattleView` 가 `SWORD_HIT` 에 맞춰 때린다).
  *
  * ## 3번 칸에 오래 머문다
  *
@@ -460,43 +516,196 @@ export function HolySword({ nonce, size }: { nonce: number; size: number }) {
   const { t, on } = useOnce(nonce, SWORD_MS);
   const [frame, setFrame] = useState(1);
 
+  /* 화면에 나오는 검의 키 (px) — 머리말 "몸의 세 배 반" */
+  const h = Math.round(Math.min(size * 3.4, 260));
+  /*
+    얼마나 위에서 떨어지나.
+
+    검 키의 4분의 3 이다. 이만큼이면 칼끝이 하늘 한가운데(무대 위에서
+    170px 쯤)에서 출발해 적의 발까지 온다 — 적의 키가 73px 이니 머리보다
+    100px 넘게 위다. 더 올리면 위 띠(`TopBar`)에 가려 출발점이 안 보이고,
+    더 내리면 머리 옆에서 생겨난 것이 된다.
+  */
+  const far = h * 0.75;
+
   useEffect(() => {
     if (nonce <= 0) return undefined;
     setFrame(1);
-    /* 나타남 · 낙하 · **박힘(길게)** · 퍼짐 · 스러짐 */
-    const at = [0.14, 0.28, 0.62, 0.82].map((r) => Math.round(SWORD_MS * r));
-    const ts = at.map((ms, i) => setTimeout(() => setFrame(i + 2), ms));
+    const ts = SWORD_CUE.map(
+      (r, i) => setTimeout(() => setFrame(i + 2), Math.round(SWORD_MS * r)),
+    );
     return () => ts.forEach(clearTimeout);
   }, [nonce]);
 
   const fade = useMemo(() => t.interpolate({
-    inputRange: [0, 0.06, 0.9, 1], outputRange: [0, 1, 1, 0],
+    inputRange: [0, 0.05, 0.9, 1], outputRange: [0, 1, 1, 0],
   }), [t]);
+
+  /*
+    ── 떨어진다 ──
+
+    `SWORD_HIT` 에 정확히 0 이 되고 그 뒤로는 안 움직인다. 네 마디가
+    거리 = 시간² 이다 (4분의 1 지점에서 16분의 1 만 왔고, 절반에서 4분의 1,
+    4분의 3 지점에서 16분의 9). 마지막 한 뼘이 제일 빠르다.
+  */
+  const drop = useMemo(() => t.interpolate({
+    inputRange: [
+      0, SWORD_HIT * 0.25, SWORD_HIT * 0.5, SWORD_HIT * 0.75, SWORD_HIT, 1,
+    ],
+    outputRange: [-far, -far * 0.94, -far * 0.75, -far * 0.44, 0, 0],
+    extrapolate: 'clamp',
+  }), [t, far]);
+
+  /*
+    ── 빛무리 두 겹 ──
+
+    내려오는 동안은 옅게 감싸고 (0.16), 박히는 순간에 세 배로 터졌다가
+    (0.5) 잦아든다. 이 한 번의 봉우리가 없으면 검이 그냥 내려앉는다.
+
+    바깥 겹은 안쪽의 절반이 안 된다. 빛은 멀어질수록 옅어지는 것이라,
+    두 겹이 같은 밝기면 윤곽선이 두 줄 그어진 것으로 보인다.
+  */
+  const halo = useMemo(() => [1, 0.42].map((mul) => t.interpolate({
+    inputRange: [0, 0.05, SWORD_HIT - 0.02, SWORD_HIT + 0.05, 0.6, 1],
+    outputRange: [0, 0.16, 0.22, 0.5, 0.18, 0].map((v) => v * mul),
+    extrapolate: 'clamp',
+  })), [t]);
 
   if (!on) return null;
 
-  /*
-    몸의 두 배 남짓. 하늘에서 내려오는 것이라 몸보다 커야 "위에서 왔다" 가
-    되고, 상한을 두는 이유는 우두머리다 — 132px 짜리 몸에 배수를 그대로
-    곱하면 검 하나가 무대 높이를 넘는다.
-  */
-  const h = Math.round(Math.min(size * 2.3, 200));
+  const left = Math.round((size - h) / 2);
   return (
-    <Animated.View
+    <>
+      {/*
+        발밑의 착탄 — **떨어지는 상자 밖에** 있다. 안에 넣으면 빛도 같이
+        내려와서, 검이 닿기도 전에 땅이 빛난다.
+      */}
+      <SwordHit t={t} size={size} h={h} />
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          /*
+            **칼끝을** 적의 발 높이에 맞춘다 (`SWORD_FOOT`). 칸 바닥을
+            맞추던 것을 고쳤다 — 칸 아래가 비어 있어서 검이 허공에 박혔다.
+          */
+          bottom: -Math.round(h * (1 - (SWORD_FOOT[frame - 1] ?? 0.75))),
+          left,
+          width: h,
+          height: h,
+          opacity: fade,
+          transform: [{ translateY: drop }],
+          /* 맞은 놈 위에 뜨되 피해 숫자(60)보다는 아래 */
+          zIndex: 47,
+        }}
+      >
+        {/* 빛무리 두 겹 — 뒤에 깔리므로 검보다 **먼저** 그린다 */}
+        {[1.12, 1.28].map((s, i) => (
+          <Animated.View
+            key={s}
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              /* 바깥쪽일수록 옅다 — 그래야 번져 나가는 것으로 보인다 */
+              opacity: halo[i],
+              transform: [{ scale: s }],
+            }}
+          >
+            <Sprite set="sfx_holysword" name={String(frame)} size={h} />
+          </Animated.View>
+        ))}
+        <Sprite set="sfx_holysword" name={String(frame)} size={h} />
+      </Animated.View>
+    </>
+  );
+}
+
+/**
+ * ── 성검이 박히는 자리 ── 발밑에서 한 번 터지는 빛.
+ *
+ * 시트의 3·4번 칸이 이미 옆으로 뻗는 빛살을 그리고 있다. 여기서 더하는
+ * 것은 **땅에 닿았다** 하나다 — 칸 그림은 검을 따라 위에 떠 있고, 닿은
+ * 자리는 그 아래 발 높이다.
+ *
+ * 둘로 만든다.
+ *
+ *   **속** — 납작한 흰 타원이 확 퍼졌다 곧 꺼진다 (120ms 남짓)
+ *   **테** — 그 뒤를 고리 하나가 낮게 따라 나간다 (`Wave` 의 곡선)
+ *
+ * 속이 먼저 꺼지고 테가 남는 순서다 (`BossFx` 의 `Boom` 과 같다). 반대로
+ * 하면 터진 것이 아니라 부풀어 오른 것이 된다.
+ *
+ * 납작하다. 쿼터뷰라 땅에 닿은 힘은 바닥을 따라 옆으로 퍼진다 — 동그란
+ * 고리가 서면 발밑에서 뭔가 솟은 것으로 보인다.
+ */
+function SwordHit({ t, size, h }: { t: Animated.Value; size: number; h: number }) {
+  /*
+    검 폭에 맞춘다 — `Sprite` 가 정사각 상자에 담으므로 그림 폭은 키의
+    절반이다. 거기서 더 좁힌다: 3번 칸이 이미 옆으로 넓게 뻗는 빛살을
+    그리고 있어서, 같은 폭으로 한 번 더 깔면 두 겹이 겹쳐 **적이 통째로
+    흰 판에 덮인다.** 여기서 더할 것은 닿은 자리 한 점이다.
+  */
+  const w = Math.round(h * 0.42);
+
+  const core = useMemo(() => ({
+    scale: t.interpolate({
+      inputRange: [0, SWORD_HIT, SWORD_HIT + 0.05, SWORD_HIT + 0.14],
+      outputRange: [0.25, 0.25, 1, 1.35],
+      extrapolate: 'clamp',
+    }),
+    fade: t.interpolate({
+      inputRange: [0, SWORD_HIT, SWORD_HIT + 0.03, SWORD_HIT + 0.14],
+      outputRange: [0, 0, 0.75, 0],
+      extrapolate: 'clamp',
+    }),
+  }), [t]);
+  const ring = useMemo(
+    () => waveRing(t, {
+      delay: SWORD_HIT + 0.02, from: 0.4, to: 1.6, peak: 0.5, life: 0.42,
+    }),
+    [t],
+  );
+
+  return (
+    <View
       pointerEvents="none"
       style={{
         position: 'absolute',
-        /* 칸 바닥을 적의 발 높이에 붙인다 — 검은 그 위에서 내려온다 */
         bottom: 0,
-        left: Math.round((size - h) / 2),
-        width: h,
-        opacity: fade,
-        /* 맞은 놈 위에 뜨되 피해 숫자(60)보다는 아래 */
-        zIndex: 47,
+        left: Math.round((size - w) / 2),
+        width: w,
+        height: Math.round(w * 0.34),
+        alignItems: 'center',
+        justifyContent: 'center',
+        /* 검(47)보다 **아래** — 빛이 날을 덮으면 검이 사라진다 */
+        zIndex: 46,
       }}
     >
-      <Sprite set="sfx_holysword" name={String(frame)} size={h} />
-    </Animated.View>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: w,
+          height: Math.round(w * 0.3),
+          borderRadius: w,
+          backgroundColor: WHITE,
+          opacity: core.fade,
+          transform: [{ scale: core.scale }],
+        }}
+      />
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: w,
+          height: Math.round(w * 0.34),
+          borderRadius: w,
+          borderWidth: WAVE_STROKE,
+          borderColor: WHITE,
+          opacity: ring.fade,
+          transform: [{ scale: ring.scale }],
+        }}
+      />
+    </View>
   );
 }
 

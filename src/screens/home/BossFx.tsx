@@ -54,6 +54,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { Sprite } from '@/ui/Sprite';
 import { BAD_C, SHIELD_C, WHITE } from '@/ui/theme';
+import { WAVE_STROKE, wavePair, waveRing } from './Wave';
 
 /** 우두머리 쪽에서 나는 것 */
 export type BossKind = 'swing' | 'ripple' | 'spikes' | 'stench';
@@ -653,12 +654,11 @@ function Boom({ size }: { size: number }) {
       inputRange: [0, 0.1, 0.3, 0.6], outputRange: [0.2, 1, 0.55, 0], extrapolate: 'clamp',
     }),
   }), [t]);
-  const wave = useMemo(() => ({
-    scale: t.interpolate({ inputRange: [0, 1], outputRange: [0.3, 2.5] }),
-    fade: t.interpolate({
-      inputRange: [0, 0.12, 0.55, 1], outputRange: [0, 0.85, 0.3, 0],
-    }),
-  }), [t]);
+  /* 테 — 곡선은 `Wave` 가 정한다. 2.5배 등속이던 것을 1.8배로 줄여 늦춘다 */
+  const wave = useMemo(
+    () => waveRing(t, { from: 0.35, to: 1.8, peak: 0.5, life: 0.85 }),
+    [t],
+  );
   const bits = useMemo(() => Array.from({ length: 8 }, (_, i) => {
     const a = (i / 8) * Math.PI * 2 + 0.4;
     const far = size * 0.85;
@@ -692,7 +692,7 @@ function Boom({ size }: { size: number }) {
         style={{
           position: 'absolute',
           width: w, height: w, borderRadius: w,
-          borderWidth: 2, borderColor: WHITE,
+          borderWidth: WAVE_STROKE, borderColor: WHITE,
           opacity: wave.fade,
           transform: [{ scale: wave.scale }],
         }}
@@ -959,13 +959,17 @@ function Crush({ size }: { size: number }) {
   const fade = useMemo(() => t.interpolate({
     inputRange: [0, 0.12, 0.4, 1], outputRange: [0, 1, 0.85, 0],
   }), [t]);
-  /* 발밑으로 퍼지는 충격 — 눌린 것이 땅까지 갔다 */
-  const wave = useMemo(() => t.interpolate({
-    inputRange: [0, 0.2, 1], outputRange: [0.2, 0.6, 2.2],
-  }), [t]);
-  const waveFade = useMemo(() => t.interpolate({
-    inputRange: [0, 0.2, 0.7, 1], outputRange: [0, 0.7, 0.15, 0],
-  }), [t]);
+  /*
+    발밑으로 퍼지는 충격 — 눌린 것이 땅까지 갔다.
+
+    2.2배까지 벌어지던 것을 1.6배로 줄인다. 발밑에서 나는 것이라 몸보다
+    한참 크면 밟은 자리가 아니라 화면 전체가 눌린 것으로 보인다.
+    나가는 곡선은 `Wave` 가 정한다.
+  */
+  const stomp = useMemo(
+    () => waveRing(t, { delay: 0.16, from: 0.3, to: 1.6, peak: 0.45, life: 0.7 }),
+    [t],
+  );
 
   if (!on) return null;
   const w = size * 0.9;
@@ -991,10 +995,10 @@ function Crush({ size }: { size: number }) {
           width: w,
           height: w * 0.3,
           borderRadius: w,
-          borderWidth: 2,
+          borderWidth: WAVE_STROKE,
           borderColor: WHITE,
-          opacity: waveFade,
-          transform: [{ scale: wave }],
+          opacity: stomp.fade,
+          transform: [{ scale: stomp.scale }],
         }}
       />
     </View>
@@ -1424,16 +1428,18 @@ function Swing({ size, art }: { size: number; art: number }) {
  */
 function Ripple({ size }: { size: number }) {
   const { t, on } = useRun(760);
-  const rings = useMemo(() => [0, 0.16, 0.32].map((d) => ({
-    scale: t.interpolate({
-      inputRange: [0, d, 1], outputRange: [0.25, 0.25, 3.4], extrapolate: 'clamp',
-    }),
-    fade: t.interpolate({
-      inputRange: [0, d, Math.min(1, d + 0.1), Math.min(1, d + 0.6), 1],
-      outputRange: [0, 0, 0.85, 0.12, 0],
-      extrapolate: 'clamp',
-    }),
-  })), [t]);
+  /*
+    셋을 3.4배까지 등속으로 벌리던 것을 둘로 줄이고 2.2배까지만 보낸다.
+    까닭은 `Wave` 머리말에 있다 — 요약하면 저 숫자는 **밀려 나가는 공기가
+    아니라 자라는 원**이었고, 5초 내내 도는 것이라 그게 제일 크게 걸렸다.
+
+    도발(`SkillFx` 의 `Roar`)보다 여전히 크고 느리다. 저건 한 사람이 지르는
+    소리고 이건 판 전체에 걸리는 기술이라, 같으면 구분이 안 된다.
+  */
+  const rings = useMemo(
+    () => wavePair(t, { from: 0.5, to: 2.2, peak: 0.45, life: 0.66 }),
+    [t],
+  );
   /*
     ── 몸도 옅게 물든다 ──
 
@@ -1482,7 +1488,7 @@ function Ripple({ size }: { size: number }) {
             width: w,
             height: w * 0.42,
             borderRadius: w,
-            borderWidth: 2,
+            borderWidth: WAVE_STROKE,
             borderColor: WHITE,
             opacity: r.fade,
             transform: [{ scale: r.scale }],
@@ -2176,16 +2182,19 @@ export function Burst({ w, h, cx, cy }: {
   w: number; h: number; cx?: number; cy?: number;
 }) {
   const { t, on } = useRun(BURST_MS);
-  const rings = useMemo(() => [0, 0.18, 0.36].map((d) => ({
-    scale: t.interpolate({
-      inputRange: [0, d, 1], outputRange: [0.1, 0.1, 2.2], extrapolate: 'clamp',
-    }),
-    fade: t.interpolate({
-      inputRange: [0, d, Math.min(1, d + 0.12), Math.min(1, d + 0.6), 1],
-      outputRange: [0, 0, 0.85, 0.15, 0],
-      extrapolate: 'clamp',
-    }),
-  })), [t]);
+  /*
+    ── 여기가 제일 과했다 ──
+
+    고리의 기준 크기가 **무대 한 변**이다 (`size = max(w, h)`). 거기에
+    배율 2.2 를 곱하고 있었으니, 화면 두 배가 넘는 흰 테가 셋 겹쳐 지나갔다
+    — 무엇이 터졌는지가 아니라 화면이 한 번 하얘진 것으로 보였다.
+
+    둘로 줄이고 1.1배까지만 보낸다. 무대를 한 번 건너면 그것으로 충분하다.
+  */
+  const rings = useMemo(
+    () => wavePair(t, { from: 0.18, to: 1.1, peak: 0.5, life: 0.7 }),
+    [t],
+  );
 
   if (!on) return null;
   const size = Math.max(w, h);
@@ -2218,7 +2227,11 @@ export function Burst({ w, h, cx, cy }: {
             width: size,
             height: size * 0.5,
             borderRadius: size,
-            borderWidth: 3,
+            /*
+              여기만 `WAVE_STROKE`(1) 를 안 쓴다. 배율이 1.1 까지밖에 안
+              올라가는데 (위) 그 크기의 고리에 1px 이면 화면에서 실이 된다.
+            */
+            borderWidth: 2,
             borderColor: BAD_C,
             opacity: r.fade,
             transform: [{ scale: r.scale }],

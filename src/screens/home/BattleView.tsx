@@ -57,7 +57,7 @@ import { Sprite } from '@/ui/Sprite';
 import { SPRITE_RATIO, spriteGap } from '@/ui/spriteAssets';
 import { BAD_C, C, FS, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
 import { FoeMarks } from './StatusRow';
-import { HolySword, SkillFx } from './SkillFx';
+import { HolySword, SkillFx, SWORD_HIT, SWORD_MS } from './SkillFx';
 import {
   BODY_HIT, BodyKind, BossKind, BossShot, BossSideFx, Burst, Charging, Fuse, FxPlan,
   Ping, Veil,
@@ -1520,6 +1520,18 @@ export function BattleView({ top, corner }: Props = {}) {
   useEffect(() => () => { if (pierceT.current) clearTimeout(pierceT.current); }, []);
 
   /*
+    성검이 **박히는 순간**에 한 번 더 흔든다 (`SkillFx` 의 `SWORD_HIT`).
+
+    기술이 나가는 순간에 흔드는 것은 아래에 이미 있는데 (`shake.fire`),
+    이 기술은 검을 **부르고 나서** 하늘에서 내려오는 것이라 그 둘 사이가
+    270ms 다. 나갈 때만 흔들면 이졸데가 팔을 드는 순간에 땅이 흔들리고,
+    정작 검이 꽂히는 순간에는 아무 일도 안 일어난다 — "콰앙" 이 빠지는
+    자리가 정확히 거기다.
+  */
+  const swordT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (swordT.current) clearTimeout(swordT.current); }, []);
+
+  /*
     화살비의 **두 번째 발부터**를 미뤄 두는 시계들 (`RAIN_GAP`).
 
     한 자리에 하나만 두면 안 된다 — 세 발이 각자 제 시계를 갖고, 다 떨어지기
@@ -1906,6 +1918,19 @@ export function BattleView({ top, corner }: Props = {}) {
 
     skillFoe(id, idx, slot);
     shake.fire(sk.pick === 'all' || sk.leaps ? 1.2 : 1);
+
+    /*
+      하늘에서 내려오는 것은 **닿을 때** 한 번 더 (위 `swordT`). 나갈 때의
+      흔들림보다 세다 — 저건 사람이 팔을 휘두른 것이고 이건 검이 땅에
+      박힌 것이다.
+    */
+    if (sk.drop === 'sword') {
+      if (swordT.current) clearTimeout(swordT.current);
+      swordT.current = setTimeout(
+        () => shake.fire(1.9),
+        Math.round(SWORD_MS * SWORD_HIT),
+      );
+    }
 
     setHits((old) => {
       const live = old.slice(-6);
