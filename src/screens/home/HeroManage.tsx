@@ -65,15 +65,17 @@
  *
  * ## 어디를 누르느냐에 따라 다른 말을 한다
  *
- * 인물 그림 통째가 과녁이고, 그 안에 **가슴께 띠 하나**가 따로 있다
- * (`PAT_TOP`~`PAT_BOT`). 띠 안을 누르면 특별한 반응 셋 중 하나가 나오고
- * (`patOf`) 그동안 부끄러워하는 그림으로 바뀐다 (`char_shy`). 그 밖을 누르면
- * 여느 때처럼 다음 말이다.
+ * 인물 그림 통째가 과녁이고, 그 안에 **좁은 네모 하나**가 따로 있다
+ * (`CHEST`). 그 안을 누르면 특별한 반응 셋 중 하나가 나오고 (`patOf`) 그동안
+ * 부끄러워하는 그림으로 바뀐다 (`char_shy`). 그 밖을 누르면 여느 때처럼
+ * 다음 말이다.
  *
- * 띠가 있다는 티는 안 낸다. 테두리도 안내도 없다 — 눌러 보다 알게 되는 편이
- * 낫고, 무엇보다 **모르고 지나가도 손해가 없다.** 어디를 눌러도 말은 나온다.
+ * **네모는 사람마다 자리가 다르다.** 넷에게 같은 띠를 썼더니 어떤 사람은
+ * 목이, 어떤 사람은 허리가 걸렸다 — 까닭과 잰 값은 `CHEST` 에 있다.
  *
- * 그림이 아직 없으면 평소 그림 그대로다 (`fallbackSet`). 대사만 바뀐다.
+ * 네모가 있다는 티는 안 낸다. 테두리도 안내도 없다 — 눌러 보다 알게 되는
+ * 편이 낫고, 무엇보다 **모르고 지나가도 손해가 없다.** 어디를 눌러도 말은
+ * 나온다.
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -92,6 +94,7 @@ import { Row, Sep, Stars, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { FrameArt, frameStyle } from '@/ui/Frame';
 import { HERO_ACT, ICONS } from '@/ui/sprites';
+import { SPRITE_RATIO } from '@/ui/spriteAssets';
 import { Pixel } from '@/ui/Pixel';
 import { soon } from '@/ui/SoonPopup';
 import { sfx } from '@/ui/sfx';
@@ -196,17 +199,61 @@ function ActBtn({ art, label, onPress }: {
 }
 
 /**
- * 인물 그림에서 **가슴께로 치는** 띠 — 위에서 이만큼 내려온 데부터 이만큼까지.
+ * ── 사람마다 다른 자리 ── 제 그림 안에서의 비율 (`x0`·`y0`~`x1`·`y1`).
  *
- * 넷 다 7~8등신으로 그려져 있다 (`docs/CHAR_FULL_PROMPTS.md`). 그러면 머리가
- * 위 8분의 1, 목과 어깨가 그 아래 한 뼘, 가슴이 대략 **위에서 16%~34%** 다.
+ * 처음에는 넷에게 같은 띠를 썼다 (위에서 16%~34%). 등신이 비슷하니 대충
+ * 맞을 줄 알았는데 안 맞았다 — 아녜스는 베일이 머리 위로 솟아 몸이 통째로
+ * 내려가고, 비앙카는 토끼 귀가 그림의 5분의 1을 먹어서 더 내려간다. 이졸데는
+ * 반대로 정수리가 그림 꼭대기라 제일 위에 있다. 한 띠로는 어떤 사람은 목을
+ * 누르고 어떤 사람은 허리를 누른다.
  *
- * 띠로 잡는 까닭은 인물마다 조금씩 다르기 때문이다 — 아녜스는 치맛단이 길어
- * 몸이 위로 몰리고 비앙카는 다리가 길어 아래로 내려간다. 좁게 잡으면 어떤
- * 사람은 눌러도 반응이 없고, 그건 고장으로 읽힌다.
+ * 그래서 **넷을 따로 잰다.** 그림을 10% 격자에 올려 놓고 눈으로 읽은 값이다
+ * (`scratchpad/grid2.png` 를 만들어 봤다). 손으로 적은 표지만, 그림이 바뀌면
+ * 다시 재야 하는 종류라 자동으로 뽑을 수가 없다 — 픽셀만 봐서는 어디가
+ * 가슴인지 알 길이 없다.
+ *
+ * **가로도 같이 적는다.** 세로만 잡으면 리안느의 활이나 비앙카의 도끼처럼
+ * 옆으로 뻗은 것을 눌러도 반응이 나온다. 몸통 폭만 과녁이어야 한다.
+ *
+ * 값을 고칠 일이 생기면 여기 넷만 만지면 된다.
  */
-const PAT_TOP = 0.16;
-const PAT_BOT = 0.34;
+const CHEST: Record<string, { x0: number; y0: number; x1: number; y1: number }> = {
+  /* 정수리가 그림 꼭대기라 넷 중 제일 위 — 흉갑 한 장이 그대로 과녁이다 */
+  knightgirl: { x0: 0.36, y0: 0.26, x1: 0.64, y1: 0.39 },
+  /* 토끼 귀가 위를 먹어 몸이 통째로 내려간다 — 넷 중 제일 아래 */
+  bunnyaxe: { x0: 0.35, y0: 0.31, x1: 0.60, y1: 0.42 },
+  /* 활이 오른쪽으로 크게 뻗는다. 몸통은 그림 왼쪽 절반에 있다 */
+  elfarcher: { x0: 0.29, y0: 0.32, x1: 0.55, y1: 0.44 },
+  /* 베일이 솟아 몸이 내려간다. 그림이 좁아 몸통이 가로를 많이 차지한다 */
+  nun: { x0: 0.33, y0: 0.26, x1: 0.62, y1: 0.38 },
+};
+
+/**
+ * 표에 적은 비율을 **화면 위 네모**로 옮긴다.
+ *
+ * 그림은 상자 안에 `contain` 으로 들어간다. 넷 다 높이가 384 라 높이가 먼저
+ * 꽉 차고 좌우가 남는데, 남는 폭이 사람마다 다르다 (아녜스 85px, 비앙카
+ * 147px). 그래서 비율을 그냥 상자 크기에 곱하면 좁은 사람일수록 과녁이
+ * 옆으로 벌어진다.
+ *
+ * **그려진 그림 크기를 먼저 구하고** 거기에 곱한다. 그림 비율은 자를 때
+ * 같이 적힌 값을 읽는다 (`SPRITE_RATIO` — 높이 ÷ 폭).
+ *
+ * 표에 없는 사람은 `null` 이고, 그때는 부르는 쪽이 그림 통째를 과녁으로 둔다.
+ */
+function chestBox(art: string) {
+  const r = CHEST[art];
+  if (!r) return null;
+  const ratio = SPRITE_RATIO[`char_full/${art}`] ?? 1.5;
+  const drawnH = Math.min(FULL_H, FULL_W * ratio);
+  const drawnW = drawnH / ratio;
+  return {
+    left: (FULL_W - drawnW) / 2 + r.x0 * drawnW,
+    top: (FULL_H - drawnH) / 2 + r.y0 * drawnH,
+    width: (r.x1 - r.x0) * drawnW,
+    height: (r.y1 - r.y0) * drawnH,
+  };
+}
 
 /** 말풍선이 떠 있는 시간 · 사라져 있는 시간 */
 const TALK_ON = 5000;
@@ -465,6 +512,13 @@ export function HeroManage({ pick, onPick }: {
   const lines = useMemo(() => linesOf(id ?? '', d?.quote), [id, d?.quote]);
   const pats = useMemo(() => patOf(id ?? ''), [id]);
   const talk = useTalk(id ?? '', lines, pats);
+  /*
+    이 사람의 좁은 과녁이 화면 어디인가 (`CHEST`).
+
+    이것도 **이른 반환보다 위**다. 위 셋과 같은 까닭이고, 없을 수도 있는 값을
+    빈 문자열로 받아 둔다 — 표에 없으면 `null` 이라 그때는 안 그린다.
+  */
+  const chest = useMemo(() => chestBox(d?.art ?? ''), [d?.art]);
 
   if (!c || !d) {
     return (
@@ -628,18 +682,19 @@ export function HeroManage({ pick, onPick }: {
             onPress={talk.bump}
             style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
           />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${d.name}에게 짓궂게 굴기`}
-            onPress={talk.pat}
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: FULL_H * PAT_TOP,
-              height: FULL_H * (PAT_BOT - PAT_TOP),
-            }}
-          />
+          {/*
+            좁은 과녁은 **사람마다 자리가 다르다** (`CHEST`). 표에 없는
+            사람은 안 그린다 — 그러면 아래 깔린 통짜가 다 받아서, 어디를
+            눌러도 평소 대사가 나온다.
+          */}
+          {!!chest && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${d.name}에게 짓궂게 굴기`}
+              onPress={talk.pat}
+              style={{ position: 'absolute', ...chest }}
+            />
+          )}
         </View>
 
         {/*

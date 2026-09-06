@@ -90,6 +90,22 @@ import { C, FS, LINE, O, SP } from '@/ui/theme';
 export type TabId = 'main' | 'hero';
 
 /**
+ * 로고가 앉는 상자 — **높이가 박혀 있다.**
+ *
+ * 로고 크기가 칸마다 다르다. 고른 칸이 한 단 크고(24) 메인은 거기서 또 한 단
+ * 크다(28). 그런데 이 띠는 가로 줄이라 **제일 큰 자식이 줄 높이를 정한다** —
+ * 로고가 그대로 서 있으면 어느 탭에 있느냐에 따라 띠가 오르내린다.
+ *
+ * 실제로 그랬다. 메인에 있으면 메인 로고가 28 이고, 영웅에 있으면 메인이
+ * 안 골라져서 24 다. 그 4px 만큼 띠가 얇아졌다 — 탭을 옮길 때마다 화면 바닥이
+ * 미묘하게 들썩였다.
+ *
+ * 제일 큰 값으로 상자를 박아 두고 그 안에서 가운데 맞춘다. 이제 로고를 몇으로
+ * 바꾸든 (이 값 이하이면) 띠 높이는 안 움직인다.
+ */
+const ICON_BOX = 28;
+
+/**
  * 메인 칸이 띠 위로 솟는 높이.
  *
  * **밖으로 내보낸다.** 이만큼이 띠 위쪽 화면을 덮으므로, 띠 바로 위에
@@ -206,18 +222,24 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
               그린다 (`Sprite` 의 `fallback`). `NAV` 는 아트가 올 때까지
               버티는 자리표다 — 프롬프트는 `docs/UI_SHELL_PROMPTS.md`.
             */}
-            <Sprite
-              set="nav_bot"
-              name={t.art}
-              /*
-                크기가 곧 "여기가 본거리" 다. 고른 칸이 한 단 크고, 메인은
-                거기서 또 한 단 크다 — 안 골랐어도 나머지 넷의 고른 크기와
-                같다.
-              */
-              size={(here ? 24 : 20) + (home ? 4 : 0)}
-              fallback={NAV[t.art]}
-              opacity={here ? 1 : home ? O.sub : O.dim}
-            />
+            {/*
+              상자 높이가 박혀 있다 (`ICON_BOX`). 안에서 로고만 커졌다
+              작아지므로 띠 높이는 안 움직인다 — 까닭은 그 이름표에.
+            */}
+            <View style={{ height: ICON_BOX, justifyContent: 'center' }}>
+              <Sprite
+                set="nav_bot"
+                name={t.art}
+                /*
+                  크기가 곧 "여기가 본거리" 다. 고른 칸이 한 단 크고, 메인은
+                  거기서 또 한 단 크다 — 안 골랐어도 나머지 넷의 고른 크기와
+                  같다.
+                */
+                size={(here ? 24 : 20) + (home ? 4 : 0)}
+                fallback={NAV[t.art]}
+                opacity={here ? 1 : home ? O.sub : O.dim}
+              />
+            </View>
             <T
               size={FS.tiny}
               bold={here || home}

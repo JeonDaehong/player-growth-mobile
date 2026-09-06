@@ -4615,6 +4615,57 @@
           1
         ]
       ]
+    },
+    {
+      "file": "char-shy-knightgirl.jpg",
+      "name": "char_shy",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "knightgirl"
+      ],
+      "size": 384
+    },
+    {
+      "file": "char-shy-bunnyaxe.jpg",
+      "name": "char_shy",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "bunnyaxe"
+      ],
+      "size": 384,
+      "append": true
+    },
+    {
+      "file": "char-shy-elfarcher.jpg",
+      "name": "char_shy",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "elfarcher"
+      ],
+      "size": 384,
+      "append": true
+    },
+    {
+      "file": "char-shy-nun.jpg",
+      "name": "char_shy",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "nun"
+      ],
+      "size": 384,
+      "append": true
     }
   ],
   "_srcDirs": []
