@@ -38,8 +38,7 @@ import { Animated, Easing, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { useBattleUi } from '@/state/battleUi';
 import {
-  BOSS_SKILLS, MOB_CAP, OPEN_WALK_MS, STAGE_MS, bossReady, fightHeld,
-  foeAt as kindAt, foeCell,
+  BOSS_SKILLS, MOB_CAP, STAGE_MS, bossReady, fightHeld, foeAt as kindAt, foeCell,
   foeHexOf, foeOf, healPlan, mobCap, pickAim,
   RAGE_MS, rageIn, raging, rowMelee, skillDamage,
   skillTargets, stageOf, targetOf,
@@ -758,23 +757,24 @@ export function BattleView({ top, corner }: Props = {}) {
   const down = battle.down > 0;
 
   /*
-    ── 머리 위 한 줄은 **막이 걷히자마자** 뜬다 ──
+    ── 머리 위 한 줄은 **다 걸어 들어와 선 뒤에** 뜬다 ──
 
-    여태 `!held` 를 봤다. 그건 `openIn` 이 0 이 되는 순간이라, 검은 막이
-    걷히고(`OPEN_MS - OPEN_WALK_MS` = 1500ms) 양쪽이 걸어 들어와 다 선
-    뒤다. 거기서 또 0.7초를 기다렸으므로 (`HitFx` 의 `SETTLE_MS`) 판이
-    열릴 때 무엇이 걸려 있는지가 **1.2초 늦게** 나왔다.
+    ## 한 번 너무 당겼다가 되돌렸다
 
-    막이 걷히는 시점은 마지막 한 틱이 남은 때다 (`OPEN_WALK_MS`). 그때부터
-    켜면 걸어 들어오는 동안 글이 인물을 따라 같이 들어오고, 다 선 뒤에도
-    1초 넘게 또렷하게 떠 있다 (`NOTE_MS` 가 1.6초다).
+    막이 걷히는 시점(`openIn <= OPEN_WALK_MS`)부터 켜 봤다. 1.2초가 당겨져서
+    좋기는 한데, 그때는 양쪽이 아직 화면 밖에서 **미끄러져 들어오는 중**이다.
+    글은 인물에 붙어 있으니 같이 미끄러져 들어오는데, 그게 "갑자기 확 뜬다"
+    로 보였다 — 판이 열리자마자 글자 넷이 옆에서 날아 들어오는 셈이다.
 
-    시간을 재지 않는다 — 엔진이 내려 주는 `openIn` 을 그대로 읽으므로
-    화면의 시계와 엔진의 시계가 어긋날 자리가 없다.
+    제자리에 **다 서고 나서** 말하는 것이 맞다. `!held` 가 그 순간이다
+    (`openIn` 이 0 이 되는 때 — 미끄러짐은 그보다 140ms 앞서 끝난다).
+
+    ## 그래도 0.7초는 당겨져 있다
+
+    여기까지 오고도 `SETTLE_MS` 로 700ms 를 더 기다리고 있었다 (`HitFx`).
+    **이미 끝난 걸어 들어오기를 기다리는 값**이었다 — 그건 0 으로 내렸다.
   */
-  const noteLive = !down
-    && !(Number.isFinite(battle.clearIn) && battle.clearIn > 0)
-    && (battle.openIn ?? 0) <= OPEN_WALK_MS;
+  const noteLive = !held && !down;
   const empty = ps.count === 0;
 
   const [pops, setPops] = useState<Pop[]>([]);
