@@ -41,7 +41,7 @@ import { Sprite } from '@/ui/Sprite';
 import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
 import type { Mark } from '@/core/passives';
 import { BodyKind, Bound, BossBodyFx, Charmed, Shocked, Veil } from './BossFx';
-import { BAD_C, WHITE } from '@/ui/theme';
+import { BAD_C, SHIELD_C, SURF, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
 import {
   CcTag, DamageNumber, HealMarks, HitBurst, HurtTint, MarkNotes, SkillShout,
@@ -211,7 +211,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
-  live, hitNo, hitKind, cc, bound, boundWeb, charmed, warded, shock, turn,
+  live, hitNo, hitKind, cc, bound, boundWeb, charmed, ward = 0, shock, turn,
   x, width, noteShift = 0, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -376,13 +376,21 @@ function FighterView({
   /** 지금 돌아서 있나 (24 · 29판) — 몸이 붉게 일렁인다 */
   charmed?: boolean;
   /**
-   * 지금 보호막을 두르고 있나 (`BattleState.ward` — 이졸데의 수호의 결의).
+   * 지금 두르고 있는 **보호막의 두께** — 최대 체력 대비 (0~1).
    *
-   * 파티 칸에 하늘색 줄로도 뜨지만 (`PartyBar`), 저건 **얼마나 남았나**를
-   * 말한다. 무대에서 필요한 것은 **누가 덮여 있나**라서 몸에 한 겹 얹는다 —
-   * 넷 중 누가 막을 받았는지는 막대를 세 번 읽어야 알 수 있다.
+   * 0 이면 안 두르고 있다 (`BattleState.ward` — 이졸데의 수호의 결의).
+   *
+   * ## 참·거짓이었다
+   *
+   * 몸에 한 겹 얹는 것(`Veil`)에는 그걸로 충분했다. 그런데 그 겹은 **누가
+   * 덮여 있나**만 말하고 **얼마나 남았나**는 안 말한다 — 막이 다 깎여 가는
+   * 것과 방금 받은 것이 화면에서 똑같았다.
+   *
+   * 파티 칸에는 하늘색 줄이 있었지만 (`PartyBar`), 그건 무대 아래라
+   * 싸움을 보는 눈이 안 가는 자리다. 무대의 체력 막대 밑에도 같은 줄을
+   * 그리려면 두께가 있어야 한다.
    */
-  warded?: boolean;
+  ward?: number;
   /**
    * **감전됐나** (`core/status` 의 `st_shock`).
    *
@@ -1213,26 +1221,71 @@ function FighterView({
         발밑은 비어 있고, 줄이 겹쳐 서도 앞사람 발밑이 뒷사람을 안 가린다.
       */}
       {!fallen && (
-        <View
-          style={{
-            position: 'absolute',
-            bottom: -7,
-            left: size * 0.12,
-            width: size * 0.76,
-            height: 4,
-            borderWidth: 1,
-            borderColor: '#FFFFFF88',
-            zIndex: 30,
-          }}
-        >
+        <>
           <View
             style={{
-              width: `${ratio * 100}%`,
-              height: '100%',
-              backgroundColor: WHITE,
+              position: 'absolute',
+              bottom: -7,
+              left: size * 0.12,
+              width: size * 0.76,
+              height: 4,
+              borderWidth: 1,
+              borderColor: '#FFFFFF88',
+              zIndex: 30,
             }}
-          />
-        </View>
+          >
+            <View
+              style={{
+                width: `${ratio * 100}%`,
+                height: '100%',
+                backgroundColor: WHITE,
+              }}
+            />
+          </View>
+          {/*
+            ── 보호막 ── 체력 막대 **바로 아래** 가는 하늘색 줄.
+
+            하늘색은 이 게임에서 **"저 겹은 체력이 아니다"** 하나만 말한다
+            (`ui/theme` 의 `SHIELD_C`). 파티 칸에 같은 줄이 이미 있고
+            (`PartyBar`) 규칙도 같다 — 두 자리가 다른 색을 쓰면 같은 것을
+            두 번 배워야 한다.
+
+            ## 막대 **안에** 안 섞는다
+
+            적의 막은 같은 막대에 겹쳐 그린다 (`BattleView` 의 `f.gim.shield`).
+            거긴 그게 맞다 — 5초 안에 깨야 하는 것이라 **어디까지 깎았나가
+            곧 남은 시간**이고, 그동안 체력은 안 줄어든다.
+
+            아군의 막은 반대다. 체력 **위에 얹히는 주머니**라 둘 다 봐야
+            하고, 게다가 대개 최대 체력의 12% 라 (`SkillDef.ward`) 같은
+            막대에 이어 붙이면 체력이 가득 찬 순간 — 그러니까 막을 두르는
+            바로 그 순간 — 갈 자리가 없어 통째로 잘린다.
+
+            2px 이다. 체력 막대(4px)보다 얇아야 "덤으로 붙은 겹" 으로 읽힌다.
+          */}
+          {ward > 0 && (
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: -11,
+                left: size * 0.12,
+                width: size * 0.76,
+                height: 2,
+                backgroundColor: SURF.down,
+                zIndex: 30,
+              }}
+            >
+              <View
+                style={{
+                  width: `${Math.min(100, ward * 100)}%`,
+                  height: '100%',
+                  backgroundColor: SHIELD_C,
+                }}
+              />
+            </View>
+          )}
+        </>
       )}
 
       {/*
@@ -1385,7 +1438,7 @@ function FighterView({
       */}
       {charmed && <Charmed size={size} />}
       {/* 보호막이 서 있는 동안 몸을 옅게 감싼다 (`BossFx` 의 `Veil`) */}
-      {warded && <Veil size={size} />}
+      {ward > 0 && <Veil size={size} />}
       {shock && <Shocked size={size} />}
 
       {/* 못 움직이는 동안 계속 붙어 있는 딱지 — `💫기절` */}
@@ -1576,7 +1629,7 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.bound === b.bound
   && a.boundWeb === b.boundWeb
   && a.charmed === b.charmed
-  && a.warded === b.warded
+  && a.ward === b.ward
   && a.shock === b.shock
   && a.turn === b.turn
   && a.purify === b.purify

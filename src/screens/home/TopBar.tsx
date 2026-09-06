@@ -262,10 +262,12 @@ export function TopBar() {
                 fallback={ICONS.badge}
               />
             </View>
-            <View>
-              <T size={FS.label} bold numberOfLines={1}>{nickname || '이름 없음'}</T>
-              <T size={8} dim="dim" numberOfLines={1}>{AVATAR_NAME[avatar] ?? ''}</T>
-            </View>
+            {/*
+              이름만 적는다. 아래 로고 이름(`망치 든 메이드`)이 한 줄 더
+              있었는데, 로고가 **내가 가진 캐릭터**가 되면서 (`core/avatars`)
+              그림이 곧 그 사람이라 이름을 따로 적을 이유가 없어졌다.
+            */}
+            <T size={FS.label} bold numberOfLines={1}>{nickname || '이름 없음'}</T>
           </Pressable>
 
           {/* ── 지갑 ── 셋이 알약 하나 안에 들어간다 */}
@@ -281,12 +283,18 @@ export function TopBar() {
             <Coin art="coin" icon={ICONS.coin} text={fmtShort(money).replace(' 골드', '')} />
             <VBar />
             <Coin art="gem" icon={ICONS.gem} text={String(dia)} />
-            <VBar />
             {/*
-              체력은 숫자만. 막대로 두면 재화 옆에서 폭을 다투고, 이 자리에서
-              알아야 하는 것은 "얼마나 남았나" 하나다.
+              ── 여기 있던 하트를 걷었다 ──
+
+              `♥ 30/30` 이었다. 판에 들어갈 때마다 닳는 값이었는데, 이 게임은
+              **켜 두면 알아서 도는** 방치형이라 (`core/autoBattle` 머리말)
+              들어가고 나오는 순간이 따로 없다 — 그래서 저 숫자는 줄지도
+              않으면서 위 띠의 3분의 1을 쓰고 있었다.
+
+              값 자체(`stamina`)는 아직 남아 있다. 쓰는 데가 없어지면 그때
+              통째로 걷는다 — 위 띠에서 사라진 것과 저장본에서 사라지는 것은
+              다른 일이라 한 번에 하지 않는다.
             */}
-            <Coin art="heart" icon={ICONS.heart} text={`${stamina}/${maxSta}`} />
           </Row>
         </Row>
 

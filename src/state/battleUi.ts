@@ -66,11 +66,36 @@ interface BattleUi {
    * @param id  맞은 아군
    */
   hitByAlly: (who: string, id: string) => void;
+
+  /**
+   * ── 이번 틱에 **지속 피해로 탄** 적들 ── (`core/autoBattle` 의 `TickEvent.landed`)
+   *
+   * ## 무대는 이걸 못 알아낸다
+   *
+   * 평타와 기술은 무대가 직접 부르므로 (`onSwing` · `onSkill`) 얼마가
+   * 들어갔는지 그 자리에서 안다. 그런데 지속 피해는 **틱이 낸다** —
+   * 무대가 보는 것은 적 체력이 조용히 줄어든 결과뿐이다.
+   *
+   * 그래서 여태 화면에 아무것도 안 떴다. 용암 지대는 0.5초마다 멀쩡히
+   * 태우고 있었는데 숫자도 불꽃도 없으니, 보는 쪽에서는 **아무 일도 안
+   * 일어나는 기술**이었다.
+   *
+   * `no` 는 같은 놈이 연달아 타도 무대가 알아보게 하는 번호다.
+   */
+  dot: { no: number; at: readonly { at: number; dmg: number }[] };
+  /** 틱을 부른 쪽이 넣어 준다 (`slices/roster` 의 `battleTickOnce`) */
+  foeBurned: (at: readonly { at: number; dmg: number }[]) => void;
 }
 
 export const useBattleUi = create<BattleUi>((set) => ({
   charge: {},
   charmHit: {},
+  dot: { no: 0, at: [] },
+
+  foeBurned: (at) => set((st) => (
+    /* 탄 놈이 없으면 아무 일도 안 한다 — 매 틱 새 객체를 만들면 화면이 헛돈다 */
+    at.length ? { dot: { no: st.dot.no + 1, at } } : {}
+  )),
 
   hitByAlly: (who, id) => set((st) => ({
     charmHit: {

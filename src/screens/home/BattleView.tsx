@@ -1203,6 +1203,13 @@ export function BattleView({ top, corner }: Props = {}) {
   }, [charmOn]);
 
   const charmHit = useBattleUi((s) => s.charmHit);
+  /*
+    ── 지속 피해로 탄 적들 ── (`state/battleUi` 의 `dot`)
+
+    무대는 이걸 못 알아낸다 — 틱이 낸 피해라 여기서 보는 것은 적 체력이
+    조용히 줄어든 결과뿐이다. 계산을 부른 쪽이 넣어 준다.
+  */
+  const dot = useBattleUi((s) => s.dot);
   const lastCharmHit = useRef<Record<string, number>>({});
   useEffect(() => {
     for (const [who, hit] of Object.entries(charmHit)) {
@@ -1840,6 +1847,53 @@ export function BattleView({ top, corner }: Props = {}) {
       Animated.timing(knock, { toValue: 0, duration: 130, useNativeDriver: true }),
     ]).start();
   }, [knock, shake, strikeFoe, spotOf]);
+
+  /*
+    ── 불타는 숫자 ── 지속 피해가 틱마다 깎은 만큼.
+
+    ## 왜 여기서 따로 그리나
+
+    평타와 기술은 무대가 직접 부르므로 그 자리에서 자국을 남긴다
+    (`onSwing` · `onSkill`). 지속 피해는 **틱이 낸다** — 0.5초마다
+    조용히 체력만 줄었고, 화면에는 숫자도 불꽃도 안 떴다. 계산은 멀쩡히
+    돌고 있는데 보는 쪽에서는 아무 일도 안 일어나는 기술이었다.
+
+    ## 불꽃은 안 그린다
+
+    숫자만 띄운다 (`mute`). 0.5초마다 타는 것이라 여기에 타격 불꽃까지
+    얹으면 5초 동안 열 번이 터져서, 정작 크게 한 방 맞은 순간이 그 사이에
+    묻힌다 — 지속 피해는 **계속 깎이고 있다**를 말하면 되고 그건 숫자가
+    한다.
+
+    ## 자리 번호로 되짚는다
+
+    `Landed.at` 은 그 틱의 **목록 번호**다 (`core/autoBattle`). 무대 자리로
+    옮기는 것은 평타·기술과 같은 길이다 (`foeAt.current.pos`) — 그 사이에
+    한 마리가 죽으면 번호가 밀리지만, 그때는 이미 그 놈이 화면에 없다.
+  */
+  useEffect(() => {
+    if (dot.no <= 0 || !dot.at.length) return;
+    const a = foeAt.current;
+    setHits((old) => {
+      const live = old.slice(-6);
+      const add = dot.at
+        .map((d) => ({ d, pos: a.pos[d.at] }))
+        .filter((x) => x.pos !== undefined)
+        .map(({ d, pos }) => ({
+          id: '', fx: 'smash' as const,
+          dmg: d.dmg, crit: false,
+          key: hitSeq.current++, ...spotOf(pos as number),
+          blast: false, fey: 0, arrow: '', sword: false, erupt: false,
+          /* 숫자만 — 불꽃은 안 그린다 (위 머리말) */
+          mute: true,
+          row: rowFor(live, spotOf(pos as number).x), born: Date.now(),
+          dx: 0, dy: 0,
+        }));
+      return add.length ? [...live, ...add] : old;
+    });
+    /* `dot.at` 은 매번 새 배열이라 갈래에 못 건다 — 번호가 그 자리를 대신한다 */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dot.no, spotOf]);
 
   // 화면을 떠날 때 남은 타이머를 치운다
   useEffect(() => () => {
@@ -3202,7 +3256,16 @@ export function BattleView({ top, corner }: Props = {}) {
                       남은 양이 0 이면 안 감싼다 — 시간이 남아도 다 깎였으면
                       막은 없는 것이다 (`core/autoBattle` 의 `Ward`).
                     */
-                    warded={(battle.ward?.[c.id]?.hp ?? 0) > 0}
+                    /*
+                      막의 **두께**를 넘긴다 (최대 체력 대비). 참·거짓이었는데,
+                      그러면 몸에 겹은 얹혀도 발밑 줄이 얼마나 남았는지를
+                      못 그린다 (`Fighter` 의 `ward`).
+                    */
+                    ward={(() => {
+                      const w = battle.ward?.[c.id];
+                      if (!w || w.hp <= 0 || w.ms <= 0) return 0;
+                      return Math.min(1, w.hp / Math.max(1, statOf(c).hp));
+                    })()}
                     shock={hasHex(hexOf(battle.hex, c.id), 'st_shock')}
                     /*
                       ── 돌아섰나 ── **실제로 친 사람 쪽을 본다.**

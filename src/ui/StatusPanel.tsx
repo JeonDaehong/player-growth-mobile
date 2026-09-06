@@ -14,7 +14,6 @@ import { GUILD_LEVEL_MAX, guildLevelOf } from '@/core/guildRaid';
 
 import { ICONS } from './sprites';
 import { isWeaponKind } from '@/core/types';
-import { TitleTag } from './TitleTag';
 import { fmtShort } from '@/core/currency';
 import { Axis, CAPS, GRADES, axisText, spiritTotal } from '@/core/spirit';
 import {
@@ -38,23 +37,21 @@ import { BORDER, MONO, SP, WHITE } from './theme';
 /**
  * 내 정보 — 홈과 프로필이 같은 것을 본다.
  *
- * 로고(투기장 얼굴)를 맨 위에 두고 이름·칭호·아이템레벨을 붙인다.
+ * 로고(투기장 얼굴)를 맨 위에 두고 이름과 아이템레벨을 붙인다.
  * 홈과 프로필에서 내용이 갈리면 어느 쪽이 맞는지 헷갈리므로 한 컴포넌트로 묶었다.
  * 변경 버튼은 프로필에서만 넘겨준다 (홈은 보기 전용).
  */
 export function StatusPanel({
   onChangeLogo,
-  onChangeTitle,
   canRename,
 }: {
   onChangeLogo?: () => void;
-  onChangeTitle?: () => void;
   /**
    * 이름 옆 연필을 보여 줄까.
    *
    * 홈은 **보기 전용**이다 — 장비를 만지러 들어온 화면에서 이름까지 고칠 수 있으면
    * 무엇을 하는 화면인지 흐려지고, 강화하다 잘못 눌러 닉네임 창이 뜨는 일도 생긴다.
-   * 고치는 건 프로필(기타 › 프로필)에서만 한다. 로고·칭호 변경 버튼과 같은 규칙이다.
+   * 고치는 건 프로필(기타 › 프로필)에서만 한다. 로고 변경 버튼과 같은 규칙이다.
    */
   canRename?: boolean;
 }) {
@@ -62,7 +59,6 @@ export function StatusPanel({
   const avatar = useGame((s) => s.avatar);
   const nickname = useGame((s) => s.nickname);
   const isMaster = useIsGuildMaster();
-  const title = useGame((s) => s.equippedTitle);
   const equipped = useGame((s) => s.equipped);
   const ilvl = useGame(selIlvl);
   const cur = useGame(selCurIlvl);
@@ -89,7 +85,7 @@ export function StatusPanel({
 
   return (
     <Panel title="내 정보">
-      {/* 한 줄에 다 담는다 — 로고·이름·칭호 왼쪽, 무기·아이템레벨 오른쪽 */}
+      {/* 한 줄에 다 담는다 — 로고와 이름이 왼쪽, 무기·아이템레벨이 오른쪽 */}
       <Row gap={SP.md}>
         <View style={[BORDER, { padding: SP.xs, borderWidth: 2 }]}>
           <Sprite set="avatar" name={avatar} size={60} />
@@ -118,11 +114,10 @@ export function StatusPanel({
               </Pressable>
             )}
           </Row>
-          <Row gap={SP.xs} style={{ marginTop: 3 }}>
-            {title
-              ? <TitleTag id={title} size={11} />
-              : <T size={11} dim="dim">칭호 없음</T>}
-          </Row>
+          {/*
+            여기 칭호 이름표가 있었다. 표째로 다시 짤 것이라 지금은 아무
+            데도 안 뜬다 (`screens/home/ProfilePopup` 참고).
+          */}
         </View>
 
         <View style={{ alignItems: 'flex-end' }}>
@@ -228,11 +223,8 @@ export function StatusPanel({
       <KV k="보스의탑 최고 층" v={`${towerCleared} / ${TOWER_FLOORS}`} />
       <KV k="강화에 갈아넣은 돈" v={fmtShort(stats.goldSpentOnEnhance)} />
 
-      {(onChangeLogo || onChangeTitle) && (
-        <Row gap={SP.sm} style={{ marginTop: SP.md }}>
-          {!!onChangeLogo && <Btn label="로고 변경" size="sm" style={{ flex: 1 }} onPress={onChangeLogo} />}
-          {!!onChangeTitle && <Btn label="칭호 변경" size="sm" style={{ flex: 1 }} onPress={onChangeTitle} />}
-        </Row>
+      {!!onChangeLogo && (
+        <Btn label="로고 변경" size="sm" style={{ marginTop: SP.md }} onPress={onChangeLogo} />
       )}
 
       <NicknamePopup visible={!!canRename && rename} onClose={() => setRename(false)} />

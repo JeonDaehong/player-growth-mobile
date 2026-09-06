@@ -1,59 +1,69 @@
 /**
  * ── 프로필 ── 위 띠의 로고를 누르면 열린다.
  *
- * 네 가지를 한 창에서 본다: **로고 · UID · 닉네임 · 칭호.**
+ * 셋을 한 창에서 본다: **로고 · UID · 닉네임.**
  *
- * ## 왜 넷을 같이 두나
- *
- * 넷 다 "남에게 보이는 나" 다. 순위표에도 채팅에도 투기장 상대 화면에도 이
- * 넷이 같이 나간다 — 따로 두면 얼굴을 바꾸러 들어왔다가 칭호가 어디 있는지
+ * 셋 다 "남에게 보이는 나" 다. 순위표에도 채팅에도 투기장 상대 화면에도 이
+ * 셋이 같이 나간다 — 따로 두면 얼굴을 바꾸러 들어왔다가 이름이 어디 있는지
  * 다시 찾아야 한다.
  *
  * UID 만 못 바꾼다. 그래서 맨 위에 **읽기 전용 한 줄**로 둔다 — 바꿀 수
  * 있는 것들 사이에 끼워 두면 왜 안 눌리는지를 눌러 보고서야 안다.
  *
- * ## 잠긴 로고도 보여 준다
+ * ## 걷어 낸 것들
  *
- * 가진 것만 그리면 열여섯 칸이 열두 칸이 되어, 특별 넷이 있다는 것 자체를
- * 모른다. 잠긴 칸은 흐리게 두고 **어디서 나는지**를 적는다
- * (`core/avatars` 의 `AVATAR_FROM`).
+ * **칭호** — 표째로 다시 짤 것이라 지금은 아무 데도 안 뜬다.
+ *
+ * **아이템레벨** — 위 띠에서 여기로 내려왔던 값인데, 여기서도 아무 판단에
+ * 안 쓰였다. 장비를 보러 가면 거기 있다.
+ *
+ * **잠긴 로고 목록** — 열여섯 칸 중 열둘이 이 게임 어디에도 안 나오는
+ * 낯선 사람이었다. 이제 로고 하나와 **모집한 캐릭터**만 뜬다
+ * (`core/avatars` 의 `avatarsFor`) — 얼굴이 곧 "내가 이 사람을 가졌다" 다.
  */
-import React, { useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
-import { useGame, fmtIlvl } from '@/state/store';
-import { selCurIlvl, selIlvl, selPenalty } from '@/state/selectors';
-import {
-  AVATAR_FROM, AVATAR_IDS, AVATAR_NAME, AVATAR_SOURCE, AvatarId,
-} from '@/core/avatars';
+import React, { useMemo, useState } from 'react';
+import { Pressable, TextInput, View } from 'react-native';
+import { useGame } from '@/state/store';
+import { AVATAR_NAME, AvatarId, avatarsFor } from '@/core/avatars';
 import { NICKNAME_MAX } from '@/core/cash';
-import { TITLES } from '@/core/titles';
 import { Btn, Row, Sep, T } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
-import { TitleTag } from '@/ui/TitleTag';
 import { ICONS } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { BORDER, C, MONO, SP, WHITE } from '@/ui/theme';
 
 /** 로고 칸 하나 */
+/*
+  ── 잠긴 칸이 없어졌다 ──
+
+  안 가진 것을 흐리게 남겨 두던 자리다. 목록이 열여섯일 때는 "특별 넷이
+  있다" 를 알리는 값이 있었는데, 이제 목록이 로고 하나와 **모집한 사람들**
+  이라 잠긴 칸은 곧 "아직 안 뽑은 캐릭터" 다 — 그건 모집 화면이 할 말이고,
+  얼굴 고르는 자리에서 다시 세어 보여 줄 것이 아니다.
+*/
 function AvatarCell({
-  id, on, owned, onPress,
-}: { id: AvatarId; on: boolean; owned: boolean; onPress: () => void }) {
+  id, name, on, onPress,
+}: { id: AvatarId; name: string; on: boolean; onPress: () => void }) {
   return (
     <Pressable
-      onPress={() => { if (owned) { sfx('tap'); onPress(); } }}
+      onPress={() => { sfx('tap'); onPress(); }}
       style={[
         BORDER,
         {
           padding: 2,
+          alignItems: 'center',
           /* 고른 것만 굵은 테두리 — 흑백이라 굵기가 곧 강조다 */
           borderWidth: on ? 2 : 1,
-          opacity: owned ? 1 : 0.3,
           backgroundColor: on ? C.bgInv : 'transparent',
         },
       ]}
     >
       <Sprite set="avatar" name={id} size={34} fallback={ICONS.badge} />
+      {/* 이름은 칸 밑에 — 몇 개 안 되므로 자리가 남고, 누구인지가 바로 읽힌다 */}
+      <T size={8} dim={on ? 'full' : 'dim'} style={on ? { color: C.fgInv } : undefined}>
+        {name}
+      </T>
     </Pressable>
   );
 }
@@ -62,16 +72,12 @@ export function ProfilePopup({ visible, onClose }: { visible: boolean; onClose: 
   const account = useGame((s) => s.account);
   const nickname = useGame((s) => s.nickname);
   const avatar = useGame((s) => s.avatar);
-  const owned = useGame((s) => s.ownedAvatars);
-  const titles = useGame((s) => s.titles);
-  const equipped = useGame((s) => s.equippedTitle);
+  const chars = useGame((s) => s.chars);
   const setAvatar = useGame((s) => s.setAvatar);
   const setNickname = useGame((s) => s.setNickname);
-  const equipTitle = useGame((s) => s.equipTitle);
 
-  const cur = useGame(selCurIlvl);
-  const ilvl = useGame(selIlvl);
-  const penalty = useGame(selPenalty);
+  /* 로고 하나 + 모집한 사람들. 새 배열이라 기억해 둔다 */
+  const list = useMemo(() => avatarsFor(Object.keys(chars)), [chars]);
 
   const [draft, setDraft] = useState(nickname);
 
@@ -94,23 +100,9 @@ export function ProfilePopup({ visible, onClose }: { visible: boolean; onClose: 
           </View>
           <View style={{ flex: 1, gap: 2 }}>
             <T size={13} bold numberOfLines={1}>{nickname || '이름 없음'}</T>
-            <T size={10} dim="sub">{AVATAR_NAME[avatar] ?? ''}</T>
             <Row gap={4}>
               <T size={9} dim="dim">UID</T>
               <T size={9} dim="sub" style={{ fontFamily: MONO }} selectable>{uid}</T>
-            </Row>
-            {/*
-              아이템레벨은 위 띠에서 여기로 내려왔다. **파는 것도 쓰는 것도
-              아닌 값**이라 늘 보일 이유가 없고, 남에게 보이는 나의 일부라
-              이 창이 맞는 자리다.
-
-              내구도 보정이 걸려 있으면 원래 값을 같이 적는다 — 지금 값만
-              보면 왜 낮은지가 화면에 없다.
-            */}
-            <Row gap={4}>
-              <T size={9} dim="dim">아이템레벨</T>
-              <T size={9} dim="sub">{fmtIlvl(cur)}</T>
-              {penalty && <T size={9} dim="dim">{`/ ${fmtIlvl(ilvl)}`}</T>}
             </Row>
           </View>
         </Row>
@@ -153,64 +145,22 @@ export function ProfilePopup({ visible, onClose }: { visible: boolean; onClose: 
 
         <Sep />
 
-        {/* ── 로고 ── */}
+        {/* ── 로고 ── 게임 로고 하나 + 모집한 사람들 */}
         <T size={10} dim="sub">로고</T>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SP.xs }}>
-          {AVATAR_IDS.map((id) => (
+          {list.map((id) => (
             <AvatarCell
               key={id}
               id={id}
+              name={AVATAR_NAME[id] ?? ''}
               on={id === avatar}
-              owned={owned.includes(id)}
               onPress={() => setAvatar(id)}
             />
           ))}
         </View>
-        {/*
-          안 가진 로고 중 **하나만** 어디서 나는지 적는다. 넷을 다 적으면
-          네 줄이 되어 창이 로고 안내문이 된다 — 하나면 "저건 어디서 나나" 에
-          답하면서 나머지도 같은 식으로 난다는 것을 알린다.
-        */}
-        {(() => {
-          const locked = AVATAR_IDS.find((id) => !owned.includes(id));
-          const from = locked ? AVATAR_FROM[AVATAR_SOURCE[locked]] : '';
-          return from
-            ? <T size={9} dim="dim">{`${AVATAR_NAME[locked as AvatarId]} — ${from}`}</T>
-            : null;
-        })()}
-
-        <Sep />
-
-        {/* ── 칭호 ── */}
-        <T size={10} dim="sub">칭호</T>
-        {!titles.length ? (
-          <T size={10} dim="dim">아직 받은 칭호가 없습니다.</T>
-        ) : (
-          <ScrollView style={{ maxHeight: 120 }} showsVerticalScrollIndicator={false}>
-            <View style={{ gap: SP.xs }}>
-              {/*
-                "떼기" 도 한 칸이다. 칭호를 하나 달고 나면 **다시 떼는 길이
-                없어서** 마음에 안 드는 것이 영영 붙어 있었다.
-              */}
-              <Pressable onPress={() => { sfx('tap'); equipTitle(null); }}>
-                <Row gap={SP.xs}>
-                  <T size={11} bold={equipped === null}>
-                    {equipped === null ? '● 안 달기' : '○ 안 달기'}
-                  </T>
-                </Row>
-              </Pressable>
-              {titles.map((t) => (
-                <Pressable key={t} onPress={() => { sfx('tap'); equipTitle(t); }}>
-                  <Row gap={SP.xs}>
-                    <T size={11}>{equipped === t ? '●' : '○'}</T>
-                    <TitleTag id={t} size={10} />
-                    <T size={9} dim="dim" numberOfLines={1}>{TITLES[t]?.effect ?? ''}</T>
-                  </Row>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-        )}
+        <T size={9} dim="dim">
+          모집한 캐릭터의 얼굴이 여기에 하나씩 늘어납니다.
+        </T>
       </View>
 
       <Btn label="닫기" onPress={onClose} fill />

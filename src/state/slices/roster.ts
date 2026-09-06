@@ -563,6 +563,13 @@ export const createRosterSlice = (
   battleTickOnce: () => {
     const st = get();
     const { battle, ev } = battleTick(st.battle, st.party, st.chars, st.formation);
+    /*
+      ── 지속 피해로 탄 만큼을 무대에 알린다 ──
+
+      무대는 이걸 못 알아낸다 — 틱이 낸 피해라 화면이 보는 것은 적 체력이
+      조용히 줄어든 결과뿐이다 (`state/battleUi` 의 `dot`).
+    */
+    useBattleUi.getState().foeBurned(ev.landed);
 
     /*
       아무것도 안 바뀌었으면 `set` 을 부르지 않는다 — 파티가 비어 있을 때

@@ -1000,17 +1000,27 @@ ok('비매품 (가격 0)', SCROLLS.guarantee.price === 0);
 {
   console.log(NL + '── 로고 ──');
   const av = require('./avatars') as typeof import('./avatars');
-  ok('로고 16종', av.AVATAR_IDS.length === 16, String(av.AVATAR_IDS.length));
-  ok('기본 12종', av.DEFAULT_AVATARS.length === 12, String(av.DEFAULT_AVATARS.length));
+  /* 로고 하나 + 낯선 열둘 — 뒤엣것은 옛 저장본과 행상인이 아직 쓴다 */
+  ok('기본 13종', av.DEFAULT_AVATARS.length === 13, String(av.DEFAULT_AVATARS.length));
   ok('전부 이름이 있다', av.AVATAR_IDS.every((id) => !!av.AVATAR_NAME[id]));
   ok('전부 출처가 있다', av.AVATAR_IDS.every((id) => !!av.AVATAR_SOURCE[id]));
-  // 넷의 출처가 서로 달라야 "저건 어디서 났지" 가 성립한다
-  const special = av.AVATAR_IDS.filter((id) => av.AVATAR_SOURCE[id] !== 'default');
-  ok('특별 로고 4종', special.length === 4, special.join(' '));
-  ok('출처 3갈래 (골드 2 · 쿠지 1 · 칭호 1)',
-    special.filter((id) => av.AVATAR_SOURCE[id] === 'gold').length === 2
-    && special.filter((id) => av.AVATAR_SOURCE[id] === 'kuji').length === 1
-    && special.filter((id) => av.AVATAR_SOURCE[id] === 'title').length === 1);
+  ok('사는 로고 둘 · 뽑는 로고 하나',
+    av.AVATAR_IDS.filter((id) => av.AVATAR_SOURCE[id] === 'gold').length === 2
+    && av.AVATAR_IDS.filter((id) => av.AVATAR_SOURCE[id] === 'kuji').length === 1);
+  /*
+    ── 고르는 칸에 뜨는 것 ── 로고 하나 + **가진 캐릭터만** (`avatarsFor`).
+
+    표에는 낯선 열둘이 그대로 남아 있다 (옛 저장본과 행상인이 아직 쓴다).
+    여기서 지키는 것은 "고르는 칸에는 안 뜬다" 하나다.
+  */
+  ok('아무도 없으면 로고 하나', av.avatarsFor([]).join() === 'logo');
+  ok('가진 캐릭터만 열린다',
+    av.avatarsFor(['nun', 'elfarcher']).join() === 'logo,elfarcher,nun',
+    av.avatarsFor(['nun', 'elfarcher']).join());
+  ok('안 가진 캐릭터는 안 뜬다', !av.avatarsFor(['nun']).includes('bunnyaxe'));
+  ok('낯선 열둘은 고르는 칸에 없다',
+    !av.avatarsFor(['nun', 'elfarcher', 'knightgirl', 'bunnyaxe']).includes('swordsman'));
+  ok('기본 얼굴이 로고다', av.DEFAULT_AVATAR === 'logo', av.DEFAULT_AVATAR);
   ok('파는 로고에만 값이 붙어 있다',
     av.AVATAR_IDS.every((id) =>
       (av.AVATAR_PRICE[id] !== undefined) === (av.AVATAR_SOURCE[id] === 'gold')));

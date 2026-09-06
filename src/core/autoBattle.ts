@@ -4087,6 +4087,18 @@ export function battleTick(
     목록에서 빠지면 그 번호는 다음 판까지 안 돌아온다.
   */
   const foeHex: Record<number, Hex[]> = {};
+  /*
+    ── 태운 만큼을 **화면에 알린다** ── (`TickEvent.landed`)
+
+    여태 여기서 체력만 조용히 깎았다. 계산은 멀쩡히 돌고 있었는데
+    (비앙카의 용암 지대는 0.5초마다 공격력의 20% 를 넣는다) 화면에는
+    숫자도 불꽃도 안 떴다 — 적 체력이 이유 없이 줄어드는 것으로만 보여서
+    "지속피해를 안 주는 것 같다" 가 됐다.
+
+    때린 쪽이 넣은 것을 그대로 말한다. 평타·기술과 같은 칸을 쓰므로
+    (`Landed`) 그리는 쪽은 무엇이 태운 것인지 몰라도 된다.
+  */
+  const burned: Landed[] = [];
   for (let i = 0; i < foes.length; i += 1) {
     const f = foes[i];
     const was = foeHexOf(st.foeHex, f.id);
@@ -4106,7 +4118,11 @@ export function battleTick(
         raw, 1, foeArmor(kind0, foes[i].hp), { type, pierce: NO_PIERCE },
       );
     }
-    if (burn > 0) foes[i] = biteFoe(foes[i], burn);
+    if (burn > 0) {
+      foes[i] = biteFoe(foes[i], burn);
+      /* 지속 피해는 치명타가 없다 — 걸 때 이미 숫자로 굳었다 (`Hex.dot`) */
+      burned.push({ at: i, dmg: burn, crit: false });
+    }
   }
 
   /** 이 마리가 지금 받는 회복 배수 — 시듦이 걸려 있으면 깎인다 */
@@ -4591,8 +4607,8 @@ export function battleTick(
         killed, cleared: false, elixir: 0, bossCame, wiped: true, gold, healed,
         /* 적이 때린 틱이다 — 요정의 화살은 아군이 때릴 때만 터진다 */
         fey: 0,
-        /* 여기서 나가는 피해는 기믹이 낸 것이라 적 머리 위에 숫자가 안 뜬다 */
-        landed: NO_LAND,
+        /* 불타고 있던 놈들 — 전멸한 틱에도 태운 것은 태운 것이다 */
+        landed: burned,
         applied: true,
       },
     };
@@ -4655,7 +4671,8 @@ export function battleTick(
       hit, taken, hurt: hurtId, fell, pattern,
       /* 적이 때린 틱이다 — 요정의 화살은 아군이 때릴 때만 터진다 */
       fey: 0,
-      landed: NO_LAND,
+      /* 이 틱에 지속 피해로 태운 만큼 — 화면이 숫자로 띄운다 (`burned`) */
+      landed: burned,
       killed: gimCleared ? killed + 1 : killed,
       cleared: gimCleared,
       elixir: gimCleared ? rollElixir(st.stage, rand) : 0,

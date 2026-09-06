@@ -23,16 +23,24 @@ import { g } from '@/core/currency';
  * 어깨 너머로 삐져나온 무기가 실루엣을 갈라 주는 실용적인 이유도 있다.
  */
 export const AVATAR_IDS = [
+  /* 우리 게임 로고 — 아무것도 없어도 이건 있다 */
+  'logo',
+  /* 내가 가진 캐릭터들 (`core/chars` 의 `CharDef.art` 와 같은 이름) */
+  'knightgirl', 'bunnyaxe', 'elfarcher', 'nun',
   // 기본 12 — 처음부터 열려 있다
   'swordsman', 'miner', 'mercenary', 'knight', 'regular', 'merchant',
   'duelist', 'robber', 'deserter', 'baron', 'spearman', 'archer',
   // 특별 4 — 얻어야 한다 (AVATAR_SOURCE)
-  'bunnyblade', 'maidhammer', 'witchgirl', 'knightgirl',
+  'bunnyblade', 'maidhammer', 'witchgirl',
 ] as const;
 
 export type AvatarId = (typeof AVATAR_IDS)[number];
 
 export const AVATAR_NAME: Record<AvatarId, string> = {
+  logo: '우리 게임',
+  bunnyaxe: '비앙카',
+  elfarcher: '리안느',
+  nun: '아녜스',
   swordsman: '무명의 검객',
   miner: '떠돌이 광부',
   mercenary: '은퇴한 용병',
@@ -52,9 +60,12 @@ export const AVATAR_NAME: Record<AvatarId, string> = {
 };
 
 /** 얻는 방법 */
-export type AvatarSource = 'default' | 'gold' | 'kuji' | 'title';
+export type AvatarSource = 'default' | 'gold' | 'kuji' | 'title' | 'char';
 
 export const AVATAR_SOURCE: Record<AvatarId, AvatarSource> = {
+  logo: 'default',
+  /* 캐릭터 얼굴은 **그 사람을 가지고 있으면** 열린다 (`avatarsFor`) */
+  knightgirl: 'char', bunnyaxe: 'char', elfarcher: 'char', nun: 'char',
   swordsman: 'default', miner: 'default', mercenary: 'default', knight: 'default',
   regular: 'default', merchant: 'default', duelist: 'default', robber: 'default',
   deserter: 'default', baron: 'default', spearman: 'default', archer: 'default',
@@ -64,17 +75,44 @@ export const AVATAR_SOURCE: Record<AvatarId, AvatarSource> = {
   maidhammer: 'gold',
   // 오락실 쿠지 — 로고 회차의 A상 (500칸 중 1칸)
   witchgirl: 'kuji',
-  // '초기 정착민' 칭호를 받은 사람에게 딸려 온다. 자리가 나가면 두 번 다시 안 열린다
-  knightgirl: 'title',
 };
 
 /** 어디서 났는지 한 줄로 — 로고 선택 화면이 잠긴 칸에 적는다 */
 export const AVATAR_FROM: Record<AvatarSource, string> = {
   default: '',
+  char: '그 캐릭터를 모집하면',
   gold: '뒷동산 › 이세계 행상인',
   kuji: '오락실 › 쿠지 (로고 회차 A상)',
-  title: '"초기 정착민" 칭호를 받으면',
+  title: '',
 };
+
+/**
+ * ── 로고 고르는 칸에 **실제로 뜨는 것들** ── (`screens/home/ProfilePopup`)
+ *
+ * ## 왜 표 전체를 안 쓰나
+ *
+ * 열여섯 칸이 있었고 그중 열둘이 **거리에서 굴러먹은 낯선 사람들**이었다
+ * (무명의 검객 · 파산한 상인 · 빚쟁이 기사…). 게임을 켜면 내 얼굴이 그중
+ * 하나로 정해져 있는데, 그 사람은 이 게임 어디에도 안 나온다 — 남의 화면에
+ * 뜨는 유일한 그림이 **내가 모은 것과 아무 상관없는 얼굴**이었다.
+ *
+ * 이제 두 갈래만 뜬다.
+ *
+ *   `logo`  우리 게임 로고. 아무것도 없어도 늘 있는 하나다
+ *   캐릭터   **모집한 사람만.** 얼굴이 곧 "내가 이 사람을 가졌다" 가 된다
+ *
+ * 나머지 열다섯은 표에 남겨 둔다. 옛 저장본이 그 얼굴을 쓰고 있을 수 있고
+ * (그림은 그대로 뜬다), 행상인과 쿠지가 아직 그것들을 판다 — 파는 것을
+ * 걷는 일과 고르는 칸을 정리하는 일은 다른 일이라 한 번에 안 한다.
+ *
+ * @param owned 지금 가지고 있는 캐릭터 번호들 (`GameState.chars` 의 열쇠)
+ */
+export function avatarsFor(owned: readonly string[]): AvatarId[] {
+  const have = new Set(owned);
+  return AVATAR_IDS.filter(
+    (id) => id === 'logo' || (AVATAR_SOURCE[id] === 'char' && have.has(id)),
+  );
+}
 
 /** 처음부터 열려 있는 것들 */
 export const DEFAULT_AVATARS: AvatarId[] =
@@ -92,7 +130,14 @@ export const AVATAR_PRICE: Partial<Record<AvatarId, number>> = {
   maidhammer: g(50),
 };
 
-export const DEFAULT_AVATAR: AvatarId = 'swordsman';
+/**
+ * 아무것도 안 골랐을 때의 얼굴 — **우리 게임 로고**.
+ *
+ * `swordsman`(무명의 검객)이었다. 처음 켠 사람에게 이 게임과 아무 상관없는
+ * 낯선 얼굴이 배정되는 셈이라, 로고가 훨씬 맞다 — 아직 아무도 안 모았을 때
+ * 내걸 수 있는 것은 게임 자신뿐이다.
+ */
+export const DEFAULT_AVATAR: AvatarId = 'logo';
 
 export const isAvatarId = (v: string): v is AvatarId =>
   (AVATAR_IDS as readonly string[]).includes(v);
