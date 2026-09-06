@@ -24,7 +24,7 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { AVATAR_NAME, AvatarId, avatarsFor } from '@/core/avatars';
+import { AvatarId, avatarsFor } from '@/core/avatars';
 import { NICKNAME_MAX } from '@/core/cash';
 import { Btn, Row, Sep, T } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
@@ -43,8 +43,8 @@ import { BORDER, C, MONO, SP, WHITE } from '@/ui/theme';
   얼굴 고르는 자리에서 다시 세어 보여 줄 것이 아니다.
 */
 function AvatarCell({
-  id, name, on, onPress,
-}: { id: AvatarId; name: string; on: boolean; onPress: () => void }) {
+  id, on, onPress,
+}: { id: AvatarId; on: boolean; onPress: () => void }) {
   return (
     <Pressable
       onPress={() => { sfx('tap'); onPress(); }}
@@ -59,11 +59,12 @@ function AvatarCell({
         },
       ]}
     >
+      {/*
+        이름은 안 적는다. 목록이 로고 하나와 **모집한 캐릭터**뿐이라
+        (`avatarsFor`) 얼굴이 곧 그 사람이다 — 넷 아래에 이름을 또 적으면
+        얼굴을 고르는 자리가 이름표 목록이 된다.
+      */}
       <Sprite set="avatar" name={id} size={34} fallback={ICONS.badge} />
-      {/* 이름은 칸 밑에 — 몇 개 안 되므로 자리가 남고, 누구인지가 바로 읽힌다 */}
-      <T size={8} dim={on ? 'full' : 'dim'} style={on ? { color: C.fgInv } : undefined}>
-        {name}
-      </T>
     </Pressable>
   );
 }
@@ -152,7 +153,6 @@ export function ProfilePopup({ visible, onClose }: { visible: boolean; onClose: 
             <AvatarCell
               key={id}
               id={id}
-              name={AVATAR_NAME[id] ?? ''}
               on={id === avatar}
               onPress={() => setAvatar(id)}
             />
