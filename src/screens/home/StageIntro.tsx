@@ -18,14 +18,15 @@
  * 엔진에서 읽고, 그 뒤 2초는 `Animated` 가 부드럽게 끌고 간다 — 길이를 엔진과
  * 같게 맞춰 두었으므로 둘이 같이 끝난다.
  */
-import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, Pressable, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
 import {
   BattleState, CLEAR_MS, MOVE_MS, OPEN_MS, OPEN_WALK_MS, stageOf,
 } from '@/core/autoBattle';
 import { Row, T } from '@/ui/atoms';
+import { Popup } from '@/ui/Popup';
 import { sfx } from '@/ui/sfx';
-import { MONO, SP, WHITE } from '@/ui/theme';
+import { BORDER, C, LINE, MONO, SP, SURF, WHITE } from '@/ui/theme';
 
 /**
  * 지금 무슨 연출 중인가.
@@ -326,6 +327,8 @@ export function StagePicker({
   best: number;
   onGo: (stage: number) => void;
 }) {
+  /** 판 목록을 펴 놓았나 (`StageListPopup`) */
+  const [list, setList] = useState(false);
   const canBack = stage > 1;
   const canNext = stage < Math.max(1, best);
 
@@ -341,16 +344,132 @@ export function StagePicker({
   );
 
   return (
-    <Row gap={0}>
-      {arrow(canBack, '<', stage - 1)}
+    <>
+      <Row gap={0}>
+        {arrow(canBack, '<', stage - 1)}
+        {/*
+          ── 판 번호를 누르면 **목록이 열린다** ──
+
+          화살표만 있었다. 30판에서 3판으로 가려면 스물일곱 번을 눌러야 하고,
+          한 번 누를 때마다 판이 실제로 옮겨지므로 (`goStage` — 막이 내렸다
+          올라간다) 지나가는 스물일곱 판을 다 겪는다.
+
+          목록이면 한 번이다. 화살표는 그대로 둔다 — 옆 판으로 한 칸씩 가는
+          것은 그쪽이 빠르고, 실제로 그 일이 제일 잦다.
+
+          폭을 고정한다. 한 자리에서 두 자리로 넘어갈 때 폭이 변하면 화살표가
+          좌우로 흔들려서, 누르려던 자리가 눌린 뒤에 옮겨 간다.
+        */}
+        <Pressable
+          hitSlop={8}
+          onPress={() => { sfx('tap'); setList(true); }}
+          style={({ pressed }) => ({
+            minWidth: 54,
+            alignItems: 'center',
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <T size={12} bold>{stage}스테이지</T>
+        </Pressable>
+        {arrow(canNext, '>', stage + 1)}
+      </Row>
+
+      <StageListPopup
+        visible={list}
+        stage={stage}
+        best={best}
+        onClose={() => setList(false)}
+        onGo={(to) => { setList(false); onGo(to); }}
+      />
+    </>
+  );
+}
+
+/** 목록에서 판 하나가 차지하는 칸 폭 (px) — 한 줄에 다섯이 선다 */
+const CELL = 56;
+
+/**
+ * ── 깬 데까지 늘어놓고 고른다 ──
+ *
+ * ## 왜 목록이 필요한가
+ *
+ * 판을 옮기는 길이 화살표뿐이었다. 30판에서 3판으로 내려가려면 스물일곱 번을
+ * 누르는데, 한 번 누를 때마다 **판이 실제로 옮겨진다** (`goStage` — 검은 막이
+ * 내렸다 올라가고 양쪽이 새로 걸어 들어온다). 지나가는 스물일곱 판을 다
+ * 겪으면서 가는 셈이다.
+ *
+ * ## 깬 데까지만
+ *
+ * `best` 까지다 (`core/autoBattle` 의 `canGoStage` 와 같은 규칙). 안 깬 판을
+ * 회색으로 늘어놓지 않는다 — 30판까지 깼으면 서른 칸이지만 1판만 깼으면 한
+ * 칸이라, 목록의 길이 자체가 "어디까지 왔나" 를 말한다.
+ *
+ * ## 지금 판은 반전
+ *
+ * 흑백이라 켜짐을 말할 수단이 몇 없다 (`ui/theme`). 흰 바탕에 검은 글씨는
+ * 이 게임에서 **지금 여기** 하나만 뜻한다.
+ */
+function StageListPopup({
+  visible, stage, best, onClose, onGo,
+}: {
+  visible: boolean;
+  stage: number;
+  best: number;
+  onClose: () => void;
+  onGo: (stage: number) => void;
+}) {
+  const top = Math.max(1, best);
+  const all = useMemo(
+    () => Array.from({ length: top }, (_v, i) => i + 1),
+    [top],
+  );
+
+  return (
+    <Popup visible={visible} title="스테이지 고르기" onClose={onClose}>
+      <T size={10} dim="sub" style={{ marginBottom: SP.sm }}>
+        {`깬 데까지 갈 수 있습니다 — 지금 ${top}스테이지까지`}
+      </T>
       {/*
-        폭을 고정한다. 한 자리에서 두 자리로 넘어갈 때 폭이 변하면 화살표가
-        좌우로 흔들려서, 누르려던 자리가 눌린 뒤에 옮겨 간다.
+        높이를 묶어 둔다. 서른 칸이면 여섯 줄이라 창이 화면을 넘어가는데,
+        `Popup` 은 스스로 안 굴린다.
       */}
-      <View style={{ minWidth: 54, alignItems: 'center' }}>
-        <T size={12} bold>{stage}스테이지</T>
-      </View>
-      {arrow(canNext, '>', stage + 1)}
-    </Row>
+      <ScrollView style={{ maxHeight: 260 }} showsVerticalScrollIndicator={false}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SP.xs }}>
+          {all.map((n) => {
+            const here = n === stage;
+            return (
+              <Pressable
+                key={n}
+                onPress={() => { sfx('tap'); if (!here) onGo(n); else onClose(); }}
+                style={({ pressed }) => [
+                  BORDER,
+                  {
+                    width: CELL,
+                    paddingVertical: SP.xs + 1,
+                    alignItems: 'center',
+                    borderColor: here ? WHITE : LINE.mid,
+                    backgroundColor: here ? WHITE : (pressed ? SURF.up : 'transparent'),
+                  },
+                ]}
+              >
+                <T size={12} bold style={here ? { color: C.bg } : undefined}>{n}</T>
+                {/*
+                  다섯 판마다 지역이 바뀐다 (`stageOf`). 번호만 늘어놓으면
+                  서른 칸이 그냥 숫자밭이라, 어디로 가는 길인지가 안 보인다.
+                */}
+                <T
+                  size={8}
+                  numberOfLines={1}
+                  dim={here ? 'full' : 'dim'}
+                  style={here ? { color: C.bg } : undefined}
+                >
+                  {stageOf(n).zone}
+                </T>
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </Popup>
   );
 }
