@@ -21,19 +21,33 @@
 이 그림으로 바뀌면서 특별한 대사 셋 중 하나가 나옵니다 (`core/lines` 의
 `PAT`). 5초 뒤에 평소 그림으로 돌아갑니다.
 
-**넷이 다르게 당황합니다.** 그게 이 넉 장을 따로 그리는 이유입니다 — 넷이 다
-같은 표정이면 한 장을 돌려 쓰는 것과 다를 게 없습니다.
+**넷이 다르게 부끄러워합니다.** 그게 이 넉 장을 따로 그리는 이유입니다 —
+넷이 다 같은 표정이면 한 장을 돌려 쓰는 것과 다를 게 없습니다.
 
 | | |
 |---|---|
-| 이졸데 | 대처법이 없다. 겁이 아니라 처음 겪는 일이다 |
-| 비앙카 | 농담으로 덮으려다 실패한다. 웃고 있는데 화나 있다 |
-| 리안느 | 말이 짧아진다. 표정도 짧다 |
-| 아녜스 | 존댓말이 무너진다 |
+| 이졸데 | 이런 걸 겪어 본 적이 없어 말이 막힌다 |
+| 비앙카 | 웃어 넘기려다 제 얼굴이 빨개진 걸 먼저 들킨다 |
+| 리안느 | 표정이 짧다. 딴 데를 본다 |
+| 아녜스 | 늘 내리깔던 눈이 위로 올라간다 |
 
-**받아 주는 얼굴은 안 그립니다.** 좋아하거나 유혹하는 표정이면 이 그림이
-"계속 누르라" 가 되는데, 그러면 넷의 성격이 아니라 보상표가 됩니다. 넷 다
-**싫어하는데 방식이 다른** 쪽입니다.
+## 노리는 자리는 **화난 것과 좋아하는 것 사이**입니다
+
+이 문서를 한 번 화난 쪽으로 써 놨었고, 그림이 넷 다 노려보는 얼굴로 나왔습니다.
+받아 주는 표정이 되지 않게 하려던 것인데 반대쪽으로 너무 갔습니다.
+
+두 쪽 다 틀립니다.
+
+| | 왜 안 되나 |
+|---|---|
+| **화난 얼굴** | 눈꼬리가 올라가고 입이 굳으면 부끄러운 게 아니라 위협입니다. 눌렀을 때 재미가 아니라 불쾌가 돌아옵니다 |
+| **좋아하는 얼굴** | 눈웃음이나 유혹하는 표정이면 "계속 누르라" 가 되고, 그러면 넷의 성격이 아니라 보상표가 됩니다 |
+
+**부끄러움은 그 사이**입니다. 눈이 **커지고**(가늘어지지 않습니다), 눈썹 안쪽이
+**올라가고**(바깥쪽이 내려가지 않습니다), 시선이 **비끼고**(노려보지 않습니다),
+입이 **살짝 벌어집니다**(일자로 굳지 않습니다).
+
+넷 다 눈썹은 **팔자**입니다. 눈썹 하나가 화난 얼굴과 부끄러운 얼굴을 가릅니다.
 
 ## 안 와도 굴러갑니다
 
@@ -143,10 +157,13 @@ She is SEVEN AND A HALF HEADS TALL. Her hips sit at the exact vertical midpoint.
 NOT chibi, NOT stubby, NOT squat. Same height in the frame as the reference:
 crown one twelfth below the top edge, soles one twelfth above the bottom.
 
-WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST AND SHE IS NOT AMUSED.
+WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST AND SHE IS FLUSTERED.
 This is the one thing armour does not stop, and she has no procedure for it.
-- HER FACE: eyes wide and cast sharply to one side, not meeting the viewer.
-  Eyebrows tilted up at the inner ends. Mouth a small flat line, caught mid-word.
+SHE IS EMBARRASSED, NOT ANGRY. She is not glaring, not scowling, not threatening.
+Her composure has simply fallen off and she has no idea where to put her face.
+- HER FACE: eyes WIDE and OPEN — never narrowed — and cast to one side, not
+  meeting the viewer. Eyebrows tilted UP AT THE INNER ENDS, the classic worried
+  slant. Mouth SMALL AND SLIGHTLY OPEN, caught mid-word — not a hard flat line.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone — this is how a blush is
   drawn in 1-bit. Not a filled patch, not a circle: two or three clean strokes.
 - HER LEFT FOREARM comes UP AND ACROSS THE FRONT OF HER BREASTPLATE, held flat
@@ -213,10 +230,12 @@ She is EIGHT HEADS TALL, the tallest of the four. Hips at the exact vertical
 midpoint. NOT chibi, NOT stubby. Same height in the frame as the reference.
 
 WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
-She jokes first and it does not work this time. She is smiling and she is angry.
-- HER FACE: eyes wide, one eye slightly more open than the other. Eyebrows up at
-  the inner ends. Mouth open in a startled grin that has gone crooked and tight —
-  the smile is still there and it has stopped meaning anything friendly.
+She tries to laugh it off and her own face gives her away first.
+SHE IS EMBARRASSED, NOT ANGRY. Not glaring, not scowling, not threatening.
+- HER FACE: eyes WIDE and OPEN — never narrowed — looking off to one side.
+  Eyebrows UP AT THE INNER ENDS. Mouth open in a grin that has gone crooked and
+  helpless: she started the joke and lost it halfway. The blush is the loudest
+  thing on her face.
   TWO OR THREE SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes,
   not a filled patch.
 - HER RABBIT EARS: BOTH FOLD BACK AND DOWN, flattened the way a startled rabbit
@@ -285,9 +304,10 @@ Hips at the exact vertical midpoint. Same height in the frame as the reference.
 
 WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
 She does not have a reaction ready for this and it shows. She says almost nothing.
-- HER FACE: eyes wide and turned sharply to one side, deliberately not looking at
-  the viewer. Eyebrows up at the inner ends. Mouth a small tight flat line — she
-  has decided not to say anything and it is costing her.
+SHE IS EMBARRASSED, NOT ANGRY. Not glaring, not scowling, not threatening.
+- HER FACE: eyes WIDE and OPEN — never narrowed — turned firmly to one side,
+  deliberately not looking at the viewer. Eyebrows UP AT THE INNER ENDS. Mouth
+  small and slightly open, one word begun and abandoned.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes only.
 - HER EARS: the long swept ears DROOP, tilting down and back. This is the loudest
   signal on her, because her ears are the first thing anyone notices.
@@ -354,9 +374,11 @@ in the frame as the reference; the hem is the bottom of her silhouette.
 
 WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
 She was in the middle of something and has entirely lost it.
-- HER FACE: eyes wide and looking up and away, which is the opposite of her usual
-  lowered gaze — that reversal is the whole point. Eyebrows up at the inner ends.
-  Mouth small and open, a word that did not finish.
+SHE IS EMBARRASSED, NOT ANGRY. Not glaring, not scowling, not scandalised into
+sternness. She is a quiet person who has been knocked completely off her rhythm.
+- HER FACE: eyes WIDE and OPEN — never narrowed — looking UP AND AWAY, which is
+  the opposite of her usual lowered gaze; that reversal is the whole point.
+  Eyebrows UP AT THE INNER ENDS. Mouth small and open, a word that did not finish.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes only.
 - HER RIGHT FOREARM comes up and ACROSS THE FRONT OF THE PALE SCAPULAR, held flat
   against herself, the wide bell sleeve falling over it. The short chain is still
@@ -403,8 +425,12 @@ a small sprite.
 합니다. 옷은 평소 그림과 **한 올도 같아야** 합니다. 달라진 것은 얼굴과 팔
 하나뿐이고, 그래야 두 장이 겹쳐집니다.
 
-**좋아하는 얼굴을 그립니다.** 눈웃음이나 유혹하는 표정으로 가면 이 그림이
-"계속 누르라" 가 됩니다. 넷 다 **싫어하는데 방식이 다른** 쪽입니다.
+**화난 얼굴을 그립니다.** 이게 제일 자주 납니다. 눈꼬리가 올라가고 눈이
+가늘어지고 입이 일자로 굳으면 그건 노려보는 얼굴입니다 — 부끄러운 얼굴은
+눈이 **커지고** 눈썹 안쪽이 **올라갑니다**. 눈썹이 팔자인지부터 보세요.
+
+**좋아하는 얼굴을 그립니다.** 반대쪽 실패입니다. 눈웃음이나 유혹하는 표정으로
+가면 이 그림이 "계속 누르라" 가 됩니다. 노리는 자리는 그 둘 사이입니다.
 
 **하트와 반짝이를 뿌립니다.** 얼굴 옆에 ♥ 나 별을 넣으려 합니다. 검은 바닥에
 인물 하나뿐이어야 하고, 그래야 슬라이서가 여백을 제대로 깎습니다.
