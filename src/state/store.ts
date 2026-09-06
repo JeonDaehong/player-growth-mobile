@@ -140,6 +140,39 @@ export const useGame = create<Store>()(
 
 
 /*
+  ⚠ ── 테스트용 창구 ── 출시 전에 이 블록을 지운다
+
+  브라우저 콘솔에서 스토어를 직접 만질 수 있게 열어 둔다.
+
+  ## 왜 콘솔인가
+
+  값을 손보는 길이 여태 **화면의 TEST 단추**뿐이었다 (`FREE_ENHANCE` 의
+  성·레벨 단추 같은 것들). 그런데 그건 만질 값 하나마다 단추를 하나씩
+  만들어야 하고, 만들고 나면 **출시 전에 지워야 하는 것이 화면에 늘어난다** —
+  실제로 무대 위에 얹혀 있던 `TEST · 광폭화` 를 그렇게 걷었다.
+
+  여기 한 줄이면 어떤 값이든 만진다. 화면에는 아무것도 안 남는다.
+
+  ## 저장본을 직접 고치면 안 되는 이유
+
+  `localStorage` 를 손으로 고치는 방법도 있는데, 그러면 **덮어써진다.**
+  전투가 0.5초마다 돌아 상태가 계속 바뀌고 (`battleTickOnce`) 그때마다
+  저장이 예약되므로 (`state/storage` 의 디바운스), 새로고침하는 순간
+  화면이 들고 있던 옛 값이 내가 고친 것 위에 씌워진다.
+
+  스토어를 거치면 그런 일이 없다 — 화면과 저장이 같은 값을 본다.
+
+    game.setState({ dia: game.getState().dia + 100 })   다이아 100
+    game.setState({ money: 1e9 })                       골드
+    game.getState().battle.stage                        지금 판
+
+  콘솔에 `game` 이 없으면 이 블록이 지워진 빌드다.
+*/
+if (typeof window !== 'undefined') {
+  (window as unknown as { game: typeof useGame }).game = useGame;
+}
+
+/*
   화면이 자주 같이 쓰는 core 심볼을 여기서 한 번 더 내보낸다.
 
   `@/core/tiers` 에서 직접 가져와도 되지만, 장비 한 칸을 그리는 화면은 거의 언제나
