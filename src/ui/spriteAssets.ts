@@ -1894,7 +1894,14 @@ export const SFX_HOLYSWORD_SPRITES = {
   '5': require('../../assets/sprites/sfx_holysword/5.png'),
 } as const;
 
-export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'bfx_bind' | 'boss_passive' | 'status_icon' | 'sfx_erupt' | 'passive_icon' | 'sw_grub' | 'sw_hopper' | 'sw_spitter' | 'sw_weaver' | 'sw_roller' | 'sw_soldier' | 'sw_drone' | 'sw_lancer' | 'sw_husk' | 'sw_mantis' | 'sw_glider' | 'sw_bomb' | 'b21_centipeda' | 'b22_apis' | 'b23_nucanus' | 'b24_biblis' | 'b25_arachnes' | 'b26_pyros' | 'b27_locusta' | 'b28_mosquito' | 'b29_formica' | 'b30_baal' | 'nav_top' | 'nav_bot' | 'coin_ui' | 'growth' | 'rarity' | 'bfx_cocoon' | 'elfarcher_dragon' | 'sfx_holysword';
+export const CHAR_FULL_SPRITES = {
+  'bunnyaxe': require('../../assets/sprites/char_full/bunnyaxe.png'),
+  'elfarcher': require('../../assets/sprites/char_full/elfarcher.png'),
+  'knightgirl': require('../../assets/sprites/char_full/knightgirl.png'),
+  'nun': require('../../assets/sprites/char_full/nun.png'),
+} as const;
+
+export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'bfx_bind' | 'boss_passive' | 'status_icon' | 'sfx_erupt' | 'passive_icon' | 'sw_grub' | 'sw_hopper' | 'sw_spitter' | 'sw_weaver' | 'sw_roller' | 'sw_soldier' | 'sw_drone' | 'sw_lancer' | 'sw_husk' | 'sw_mantis' | 'sw_glider' | 'sw_bomb' | 'b21_centipeda' | 'b22_apis' | 'b23_nucanus' | 'b24_biblis' | 'b25_arachnes' | 'b26_pyros' | 'b27_locusta' | 'b28_mosquito' | 'b29_formica' | 'b30_baal' | 'nav_top' | 'nav_bot' | 'coin_ui' | 'growth' | 'rarity' | 'bfx_cocoon' | 'elfarcher_dragon' | 'sfx_holysword' | 'char_full';
 
 export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   scroll: SCROLL_SPRITES,
@@ -2096,6 +2103,7 @@ export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   bfx_cocoon: BFX_COCOON_SPRITES,
   elfarcher_dragon: ELFARCHER_DRAGON_SPRITES,
   sfx_holysword: SFX_HOLYSWORD_SPRITES,
+  char_full: CHAR_FULL_SPRITES,
 };
 
 /** 세트에서 키를 안전하게 꺼낸다. 없으면 undefined — 호출부가 대체 렌더를 하도록. */
@@ -2145,8 +2153,8 @@ export const SPRITE_RATIO: Record<string, number> = {
   'avatar/duelist': 0.8073,
   'avatar/elfarcher': 1.28,
   'avatar/knight': 0.8646,
-  'avatar/logo': 1.0,
   'avatar/knightgirl': 0.9635,
+  'avatar/logo': 1.0,
   'avatar/maidhammer': 0.974,
   'avatar/mercenary': 0.875,
   'avatar/merchant': 0.9115,
@@ -2433,6 +2441,10 @@ export const SPRITE_RATIO: Record<string, number> = {
   'card_back/frames': 1.7523,
   'card_back/frames2': 1.7685,
   'card_back/lattice': 1.8019,
+  'char_full/bunnyaxe': 1.561,
+  'char_full/elfarcher': 1.7143,
+  'char_full/knightgirl': 1.6,
+  'char_full/nun': 2.7042,
   'coin/copper': 1.0,
   'coin/gold': 0.9531,
   'coin/silver': 0.9792,

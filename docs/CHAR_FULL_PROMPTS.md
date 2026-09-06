@@ -44,37 +44,47 @@
 박히는 것과 같은 그림을 크게만 띄우면 키운 값을 못 합니다 — 조각을 모아 성을
 올리고 레벨을 백 번 눌러도 화면에서 달라지는 것이 숫자뿐입니다.
 
-## 지금은 흉상이 대신 서 있습니다
+## 넷 다 들어와 있습니다 ✅
 
-`char_full` 이 없으면 `avatar` 로 떨어집니다 (`Sprite` 의 `fallbackSet`).
-무대 크기와 자리는 이미 잡혀 있으므로, 그림이 들어오면 폴더에 넣고
-`slice.py` 를 돌리는 것으로 끝입니다. **화면 코드는 안 건드립니다.**
+`assets/2026-09-06/char-full-*.jpg` 로 받아서 잘랐습니다. 결과는
+`assets/sprites/char_full/` 에 있고 화면에 이미 서 있습니다.
 
-## 받은 다음
+| | 잘린 크기 | 세로 비율 |
+|---|---|---|
+| 이졸데 | 120x192 | 1.60 |
+| 비앙카 | 123x192 | 1.56 |
+| 리안느 | 112x192 | 1.71 |
+| 아녜스 | 71x192 | 2.70 |
 
-1. 네 장을 `assets/new-image/` 에 넣습니다 (이름은 아래 설정과 맞추세요)
-2. `tools/sprites.config.json` 에 아래 넷을 더합니다
+넷 다 **높이가 192** 입니다. 트림이 여백을 깎아서 그렇게 됩니다 — 무대가
+`contain` 으로 높이를 맞추므로 넷 다 상자를 꽉 채우고, 좁은 사람(아녜스)은
+좌우가 빌 뿐입니다.
+
+### 다섯째 사람이 생기면
+
+1. `assets/<날짜>/char-full-<id>.jpg` 로 넣습니다 (날짜 폴더는 `slice.py` 가
+   저절로 찾습니다 — `_src_dirs`)
+2. `tools/sprites.config.json` 의 `char_full` 항목 **뒤에** 한 줄 더합니다.
+   `append: true` 를 꼭 붙이세요 — 빼면 앞의 넷이 지워집니다
 
 ```json
-{ "file": "char-full-knightgirl.png", "name": "char_full", "grid": [1, 1],
-  "labels": ["knightgirl"] },
-{ "file": "char-full-bunnyaxe.png", "name": "char_full", "grid": [1, 1],
-  "labels": ["bunnyaxe"], "append": true },
-{ "file": "char-full-elfarcher.png", "name": "char_full", "grid": [1, 1],
-  "labels": ["elfarcher"], "append": true },
-{ "file": "char-full-nun.png", "name": "char_full", "grid": [1, 1],
-  "labels": ["nun"], "append": true }
+{ "file": "char-full-<id>.jpg", "name": "char_full", "grid": [1, 1],
+  "labels": ["<id>"], "append": true }
 ```
 
-**순서가 중요합니다.** 첫 항목이 폴더를 비우고 나머지 셋이 덧붙입니다
-(`append`). 첫 항목에 `append` 를 붙이면 옛 그림이 안 지워지고, 둘째부터
-빼먹으면 앞의 것이 지워집니다.
-
 `grid` 는 "이 그림 전체가 한 칸" 이라는 뜻입니다 — **마젠타 선이 필요 없습니다.**
-`invert` 는 붙이지 마세요. 검은 바닥에 흰 그림으로 받습니다.
+`invert` 도 붙이지 마세요. 검은 바닥에 흰 그림으로 받습니다.
 
-3. `python3 tools/slice.py` — `spriteAssets.ts` 가 다시 생성됩니다
-4. 화면에서 바로 바뀝니다. `fallbackSet` 이 밀려나는 것뿐입니다
+3. `python3 tools/slice.py char_full` — `spriteAssets.ts` 가 다시 생성됩니다
+4. 화면에서 바로 바뀝니다. **화면 코드는 안 건드립니다** (`fallbackSet` 이
+   밀려나는 것뿐입니다)
+
+### 워터마크는 저절로 사라집니다
+
+Gemini 가 오른쪽 아래에 회색 사각별을 박아 놓습니다. 밝기가 85 인데 이진화
+문턱이 128 이라 (`slice.py` 의 `THRESH`) 자를 때 그냥 배경으로 떨어집니다.
+`killCorner` 를 쓰지 마세요 — 우하단 13% 를 통째로 지우는 옵션이라 **이졸데의
+망토 자락이 같이 잘립니다.**
 
 **슬라이서가 긴 변을 192px 로 줄입니다** (`SIZE`). 화면에서는 200px 높이로
 뜨므로 사실상 1:1 입니다 — 여기가 이 게임에서 캐릭터가 제일 크게 보이는

@@ -4524,6 +4524,53 @@
           1
         ]
       ]
+    },
+    {
+      "file": "char-full-knightgirl.jpg",
+      "name": "char_full",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "knightgirl"
+      ]
+    },
+    {
+      "file": "char-full-bunnyaxe.jpg",
+      "name": "char_full",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "bunnyaxe"
+      ],
+      "append": true
+    },
+    {
+      "file": "char-full-elfarcher.jpg",
+      "name": "char_full",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "elfarcher"
+      ],
+      "append": true
+    },
+    {
+      "file": "char-full-nun.jpg",
+      "name": "char_full",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "nun"
+      ],
+      "append": true
     }
   ],
   "_srcDirs": []
