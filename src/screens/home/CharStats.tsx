@@ -41,7 +41,7 @@ import { hexOf } from '@/core/status';
 import { Row, T } from '@/ui/atoms';
 import { Pixel } from '@/ui/Pixel';
 import { STAT } from '@/ui/sprites';
-import { BAD_C, GOOD_C, SP } from '@/ui/theme';
+import { BAD_C, GOOD_C, LINE, SP } from '@/ui/theme';
 
 /** 로고 한 변 — 11px 글자 옆에 서므로 그보다 작아야 한다 (머리말) */
 const IC = 9;
@@ -80,24 +80,30 @@ function StatRow({ art, k, v, delta, tail }: {
   );
 }
 
-export function CharStats({ c, party, chars, cols = 1, deltas = true }: {
+export function CharStats({ c, party, chars, cols = 1, live = true }: {
   c: OwnedChar;
   party: Party;
   chars: Record<string, OwnedChar>;
   /** 한 줄에 몇 칸. 영웅 관리는 2, 캐릭터 창은 1 (머리말) */
   cols?: 1 | 2;
   /**
-   * **초록·붉은 괄호를 붙이나** (`(+11)` · `(-3)`).
+   * **지금 판 이야기를 같이 적나.**
    *
-   * 영웅 관리는 끈다. 저 괄호는 **지금 판에서 걸려 있는 것**을 말하는데,
-   * 거기는 판을 보는 자리가 아니라 키우는 자리다 — 레벨을 올릴까 성을
-   * 올릴까를 정하려고 보는 숫자 옆에서 저쪽 무대의 함성이 얹은 몫이
-   * 오르내리면, **어느 것이 이 사람의 값인지**가 흐려진다.
+   * 두 가지가 여기 걸린다.
+   *
+   *   초록·붉은 괄호   `(+11)` · `(-3)` — 지금 걸려 있는 것이 얹거나 깎은 몫
+   *   남은 체력        `1234 / 3000` 의 앞엣것
+   *
+   * 영웅 관리는 끈다. 거기는 판을 보는 자리가 아니라 **키우는 자리**다 —
+   * 레벨을 올릴까 성을 올릴까를 정하려고 보는 숫자 옆에서 저쪽 무대의
+   * 함성이 얹은 몫과 방금 맞은 피가 오르내리면, 어느 것이 이 사람의 값인지가
+   * 흐려진다. 무엇보다 **레벨을 올려도 저 둘은 안 바뀐다** — 방금 누른 것과
+   * 상관없는 숫자가 옆에서 움직인다.
    *
    * 캐릭터 창은 켜 둔다. 거기는 싸움을 보다 "쟤 왜 저러지" 로 여는 자리라
    * 지금 걸려 있는 것이 곧 답이다.
    */
-  deltas?: boolean;
+  live?: boolean;
 }) {
   /*
     지금 남은 체력과 걸려 있는 것들.
@@ -154,7 +160,7 @@ export function CharStats({ c, party, chars, cols = 1, deltas = true }: {
       art="atk"
       k={`공격력 (${DMG_NAME[blowOf(c.id).type]})`}
       v={`${base.atk}`}
-      delta={deltas && now ? deltaText(base.atk, now.atk) : ''}
+      delta={live && now ? deltaText(base.atk, now.atk) : ''}
     />,
     /*
       **실제 간격(`1333ms 마다`)은 안 적는다.** 배수만으로는 0.8 이 빠른지
@@ -166,33 +172,38 @@ export function CharStats({ c, party, chars, cols = 1, deltas = true }: {
       art="spd"
       k="공격속도"
       v={`${base.spd}`}
-      delta={deltas && now ? deltaText(base.spd, now.spd, 1) : ''}
+      delta={live && now ? deltaText(base.spd, now.spd, 1) : ''}
     />,
     /*
       체력은 **대형이 올린 것까지가 최대치**다 (`seat`). 전투가 그 값을
       최대로 보므로 (`hpOf`), 여기서 맨 몸 수치를 최대로 적으면 앞줄에 선
       사람이 가득 찬 채로도 넘쳐 보인다.
+
+      남은 체력(`1234 / 3000` 의 앞엣것)은 **판을 보는 자리에서만** 붙는다
+      (`live`). 키우는 자리에서는 최대치 하나다 — 거기서 견주는 것은 "이
+      사람이 얼마나 단단한가" 이지 "지금 얼마나 깎였나" 가 아니고, 무대는
+      그 옆에서 계속 도므로 볼 때마다 다른 숫자가 뜬다.
     */
     <StatRow
       key="hp"
       art="hp"
       k="체력"
-      v={`${cur > 0 ? `${Math.ceil(cur)} / ` : ''}${seat.hp}`}
-      delta={deltas ? deltaText(base.hp, seat.hp) : ''}
+      v={`${live && cur > 0 ? `${Math.ceil(cur)} / ` : ''}${seat.hp}`}
+      delta={live ? deltaText(base.hp, seat.hp) : ''}
     />,
     <StatRow
       key="def"
       art="def"
       k="방어력"
       v={`${base.def}`}
-      delta={deltas && now ? deltaText(base.def, now.def) : ''}
+      delta={live && now ? deltaText(base.def, now.def) : ''}
     />,
     <StatRow
       key="res"
       art="res"
       k="마법저항력"
       v={`${base.res}`}
-      delta={deltas && now ? deltaText(base.res, now.res) : ''}
+      delta={live && now ? deltaText(base.res, now.res) : ''}
     />,
     /*
       ── 치명타 두 줄은 **늘 뜬다** ──
@@ -216,7 +227,7 @@ export function CharStats({ c, party, chars, cols = 1, deltas = true }: {
       art="crit"
       k="치명타 확률"
       v={`${Math.round(base.crit * 100)}%`}
-      delta={deltas && now ? deltaText(base.crit * 100, critNow * 100) : ''}
+      delta={live && now ? deltaText(base.crit * 100, critNow * 100) : ''}
     />,
     <StatRow
       key="cdmg"
@@ -248,6 +259,30 @@ export function CharStats({ c, party, chars, cols = 1, deltas = true }: {
   */
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+      {/*
+        ── 두 칸 사이의 세로줄 ──
+
+        왼쪽 값의 오른쪽 끝과 오른쪽 이름의 왼쪽 끝이 맞닿아 있어서, 훑을 때
+        `1127 방어력` 이 한 덩어리로 읽혔다. 줄 하나면 그 눈길이 끊긴다.
+
+        **제일 옅은 선**이다 (`LINE.low`). 이건 가르는 것이지 무엇을 말하는
+        것이 아니라, 보이는 줄 모르게 있어야 맞다.
+
+        칸이 하나일 때는 안 그린다 — 가를 것이 없다.
+      */}
+      {cols === 2 && (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: 2,
+            bottom: 2,
+            width: 1,
+            backgroundColor: LINE.low,
+          }}
+        />
+      )}
       {rows.map((node, i) => (
         <View
           key={i}

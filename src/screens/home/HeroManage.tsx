@@ -572,10 +572,12 @@ export function HeroManage({ pick, onPick }: {
         여덟 줄이 한 칸으로 서면 세로를 여덟 줄만큼 먹는다. 두 칸이면 넷이고,
         그 차이가 곧 아래 키우는 단추가 화면 안에 있느냐 밖에 있느냐다.
 
-        초록·붉은 괄호는 안 붙인다 (`deltas`). 저건 지금 판에서 걸려 있는
-        것을 말하는데, 여기는 판을 보는 자리가 아니라 키우는 자리다.
+        **지금 판 이야기는 빼고 그린다** (`live`). 초록·붉은 괄호도, 남은
+        체력도 안 붙는다 — 여기는 판을 보는 자리가 아니라 키우는 자리라,
+        견주는 것이 "이 사람이 얼마나 단단한가" 이지 "지금 얼마나 깎였나"
+        가 아니다.
       */}
-      <CharStats c={c} party={party} chars={chars} cols={2} deltas={false} />
+      <CharStats c={c} party={party} chars={chars} cols={2} live={false} />
 
       <Sep />
 

@@ -39,6 +39,25 @@
  *   1. **액자** — 고른 칸만 테두리가 밝고 면이 찬다 (`frameStyle`)
  *   2. **밝기** — 안 고른 칸은 그림도 글자도 흐리다 (`O.dim`)
  *   3. **크기** — 고른 칸의 그림만 한 단계 크다
+ *
+ * ## 메인은 **늘 한 단 위**다
+ *
+ * 다섯 중 하나는 특별하다. 메인은 다른 데로 나가는 문이 아니라 **돌아오는
+ * 자리**다 — 어디에 들어가 있든 여기를 누르면 판으로 돌아온다. 그게 다섯
+ * 칸을 다 똑같이 그리면 안 보인다.
+ *
+ * 시안(`assets/2026-09-06/456456.jpg`)도 가운데 칸을 크게 그려 뒀다. 여기서는
+ * 셋으로 준다: **더 넓고**(`flex`), **그림이 한 단 크고**, 안 골랐을 때도
+ * 테두리가 나머지 넷보다 한 단 밝다.
+ *
+ * 그래서 밝기 단이 둘이 아니라 셋이 된다.
+ *
+ *   고른 칸        테두리 밝음 · 면이 참 · 그림 또렷
+ *   메인 (안 고름)  테두리 중간 · 그림 반쯤
+ *   나머지         테두리 거의 안 보임 · 그림 흐림
+ *
+ * 이 셋이 안 겹쳐야 한다. 메인을 너무 밝게 하면 **어느 것이 지금 여기인지**가
+ * 안 갈리는데, 그건 이 띠가 하는 제일 중요한 말이라 양보할 수 없다.
  */
 import React from 'react';
 import { Pressable, View } from 'react-native';
@@ -96,6 +115,8 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
     >
       {TABS.map((t) => {
         const here = t.id === tab;
+        /* 돌아오는 자리 — 나가는 문 넷과 다르게 그린다 (머리말) */
+        const home = t.id === 'main';
         return (
           <Pressable
             key={t.id}
@@ -107,9 +128,17 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
             }}
             style={({ pressed }) => [
               frameStyle({ hi: here, pressed }),
+              /*
+                안 골랐을 때도 메인만 테두리가 한 단 밝다. 고른 칸(`LINE.hi`)
+                과 나머지(`LINE.low`) 사이라, 셋이 안 겹친다.
+              */
+              home && !here ? { borderColor: LINE.mid } : null,
               {
-                /* 다섯이 **정확히 같은 폭**이다 — 라벨 길이가 자리를 못 바꾼다 */
-                flex: 1,
+                /*
+                  넷은 같은 폭, 메인만 넓다. 라벨 길이는 여전히 자리를 못
+                  바꾼다 — 넓이를 정하는 것은 글자가 아니라 이 값이다.
+                */
+                flex: home ? 1.35 : 1,
                 paddingVertical: SP.xs + 1,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -126,16 +155,20 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
             <Sprite
               set="nav_bot"
               name={t.art}
-              /* 고른 칸만 한 단계 크다 — 크기가 곧 "여기가 본거리" 다 */
-              size={here ? 24 : 20}
+              /*
+                크기가 곧 "여기가 본거리" 다. 고른 칸이 한 단 크고, 메인은
+                거기서 또 한 단 크다 — 안 골랐어도 나머지 넷의 고른 크기와
+                같다.
+              */
+              size={(here ? 24 : 20) + (home ? 4 : 0)}
               fallback={NAV[t.art]}
-              opacity={here ? 1 : O.dim}
+              opacity={here ? 1 : home ? O.sub : O.dim}
             />
             <T
               size={FS.tiny}
-              bold={here}
+              bold={here || home}
               /* 안 고른 칸은 글자도 같이 물러난다 — 그림만 흐리면 줄이 어긋나 보인다 */
-              dim={here ? 'full' : 'dim'}
+              dim={here ? 'full' : home ? 'sub' : 'dim'}
             >
               {t.label}
             </T>
