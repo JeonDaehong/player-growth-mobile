@@ -250,7 +250,8 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                       style={{
                         position: 'absolute',
                         right: -2,
-                        bottom: HP_H + 1,
+                        /* 체력 막대와 그 위의 막 줄을 비켜 앉는다 */
+                        bottom: HP_H + THIN + 1,
                         paddingHorizontal: 3,
                         borderRadius: R.sm,
                         backgroundColor: SURF.veil,
@@ -286,37 +287,43 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                         }}
                       />
                     </View>
-                  </View>
+                    {/*
+                      ── 보호막 ── 체력 막대 **바로 위에, 같은 길이로.**
 
-                  {/*
-                    ── 보호막 ── 체력 바로 아래 가는 하늘색 줄.
+                      칸 폭을 다 쓰는 줄로 얼굴 밑에 따로 있었다. 체력 막대는
+                      얼굴 폭(46px)이고 이건 칸 폭(80px 남짓)이라 **둘의 길이가
+                      달랐고**, 그러면 같은 몸의 두 겹이 아니라 상관없는 두
+                      막대로 읽힌다 — 막이 체력의 몇 할인지가 눈으로 안 잡힌다.
 
-                    하늘색은 이 게임에서 **"저 겹은 체력이 아니다"** 하나만
-                    말한다 (`ui/theme` 의 `SHIELD_C`). 무대의 발밑 막대와
-                    같은 규칙이다 (`Fighter`).
+                      같은 상자 안에 같은 좌우로 얹으면 길이가 저절로 같다.
+                      위에 올리는 이유도 그거다: 막이 먼저 깎이고 그다음에
+                      체력이 닳으므로 (`core/autoBattle` 의 막 흡수), **위에
+                      쌓인 겹**이 실제 순서다.
 
-                    **없어도 자리는 지킨다.** 안 그리면 막을 두르는 순간
-                    그 사람 칸만 4px 길어져서 넷이 어긋난다 — 자리만 비워
-                    두면 아무것도 안 움직인다.
-                  */}
-                  <View
-                    style={{
-                      alignSelf: 'stretch',
-                      height: THIN,
-                      marginTop: 2,
-                      borderRadius: 1,
-                      backgroundColor: ward > 0 ? SURF.down : 'transparent',
-                      overflow: 'hidden',
-                    }}
-                  >
+                      **없으면 안 그린다.** 얼굴 위에 얹힌 것이라 자리를 안
+                      먹으므로, 빈 홈을 남겨 둘 이유가 없다 (밑에 따로 있던
+                      시절에는 그게 칸 높이를 흔들었다).
+                    */}
                     {ward > 0 && (
                       <View
                         style={{
-                          width: `${ward * 100}%`,
-                          height: '100%',
-                          backgroundColor: SHIELD_C,
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          bottom: HP_H,
+                          height: THIN,
+                          backgroundColor: SURF.down,
+                          overflow: 'hidden',
                         }}
-                      />
+                      >
+                        <View
+                          style={{
+                            width: `${ward * 100}%`,
+                            height: '100%',
+                            backgroundColor: SHIELD_C,
+                          }}
+                        />
+                      </View>
                     )}
                   </View>
 
@@ -436,10 +443,13 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                   />
                 </>
               ) : (
-                /* 찬 칸과 **같은 높이** — 얼굴 · 이름 · 막 · 기술 넷 · 로고 줄 */
+                /*
+                  찬 칸과 **같은 높이** — 얼굴 · 이름 · 기술 넷 · 로고 줄.
+                  막 줄은 얼굴 위에 얹히므로 (`ward`) 여기 안 센다.
+                */
                 <View
                   style={{
-                    height: FACE + 14 + (THIN + 2) + SKILL_ROWS * (SK_H + 2) + 19,
+                    height: FACE + 14 + SKILL_ROWS * (SK_H + 2) + 19,
                     justifyContent: 'center',
                     gap: 4,
                   }}
