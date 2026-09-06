@@ -4535,7 +4535,14 @@
       "labels": [
         "knightgirl"
       ],
-      "size": 384
+      "size": 384,
+      "region": [
+        0.0946,
+        0.0635,
+        0.968,
+        0.9912
+      ],
+      "noTrim": true
     },
     {
       "file": "char-full-bunnyaxe.jpg",
@@ -4548,7 +4555,14 @@
         "bunnyaxe"
       ],
       "append": true,
-      "size": 384
+      "size": 384,
+      "region": [
+        0.0189,
+        0.0,
+        0.9811,
+        0.999
+      ],
+      "noTrim": true
     },
     {
       "file": "char-full-elfarcher.jpg",
@@ -4561,7 +4575,14 @@
         "elfarcher"
       ],
       "append": true,
-      "size": 384
+      "size": 384,
+      "region": [
+        0.1033,
+        0.0059,
+        0.9753,
+        0.9971
+      ],
+      "noTrim": true
     },
     {
       "file": "char-full-nun.jpg",
@@ -4574,7 +4595,14 @@
         "nun"
       ],
       "append": true,
-      "size": 384
+      "size": 384,
+      "region": [
+        0.2751,
+        0.0381,
+        0.8617,
+        0.9697
+      ],
+      "noTrim": true
     },
     {
       "file": "bg.jpg",
@@ -4626,7 +4654,14 @@
       "labels": [
         "knightgirl"
       ],
-      "size": 384
+      "size": 384,
+      "region": [
+        0.0946,
+        0.0635,
+        0.968,
+        0.9912
+      ],
+      "noTrim": true
     },
     {
       "file": "char-shy-bunnyaxe.jpg",
@@ -4639,7 +4674,14 @@
         "bunnyaxe"
       ],
       "size": 384,
-      "append": true
+      "append": true,
+      "region": [
+        0.0189,
+        0.0,
+        0.9811,
+        0.999
+      ],
+      "noTrim": true
     },
     {
       "file": "char-shy-elfarcher.jpg",
@@ -4652,7 +4694,14 @@
         "elfarcher"
       ],
       "size": 384,
-      "append": true
+      "append": true,
+      "region": [
+        0.1033,
+        0.0059,
+        0.9753,
+        0.9971
+      ],
+      "noTrim": true
     },
     {
       "file": "char-shy-nun.jpg",
@@ -4665,7 +4714,14 @@
         "nun"
       ],
       "size": 384,
-      "append": true
+      "append": true,
+      "region": [
+        0.2751,
+        0.0381,
+        0.8617,
+        0.9697
+      ],
+      "noTrim": true
     }
   ],
   "_srcDirs": []
