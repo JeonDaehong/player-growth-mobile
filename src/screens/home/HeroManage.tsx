@@ -15,11 +15,11 @@
  *
  * ## 위에서 아래로 무엇이 있나
  *
- *   무대      전신 · 등급 문장 · 역할과 패시브 · 코스튬 셋 · 좌우 화살표
+ *   무대      전신 · 말풍선 · 등급 문장 · 역할과 패시브 · 코스튬 셋 · 화살표
  *   이름표    별 · 레벨 · 전투력
- *   기술      칸 셋 (`SkillPanel` 의 `grid`)
+ *   기술      "현재 채용중인 스킬" + 스킬 트리 문 · 칸 셋 (`SkillPanel` 의 `grid`)
  *   수치      두 칸 격자 (`CharStats` 의 `cols`)
- *   키우기    승급 · 레벨업 · 스킬 트리
+ *   키우기    승급 · 레벨업
  *
  * **보는 것이 먼저고 하는 것이 나중이다.** 한동안 키우는 단추를 위쪽에 뒀는데,
  * 그러면 화면을 열자마자 단추부터 마주치고 이 사람이 누구인지는 그 아래로
@@ -50,8 +50,20 @@
  * 서 있다는 것만 말하면 되고, 그건 아주 흐린 윤곽으로도 된다.
  *
  * 그림이 없으면 그냥 어둡다 (`SURF.down`). 프롬프트는 `docs/HERO_BG_PROMPT.md`.
+ *
+ * ## 말풍선
+ *
+ * 인물 머리 위에 한 마디가 뜬다 (`core/lines`). 5초 있다 사라지고, 5초 쉬었다
+ * 다른 말이 뜬다. **인물을 누르면 바로 다음 말**로 넘어간다.
+ *
+ * 쉬는 5초가 있는 까닭은, 계속 떠 있으면 그것도 결국 무늬가 되기 때문이다.
+ * 사라졌다 뜨는 것이 있어야 눈이 그때 한 번 간다.
+ *
+ * 여기 있던 한 줄 소개(`CharDef.quote`)를 걷고 그 자리를 이걸로 대신한다.
+ * 늘 같은 한 마디는 두 번째 볼 때부터 안 읽힌다 — 자세한 까닭은 `core/lines`
+ * 머리말에.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import {
@@ -60,11 +72,13 @@ import {
   battleTypeOf, canAwaken, capOf, charPower, lvCost, maxStar, starUpCost,
 } from '@/core/chars';
 import { fmtShort } from '@/core/currency';
+import { linesOf } from '@/core/lines';
 import { passiveOf } from '@/core/passives';
 import { seatRows } from '@/core/party';
 import { openPicks } from '@/core/skillTree';
 import { Row, Sep, Stars, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
+import { FrameArt, frameStyle } from '@/ui/Frame';
 import { HERO_ACT, ICONS } from '@/ui/sprites';
 import { Pixel } from '@/ui/Pixel';
 import { soon } from '@/ui/SoonPopup';
@@ -166,6 +180,102 @@ function ActBtn({ art, label, onPress }: {
       */}
       <Sprite set="hero_ui" name={art} size={17} fallback={HERO_ACT[art]} />
     </Pressable>
+  );
+}
+
+/** 말풍선이 떠 있는 시간 · 사라져 있는 시간 */
+const TALK_ON = 5000;
+const TALK_OFF = 5000;
+
+/**
+ * ── 말풍선 ── 인물 머리 위에 한 마디.
+ *
+ * 뜨고 · 사라지고 · 다른 말로 다시 뜨는 것을 시간이 돌린다. 인물을 누르면
+ * (`bump`) 기다리지 않고 바로 다음 말이다.
+ *
+ * ## 다음 말은 **바로 앞엣것만 피한다**
+ *
+ * 무작위로 고르면 같은 말이 연달아 두 번 나오는 일이 생기는데, 그러면 말풍선이
+ * 안 바뀐 것처럼 보여서 "고장" 으로 읽힌다. 순서를 통째로 섞어 돌리는 방법도
+ * 있지만 열 줄짜리에 그건 과하다 — 앞엣것 하나만 피하면 충분하다.
+ */
+function useTalk(id: string, lines: readonly string[]) {
+  const [at, setAt] = useState(() => Math.floor(Math.random() * lines.length));
+  const [on, setOn] = useState(true);
+
+  /* 사람이 바뀌면 처음부터 — 앞사람의 말이 남아 있으면 안 된다 */
+  useEffect(() => {
+    setAt(Math.floor(Math.random() * lines.length));
+    setOn(true);
+  }, [id, lines.length]);
+
+  const bump = () => {
+    setAt((i) => (lines.length < 2 ? i : (i + 1 + Math.floor(Math.random() * (lines.length - 1))) % lines.length));
+    setOn(true);
+  };
+
+  /*
+    떠 있으면 5초 뒤에 지우고, 지워져 있으면 5초 뒤에 다음 말로 띄운다.
+
+    `on` 과 `at` 이 바뀔 때마다 시계를 다시 건다. 인물을 눌러 `bump` 가
+    돌면 그 자리에서 5초가 새로 시작된다 — 방금 띄운 말이 0.2초 뒤에 사라지면
+    안 된다.
+  */
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (on) setOn(false);
+      else bump();
+    }, on ? TALK_ON : TALK_OFF);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [on, at, id]);
+
+  return { text: lines[at] ?? '', on, bump };
+}
+
+/**
+ * 말풍선 한 덩이 — 상자와 꼬리.
+ *
+ * 꼬리는 **네모를 45도 돌린 것**이다. 삼각형을 그리는 방법이 따로 없어서
+ * (`borderWidth` 로 흉내 내는 손은 1-bit 테두리와 안 맞는다) 마름모를 상자
+ * 밑에 반쯤 물려 놓고, 위쪽 절반은 상자가 덮게 둔다. 남는 아래쪽 두 변이
+ * 꼬리가 된다.
+ */
+function Bubble({ text }: { text: string }) {
+  return (
+    <View style={{ alignItems: 'center' }}>
+      <View
+        style={[
+          BORDER,
+          {
+            maxWidth: 200,
+            paddingHorizontal: SP.sm,
+            paddingVertical: SP.xs,
+            borderColor: LINE.hi,
+            /* 무대 위라 불투명해야 한다 — 인물이 비치면 글이 안 읽힌다 */
+            backgroundColor: '#0E0E0E',
+          },
+        ]}
+      >
+        <T size={FS.tiny} center numberOfLines={2}>{text}</T>
+      </View>
+      {/*
+        꼬리 — 상자 아래로 반쯤만 나온다. 위쪽 절반은 상자가 덮으므로
+        `marginTop` 이 음수다.
+      */}
+      <View
+        style={{
+          width: 8,
+          height: 8,
+          marginTop: -5,
+          transform: [{ rotate: '45deg' }],
+          borderRightWidth: 1,
+          borderBottomWidth: 1,
+          borderColor: LINE.hi,
+          backgroundColor: '#0E0E0E',
+        }}
+      />
+    </View>
   );
 }
 
@@ -289,6 +399,17 @@ export function HeroManage({ pick, onPick }: {
   const id = owned[at];
   const c = id ? chars[id] : null;
   const d = c ? CHARS[c.id] : null;
+
+  /*
+    ── 이 사람이 할 수 있는 말들 ── 첫 줄이 `quote` 다 (`core/lines`).
+
+    **이른 반환보다 위**에 있어야 한다. 아래 `if (!c || !d)` 뒤에 두면, 가진
+    캐릭터가 없는 판에서 훅을 건너뛰게 되어 그다음 렌더에서 훅 차례가 어긋난다.
+    그래서 없을 수도 있는 값을 빈 것으로 받아 둔다 — 어차피 그때는 말풍선을
+    안 그린다.
+  */
+  const lines = useMemo(() => linesOf(id ?? '', d?.quote), [id, d?.quote]);
+  const talk = useTalk(id ?? '', lines);
 
   if (!c || !d) {
     return (
@@ -416,13 +537,25 @@ export function HeroManage({ pick, onPick }: {
           높이를 맞추므로 넷 다 상자 높이를 꽉 채우고, 좁은 사람은 좌우가
           빌 뿐이다. 발 높이는 넷이 같다.
         */}
-        <Sprite
-          set="char_full"
-          name={d.art}
-          fallbackSet="avatar"
-          size={FULL_W}
+        {/*
+          누르면 다음 말이 나온다 (`useTalk` 의 `bump`). 과녁이 인물 그림
+          통째라 빗나갈 일이 없다 — 말풍선 자체를 과녁으로 두면 사라져
+          있는 5초 동안 누를 데가 없어진다.
+        */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${d.name}에게 말 걸기`}
+          onPress={talk.bump}
           style={{ width: FULL_W, height: FULL_H, marginBottom: SP.sm }}
-        />
+        >
+          <Sprite
+            set="char_full"
+            name={d.art}
+            fallbackSet="avatar"
+            size={FULL_W}
+            style={{ width: FULL_W, height: FULL_H }}
+          />
+        </Pressable>
 
         {/*
           ── 등급 문장 ── 한가운데 위.
@@ -507,6 +640,30 @@ export function HeroManage({ pick, onPick }: {
           <Arrow on={at > 0} label="‹" onPress={() => onPick(owned[at - 1])} />
           <Arrow on={at < owned.length - 1} label="›" onPress={() => onPick(owned[at + 1])} />
         </View>
+
+        {/*
+          ── 말풍선 ── **맨 마지막에 그린다.**
+
+          무대에 얹힌 것 중 제일 위여야 한다. 앞에 그리면 화살표 판이나 인물
+          위로 올라오는 것들에 가린다.
+
+          자리는 왼쪽 글 다음, 오른쪽 단추 앞 — 그 사이가 인물 머리 위이고,
+          여기 말고는 셋 중 하나를 덮는다. 손가락도 안 먹는다: 누르는 것은
+          말풍선이 아니라 인물이다.
+        */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: SIDE_W + SP.sm,
+            right: 44,
+            top: SP.lg,
+            alignItems: 'center',
+            opacity: talk.on && talk.text ? 1 : 0,
+          }}
+        >
+          {!!talk.text && <Bubble text={talk.text} />}
+        </View>
       </View>
 
       {/*
@@ -546,23 +703,54 @@ export function HeroManage({ pick, onPick }: {
       <Sep />
 
       {/*
-        ── 무엇을 쓰나 ── 시안처럼 로고 칸이 가로로 선다 (`grid`).
+        ── 무엇을 쓰나 ──
 
-        줄로 늘어놓으면 기술 넷이 세로를 그만큼 먹고, 그만큼 아래 수치와
-        키우는 줄이 밀린다. 자세한 것은 칸을 누르면 아래에 펴진다.
+        머리말에 **`현재 채용중인 스킬`** 이라고 적는다. 아래 칸에 뜨는 것이
+        이 사람이 가진 기술 전부가 아니라 **지금 쓰고 있는 것**이라서다 —
+        트리에서 갈래를 고르면 여기 뜨는 것이 바뀐다 (`skillsFor`). 그 말이
+        없으면 트리를 찍고 와서 "왜 아까 본 기술이 없지" 가 된다.
+
+        칸은 시안처럼 가로로 선다 (`grid`). 줄로 늘어놓으면 기술 넷이 세로를
+        그만큼 먹고, 그만큼 아래 수치와 키우는 줄이 밀린다. 자세한 것은 칸을
+        누르면 아래에 펴진다.
       */}
+      <Row between style={{ marginBottom: SP.xs, alignItems: 'center' }}>
+        <T size={FS.title} bold>현재 채용중인 스킬</T>
+        {/*
+          ── 스킬 트리로 가는 문 ── **여기가 제자리다.**
+
+          맨 아래 키우는 줄에 동그라미로 달아 뒀었다. 그런데 저건 골드나
+          조각을 치르는 일이 아니라 **무엇을 쓸까를 고르는 일**이라, 승급·
+          레벨업과 나란히 있으면 셋 다 같은 종류로 읽힌다.
+
+          지금 쓰는 기술 바로 옆이 맞다. 목록은 "지금 무엇을 쓰나" 를, 트리는
+          "무엇으로 바꿀까" 를 말하므로 둘이 한 줄에 있어야 이어진다.
+
+          찍을 것이 남았으면 채워진다 — 성만 되면 저절로 열리던 것이 골라야
+          열리는 것으로 바뀌었으므로, 안 찍은 사람은 기술을 잃은 것으로 보인다.
+        */}
+        <Pressable
+          onPress={() => { sfx('tap'); setTree(true); }}
+          style={({ pressed }) => [
+            frameStyle({ hi: picks > 0, pressed }),
+            {
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              paddingHorizontal: SP.sm,
+              paddingVertical: 4,
+            },
+          ]}
+        >
+          <FrameArt hi={picks > 0} />
+          <Sprite set="growth" name="star_on" size={12} />
+          <T size={FS.tiny} bold={picks > 0}>
+            {picks > 0 ? `스킬 트리 +${picks}` : '스킬 트리'}
+          </T>
+        </Pressable>
+      </Row>
+
       <SkillPanel c={c} party={party} chars={chars} grid />
-
-      {/*
-        한 줄 소개. 시안의 `[방어형] 키워드를 가진 대상을…` 자리다.
-
-        우리에게는 키워드 규칙이 아직 없으므로 그 사람의 한 마디를 둔다
-        (`CharDef.quote`). 이 줄은 위 칸과 아래 격자 사이에서 **숨을 쉬는
-        자리**라, 비우면 격자 둘이 맞붙는다.
-      */}
-      <T size={FS.tiny} dim="dim" center numberOfLines={2} style={{ marginTop: SP.sm }}>
-        {d.quote}
-      </T>
 
       <Sep />
 
@@ -588,8 +776,9 @@ export function HeroManage({ pick, onPick }: {
         승급과 레벨업이 있다. 보는 것이 먼저고 하는 것이 나중인데, 키우는
         단추는 손이 닿아야 하는 것이라 아래쪽이 오히려 맞다.
 
-        스킬 트리는 동그라미다. 저건 값을 치르는 것이 아니라 **고르는 것**
-        이라, 네모 둘과 같은 모양이면 셋 다 같은 일로 읽힌다.
+        스킬 트리는 여기 없다. 저건 값을 치르는 것이 아니라 **고르는 것**
+        이라, 승급·레벨업과 나란히 두면 셋 다 같은 일로 읽힌다 — 지금은 쓰는
+        기술 바로 옆에 있다.
       */}
       <Row gap={SP.xs} style={{ alignItems: 'stretch' }}>
         {starNode}
@@ -605,30 +794,6 @@ export function HeroManage({ pick, onPick }: {
             if (r === 'max') toast('지금 성의 상한입니다', 'plain');
           }}
         />
-        {/*
-          찍을 것이 남았으면 채워진다 — 성만 되면 저절로 열리던 것이 골라야
-          열리는 것으로 바뀌었으므로, 안 찍은 사람은 기술을 잃은 것으로 보인다.
-        */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={picks > 0 ? `스킬 트리 — 찍을 것 ${picks}개` : '스킬 트리'}
-          onPress={() => { sfx('tap'); setTree(true); }}
-          style={({ pressed }) => ({
-            width: 50,
-            borderRadius: R.round,
-            borderWidth: 1,
-            borderColor: picks > 0 ? LINE.hi : LINE.mid,
-            backgroundColor: pressed || picks > 0 ? SURF.up : 'transparent',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 1,
-          })}
-        >
-          <Sprite set="growth" name="star_on" size={16} />
-          <T size={9} bold={picks > 0} dim={picks > 0 ? 'full' : 'dim'}>
-            {picks > 0 ? `+${picks}` : '트리'}
-          </T>
-        </Pressable>
       </Row>
     </>
   );
