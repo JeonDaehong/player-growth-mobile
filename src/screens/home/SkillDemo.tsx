@@ -23,6 +23,21 @@
  * "한 대" 를 그대로 받아 쓴다 (`hit`) — 여기서 따로 세면 같은 창 안에서
  * 두 숫자가 갈린다.
  *
+ * ## 무대가 하는 일까지 여기서 한다
+ *
+ * 전투에서는 일부러 **인물 밖에서** 그리는 것이 셋 있다.
+ *
+ *   뛰어들기   `Fighter` 는 몸짓만 하고, 얼마나 뛸지는 무대가 잰다 (`leapTo`)
+ *   거대 화살  `SwordWave` 가 스스로 물러난다 (`projMul >= 2` 면 `null`) —
+ *              몸에 묶이면 어깨 높이로 나가 제일 가까운 놈 앞에서 멎기 때문에,
+ *              무대가 `GiantArrow` 로 따로 그린다
+ *   머리 위 글 걸린 것이 무엇인지는 상태(`BattleState.hex`)가 알고, 그건
+ *              전투가 도는 동안에만 있다
+ *
+ * 셋 다 여기서 흉내 낸다. 안 하면 시연이 **그 기술의 알맹이를 빼놓고** 보여
+ * 준다 — 강타는 제자리에서 도끼만 휘두르고, 거대 화살은 아무것도 안 나가고,
+ * 버프 기술은 아무 일도 안 일어난다.
+ *
  * ## 박자는 전투 것을 그대로 쓴다
  *
  * `Fighter` 의 `SK_MS` 와 `landAtOf`, `skFramesOf` 를 그대로 부른다. 여기에
@@ -36,11 +51,12 @@
  * 이 접으면 이 컴포넌트가 통째로 사라지고 시계도 같이 걷힌다) 배경에서
  * 도는 시계가 쌓일 일은 없다.
  */
-import React, { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, View } from 'react-native';
 import {
   CHARS, OwnedChar, SkillDef, blowOf, projFrame, projSet,
 } from '@/core/chars';
+import { GOOD, STATUS_WHAT, StatusId } from '@/core/status';
 import { Sprite } from '@/ui/Sprite';
 import { T } from '@/ui/atoms';
 import { BORDER, LINE, R, SP, SURF } from '@/ui/theme';
@@ -50,10 +66,13 @@ import {
 import { HolySword, SWORD_HIT, SWORD_MS, SkillFx } from './SkillFx';
 import { SkillAura } from './SkillAura';
 import { SwordWave } from './SwordWave';
-import { DamageNumber, FallingArrow, HealMarks, HitBurst } from './HitFx';
+import { GiantArrow, PierceAura } from './PierceAura';
+import {
+  DamageNumber, FallingArrow, HealMarks, HitBurst, StatusNote,
+} from './HitFx';
 
 /** 한 바퀴 (ms). 동작이 0.5초라 나머지는 **보고 나서 숨 돌리는 시간**이다 */
-const LOOP_MS = 2400;
+const LOOP_MS = 2600;
 /** 한 바퀴 안에서 기술이 시작하는 시각 — 앞의 여백이 "가만히 서 있다" 를 만든다 */
 const START = 500;
 
@@ -61,8 +80,8 @@ const START = 500;
  * 시연 무대의 높이 (px).
  *
  * 인물 키(62)의 두 배 반이다. 무대(423px)만큼 여유를 줄 수는 없지만, 이
- * 정도는 있어야 **하늘에서 내려오는 것**이 내려오는 동안 보인다 — 상자가
- * 인물 키만 하면 성검이 화면 밖에서 한 프레임 만에 박힌다.
+ * 정도는 있어야 **하늘에서 내려오는 것**이 내려오는 동안 보이고 **뛰어오른
+ * 사람**이 천장에 안 닿는다.
  */
 const H = 156;
 /** 바닥선이 상자 밑에서 얼마나 떠 있나 */
@@ -113,8 +132,74 @@ const DUMMY = { set: 'cr_slime', name: 'idle' } as const;
  */
 const SWORD_W = 28;
 
+/**
+ * 뛰어드는 기술이 **얼마나 솟나** (px).
+ *
+ * 무대에서는 인물 키만큼 뛴다 (`Fighter` 의 `LEAP_UP` — 54 × ZOOM = 76,
+ * 인물이 76px). 여기 상자가 156px 이고 바닥이 12px 떠 있어서 그 비율대로
+ * 뛰면 머리가 천장을 뚫는다. 몸의 절반이면 상자 안에 남으면서도 "땅을 차고
+ * 올랐다" 가 읽힌다.
+ */
+const LEAP_UP = Math.round(ME_W * 0.5);
+
 /** 매 렌더마다 새로 만들면 숫자가 되감긴다 (`HitFx` 참고) */
 const NOOP = () => {};
+
+/** 머리 위에 뜰 한 줄 */
+interface Note {
+  text: string;
+  good: boolean;
+}
+
+/**
+ * 이 기술이 **누구에게 무엇을 거나** — 머리 위에 뜰 글들.
+ *
+ * ## 왜 표를 다시 안 만드나
+ *
+ * 낱말은 `core/status` 의 `STATUS_WHAT` 하나에서만 나온다. 전투 중에 실제로
+ * 뜨는 것과 같은 글이어야 하기 때문이다 — 여기서 따로 적으면 시연에서 본
+ * 문구와 판에서 보는 문구가 갈리고, 그러면 시연이 거짓말이 된다.
+ *
+ * 좋은지 나쁜지도 마찬가지다 (`GOOD`). 색이 그것 하나로 갈리므로
+ * (`StatusNote`) 두 벌로 세면 초록이어야 할 것이 붉게 뜬다.
+ *
+ * ## 보호막만 낱말이 따로다
+ *
+ * 보호막은 걸리는 것(`Hex`)이 아니라 따로 세는 체력 주머니라
+ * (`BattleState.ward`) `STATUS_WHAT` 에 줄이 없다. 전투에서도 `marksOf` 가
+ * 그 자리에서 글자를 박아 넣으므로 (`피해 흡수`), 여기서도 같은 낱말을 쓴다.
+ */
+function notesOf(sk: SkillDef): { mine: Note[]; theirs: Note[] } {
+  const mine: Note[] = [];
+  const theirs: Note[] = [];
+  const put = (into: Note[], id: StatusId) => {
+    const text = STATUS_WHAT[id];
+    /* 말 안 하는 것이 있다 (`st_fey`) — 로고만 뜬다 */
+    if (text) into.push({ text, good: GOOD.has(id) });
+  };
+
+  /* ── 제 몸에 ── */
+  if (sk.self) put(mine, sk.self.id);
+  for (const m of sk.selfAlso ?? []) put(mine, m.id);
+  /* ── 파티에 ── 시연에는 한 사람뿐이라 그 사람 머리 위에 뜬다 */
+  if (sk.party) put(mine, sk.party.id);
+  for (const m of sk.partyAlso ?? []) put(mine, m.id);
+  if (sk.partyProc) put(mine, sk.partyProc.id);
+  if (sk.cleanseGift) put(mine, sk.cleanseGift.id);
+  if (sk.ward) mine.push({ text: '피해 흡수', good: true });
+
+  /* ── 맞는 놈에게 ── */
+  if (sk.taunt) put(theirs, 'st_taunt');
+  if (sk.foeHex) put(theirs, sk.foeHex.id);
+  if (sk.foeHex2) put(theirs, sk.foeHex2.id);
+  if (sk.foeDot) put(theirs, sk.foeDot.id);
+
+  /*
+    둘까지만 띄운다 — 전투와 같은 규칙이다 (`HitFx` 의 `MarkNotes` 가
+    `slice(-2)` 한다). 셋을 쌓으면 이 작은 상자에서 인물 키만큼 올라간다.
+  */
+  return { mine: mine.slice(0, 2), theirs: theirs.slice(0, 2) };
+}
 
 export function SkillDemo({
   c, sk, hit,
@@ -132,8 +217,8 @@ export function SkillDemo({
   /*
     이펙트마다 제 시계 — 값이 오를 때마다 한 번 돈다.
 
-    하나로 묶을 수가 없다. 넷이 서로 다른 순간에 켜지고 (몸짓이 시작할 때 ·
-    베는 칸에서 · 닿는 칸에서 · 검이 꽂힐 때), 같은 값을 보게 하면 넷이
+    하나로 묶을 수가 없다. 저마다 다른 순간에 켜지고 (몸짓이 시작할 때 ·
+    베는 칸에서 · 닿는 칸에서 · 검이 꽂힐 때), 같은 값을 보게 하면 다
     한꺼번에 튄다.
   */
   const [cast, setCast] = useState(0);
@@ -145,21 +230,33 @@ export function SkillDemo({
     한 바퀴에 걸어 두는 시계들.
 
     갈래의 정리 함수에서 한꺼번에 끈다. 한 자리에 하나만 두면 안 된다 —
-    한 바퀴에 다섯 개가 동시에 걸려 있다.
+    한 바퀴에 여섯 개가 동시에 걸려 있다.
   */
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  /* 뛰어들기 — 가로와 세로가 **따로** 돈다 (`Fighter` 와 같은 이유) */
+  const leapX = useRef(new Animated.Value(0)).current;
+  const leapY = useRef(new Animated.Value(0)).current;
 
   const frames = skFramesOf(c.id, sk);
   /* 때리는 기술인가 — 적 쪽에 그릴 것이 있나 */
   const hurts = sk.pick !== 'none' && sk.heal <= 0;
   /*
-    ── 몸에서 뭔가 날아가나 ── 검기 · 거대 화살 (`SkillDef.flies`).
+    ── 몸에서 뭔가 날아가나 ── 검기 · 화살 (`SkillDef.flies`).
 
     **활잡이라고 다 날아가는 것이 아니다.** `range === 'ranged'` 는 평타가
     날아간다는 뜻이고 (`Fighter` 의 `shooting`), 기술은 제 깃발을 따로
     가진다. 여기서 둘을 합치면 아녜스의 기도가 슬라임에게 날아간다.
   */
   const flies = sk.flies;
+  /*
+    ── 아주 큰 것은 **무대가 그린다** ── (`SwordWave` 의 `mul >= 2` 갈래)
+
+    거대 화살 하나다. `SwordWave` 는 저 크기를 만나면 스스로 `null` 을
+    돌려주므로 (몸에 묶이면 어깨 높이로 나가 코앞에서 멎는다), 여기서도
+    무대가 하는 것과 같이 `GiantArrow` 로 따로 그려야 한다 — 안 그리면
+    **아무것도 안 나간다.**
+  */
+  const giant = flies && (sk.projMul ?? 1) >= 2;
   /*
     ── 위에서 떨어지는 화살 ── 리안느의 화살비.
 
@@ -168,6 +265,16 @@ export function SkillDemo({
     된다 — 이 기술의 내용이 통째로 빠진다.
   */
   const rains = hurts && CHARS[c.id].range === 'ranged' && !sk.flies;
+  const notes = useMemo(() => notesOf(sk), [sk]);
+
+  /* 뛰어드는 거리 — 적 앞에서 멎는다 (몸이 겹치면 누가 누군지 안 보인다) */
+  const leapTo = SPAN - FOE_W * 0.5;
+  const leapDX = useMemo(() => leapX.interpolate({
+    inputRange: [0, 1], outputRange: [0, leapTo],
+  }), [leapX, leapTo]);
+  const leapDY = useMemo(() => leapY.interpolate({
+    inputRange: [0, 1], outputRange: [0, -LEAP_UP],
+  }), [leapY]);
 
   useEffect(() => {
     const beats = sk.beat ?? SK_MS;
@@ -190,13 +297,54 @@ export function SkillDemo({
         if (sk.heal > 0) { setHeal((n) => n + 1); return; }
         /* 하늘에서 내려오는 것은 여기서 **부르기만** 한다 */
         if (sk.drop === 'sword') { setDrop((n) => n + 1); return; }
-        if (sk.pick !== 'none') setLand((n) => n + 1);
+        setLand((n) => n + 1);
       });
       /* 그리고 **꽂힐 때** 맞는다 (`SkillFx` 의 `SWORD_HIT`) — 무대와 같은 규칙 */
       if (sk.drop === 'sword') {
         at(landAt + Math.round(SWORD_MS * SWORD_HIT), () => setLand((n) => n + 1));
       }
       at(START + beats[0] + beats[1] + beats[2], () => setFrame(null));
+
+      /*
+        ── 뛰어드는 기술은 **적 쪽으로 크게 나갔다** 돌아온다 ──
+
+        `Fighter` 의 그것을 그대로 옮겼다. 그림 안에서 점프는 이미 보이지만
+        제자리에서 뛰면 "적진으로 뛰어들었다" 가 아니라 "제자리 점프" 다 —
+        화면에서 실제로 거리를 좁혀야 한다.
+
+        가로는 솟는 동안에 거리를 다 끝내고, 세로는 올라갔다 곧게 가속하며
+        떨어진다. 둘을 한 값으로 굴리면 포물선이 되는데, 내리찍는 기술은
+        ㄱ 자로 떨어져야 "쾅" 이 된다.
+      */
+      if (sk.leaps) {
+        at(START, () => {
+          Animated.sequence([
+            Animated.timing(leapX, {
+              toValue: 1,
+              duration: beats[0],
+              easing: Easing.out(Easing.quad),
+              useNativeDriver: true,
+            }),
+            /* 착지한 자리에 머문다 — 바로 돌아오면 폭발을 볼 새가 없다 */
+            Animated.delay(beats[1] + beats[2] + 260),
+            Animated.timing(leapX, {
+              toValue: 0, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: true,
+            }),
+          ]).start();
+          Animated.sequence([
+            Animated.timing(leapY, {
+              toValue: 1, duration: beats[0], easing: Easing.out(Easing.quad), useNativeDriver: true,
+            }),
+            Animated.timing(leapY, {
+              toValue: 0,
+              duration: beats[1],
+              /* 떨어질수록 빨라진다 — 이게 "쾅" 을 만든다 */
+              easing: Easing.in(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ]).start();
+        });
+      }
     };
 
     beat();
@@ -205,6 +353,8 @@ export function SkillDemo({
       clearInterval(loop);
       timers.current.forEach(clearTimeout);
       timers.current = [];
+      leapX.stopAnimation(() => leapX.setValue(0));
+      leapY.stopAnimation(() => leapY.setValue(0));
       setFrame(null);
     };
     /*
@@ -216,6 +366,8 @@ export function SkillDemo({
   }, [c.id, sk.name]);
 
   const foeLeft = PAD + ME_W + SPAN - FOE_W;
+  /* 인물의 가슴 높이 — 거대 화살이 이 줄로 지나간다 (`GiantArrow` 의 `y`) */
+  const chestY = H - FLOOR - ME_W + Math.round(ME_W * 0.33);
 
   return (
     <View style={{ marginBottom: SP.sm }}>
@@ -248,9 +400,15 @@ export function SkillDemo({
         />
 
         {/* ── 쓰는 사람 ── */}
-        <View
+        <Animated.View
           style={{
-            position: 'absolute', left: PAD, bottom: FLOOR, width: ME_W, height: ME_W,
+            position: 'absolute',
+            left: PAD,
+            bottom: FLOOR,
+            width: ME_W,
+            height: ME_W,
+            /* 뛰어드는 기술만 움직인다 — 아니면 둘 다 0 이라 없는 것과 같다 */
+            transform: [{ translateX: leapDX }, { translateY: leapDY }],
           }}
         >
           {/*
@@ -281,8 +439,13 @@ export function SkillDemo({
             <SkillFx kind={sk.cast} nonce={cast} size={ME_W} />
           )}
           {sk.heal > 0 && <HealMarks nonce={heal} size={ME_W} />}
-          {/* 날아가는 것 — 검기와 화살. 몸에서 나가 적 앞에서 멎는다 */}
-          {flies && (
+          {/*
+            날아가는 것 — 검기와 화살. 몸에서 나가 적 앞에서 멎는다.
+
+            거대 화살은 여기서 안 그린다 (`giant`) — `SwordWave` 가 저
+            크기를 스스로 물리므로 그려도 아무것도 안 나온다.
+          */}
+          {flies && !giant && (
             <SwordWave
               charId={c.id}
               nonce={fly}
@@ -292,7 +455,47 @@ export function SkillDemo({
               mul={sk.projMul}
             />
           )}
-        </View>
+          {/*
+            ── 제 몸과 파티에 걸리는 것 ── 머리 위 한 줄.
+
+            시연에는 한 사람뿐이므로 파티 전체에 거는 것도 이 사람 머리 위에
+            뜬다. 낱말과 색은 전투와 **같은 표**에서 나온다 (`notesOf`).
+
+            `key` 에 시계를 물린다 — `StatusNote` 는 붙는 순간 한 번 돌고
+            마는 부품이라, 같은 것을 두면 두 바퀴째에 다시 안 뜬다.
+          */}
+          {land > 0 && notes.mine.map((n, i) => (
+            <StatusNote
+              key={`${n.text}${land}`}
+              text={n.text}
+              good={n.good}
+              i={notes.mine.length - 1 - i}
+            />
+          ))}
+        </Animated.View>
+
+        {/*
+          ── 거대 화살 ── 무대를 가로지른다 (`PierceAura` 의 `GiantArrow`).
+
+          인물 상자 **밖**이다. 저 부품은 제 부모의 왼쪽 끝(0)을 기준으로
+          날아가므로 (`left: 0` + `translateX`), 인물 안에 넣으면 인물이
+          움직이는 만큼 같이 끌려간다.
+
+          `key` 로 다시 태운다 — 저 부품은 `nonce` 를 안 받고 **붙는 순간**
+          한 번 돈다.
+        */}
+        {giant && fly > 0 && (
+          <GiantArrow
+            key={fly}
+            set={sk.proj || projSet(c.id)}
+            name={projFrame(c.id)}
+            size={Math.round(ME_W * (sk.projMul ?? 1))}
+            /* 활 끝에서 나가 오른쪽 밖으로 */
+            from={PAD + ME_W}
+            to={foeLeft + FOE_W + PAD * 3}
+            y={chestY}
+          />
+        )}
 
         {/* ── 맞는 사람 ── */}
         <View
@@ -324,6 +527,13 @@ export function SkillDemo({
           )}
           {hurts && land > 0 && (
             <>
+              {/* 꿰뚫린 자리에서 퍼지는 기운 — 거대 화살에만 붙는다 */}
+              {giant && (
+                /* 상자가 아니라 **열쇠만** 필요하다 — 저 부품은 스스로 절대 배치다 */
+                <React.Fragment key={`aura${land}`}>
+                  <PierceAura size={FOE_W} delay={0} />
+                </React.Fragment>
+              )}
               <View style={{ position: 'absolute', left: FOE_W * 0.2, top: FOE_W * 0.3 }}>
                 <HitBurst
                   kind={sk.fx ?? CHARS[c.id].fx}
@@ -362,6 +572,15 @@ export function SkillDemo({
               </View>
             </>
           )}
+          {/* ── 맞는 놈에게 걸리는 것 ── 도발 · 시듦 · 지옥불 */}
+          {land > 0 && notes.theirs.map((n, i) => (
+            <StatusNote
+              key={`${n.text}${land}`}
+              text={n.text}
+              good={n.good}
+              i={notes.theirs.length - 1 - i}
+            />
+          ))}
         </View>
       </View>
       <T size={9} dim="dim" style={{ marginTop: 3 }}>

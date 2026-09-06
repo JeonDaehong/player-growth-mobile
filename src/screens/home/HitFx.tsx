@@ -25,7 +25,9 @@ import type { HitFx } from '@/core/chars';
 import type { Mark } from '@/core/passives';
 import { Sprite } from '@/ui/Sprite';
 import { BAD_C, BLACK, GOOD_C, MONO, WHITE } from '@/ui/theme';
-import { NOTE_TIER, NoteZone, claimNoteLane } from './noteLane';
+import {
+  NOTE_SHIFT, NOTE_TIER, NoteSpot, NoteZone, claimNoteSpot,
+} from './noteLane';
 
 /** 이펙트 한 판의 길이 */
 export const FX_MS = 260;
@@ -1236,6 +1238,9 @@ export const NOTE_MS = 1600;
  */
 const NOTE_ROW = 12;
 
+/** 아무와도 안 부딪힌 자리 — 매번 새 객체를 만들면 갈래가 헛돈다 */
+const HOME_SPOT: NoteSpot = { lane: 0, shift: 0 };
+
 /**
  * 판이 열린 뒤 **첫 줄을 띄우기까지** 기다리는 시간 (ms).
  *
@@ -1278,9 +1283,17 @@ const SETTLE_MS = 700;
  * 그림자만 지워서 밝은 배경에서도 읽히게 한다.
  */
 export function StatusNote({
-  text, good, i, lift = 0, head = 0,
+  text, good, i, lift = 0, head = 0, shift = 0,
 }: {
   text: string;
+  /**
+   * 옆으로 얼마나 비켜설까 (px). 왼쪽이 음수 (`noteLane` 의 `NOTE_SHIFT`).
+   *
+   * 나란히 선 둘이 같은 글을 동시에 띄울 때 서로 반대쪽으로 물러난다.
+   * **위로 올리는 것보다 이쪽이 낫다** — 어느 쪽으로 밀리든 글은 여전히
+   * 제 주인 머리 위에 있고, 위로 올리면 그만큼 주인에게서 멀어진다.
+   */
+  shift?: number;
   /**
    * 상자 꼭대기에서 **그림 머리까지** 비어 있는 높이 (px).
    *
@@ -1363,11 +1376,18 @@ export function StatusNote({
           (`받는 치유 감소`), 지금은 전부 두세 낱말이라 (`core/status` 의
           `STATUS_WHAT`) 그 폭이 그대로 **옆 사람 자리를 먹는 여유**가 된다.
         */
-        left: -14,
-        right: -14,
+        /*
+          **옆으로 비킬 만큼 넓혀 둔다.**
+
+          -14 였다. 비켜선 글이 그 폭을 넘어가면 잘리므로 (`numberOfLines`),
+          비킬 수 있는 만큼(`NOTE_SHIFT`) 양쪽을 더 연다. 덤으로 제일 긴
+          글(`치명타 확률 증가` 82px)이 말줄임 없이 들어간다.
+        */
+        left: -(14 + NOTE_SHIFT),
+        right: -(14 + NOTE_SHIFT),
         alignItems: 'center',
         opacity: fade,
-        transform: [{ translateY: rise }],
+        transform: [{ translateX: shift }, { translateY: rise }],
         zIndex: 48,
       }}
     >
@@ -1423,7 +1443,7 @@ export function StatusNote({
  * 붙는 것처럼 보이는데, 규칙상으로도 실제로 그렇다.
  */
 export function MarkNotes({
-  marks, markKey, live, who, zone, x, head = 0,
+  marks, markKey, live, who, zone, x, y, head = 0,
 }: {
   marks: readonly Mark[];
   /**
@@ -1436,6 +1456,14 @@ export function MarkNotes({
   zone: NoteZone;
   /** 그 사람이 가로로 어디 서 있나 (같은 구역 안에서 같은 자로 잰 값) */
   x: number;
+  /**
+   * 세로로 얼마나 올라가 서 있나 (`Ground` 의 `depthAt` 의 `lift`).
+   *
+   * 이게 없으면 위아래로 한참 떨어진 둘이 **가로로 가깝다는 이유만으로**
+   * 서로 자리를 뺏는다 — 넷이 한꺼번에 말할 때 마지막 사람이 3층까지
+   * 밀리던 것이 그것이다 (`noteLane` 의 `NEAR_Y`).
+   */
+  y: number;
   /** 상자 꼭대기에서 그림 머리까지 비어 있는 높이 (`StatusNote` 의 `head`) */
   head?: number;
   /**
@@ -1450,13 +1478,16 @@ export function MarkNotes({
 }) {
   const [notes, setNotes] = useState<{ key: number; text: string; good: boolean }[]>([]);
   /*
-    ── 몇 층에 뜰까 ── (`noteLane`)
+    ── 어디에 뜰까 ── (`noteLane`)
 
     글이 새로 뜨는 **그 순간에** 받는다. 자리 번호로 미리 정해 두면 옆 사람
-    머리 위가 비어 있어도 늘 올라가 있고, 그게 "너무 머리에서 위에서 뜬다"
-    였다. 뜰 때 물어보면 아무도 안 겹칠 때는 0 층이다 — 머리 바로 위.
+    머리 위가 비어 있어도 늘 비켜서 있고, 그게 "너무 머리에서 위에서 뜬다"
+    였다.
+
+    부딪히면 **옆으로** 비킨다 (`shift`). 위로 올리는 것은 셋 이상이 한 점에
+    몰릴 때뿐이라, 사실상 늘 머리 바로 위다.
   */
-  const [lane, setLane] = useState(0);
+  const [spot, setSpot] = useState<NoteSpot>(HOME_SPOT);
   const seq = useRef(0);
   const had = useRef<Set<string>>(new Set());
   const told = useRef<Set<string>>(new Set());
@@ -1555,7 +1586,7 @@ export function MarkNotes({
       **같은 순간에** 새로 걸리는 일은 판이 열릴 때뿐이고, 그때 셋째 줄은
       어차피 위쪽 띠에 가려 잘 안 보였다.
     */
-    setLane(claimNoteLane(who, zone, x, NOTE_MS));
+    setSpot(claimNoteSpot(who, zone, x, y, NOTE_MS));
     setNotes((old) => [...old, ...fresh].slice(-2));
     timers.current.push(setTimeout(() => {
       setNotes((old) => old.filter((n) => !fresh.some((f) => f.key === n.key)));
@@ -1576,7 +1607,8 @@ export function MarkNotes({
           text={n.text}
           good={n.good}
           i={k}
-          lift={lane * NOTE_TIER}
+          lift={spot.lane * NOTE_TIER}
+          shift={spot.shift}
           head={head}
         />
       ))}

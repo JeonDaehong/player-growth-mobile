@@ -3619,6 +3619,7 @@ export function BattleView({ top, corner }: Props = {}) {
                       who={`foe${f.id}`}
                       zone="foe"
                       x={foeForm.x[back] ?? 0}
+                      y={foeForm.lift[back] ?? 0}
                       /*
                         상자 꼭대기가 아니라 **그림 꼭대기** 위에 뜬다
                         (`headH`). 회복 숫자가 쓰는 것과 같은 값이다 —
