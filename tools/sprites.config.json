@@ -4575,6 +4575,19 @@
       ],
       "append": true,
       "size": 384
+    },
+    {
+      "file": "bg.jpg",
+      "name": "bg_hero",
+      "grid": [
+        1,
+        1
+      ],
+      "labels": [
+        "hall"
+      ],
+      "size": 512,
+      "allowFilled": true
     }
   ],
   "_srcDirs": []
