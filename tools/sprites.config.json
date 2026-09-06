@@ -4534,7 +4534,8 @@
       ],
       "labels": [
         "knightgirl"
-      ]
+      ],
+      "size": 384
     },
     {
       "file": "char-full-bunnyaxe.jpg",
@@ -4546,7 +4547,8 @@
       "labels": [
         "bunnyaxe"
       ],
-      "append": true
+      "append": true,
+      "size": 384
     },
     {
       "file": "char-full-elfarcher.jpg",
@@ -4558,7 +4560,8 @@
       "labels": [
         "elfarcher"
       ],
-      "append": true
+      "append": true,
+      "size": 384
     },
     {
       "file": "char-full-nun.jpg",
@@ -4570,7 +4573,8 @@
       "labels": [
         "nun"
       ],
-      "append": true
+      "append": true,
+      "size": 384
     }
   ],
   "_srcDirs": []

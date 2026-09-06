@@ -31,6 +31,9 @@
   minPart               가장 큰 덩어리의 이 비율보다 작은 **떨어진 조각**을 버린다.
                         글자는 물체와 붙어 있지 않으므로 0.05 정도면 대개 사라진다.
   killCorner            우하단 워터마크 제거
+  size                  출력 한 변 상한. 기본은 192 (`SIZE`). 화면에서 크게 뜨는
+                        세트만 올린다 — 원본 도트 격자보다 더 줄이면 체크무늬
+                        음영이 솎여서 깨진다 (`to_png` 머리말).
   auto                  true 면 마젠타 선에서 칸 경계를 자동으로 뽑는다 (불균등 칸 대응)
   allowFilled           꽉 찬 그림이 정상인 세트(카드·배경 등)에서 채움률 경고를 끈다.
   paper                 **흰 종이에 검은 선**으로 그려져 온 시트. invert 로는 못
@@ -359,13 +362,32 @@ def on_paper(mask, rgb):
     return mask & ~outside
 
 
-def to_png(mask):
-    """True=흰색, False=투명. RN 에서 어떤 배경 위에도 올릴 수 있게 알파를 쓴다."""
+def to_png(mask, size=None):
+    """True=흰색, False=투명. RN 에서 어떤 배경 위에도 올릴 수 있게 알파를 쓴다.
+
+    ## 상한을 세트마다 따로 줄 수 있다 (`size`)
+
+    기본은 192 다 (`SIZE`). 인물·몬스터·로고가 다 화면에서 그보다 작게 뜨므로
+    그 위는 버리는 픽셀이었다.
+
+    그런데 **줄이는 것이 공짜가 아니다.** 받아 오는 그림은 도트가 크게 찍혀
+    있고 (한 칸이 원본 두세 픽셀), 그 격자보다 더 줄이면 체크무늬 음영이
+    무작위로 솎여서 **무늬가 깨진다** — 밝은 데가 어두워지고 선이 끊긴다.
+    `NEAREST` 라 더 그렇다: 평균이 아니라 한 점을 집으므로, 어느 점을 집느냐가
+    곧 결과다.
+
+    영웅 관리의 전신이 그 벽에 부딪혔다. 원본 1024 높이에 도트 한 칸이 2.75px
+    이므로 실제 격자는 372 인데, 192 로 줄이면 격자의 절반을 버리는 셈이라
+    치마와 수도복이 지저분한 얼룩이 됐다. 384 면 격자와 거의 1:1 이다.
+
+    그래서 **화면에서 크게 뜨는 세트만** 여기서 올린다. 전부 올리면 앱 크기가
+    쓸데없이 커진다 — 파티 칸에 46px 로 박히는 흉상에는 192 도 넘친다.
+    """
     h, w = mask.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
     rgba[mask] = [255, 255, 255, 255]
     im = Image.fromarray(rgba, 'RGBA')
-    scale = min(SIZE / max(w, h), 1.0)
+    scale = min((SIZE if size is None else size) / max(w, h), 1.0)
     if scale < 1.0:
         im = im.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.NEAREST)
     return im
@@ -522,7 +544,7 @@ def run(only=None):
                         n -= 1
                         continue
                     r0, r1, c0, c1 = box
-                out = to_png(mask[r0:r1, c0:c1])
+                out = to_png(mask[r0:r1, c0:c1], s.get('size'))
                 if cell_folders:
                     idx = n - len([x for x in drop if x < n])
                     if idx > len(cell_folders):
