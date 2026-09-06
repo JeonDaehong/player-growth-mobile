@@ -15,7 +15,7 @@
 | 파일 이름 | `knightgirl.png` · `bunnyaxe.png` · `elfarcher.png` · `nun.png` |
 | 모델 | Gemini |
 | 요청 | **4번** (한 명당 한 번) |
-| 배경 | 여기 없습니다 — [HERO_BG_PROMPT.md](HERO_BG_PROMPT.md) |
+| 배경 | **없습니다** — 아래 "배경은 안 깝니다" |
 
 ---
 
@@ -76,11 +76,14 @@
 3. `python3 tools/slice.py` — `spriteAssets.ts` 가 다시 생성됩니다
 4. 화면에서 바로 바뀝니다. `fallbackSet` 이 밀려나는 것뿐입니다
 
-**슬라이서가 긴 변을 192px 로 줄입니다** (`SIZE`). 화면에서는 140px 높이로
-뜨므로 그 정도면 넉넉합니다. 그리고 **투명한 여백을 잘라냅니다** — 그래서
-그림 안에서 인물이 위아래로 어디에 있든 상관없고, 네 명의 키 차이도 여기서
-사라집니다. 살아남는 것은 **인물 안의 비율**뿐입니다. 등신 수가 그토록
-중요한 이유가 이것입니다.
+**슬라이서가 긴 변을 192px 로 줄입니다** (`SIZE`). 화면에서는 200px 높이로
+뜨므로 사실상 1:1 입니다 — 여기가 이 게임에서 캐릭터가 제일 크게 보이는
+자리이고, 그림에 남는 여유가 없다는 뜻이기도 합니다.
+
+그리고 **투명한 여백을 잘라냅니다** (`trim`). 그래서 그림 안에서 인물이
+위아래로 어디에 있든 상관없고, 네 명의 키 차이도 여기서 사라집니다.
+살아남는 것은 **인물 안의 비율**뿐입니다 — 등신 수가 그토록 중요한 이유가
+이것입니다.
 
 ---
 
@@ -96,15 +99,24 @@
 |---|---|---|
 | 카메라 | 살짝 내려다보는 측면 (바닥이 쿼터뷰라서) | **정면 눈높이**. 화면 밖의 나를 본다 |
 | 자세 | 스윙 한 번의 네 토막 | 서 있는 한 자세. 안 움직인다 |
-| 크기 | 54px 에서 읽혀야 함 | **140px 높이**. 손·얼굴·무기 장식이 살아난다 |
+| 크기 | 54px 에서 읽혀야 함 | **200px 높이**. 손·얼굴·무기 장식이 살아난다 |
 
 정면인 이유는 이 화면이 무대가 아니기 때문입니다. 무대에서는 인물이 오른쪽
 적을 보고 서지만, 여기서는 **나를 봅니다** — 고르는 자리라 눈이 마주쳐야
 합니다.
 
-**배경은 그리지 않습니다.** 검은 바닥에 오려낸 인물 하나입니다. 뒤에 깔릴
-그림은 화면이 따로 깝니다 ([HERO_BG_PROMPT.md](HERO_BG_PROMPT.md)) — 인물에
-배경이 붙어 오면 배경이 둘이 됩니다.
+### 배경은 안 깝니다
+
+**검은 바닥에 오려낸 인물 하나입니다.** 뒤에 그림이 붙어 오면 못 씁니다.
+
+한 번 뒤에 깔 배경을 따로 받으려고 했다가 물렸습니다. 배경을 깔려면 무대가
+화면 폭을 다 쓰는 **가로 상자**여야 하는데, 전신은 2:3 세로로 오는 그림이라
+가로 상자에 넣으면 그만큼 작아집니다 — 크게 보려고 만든 자리에서 인물이
+작아지는 셈입니다. 세로를 골랐고, 뒤는 그냥 어둡습니다.
+
+그래서 이 그림에서 **배경이 곧 여백**입니다. 인물 주위가 검게 비어 있어야
+슬라이서가 그 여백을 잘라내고 (`trim`), 잘라낸 만큼 인물이 상자를 꽉 채웁니다.
+배경이 붙어 오면 잘라낼 것이 없어서 인물이 작게 박힙니다.
 
 ---
 
@@ -181,7 +193,7 @@ STYLE (strict, non-negotiable):
 
 RESOLUTION — THIS IS BIGGER THAN THE BATTLE SPRITES.
 Her battle sprites are read at 54 pixels tall and are built from very few pixels.
-This one is read at about 140 pixels tall. Use the extra room:
+This one is read at about 200 pixels tall. Use the extra room:
 - Her face has actual features — eyes, brow, mouth — not two dots.
 - Her hands are drawn as hands on the pommel, with separated fingers where they wrap.
 - Armour edges, the fall of the split skirt, the cross guard and ring pommel all
@@ -269,7 +281,7 @@ STYLE (strict, non-negotiable):
 
 RESOLUTION — THIS IS BIGGER THAN THE BATTLE SPRITES.
 Her battle sprites are read at 54 pixels tall and are built from very few pixels.
-This one is read at about 140 pixels tall. Use the extra room:
+This one is read at about 200 pixels tall. Use the extra room:
 - Her face has actual features — eyes, brow, the small grin — not two dots.
 - Her hand is drawn as a hand on the haft, with separated fingers where they wrap.
 - The cord wrap on the grip, the spike on the back of the axe head, the torn left
@@ -354,7 +366,7 @@ STYLE (strict, non-negotiable):
 
 RESOLUTION — THIS IS BIGGER THAN THE BATTLE SPRITES.
 Her battle sprites are read at 54 pixels tall and are built from very few pixels.
-This one is read at about 140 pixels tall. Use the extra room:
+This one is read at about 200 pixels tall. Use the extra room:
 - Her face has actual features — eyes, brow, mouth — not two dots.
 - Her hand is drawn as a hand on the bow grip, with separated fingers.
 - The double curve of the bow, the binding on its grip, the fletching standing out
@@ -443,7 +455,7 @@ STYLE (strict, non-negotiable):
 
 RESOLUTION — THIS IS BIGGER THAN THE BATTLE SPRITES.
 Her battle sprites are read at 54 pixels tall and are built from very few pixels.
-This one is read at about 140 pixels tall. Use the extra room:
+This one is read at about 200 pixels tall. Use the extra room:
 - Her face has actual features — eyes, brow, mouth — not two dots.
 - Her hands are drawn as hands, with the chain wound visibly twice around the right one.
 - The pierced holes in the censer, the pin of the veil on her left side, the scorched
@@ -473,8 +485,9 @@ Do NOT upscale a small sprite. Draw it at this size.
 작게 그리라고 다시 시키세요.
 
 **배경을 깝니다.** "character-select portrait" 라는 말을 들으면 뒤에 방이나
-빛무리를 넣으려 합니다. 검은 바닥에 오려낸 것이어야 합니다 — 화면이 이미
-배경을 따로 깔아 두므로 (`bg_hero`), 그림에 배경이 있으면 둘이 겹칩니다.
+빛무리를 넣으려 합니다. 검은 바닥에 오려낸 것이어야 합니다 — 이 그림에서는
+배경이 곧 여백이고, 여백이 없으면 슬라이서가 잘라낼 것이 없어서 인물이 작게
+박힙니다.
 
 **아녜스를 종으로 만듭니다.** 치마를 넓게 퍼뜨려 놓으면 그 자체로 짜리몽땅
 해집니다. 좁고 긴 종이어야 합니다 — 밑단 폭이 머리 두 개 반을 넘으면 다시.
