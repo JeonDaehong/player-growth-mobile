@@ -187,34 +187,47 @@ export function HeroScreen() {
               ? `지금 ${stage}판은 바꾸기 전 편성 그대로 싸웁니다. 저장하면 ${stage}판을 처음부터 다시 시작합니다.`
               : '판이 도는 중에는 저절로 안 바뀝니다 — 판을 어떻게 짤까를 정하는 자리이지, 지금 뭘 누를까를 정하는 자리가 아닙니다.'}
           </T>
-          {waiting && (
-            <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
-              {/*
-                ── 저장 ── **누르면 그 자리에서 들어간다.**
+          {/*
+            ── 단추 둘은 **늘 서 있다** ──
 
-                예약은 판이 바뀔 때 저절로 들어가지만 (`commitPending`), 그때가
-                언제인지가 사람 쪽에서는 안 보인다 — 마지막 판을 도는 사람은
-                판 번호가 안 바뀌므로 한참을 기다려야 하고, 기다리는 동안
-                "안 눌린 건가" 를 알 방법이 없다.
+            짜 둔 것이 있을 때만 나타났다 (`waiting`). 그러면 이 자리가
+            **있다 없다 하는 자리**가 되어, 편성을 만진 사람이 "저장이 어디
+            있지" 를 화면에서 찾게 된다 — 처음 오는 사람은 그 단추가 있다는
+            것 자체를 모른다.
 
-                값은 **판을 다시 세우는 것**이다. 그래서 묻고 넣는다 —
-                한창 우두머리를 깎는 중에 눌러 놓고 나중에 알면 늦다.
-              */}
-              <Btn
-                label="저장"
-                size="sm"
-                fill
-                style={{ flex: 1 }}
-                onPress={() => { sfx('tap'); setAsking(true); }}
-              />
-              <Btn
-                label="짜 둔 편성 버리기"
-                size="sm"
-                style={{ flex: 1 }}
-                onPress={() => { sfx('tap'); clearPending(); }}
-              />
-            </Row>
-          )}
+            늘 두고 **누를 수 있고 없고**로 말한다. 짜 둔 것이 없으면 흐리게
+            멎어 있으므로, "지금은 저장할 것이 없다" 가 그대로 읽힌다. 칸의
+            높이도 안 흔들린다.
+          */}
+          <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
+            {/*
+              ── 저장 ── **누르면 그 자리에서 들어간다.**
+
+              예약은 판이 바뀔 때 저절로 들어가지만 (`commitPending`), 그때가
+              언제인지가 사람 쪽에서는 안 보인다 — 마지막 판을 도는 사람은
+              판 번호가 안 바뀌므로 한참을 기다려야 하고, 기다리는 동안
+              "안 눌린 건가" 를 알 방법이 없다.
+
+              값은 **판을 다시 세우는 것**이다. 그래서 묻고 넣는다 —
+              한창 우두머리를 깎는 중에 눌러 놓고 나중에 알면 늦다.
+            */}
+            <Btn
+              label="저장"
+              size="sm"
+              /* 짜 둔 것이 있을 때만 채운다 — 지금 눌러야 할 것이 그때뿐이다 */
+              fill={waiting}
+              disabled={!waiting}
+              style={{ flex: 1 }}
+              onPress={() => { sfx('tap'); setAsking(true); }}
+            />
+            <Btn
+              label="짜 둔 편성 버리기"
+              size="sm"
+              disabled={!waiting}
+              style={{ flex: 1 }}
+              onPress={() => { sfx('tap'); clearPending(); }}
+            />
+          </Row>
         </View>
 
         <T size={FS.title} bold style={{ marginTop: SP.md, marginBottom: SP.xs }}>
