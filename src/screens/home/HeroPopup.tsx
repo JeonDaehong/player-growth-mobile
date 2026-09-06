@@ -177,16 +177,26 @@ export function HeroScreen() {
             borderColor: LINE.hi,
           }}
         >
-          <T size={FS.body} bold={waiting}>
-            {waiting
-              ? '저장해야 들어갑니다'
-              : '편성을 바꾸면 저장을 눌러야 들어갑니다'}
-          </T>
-          <T size={FS.tiny} dim="dim" style={{ marginTop: 2 }}>
-            {waiting
-              ? `지금 ${stage}판은 바꾸기 전 편성 그대로 싸웁니다. 저장하면 ${stage}판을 처음부터 다시 시작합니다.`
-              : '판이 도는 중에는 저절로 안 바뀝니다 — 판을 어떻게 짤까를 정하는 자리이지, 지금 뭘 누를까를 정하는 자리가 아닙니다.'}
-          </T>
+          {/*
+            ── 바꾼 것이 있을 때만 말한다 ──
+
+            가만히 있을 때도 두 줄이 떠 있었다 (`편성을 바꾸면 저장을 눌러야
+            들어갑니다` · `판이 도는 중에는 저절로 안 바뀝니다 …`). 규칙을
+            미리 알려 주려던 것인데, **아직 아무것도 안 바꾼 사람에게 하는
+            말**이라 읽을 때는 쓸 데가 없고 정작 바꾸고 나면 다른 글로 갈린다.
+
+            아래 저장 단추가 흐리게 멎어 있는 것이 이미 같은 말을 한다 —
+            누를 것이 없다는 뜻이다.
+          */}
+          {waiting && (
+            <>
+              <T size={FS.body} bold>저장해야 들어갑니다</T>
+              <T size={FS.tiny} dim="dim" style={{ marginTop: 2 }}>
+                {`지금 ${stage}판은 바꾸기 전 편성 그대로 싸웁니다. `
+                  + `저장하면 ${stage}판을 처음부터 다시 시작합니다.`}
+              </T>
+            </>
+          )}
           {/*
             ── 단추 둘은 **늘 서 있다** ──
 
@@ -221,7 +231,7 @@ export function HeroScreen() {
               onPress={() => { sfx('tap'); setAsking(true); }}
             />
             <Btn
-              label="짜 둔 편성 버리기"
+              label="변경사항 되돌리기"
               size="sm"
               disabled={!waiting}
               style={{ flex: 1 }}
@@ -231,16 +241,18 @@ export function HeroScreen() {
         </View>
 
         <T size={FS.title} bold style={{ marginTop: SP.md, marginBottom: SP.xs }}>
-          누가 서나
+          영웅 출전
         </T>
         <Row gap={SP.xs} style={{ alignItems: 'stretch' }}>
           {Array.from({ length: PARTY_SIZE }, (_v, i) => (
             <Slot key={i} id={party[i] ?? null} n={i + 1} onPress={() => setSlot(i)} />
           ))}
         </Row>
-        <T size={FS.tiny} dim="dim" style={{ marginTop: SP.xs }}>
-          칸을 누르면 세울 사람을 고르고, 그 사람을 키울 수도 있습니다.
-        </T>
+        {/*
+          여기 `칸을 누르면 세울 사람을 고르고, 그 사람을 키울 수도 있습니다`
+          가 있었다. 빈 칸에 `+` 가 그려져 있고 (`Slot`) 찬 칸은 누르면
+          열리므로, 눌러 보면 아는 것을 미리 적어 둔 셈이었다.
+        */}
 
         <View style={{ height: 1, backgroundColor: LINE.low, marginVertical: SP.md }} />
 

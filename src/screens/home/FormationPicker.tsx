@@ -245,10 +245,11 @@ export function FormationPicker() {
           </Pressable>
         </Row>
         {/*
-          지금 고른 대형이 실제로 무엇을 뜻하는지 한 줄. 이름(`2-2`)은 모양을
-          말하지 확률을 말하지 않는다 (`FormationDef.text`).
+          여기 `앞 하나 40% · 뒤 셋 20% 씩` 이 있었다 (`FormationDef.text`).
+          고른 대형 것만 한 줄 뜨는데, 저건 **셋을 나란히 놓아야 견줄 수 있는
+          값**이라 하나씩 보여 주면 세 번 눌러 가며 외워야 했다. 물음표 안에
+          셋을 같이 적으면서 여기서는 걷었다 (`FormationHelp`).
         */}
-        <T size={FS.tiny} dim="sub">{FORMATIONS[form].text}</T>
       </Row>
 
       <Row gap={SP.xs}>
