@@ -42,6 +42,7 @@ import {
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { BLACK, BORDER, O, SP, WHITE } from '@/ui/theme';
+import { SkillDemo } from './SkillDemo';
 
 /**
  * 이 기술이 **빨라야 몇 초마다** 나가나.
@@ -273,6 +274,18 @@ export function SkillPanel({
             />
             {on && (
               <View style={[BORDER, { padding: SP.sm, marginBottom: SP.xs }]}>
+                {/*
+                  ── 무엇처럼 생겼나가 **제일 위** ──
+
+                  아래 열 줄은 전부 숫자다. 숫자는 견주는 데 쓰고, 그림은
+                  "이걸 찍을까" 를 정하는 데 쓴다 — 스킬 트리에서 갈래를
+                  고르는 사람이 먼저 알고 싶은 쪽이 뒤엣것이라 위에 둔다.
+
+                  **잠긴 기술도 보여 준다.** 아직 못 쓰는 것이 무엇처럼
+                  생겼는지가 곧 성을 올릴 이유다 (목록에서 안 지우는 것과
+                  같은 까닭). 흐리게 깔린 채로 그대로 돈다.
+                */}
+                <SkillDemo c={c} sk={sk} hit={sk.heal > 0 ? 0 : hit} />
                 <KV
                   k="스킬 코스트"
                   v={`${sk.cost} (평타 한 번에 1 씩 찹니다)`}
@@ -332,9 +345,17 @@ export function SkillPanel({
                     <KV k="한 대" v={`${hit}`} />
                     {sk.hits > 1 && <KV k="발수" v={`${sk.hits}발`} />}
                     {sk.targets > 0 && <KV k="최대 대상" v={`${sk.targets}`} />}
-                    {st.crit > 0 && (
-                      <KV k="치명타" v={`${Math.round(st.crit * 100)}% · ${Math.round(st.critDmg * 100)}%`} />
-                    )}
+                    {/*
+                      **늘 적는다.** 넷 다 기본 확률이 0 이라 (`core/chars`)
+                      `crit > 0` 조건을 달아 두면 이 줄이 아무 기술에도 안
+                      뜬다 — 치명타가 스킬에도 걸린다는 것 (`rollCrit`) 이
+                      화면 어디에도 안 남는다.
+                    */}
+                    <KV
+                      k="치명타"
+                      v={`${Math.round(st.crit * 100)}%`}
+                      tail={`(터지면 ${Math.round(st.critDmg * 100)}% 로 들어간다)`}
+                    />
                     {/*
                       별표를 쓰면 안 된다 — 여기는 마크다운이 아니라 화면이라
                       `**...**` 가 글자 그대로 뜬다. 강조는 문장 순서로 낸다.

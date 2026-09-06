@@ -685,8 +685,8 @@ export function BattleView({ top, corner }: Props = {}) {
     같은 글을 띄우는데, 그게 맞다: **누구에게 걸렸나가 이 줄이 하는 말의
     절반**이다.
 
-    겹침은 높이로 푼다 (`noteLiftOf`). 문구를 짧게 유지하는 것도 같은
-    이유다 (`core/status` 의 `STATUS_WHAT` — 두세 낱말).
+    겹침은 높이로 푼다 (`screens/home/noteLane`). 문구를 짧게 유지하는 것도
+    같은 이유다 (`core/status` 의 `STATUS_WHAT` — 두세 낱말).
 
     ## 한동안 **한 사람만** 말하게 했다 — 물렀다
 
@@ -697,7 +697,7 @@ export function BattleView({ top, corner }: Props = {}) {
     들었다.
 
     걸린 사람을 숨겨서 겹침을 푸는 것은 너무 비싸다. 겹침은 **높이로**
-    푼다 (`noteLiftOf` — 가로 순서대로 세 줄을 돌려 쓴다).
+    푼다 (`noteLane` — 뜨는 순간에 옆을 보고 비어 있는 층을 받는다).
 
     적 쪽은 여전히 한 마리만 말한다 (`foeNoteOf`). 거긴 사정이 다르다 —
     도발은 **판 전체에 하나** 걸리는 것이라 여섯 마리가 같은 말을 해도
@@ -816,6 +816,37 @@ export function BattleView({ top, corner }: Props = {}) {
        * 이 연출의 전부다. 하나로 합치면 그냥 "이번엔 좀 더 아팠다" 가 된다.
        */
       fey: number;
+      /**
+       * ── 치명타로 터진 한 대인가 ── (`core/autoBattle` 의 `Landed.crit`)
+       *
+       * 여태 화면이 이걸 알 방법이 아예 없었다. 치명타는 계산 안에서 굴려
+       * 계산 안에서 쓰고 끝났고 (`rollCrit`), 화면은 띄울 숫자를 제 손으로
+       * 따로 셌기 때문에 **터지든 안 터지든 같은 숫자가 떴다.**
+       *
+       * 이제 계산이 넣은 값을 그대로 받는다. 켜져 있으면 숫자가 크고
+       * 두껍게, 갈라진 자국을 지고 뜬다 (`HitFx` 의 `DamageNumber`).
+       */
+      crit: boolean;
+      /**
+       * ── 아직 **안 맞은** 자국인가 ──
+       *
+       * 켜져 있으면 하늘에서 내려오는 것만 그리고 (`sword`) 타격 불꽃도
+       * 숫자도 안 그린다. 실제로 맞는 자국은 검이 박히는 순간에 **두 번째
+       * 자국**으로 따로 들어온다.
+       *
+       * ## 왜 나눴나
+       *
+       * 성검은 부르고 나서 하늘에서 내려온다 — 그 사이가 270ms 다
+       * (`SkillFx` 의 `SWORD_MS` × `SWORD_HIT`). 그런데 불꽃과 피해 숫자는
+       * 기술이 나가는 프레임에 떴다. 검이 아직 하늘에 있는데 적은 이미
+       * 맞아 있었고, 정작 검이 꽂히는 순간에는 숫자가 다 스러진 뒤였다 —
+       * "성검발현 데미지 왜 들어가는 거 같지" 가 이 어긋남이다.
+       *
+       * **미루는 것은 그림뿐이다.** 피해는 이미 들어갔다 (`skillFoe`) —
+       * 계산을 미루면 그 사이에 죽은 놈에게 검이 꽂히거나 판이 넘어간
+       * 뒤에 숫자가 뜬다 (화살비에서 이미 정해 둔 규칙이다).
+       */
+      mute: boolean;
       /**
        * 이 자리에서 **아래에서 위로 솟는** 것이 있나 (비앙카의 화산).
        *
@@ -1737,7 +1768,17 @@ export function BattleView({ top, corner }: Props = {}) {
       **요정의 화살이 터진 만큼을 돌려받는다** (`TickEvent.fey`). 계산만
       아는 값이라 (40% 를 거기서 굴린다) 화면이 따로 물을 방법이 없다.
     */
-    const fey = strikeFoe(sw.id, at, sw.mul, ally) || 0;
+    /*
+      ── 이 한 대가 **실제로** 무엇을 했나 ──
+
+      여태 `sw.dmg` 를 그대로 띄웠다. 저건 `Fighter` 가 읽은 **맨 공격력**
+      이라 (`atkRef`), 맞는 놈의 방어력도 파티 배수도 치명타도 안 들어
+      있었다 — 화면에 뜬 숫자와 체력 막대가 줄어드는 양이 늘 달랐다.
+
+      이제 계산이 넣은 값을 그대로 돌려준다 (`TickEvent.landed`).
+    */
+    const land = strikeFoe(sw.id, at, sw.mul, ally);
+    const fey = land?.fey ?? 0;
 
     /*
       ── 아군을 친 대는 **적 쪽에 아무것도 안 그린다** ──
@@ -1758,6 +1799,10 @@ export function BattleView({ top, corner }: Props = {}) {
       return [...live, {
         /* 과열의 둘째 대는 크게 터진다 — 같은 그림이면 넷 중 어느 것이 150% 인지 모른다 */
         ...sw, key, ...spot, blast: !!sw.blast, arrow: '', erupt: false, sword: false,
+        mute: false,
+        /* 계산이 넣은 값이 이긴다 — 못 받았을 때만 `Fighter` 가 잰 값으로 떨어진다 */
+        dmg: land?.dmg ?? sw.dmg,
+        crit: !!land?.crit,
         ping: shielded, fey,
         row: rowFor(live, spot.x), born: Date.now(),
         dx: -14 + Math.random() * 24, dy: -6 + Math.random() * 20,
@@ -1948,20 +1993,59 @@ export function BattleView({ top, corner }: Props = {}) {
       );
     }
 
-    skillFoe(id, idx, slot);
+    /*
+      ── 여기서 때리고, **때린 결과를 받아서** 띄운다 ──
+
+      위의 `dmg` 는 창에 미리 적는 값이다 (`skillDamage` — 맨몸 기준,
+      치명타 없음). 여태 그걸 그대로 머리 위에 띄웠고, 그래서 성검 발현이
+      두 배로 터진 판과 안 터진 판이 화면에서 같은 숫자였다.
+
+      `at` 으로 넘긴 차례와 같은 차례로 돌아온다 (`TickEvent.landed`) —
+      `spots` 도 같은 차례라 나란히 짚으면 된다.
+    */
+    const land = skillFoe(id, idx, slot);
     shake.fire(sk.pick === 'all' || sk.leaps ? 1.2 : 1);
 
     /*
-      하늘에서 내려오는 것은 **닿을 때** 한 번 더 (위 `swordT`). 나갈 때의
-      흔들림보다 세다 — 저건 사람이 팔을 휘두른 것이고 이건 검이 땅에
-      박힌 것이다.
+      ── 하늘에서 내려오는 것은 **꽂히는 순간**이 따로 있다 ──
+
+      검을 부르고 나서 땅에 박히기까지가 270ms 다 (`SWORD_MS` × `SWORD_HIT`).
+      그 순간에 세 가지가 같이 일어나야 한다 — 크게 흔들리고, 불꽃이 튀고,
+      숫자가 뜨고, 적이 움찔한다. 여태 흔들림 하나만 여기 맞춰져 있었고
+      나머지 셋은 **검이 아직 하늘에 있는 동안** 이미 일어나 있었다.
     */
-    if (sk.drop === 'sword') {
+    const swordDrop = sk.drop === 'sword';
+    const swordAt = Math.round(SWORD_MS * SWORD_HIT);
+    if (swordDrop) {
       if (swordT.current) clearTimeout(swordT.current);
-      swordT.current = setTimeout(
-        () => shake.fire(1.9),
-        Math.round(SWORD_MS * SWORD_HIT),
-      );
+      swordT.current = setTimeout(() => shake.fire(1.9), swordAt);
+      rainT.current.push(setTimeout(() => {
+        /* 몸이 화면에서 빠졌으면 아무 데도 안 꽂는다 */
+        if (!aliveRef.current) return;
+        setHits((old) => {
+          const live = old.slice(-6);
+          const add = spots.map((spot, n) => ({
+            erupt: false,
+            /* 검은 위에서 이미 그리고 있다 — 여기는 **꽂힌 자국**만이다 */
+            sword: false,
+            mute: false,
+            id, fx: sk.fx ?? CHARS[me.id].fx,
+            dmg: land[n]?.dmg ?? dmg,
+            crit: !!land[n]?.crit,
+            key: hitSeq.current++, ...spot,
+            blast: false,
+            fey: 0,
+            arrow: '',
+            row: rowFor(live, spot.x), born: Date.now(),
+            ping: (now.current.battle.foes[idx[n]]?.gim?.shield ?? 0) > 0,
+            dx: -10 + Math.random() * 20, dy: -6 + Math.random() * 20,
+          }));
+          return [...live, ...add];
+        });
+        setFlinch(idx.map(posAt));
+        if (flinchT.current) clearTimeout(flinchT.current);
+        flinchT.current = setTimeout(() => setFlinch([]), 180);
+      }, swordAt));
     }
 
     setHits((old) => {
@@ -1979,15 +2063,20 @@ export function BattleView({ top, corner }: Props = {}) {
         const f = at >= 0 ? now.current.battle.foes[idx[at]] : undefined;
         return (f?.gim?.shield ?? 0) > 0;
       };
-      const put = (spot: typeof spots[number], amount: number, big: boolean) => {
+      const put = (
+        spot: typeof spots[number], amount: number, big: boolean, crit = false,
+        mute = false,
+      ) => {
         add.push({
           /* 발밑에서 솟는 기술인가 — 지금은 화산 하나다 */
           erupt: sk.cast === 'erupt' && !big,
           /* 머리 위에서 내려오는 기술인가 — 지금은 성검 하나다 */
           sword: sk.drop === 'sword' && !big,
+          /* 하늘에서 내려오는 것은 **꽂힐 때** 따로 한 번 더 들어온다 */
+          mute,
           /* 기술이 제 그림을 가지고 있으면 그걸 쓴다 — 없으면 평타 것 */
           id, fx: sk.fx ?? CHARS[me.id].fx,
-          dmg: amount, key: hitSeq.current++, ...spot,
+          dmg: amount, crit, key: hitSeq.current++, ...spot,
           blast: big,
           /* 기술에는 안 붙인다 — 요정의 화살은 평타에서만 그린다 */
           fey: 0,
@@ -2036,7 +2125,13 @@ export function BattleView({ top, corner }: Props = {}) {
       const drip = sk.pick === 'random' && spots.length > 1;
       spots.forEach((spot, n) => {
         if (drip && n > 0) return;
-        put(spot, dmg, false);
+        /*
+          하늘에서 내려오는 것은 지금은 **검만** 띄운다 (`mute`). 불꽃과
+          숫자는 아래에서 꽂히는 시각에 맞춰 따로 들어온다.
+        */
+        if (swordDrop) { put(spot, 0, false, false, true); return; }
+        /* 계산이 넣은 값이 이긴다 — 못 받았을 때만 미리 잰 값으로 떨어진다 */
+        put(spot, land[n]?.dmg ?? dmg, false, !!land[n]?.crit);
       });
       return [...live, ...add];
     });
@@ -2052,8 +2147,11 @@ export function BattleView({ top, corner }: Props = {}) {
             return [...live, {
               erupt: sk.cast === 'erupt',
               sword: sk.drop === 'sword',
+              mute: false,
               id, fx: sk.fx ?? CHARS[me.id].fx,
-              dmg, key: hitSeq.current++, ...spot,
+              dmg: land[n + 1]?.dmg ?? dmg,
+              crit: !!land[n + 1]?.crit,
+              key: hitSeq.current++, ...spot,
               blast: false,
               fey: 0,
               arrow: CHARS[me.id].range === 'ranged' && !sk.flies ? projSet(me.id) : '',
@@ -2065,9 +2163,12 @@ export function BattleView({ top, corner }: Props = {}) {
         }, RAIN_GAP * (n + 1)));
       });
     }
-    setFlinch(idx.map(posAt));
-    if (flinchT.current) clearTimeout(flinchT.current);
-    flinchT.current = setTimeout(() => setFlinch([]), 180);
+    /* 하늘에서 내려오는 것은 검이 꽂힐 때 움찔한다 (위에서 미뤄 두었다) */
+    if (!swordDrop) {
+      setFlinch(idx.map(posAt));
+      if (flinchT.current) clearTimeout(flinchT.current);
+      flinchT.current = setTimeout(() => setFlinch([]), 180);
+    }
   }, [skillFoe, shake, spotOf]);
 
   /*
@@ -2628,52 +2729,20 @@ export function BattleView({ top, corner }: Props = {}) {
       allyXOf(oi) < allyXOf(me) && hpOf(o2.c, battle.hp) > 0
     ));
   };
-  /**
-   * 그 자리 사람의 머리 위 한 줄을 **몇 번째 줄에 놓을까** (px).
-   *
-   * 파티 전체에 걸리는 버프는 넷에게 같은 글이 동시에 뜬다. 한글은 전각이라
-   * 여덟 자면 인물 두 배 폭이므로, 넷이 같은 높이에 서면 옆 사람 글과 맞붙어
-   * 읽을 수 없는 덩어리가 된다 (`screens/home/HitFx` 의 `StatusNote`).
-   *
-   * **가로로 왼쪽부터 센 순서**로 두 층을 번갈아 쓴다. 자리 번호로 세면 안
-   * 된다 — 대형은 앞뒤로도 서므로 (`formLayout`) 0번과 2번이 가로로는 겨우
-   * 43px 떨어져 있고, 그 둘의 홀짝이 같으면 그대로 맞붙는다.
-   *
-   * ## 층 간격이 **한 사람 몫보다 커야** 한다
-   *
-   * 여기가 여태 두 번 틀린 자리다. 26 이었다가 15 였는데, 둘 다 **한 사람이
-   * 쓰는 높이보다 작았다.** 한 사람에게 세 가지가 한꺼번에 걸리면 석 줄이
-   * 쌓이고 (`StatusNote` 의 `i * 12`) 그 덩어리가 36px 인데, 층을 15px 만
-   * 어긋내면 옆 사람 석 줄과 사이사이에 끼어 여섯 줄이 한 덩어리가 된다 —
-   * 실제로 판이 열릴 때 그렇게 보였다.
-   *
-   * 46 이었다. 석 줄(36px)보다 커야 했으므로 그 아래로는 못 내려갔는데,
-   * 그러면 **둘째 층 사람의 제일 윗줄이 머리 위 86px** 이다 (16 + 24 + 46).
-   * 인물이 76px 이니 제 키만큼 위다 — "너무 머리에서부터 위에서 뜨는거
-   * 같아" 가 정확히 이 줄이다.
-   *
-   * 층 간격을 내리려면 **한 사람이 쓰는 높이**부터 줄여야 한다. 한꺼번에
-   * 뜨는 줄을 셋에서 둘로 줄였으므로 (`HitFx` 의 `MarkNotes`) 한 덩어리가
-   * 23px 이고, 28 이면 그보다 크다.
-   *
-   * 제일 높은 줄이 머리 위 51px 이다 (16 + 12 + 28에서 윗줄 기준 40 + 글
-   * 높이). 86 에서 절반쯤 내려왔다.
-   *
-   * ## 한동안은 아예 **한 사람만 말하게** 해서 피했다
-   *
-   * 그런데 그러면 넷에게 걸린 버프가 화면에서는 한 사람 것으로 보인다 —
-   * 실제로 "왜 한 명한테만 뜨냐" 는 말을 들었다. 겹치는 것을 푸는 값으로
-   * 걸린 사람을 숨기는 것은 너무 비쌌다.
-   */
-  const noteLiftOf = React.useMemo(() => {
-    const order = spots.map((_sp, i) => i)
-      .sort((a, b) => (form1.x[a] ?? 0) - (form1.x[b] ?? 0));
-    const row: number[] = [];
-    order.forEach((seat, rank) => { row[seat] = (rank % 2) * 28; });
-    return row;
-    /* `form1` 은 렌더마다 새로 만들어지므로 자리 배열 자체를 열쇠로 쓴다 */
-  }, [spots, form1.x]);
+  /*
+    ── 여기 있던 `noteLiftOf` 를 걷어 냈다 ──
 
+    자리마다 머리 위 글의 층을 **미리** 정해 주던 값이다 (가로로 센 순서의
+    홀짝 × 28px). 파티 전체에 걸리는 버프가 넷에게 동시에 떠서 옆 사람 글과
+    맞붙는 것을 푸는 값이었는데, 대가로 **둘째 층에 걸린 사람은 언제나** 그
+    28px 만큼 올라가 있었다 — 혼자 디버프 하나 걸렸을 때도, 옆 사람 머리
+    위가 텅 비어 있을 때도.
+
+    이제 글이 **뜨는 그 순간에** 층을 받는다 (`screens/home/noteLane`).
+    지금 실제로 옆에 글이 떠 있을 때만 비켜서고, 아니면 머리 바로 위다.
+    자리 번호가 아니라 그때그때의 화면을 보고 정하는 값이라, 미리 계산해
+    둘 수 있는 종류가 아니다.
+  */
   const allySizeOf = (i: number) => Math.round(partyW * depthAt(depthOf(i)).scale);
   /**
    * 그 사람이 적 쪽으로 나와 있는 거리 (px).
@@ -3053,8 +3122,6 @@ export function BattleView({ top, corner }: Props = {}) {
                     ch={c}
                     back={depthOf(i)}
                     x={allyXOf(i)}
-                    /* 나란히 선 사람끼리 머리 위 한 줄이 안 겹치게 */
-                    noteLift={noteLiftOf[i] ?? 0}
                     /* 무대가 좁으면 사람도 같이 줄어든다 */
                     width={partyW}
                     down={down}
@@ -3539,6 +3606,20 @@ export function BattleView({ top, corner }: Props = {}) {
                       markKey={foeNoteOf[f.id]?.key ?? ''}
                       live={!held && !down}
                       /*
+                        ── 층은 뜨는 순간에 받는다 ── (`noteLane`)
+
+                        적끼리만 견준다 (`zone`). 아군 쪽 `x` 는 아군 구역
+                        왼쪽 끝에서 잰 값이라 여기 격자 좌표와 자가 다른데,
+                        섞어 재면 무대 양 끝에 선 둘이 "가까이 있다" 로
+                        잡힌다.
+
+                        지금은 말하는 놈이 한 마리뿐이라 (`foeNoteOf`) 늘
+                        0층이지만, 여럿이 말하게 되는 날 저절로 비켜 선다.
+                      */
+                      who={`foe${f.id}`}
+                      zone="foe"
+                      x={foeForm.x[back] ?? 0}
+                      /*
                         상자 꼭대기가 아니라 **그림 꼭대기** 위에 뜬다
                         (`headH`). 회복 숫자가 쓰는 것과 같은 값이다 —
                         납작한 놈은 상자 위쪽 30~40px 이 통째로 비어서,
@@ -3834,6 +3915,14 @@ export function BattleView({ top, corner }: Props = {}) {
                 <SkillFx kind="erupt" nonce={h.key} size={h.size} />
               </View>
             )}
+            {/*
+              **아직 안 맞은 자국에는 불꽃을 안 그린다** (`mute`).
+
+              성검은 부르는 순간에 자국이 하나 들어오고 (검을 그리려고),
+              꽂히는 순간에 하나가 더 들어온다. 앞엣것에까지 불꽃을 그리면
+              검이 하늘에 있는 동안 적이 이미 맞아 있다.
+            */}
+            {!h.mute && (
             <View
               pointerEvents="none"
               style={{
@@ -3855,6 +3944,7 @@ export function BattleView({ top, corner }: Props = {}) {
                 ? <Ping size={h.size} />
                 : <HitBurst kind={h.fx} size={h.size * (h.blast ? 1.4 : 0.75)} nonce={1} />}
             </View>
+            )}
             {/*
               떨어지는 화살은 **흩지 않는다.**
 
@@ -3939,6 +4029,8 @@ export function BattleView({ top, corner }: Props = {}) {
                   dx={0}
                   dy={0}
                   big={cur.boss}
+                  /* 터진 한 대는 크고 두껍게, 한 겹 번지며 튕긴다 (`HitFx`) */
+                  crit={h.crit}
                   onDone={NOOP}
                 />
               </View>

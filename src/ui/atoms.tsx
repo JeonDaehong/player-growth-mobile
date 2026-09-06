@@ -4,7 +4,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  AWAKE_C, BORDER, BORDER_HI, C, FS, LINE, O, PILL, R, SP, SURF, WHITE, font,
+  AWAKE_C, BAD_C, BORDER, BORDER_HI, C, FS, GOOD_C, LINE, O, PILL, R, SP, SURF,
+  WHITE, font,
 } from './theme';
 import { Sprite } from './Sprite';
 import { STARS } from './sprites';
@@ -205,12 +206,47 @@ export function Bar({ value, max = 100, blocks = 20, height = 8 }: { value: numb
   );
 }
 
-/** 라벨 + 값 한 줄 */
-export function KV({ k, v, dim, warn }: { k: string; v: string; dim?: boolean; warn?: boolean }) {
+/**
+ * 라벨 + 값 한 줄.
+ *
+ * ## 값 뒤에 두 조각이 더 붙는다
+ *
+ * `25 (+2) (물리)` 처럼 세 덩어리로 읽히는 줄이 많다. 여태 셋을 한 문자열로
+ * 이어 붙였는데, 그러면 가운데 것만 색을 줄 수가 없다 — 문자열 하나에는
+ * 색도 하나다.
+ *
+ *   `delta` 지금 걸려 있는 만큼 (`core/passives` 의 `deltaText`).
+ *          **부호가 곧 색이다** — 오른 것은 초록, 깎인 것은 붉은색
+ *          (`ui/theme` 의 `GOOD_C`·`BAD_C`). 흑백 화면에서 색이 말하는 것은
+ *          한 가지뿐이고 (그 머리말 참고) 그 규칙을 여기서도 그대로 쓴다
+ *   `tail` 단위나 종류 — 늘 옅게. 숫자가 아니므로 눈이 먼저 갈 자리가 아니다
+ *
+ * 안 주면 안 그린다. `(+0)` 이 여섯 줄에 붙어 있으면 정작 달라진 줄이
+ * 안 보인다 (`deltaText` 가 그래서 빈 문자열을 돌려준다).
+ */
+export function KV({ k, v, dim, warn, delta, tail }: {
+  k: string;
+  v: string;
+  dim?: boolean;
+  warn?: boolean;
+  /** 값 옆에 붙는 차이 — `+` 로 시작하면 초록, 아니면 붉은색 */
+  delta?: string;
+  /** 그 뒤에 옅게 붙는 한 마디 */
+  tail?: string;
+}) {
   return (
     <Row between style={{ paddingVertical: 3 }}>
       <T size={12} dim="sub">{k}</T>
-      <T size={12} bold={!dim} dim={warn ? 'full' : dim ? 'sub' : 'full'}>{v}</T>
+      {/* `baseline` 이라야 크기가 다른 세 조각의 밑줄이 맞는다 */}
+      <Row gap={3} style={{ alignItems: 'baseline', flexShrink: 1 }}>
+        <T size={12} bold={!dim} dim={warn ? 'full' : dim ? 'sub' : 'full'}>{v}</T>
+        {!!delta && (
+          <T size={12} bold style={{ color: delta.includes('+') ? GOOD_C : BAD_C }}>
+            {delta}
+          </T>
+        )}
+        {!!tail && <T size={11} dim="dim" numberOfLines={1}>{tail}</T>}
+      </Row>
     </Row>
   );
 }

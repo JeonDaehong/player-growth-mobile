@@ -17,7 +17,8 @@ import { allOwned, drawChar, poolOf, recruitCost } from '@/core/recruit';
 import { whyLocked } from '@/core/skillTree';
 import { optKey } from '@/core/skillOpt';
 import {
-  BattleState, applyHit, applySkill, battleTick, callBoss, fightHeld, forceRage,
+  BattleState, Landed, NO_LAND, applyHit, applySkill, battleTick, callBoss,
+  fightHeld, forceRage,
   restartFor,
   leaveFor, TICK_MS,
 } from '@/core/autoBattle';
@@ -89,12 +90,20 @@ export interface RosterActions {
   /** @param aim 화면이 이미 고른 자리. 없으면 확률대로 여기서 고른다 */
   /** @param mul 이 한 대의 배수 — 비앙카의 과열이 둘째 대에 1.5 를 준다 */
   /**
-   * 한 대 친다. **요정의 화살이 터진 만큼**을 돌려준다 (`TickEvent.fey`).
+   * 한 대 친다. **그 한 대가 실제로 무엇을 했는지**를 돌려준다.
    *
-   * 돌려주는 이유는 화면이 그릴 것이 있어서다 — 그 한 대만 작은 화살로
-   * 따로 그린다 (`BattleView` 의 `FeyDart`). 안 터졌으면 0.
+   *   `dmg`  적 체력에서 실제로 깎인 양 (방어·치명타·무리 배수까지 얹은 값)
+   *   `crit` 치명타였나 — 화면이 숫자를 다르게 그린다 (`HitFx` 의 `DamageNumber`)
+   *   `fey`  요정의 화살이 터진 만큼 (`TickEvent.fey`). 안 터졌으면 0
+   *
+   * 여태 `fey` 하나만 돌려줬고, 화면은 띄울 숫자를 **제 손으로 다시 셌다**
+   * (`Fighter` 의 `atkRef` — 맨 공격력 그대로). 그래서 뜨는 숫자와 닳는
+   * 체력이 갈렸고, 치명타는 화면에 아예 안 나왔다.
+   *
+   * 아무 일도 안 일어났으면 (연출 중 · 쓰러짐 · 혼란으로 아군을 침) `null`.
    */
-  strikeFoe: (who: string, aim?: number, mul?: number, ally?: string | null) => number;
+  strikeFoe: (who: string, aim?: number, mul?: number, ally?: string | null)
+    => { dmg: number; crit: boolean; fey: number } | null;
   /**
    * 스킬 — 횡으로 베며 검기를 날린다. 앞의 세 마리를 1.5배로 친다.
    *
@@ -102,13 +111,17 @@ export interface RosterActions {
    * 경험치가 같이 들어간다.
    */
   /**
-   * 기술을 쓴다.
+   * 기술을 쓴다. **맞은 놈마다 실제로 들어간 대**를 돌려준다
+   * (`core/autoBattle` 의 `TickEvent.landed`).
+   *
+   * `at` 으로 넘긴 차례와 같은 차례다 — 화면이 그 차례로 자리를 잡아 두므로
+   * 나란히 짚으면 된다. 적을 안 때리는 기술(기도·도발·정화)은 빈 배열이다.
    *
    * @param at   맞는 자리들. 화면이 골라서 넘긴다
    * @param slot 기술이 여럿이면 몇 번째 것인가 (`core/chars` 의 `skillsOf`
-   *             순서). 안 주면 첫 번째 — 지금은 다들 하나씩이라 늘 0 이다
+   *             순서). 안 주면 첫 번째
    */
-  skillFoe: (who: string, at?: readonly number[], slot?: number) => void;
+  skillFoe: (who: string, at?: readonly number[], slot?: number) => readonly Landed[];
   /**
    * 골드로 한 명 모집한다.
    *
@@ -425,7 +438,7 @@ export const createRosterSlice = (
   strikeFoe: (who, aim, mul, ally) => {
     const st = get();
     /* 판 연출 중에는 안 때린다 — 막 뒤에서 적이 녹아 있으면 안 된다 */
-    if (fightHeld(st.battle)) return 0;
+    if (fightHeld(st.battle)) return null;
     const { battle, ev } = applyHit(
       st.battle, who, st.party, seated(st), Math.random, aim, mul, ally,
     );
@@ -443,13 +456,28 @@ export const createRosterSlice = (
     if (ev.taken > 0 && ev.hurt) {
       useBattleUi.getState().hitByAlly(who, ev.hurt);
       set({ battle });
-      return 0;
+      return null;
     }
-    if (ev.hit <= 0) return 0;
+    if (ev.hit <= 0) return null;
+
+    /*
+      ── 한 대의 결과를 그대로 넘긴다 ──
+
+      `ev.landed` 는 맞은 놈마다 하나씩인데 평타는 늘 한 놈이라 첫 칸이
+      곧 그 한 대다. 없으면 (있을 수 없지만) 화면이 아무것도 못 그리는
+      것보다 `hit` 이라도 띄우는 편이 낫다.
+    */
+    const one = ev.landed[0];
+    const out = {
+      dmg: one ? one.dmg : ev.hit,
+      crit: one ? one.crit : false,
+      /* 요정의 화살이 터진 만큼 — 화면이 그 한 대만 따로 그린다 */
+      fey: ev.fey,
+    };
 
     if (!ev.killed) {
       set({ battle });
-      return ev.fey;
+      return out;
     }
 
     /*
@@ -467,13 +495,12 @@ export const createRosterSlice = (
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
     set({ battle, money: st.money + ev.gold, elixir: st.elixir + ev.elixir });
-    /* 요정의 화살이 터진 만큼 — 화면이 그 한 대만 따로 그린다 (`ev.fey`) */
-    return ev.fey;
+    return out;
   },
 
   skillFoe: (who, at, slot) => {
     const st = get();
-    if (fightHeld(st.battle)) return;
+    if (fightHeld(st.battle)) return NO_LAND;
     const { battle, ev } = applySkill(
       st.battle, who, st.party, seated(st), Math.random, at, slot ?? 0, st.skillOpts,
     );
@@ -487,8 +514,8 @@ export const createRosterSlice = (
       이제 **엔진이 "바뀌었다" 를 말한다** (`TickEvent.applied`). 갈래가 늘
       때마다 여기에 항을 더하는 방식은 늘 뒤늦게 고쳐진다.
     */
-    if (!ev.applied && ev.hit <= 0 && ev.healed <= 0) return;
-    if (!ev.killed) { set({ battle }); return; }
+    if (!ev.applied && ev.hit <= 0 && ev.healed <= 0) return NO_LAND;
+    if (!ev.killed) { set({ battle }); return ev.landed; }
 
     /*
       잡으면 **골드만** 들어온다.
@@ -498,6 +525,7 @@ export const createRosterSlice = (
       것과 골드를 써서 올리는 것이 나란히 있으면, 고를 것이 없어진다.
     */
     set({ battle, money: st.money + ev.gold, elixir: st.elixir + ev.elixir });
+    return ev.landed;
   },
 
   goStage: (stage) => {

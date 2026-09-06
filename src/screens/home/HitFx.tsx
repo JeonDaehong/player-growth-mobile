@@ -25,6 +25,7 @@ import type { HitFx } from '@/core/chars';
 import type { Mark } from '@/core/passives';
 import { Sprite } from '@/ui/Sprite';
 import { BAD_C, BLACK, GOOD_C, MONO, WHITE } from '@/ui/theme';
+import { NOTE_TIER, NoteZone, claimNoteLane } from './noteLane';
 
 /** 이펙트 한 판의 길이 */
 export const FX_MS = 260;
@@ -894,12 +895,38 @@ export function FallingArrow({
  * 자리는 부르는 쪽(`BattleView`)이 잡는다. 여기서는 뜨는 동작만 한다.
  */
 export function DamageNumber({
-  text, dx, dy, big, good, bad, onDone,
+  text, dx, dy, big, good, bad, crit, onDone,
 }: {
   text: string;
   dx: number;
   dy: number;
   big?: boolean;
+  /**
+   * ── 치명타로 터진 한 대인가 ── (`core/autoBattle` 의 `Landed.crit`)
+   *
+   * ## 여태 화면에 아예 안 나왔다
+   *
+   * 치명타는 계산 안에서 굴려 계산 안에서 쓰고 끝났다 (`rollCrit`). 화면은
+   * 띄울 숫자를 제 손으로 따로 셌으므로 (`Fighter` 의 `atkRef`), 두 배로
+   * 들어간 판과 안 들어간 판에 **같은 숫자**가 떴다 — 체력 막대만 설명
+   * 없이 더 깎였다.
+   *
+   * ## 색으로는 못 가른다
+   *
+   * 흑백 2색이고 (`ui/theme`), 이미 쓰고 있는 두 색은 뜻이 정해져 있다 —
+   * 초록은 회복, 붉은색은 **아군이** 깎인 것. 치명타를 붉게 칠하면 적을
+   * 크게 때린 순간이 우리 편이 맞은 순간과 같은 색이 된다.
+   *
+   * 그래서 **굵기와 크기와 움직임**으로 가른다. 세 가지가 같이 간다:
+   *
+   *   · 1.5배 크고 자간이 벌어진다 — 같은 자리에 뜨는 다른 숫자보다 무겁다
+   *   · 뒤에 **한 겹 더 깔린다** (`halo`) — 흰 글자를 밝힐 방법이 없으므로
+   *     (색이 이미 순백이다) 크게 깐 같은 글자를 옅게 겹쳐 번지게 한다.
+   *     `BodyFlash` 가 흰 그림에 쓰는 것과 같은 수법이다
+   *   · 좌우로 한 번 튕긴다 (`jolt`) — 툭 튀어오르는 것만으로는 평타의
+   *     `pop` 과 세기만 다른 같은 움직임이라, 방향이 다른 흔들림을 하나 더 얹는다
+   */
+  crit?: boolean;
   /**
    * 회복인가 — **초록으로** 뜬다 (`ui/theme` 의 `GOOD_C`).
    *
@@ -939,9 +966,103 @@ export function DamageNumber({
   const rise = useMemo(() => t.interpolate({
     inputRange: [0, 0.2, 1], outputRange: [0, -5, -12],
   }), [t]);
+  /*
+    치명타는 **더 크게 튀어오르고 덜 가라앉는다.** 평타가 1.4 에서 1 로
+    내려앉는 자리에서 1.75 를 찍고 1.12 에 멈춘다 — 다 끝난 뒤에도 옆 숫자
+    보다 커야 "이건 다른 한 대였다" 가 남는다.
+  */
   const pop = useMemo(() => t.interpolate({
-    inputRange: [0, 0.15, 0.35, 1], outputRange: [0.6, 1.4, 1, 1],
+    inputRange: [0, 0.15, 0.35, 1],
+    outputRange: crit ? [0.5, 1.75, 1.12, 1.12] : [0.6, 1.4, 1, 1],
+  }), [t, crit]);
+  /*
+    좌우로 한 번 튕긴다 — 치명타에만.
+
+    위아래 움직임은 평타도 하는 것이라 (`rise`·`pop`) 세기만 다르면 결국
+    같은 동작으로 읽힌다. 가로로 한 번 어긋나면 그 순간이 따로 떨어진다.
+    앞 20% 안에 끝난다 — 길게 흔들면 숫자가 안 읽힌다.
+  */
+  const jolt = useMemo(() => t.interpolate({
+    inputRange: [0, 0.06, 0.13, 0.2, 1], outputRange: [0, -4, 3, 0, 0],
   }), [t]);
+  /* 뒤에 깔리는 한 겹 — 크게, 옅게. 흰 글자를 번지게 하는 유일한 방법이다 */
+  const halo = useMemo(() => t.interpolate({
+    inputRange: [0, 0.12, 0.45, 1], outputRange: [0, 0.55, 0.22, 0],
+  }), [t]);
+
+  /*
+    ── 치명타는 한 치수 크다 ──
+
+    글자 크기로 1.35배, 남는 배율로 1.12배 — 합쳐서 한 배 반이다.
+
+    **배율만으로 키우지 않는다.** `scale` 은 15px 로 그린 글자를 늘리는
+    것이라 1.5배쯤 되면 가장자리가 뭉개지는데, 이 숫자는 0.7초를 떠 있으므로
+    뭉개진 채로 머문다. 글자 크기를 올리면 그 크기로 그려져서 또렷하다.
+
+    반대로 **크기만으로도 안 된다.** 글자 상자는 왼쪽 끝이 고정이라
+    (`left: dx`) 커진 만큼 오른쪽으로만 자라서, 치명타 숫자가 제 놈에게서
+    비껴간다. 배율은 상자 한가운데를 두고 커지므로 그 치우침을 반으로 준다.
+  */
+  const size = (big ? 20 : 15) * (crit ? 1.35 : 1);
+  const tone = good ? GOOD_C : (bad ? BAD_C : WHITE);
+  const move = [
+    { translateX: jolt },
+    { translateY: rise },
+    { scale: pop },
+  ];
+
+  /*
+    ── 치명타는 **두 겹**이다 ──
+
+    같은 글자를 크게 깔고 그 위에 또렷한 것을 올린다. 두 겹이 같은 움직임을
+    타야 하나로 보이므로 바깥 상자 하나에 움직임을 걸고 안쪽은 가만히 둔다 —
+    각자 `interpolate` 를 물면 프레임마다 아주 조금씩 어긋나서 두 개로 보인다.
+  */
+  if (crit) {
+    return (
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: dx,
+          top: dy,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: fade,
+          transform: move,
+        }}
+      >
+        <Animated.Text
+          style={{
+            position: 'absolute',
+            color: tone,
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+            fontSize: size,
+            letterSpacing: 1,
+            opacity: halo,
+            transform: [{ scale: 1.5 }],
+          }}
+        >
+          {text}
+        </Animated.Text>
+        <Text
+          style={{
+            color: tone,
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+            fontSize: size,
+            letterSpacing: 1,
+            textShadowColor: BLACK,
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 4,
+          }}
+        >
+          {text}
+        </Text>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.Text
@@ -950,10 +1071,10 @@ export function DamageNumber({
         position: 'absolute',
         left: dx,
         top: dy,
-        color: good ? GOOD_C : (bad ? BAD_C : WHITE),
+        color: tone,
         fontFamily: 'monospace',
         fontWeight: 'bold',
-        fontSize: big ? 20 : 15,
+        fontSize: size,
         /*
           ── 검은 그림자를 지고 다닌다 ──
 
@@ -1107,6 +1228,15 @@ export function HurtTint({
 export const NOTE_MS = 1600;
 
 /**
+ * 한 사람 머리 위에서 줄과 줄 사이 (px).
+ *
+ * 9px 글자라 12 면 한 줄 높이보다 살짝 넉넉하다. 이 값이 곧 **한 사람이
+ * 쓰는 높이**를 정하고, 그 높이가 층 간격(`noteLane` 의 `NOTE_TIER`)의
+ * 아래 한계다 — 층이 한 사람 몫보다 좁으면 옆 사람 줄 사이에 끼어든다.
+ */
+const NOTE_ROW = 12;
+
+/**
  * 판이 열린 뒤 **첫 줄을 띄우기까지** 기다리는 시간 (ms).
  *
  * 걸어 들어오는 데 걸리는 시간보다 조금 길다 (`core/autoBattle` 의
@@ -1211,12 +1341,21 @@ export function StatusNote({
       style={{
         position: 'absolute',
         /*
-          머리 **한참 위**다. 피해 숫자가 머리 바로 위를 쓰고(`top: -11`)
-          말풍선이 그 위를 쓰므로, 셋이 같은 자리를 다투면 제일 급한 숫자가
-          가려진다.
+          ── 머리 **바로** 위다 ──
+
+          여기가 16 이었다. 피해 숫자(`top: -11`)와 말풍선(`bottom: size + 4`)이
+          이미 쓰는 자리를 비켜 주려던 것인데, 그 16 이 층 간격과 줄 간격에
+          그대로 더해져서 **글이 늘 머리에서 한 뼘 떠 있었다.**
+
+          비켜 줄 필요가 없다. 말풍선은 0.9초짜리 외침이고 이 글은 1.2초짜리
+          알림이라 겹치는 순간이 잠깐이고, 겹쳐도 둘 다 읽힌다 — 하나는 흰
+          상자에 검은 글씨고 이쪽은 초록·붉은 글씨다. 정작 못 읽는 것은
+          머리에서 멀어져 **누구 것인지 모르게 된** 글이다.
+
+          4 다. 글자 아랫줄이 머리 바로 위에 닿는다.
         */
         bottom: '100%',
-        marginBottom: 16 + i * 12 + lift - head,
+        marginBottom: 4 + i * NOTE_ROW + lift - head,
         /*
           **인물 폭에서 조금만 넘긴다.**
 
@@ -1284,11 +1423,19 @@ export function StatusNote({
  * 붙는 것처럼 보이는데, 규칙상으로도 실제로 그렇다.
  */
 export function MarkNotes({
-  marks, markKey, live, lift = 0, head = 0,
+  marks, markKey, live, who, zone, x, head = 0,
 }: {
   marks: readonly Mark[];
-  /** 이 사람 몫을 얼마나 더 올릴까 — 옆 사람과 겹치지 않게 (`StatusNote`) */
-  lift?: number;
+  /**
+   * 누구의 머리 위인가 — 층을 받을 때 쓰는 이름 (`noteLane`).
+   *
+   * 구역 안에서 겹치지만 않으면 된다. 아군은 캐릭터 번호, 적은 무대 자리다.
+   */
+  who: string;
+  /** 아군 쪽인가 적 쪽인가 — 두 구역은 서로 안 견준다 (`noteLane`) */
+  zone: NoteZone;
+  /** 그 사람이 가로로 어디 서 있나 (같은 구역 안에서 같은 자로 잰 값) */
+  x: number;
   /** 상자 꼭대기에서 그림 머리까지 비어 있는 높이 (`StatusNote` 의 `head`) */
   head?: number;
   /**
@@ -1302,6 +1449,14 @@ export function MarkNotes({
   live: boolean;
 }) {
   const [notes, setNotes] = useState<{ key: number; text: string; good: boolean }[]>([]);
+  /*
+    ── 몇 층에 뜰까 ── (`noteLane`)
+
+    글이 새로 뜨는 **그 순간에** 받는다. 자리 번호로 미리 정해 두면 옆 사람
+    머리 위가 비어 있어도 늘 올라가 있고, 그게 "너무 머리에서 위에서 뜬다"
+    였다. 뜰 때 물어보면 아무도 안 겹칠 때는 0 층이다 — 머리 바로 위.
+  */
+  const [lane, setLane] = useState(0);
   const seq = useRef(0);
   const had = useRef<Set<string>>(new Set());
   const told = useRef<Set<string>>(new Set());
@@ -1400,6 +1555,7 @@ export function MarkNotes({
       **같은 순간에** 새로 걸리는 일은 판이 열릴 때뿐이고, 그때 셋째 줄은
       어차피 위쪽 띠에 가려 잘 안 보였다.
     */
+    setLane(claimNoteLane(who, zone, x, NOTE_MS));
     setNotes((old) => [...old, ...fresh].slice(-2));
     timers.current.push(setTimeout(() => {
       setNotes((old) => old.filter((n) => !fresh.some((f) => f.key === n.key)));
@@ -1420,7 +1576,7 @@ export function MarkNotes({
           text={n.text}
           good={n.good}
           i={k}
-          lift={lift}
+          lift={lane * NOTE_TIER}
           head={head}
         />
       ))}

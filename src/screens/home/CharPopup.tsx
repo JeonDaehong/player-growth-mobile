@@ -28,8 +28,11 @@ import { SkillTreePopup } from './SkillTreePopup';
 import { openPicks } from '@/core/skillTree';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
-import { deltaText, liveArmor, liveAtk, liveSpd } from '@/core/passives';
-import { hexOf } from '@/core/status';
+import {
+  FRENZY_SHOW, critOf, deltaText, frenzyMul, liveArmor, liveAtk, liveSpd,
+  passiveOf,
+} from '@/core/passives';
+import { STATUS_NAME, hexOf } from '@/core/status';
 import { hpOf, livingMembers, seatRows } from '@/core/party';
 
 export function CharPopup({
@@ -109,12 +112,56 @@ export function CharPopup({
   const alive = livingMembers(party, chars, hpMap);
   const hex = c ? hexOf(hexMap, c.id) : [];
   const cur = c ? hpOf(c, hpMap) : 0;
-  const base = c ? statOf(c) : null;
+  /*
+    ── **맨 몸**이 기준이다 ──
+
+    `c` 는 대형에 앉힌 몸이라 (`seatRows`) `statOf(c)` 에는 줄 배수가 이미
+    얹혀 있다 — 앞줄이면 방어력이 1.5배, 뒷줄이면 공격력이 1.15배다.
+    그 값을 기준으로 잡으면 **대형이 준 몫이 화면에서 통째로 사라진다**:
+    뒷줄에 세워 공격력이 오르는데 창에 뜨는 숫자는 그냥 그 숫자라,
+    무엇 때문에 센지가 안 보인다.
+
+    줄을 떼어 낸 몸을 기준으로 두고, 줄이 준 몫부터 지금 걸린 것까지를
+    전부 괄호 하나에 담는다 (`deltaText`). 그래서 이 창의 괄호는 이제
+    **"지금 이 사람이 원래보다 얼마나 센가"** 를 통째로 말한다.
+  */
+  const base = c ? statOf({ ...c, row: undefined }) : null;
+  /* 대형까지 얹은 몸 — 체력 막대의 최대치가 이것이다 (전투가 보는 값) */
+  const seat = c ? statOf(c) : null;
   const now = c && base && cur > 0 ? {
     atk: Math.round(liveAtk(c, alive, hex)),
     spd: liveSpd(c, cur, alive, hex),
     ...liveArmor(c, hex),
   } : null;
+  /* 집중이 올려 준 몫까지 — 굴리는 쪽과 같은 함수다 (`rollCrit`) */
+  const critNow = base ? critOf(base.crit, hex) : 0;
+  /*
+    ── 지금 무엇이 그러고 있나 ──
+
+    괄호 안의 숫자만으로는 **왜** 올랐는지 알 수가 없다. 아녜스가 서 있어서
+    인지, 뒷줄이라서인지, 방금 함성을 질러서인지가 다 같은 `(+28)` 이다.
+    한 줄로 늘어놓으면 그때그때 켜지고 꺼지는 것이 그대로 보인다.
+
+    쓰러져 있으면 아무것도 안 적는다 — 시체에 붙은 버프는 거짓말이다.
+  */
+  const from: string[] = [];
+  if (c && cur > 0) {
+    if (c.row === 'front') from.push('앞줄 (체력 +10% · 방어 +50%)');
+    if (c.row === 'back') from.push('뒷줄 (공격력 +15%)');
+    /* 제 패시브는 조건이 붙은 것만 — 늘 켜져 있는 것은 위 패시브 절에 이미 있다 */
+    const mine = passiveOf(c.id);
+    if (mine?.frenzy && frenzyMul(c.id, cur, statOf(c).hp) >= FRENZY_SHOW) {
+      from.push(mine.name);
+    }
+    for (const a of alive) {
+      const p = passiveOf(a.id);
+      if (!p || !(p.allyAtk || p.allySpd)) continue;
+      from.push(`${CHARS[a.id].name}의 ${p.name}`);
+    }
+    for (const h of hex) {
+      if (h.ms > 0) from.push(STATUS_NAME[h.id]);
+    }
+  }
 
   /*
     아래 목록은 **맨 몸 명부**를 쓴다 (`raw`).
@@ -373,8 +420,9 @@ export function CharPopup({
           */}
           <KV
             k="공격력"
-            v={`${statOf(c).atk}${now ? deltaText(statOf(c).atk, now.atk) : ''}`
-              + ` (${DMG_NAME[blowOf(c.id).type]})`}
+            v={`${base!.atk}`}
+            delta={now ? deltaText(base!.atk, now.atk) : ''}
+            tail={`(${DMG_NAME[blowOf(c.id).type]})`}
           />
           {/*
             공격속도가 빠져 있었다. 이 게임에서 **스킬 주기까지 정하는 값**이라
@@ -391,26 +439,62 @@ export function CharPopup({
           */}
           <KV
             k="공격속도"
-            v={`${statOf(c).spd}${now ? deltaText(statOf(c).spd, now.spd, 1) : ''}`
-              + ` (${swingMs(now ? now.spd : statOf(c).spd)}ms 마다)`}
+            v={`${base!.spd}`}
+            delta={now ? deltaText(base!.spd, now.spd, 1) : ''}
+            tail={`(${swingMs(now ? now.spd : base!.spd)}ms 마다)`}
           />
-          <KV k="체력" v={`${cur > 0 ? `${Math.ceil(cur)} / ` : ''}${statOf(c).hp}`} />
+          {/*
+            체력은 **대형이 올린 것까지가 최대치**다 (`seat`). 전투가 그 값을
+            최대로 보므로 (`hpOf`), 여기서 맨 몸 수치를 최대로 적으면 앞줄에
+            선 사람이 가득 찬 채로도 넘쳐 보인다.
+          */}
+          <KV
+            k="체력"
+            v={`${cur > 0 ? `${Math.ceil(cur)} / ` : ''}${seat!.hp}`}
+            delta={deltaText(base!.hp, seat!.hp)}
+          />
           <KV
             k="방어력"
-            v={`${statOf(c).def}${now ? deltaText(statOf(c).def, now.def) : ''}`
-              + ' (물리 피해를 막는다)'}
+            v={`${base!.def}`}
+            delta={now ? deltaText(base!.def, now.def) : ''}
+            tail="(물리 피해를 막는다)"
           />
           <KV
             k="마법저항력"
-            v={`${statOf(c).res}${now ? deltaText(statOf(c).res, now.res) : ''}`
-              + ' (마법 피해를 막는다)'}
+            v={`${base!.res}`}
+            delta={now ? deltaText(base!.res, now.res) : ''}
+            tail="(마법 피해를 막는다)"
           />
-          {statOf(c).crit > 0 && (
-            <KV
-              k="치명타"
-              v={`${Math.round(statOf(c).crit * 100)}% · 피해 ${Math.round(statOf(c).critDmg * 100)}%`}
-            />
-          )}
+          {/*
+            ── 치명타 두 줄은 **늘 뜬다** ──
+
+            여태 `crit > 0` 일 때만 뜨게 해 뒀다. 그런데 넷 다 기본 확률이
+            0 이라 (`core/chars` 의 `CHARS`) 이 줄은 **아무에게도 안 떴다** —
+            치명타라는 것이 이 게임에 있는지조차 창에서 알 수 없었다.
+
+            0% 인 것과 줄이 없는 것은 다른 말이다. 앞엣것은 "지금은 안
+            터진다, 올리면 터진다" 이고 뒤엣것은 아무 말도 아니다. 리안느의
+            정령의 노래가 거는 집중이 확률을 올려 주므로 (`st_focus`),
+            **올릴 수 있는 축**이라는 것이 보여야 한다.
+
+            두 줄로 나눈다. `30% · 피해 200%` 한 줄이면 두 숫자가 서로
+            다른 것을 재는데 (하나는 얼마나 자주, 하나는 얼마나 세게) 한
+            덩어리로 읽힌다.
+
+            확률에는 집중이 **더해진다** (배수가 아니다 — `rollCrit` 참고).
+            그래서 여기 괄호도 지금 실제로 굴리는 확률과 같은 값이다.
+          */}
+          <KV
+            k="치명타 확률"
+            v={`${Math.round(base!.crit * 100)}%`}
+            delta={now ? deltaText(base!.crit * 100, critNow * 100) : ''}
+            tail={base!.crit <= 0 && critNow <= 0 ? '(집중이 걸리면 오른다)' : ''}
+          />
+          <KV
+            k="치명타 피해"
+            v={`${Math.round(base!.critDmg * 100)}%`}
+            tail="(터지면 이 배율로 들어간다)"
+          />
           {(() => {
             /* 관통은 **가진 사람에게만** 뜬다 — 0 짜리 줄이 넷에게 다 붙으면 잡음이다 */
             const p = anyPierce(c.id);
@@ -425,9 +509,27 @@ export function CharPopup({
             관통이 있으면 그 방어를 통째로 무시합니다.
           </T>
           <T size={9} dim="dim" style={{ marginTop: 2 }}>
-            괄호 안의 +- 는 지금 걸려 있는 패시브와 상태 효과가 얹거나 깎은
-            몫입니다. 판이 끝나거나 걸린 것이 풀리면 사라집니다.
+            초록 (+) 과 붉은 (−) 은 지금 이 사람이 원래 몸보다 얼마나 오르내려
+            있는지입니다 — 대형이 앉힌 줄, 파티 패시브, 액티브 스킬이 건 버프,
+            적이 건 디버프가 전부 여기 들어갑니다. 실시간으로 바뀌고, 판이
+            끝나거나 걸린 것이 풀리면 사라집니다.
           </T>
+          {/*
+            ── 지금 무엇이 그러고 있나 ──
+
+            괄호 안의 숫자는 **얼마나**만 말하고 **왜**는 말하지 않는다. 그
+            줄이 실시간으로 오르내리는 화면에서는 그게 특히 답답하다 — 아녜스가
+            쓰러져 공격력이 떨어졌는데 창에서는 숫자만 조용히 줄어든다.
+
+            지금 켜져 있는 것을 이름으로 늘어놓는다. 하나도 없으면 줄 자체가
+            안 뜬다 — 빈 목록은 자리만 먹는다.
+          */}
+          {from.length > 0 && (
+            <View style={[BORDER, { padding: SP.sm, marginTop: SP.xs }]}>
+              <T size={9} bold>지금 걸려 있는 것</T>
+              <T size={9} dim="sub" style={{ marginTop: 2 }}>{from.join(' · ')}</T>
+            </View>
+          )}
           {/*
             ── 테스트용 단추 ──
 

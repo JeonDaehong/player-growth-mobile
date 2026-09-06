@@ -59,10 +59,10 @@ import {
 } from './chars';
 import { rollElixir } from './growth';
 import {
-  GOOD, Hex, NO_HEX, StatusId, hexOf, mulOf, putHex, tickHex, upOf,
+  GOOD, Hex, NO_HEX, StatusId, hexOf, putHex, tickHex, upOf,
 } from './status';
 import {
-  FADE_MS, allyAtkMul, healMulOf, liveArmor, liveSpd, regenOf,
+  FADE_MS, atkMul, critOf, healMulOf, liveArmor, liveSpd, regenOf,
 } from './passives';
 import { CleanseOpt, cleanseOptOf, cleansed } from './skillOpt';
 
@@ -3537,6 +3537,54 @@ export interface TickEvent {
    * 한 칸으로 말한다.
    */
   applied: boolean;
+  /**
+   * 이번에 적에게 **실제로 들어간 대들.**
+   *
+   * ## 왜 필요한가
+   *
+   * 화면이 띄우는 피해 숫자가 여태 **계산과 다른 값**이었다. 평타는 쓰는
+   * 사람의 공격력을 그대로 띄웠고 (`Fighter` 의 `atkRef`), 기술은 미리
+   * 재 둔 값을 띄웠다 (`skillDamage` — 맨몸 기준에 치명타 없음). 둘 다
+   * 여기서 실제로 깎는 값과 갈렸다.
+   *
+   *   · 맞는 놈의 방어력이 안 빠져 있었다 (`strikeFor` 의 `shield`)
+   *   · 무리 배수가 안 실려 있었다 (`foeTough` — 우두머리 방 잡몹)
+   *   · 파티 배수와 약화가 평타 쪽에 안 실려 있었다 (`core/passives` 의 `atkMul`)
+   *   · **치명타가 통째로 빠져 있었다** (`rollCrit`)
+   *
+   * 제일 큰 것이 마지막이다. 치명타는 여기서 굴려서 여기서 쓰고 마므로,
+   * 화면은 그것이 터졌는지조차 알 방법이 없었다 — 300% 짜리 기술이 두 배로
+   * 들어가도 화면에는 늘 같은 숫자가 떴고, 체력 막대만 설명 없이 더 깎였다.
+   * "성검발현 데미지 왜 들어가는 거 같지" 가 그 자리다.
+   *
+   * 이제 **때린 쪽이 무엇을 넣었는지 그대로 말한다.** 화면은 이 값을 띄우고
+   * (`BattleView`), 치명타면 다르게 그린다 (`HitFx` 의 `DamageNumber`).
+   */
+  landed: readonly Landed[];
+}
+
+/**
+ * 적 하나에게 실제로 들어간 한 대 (`TickEvent.landed`).
+ */
+export interface Landed {
+  /**
+   * 맞은 놈이 **때리기 전** 목록에서 몇 번째였나.
+   *
+   * 때린 뒤에 죽은 놈이 빠지므로 (`foes.splice`) 그 뒤의 번호로는 못
+   * 되짚는다. 화면이 자리를 잡을 때 쓴 번호와 같은 것이어야 한다 —
+   * 부르는 쪽이 `at`/`aim` 으로 넘긴 그 번호다.
+   */
+  at: number;
+  /**
+   * 그놈의 체력에서 실제로 깎인 양.
+   *
+   * 방어·관통·치명타·무리 배수가 다 얹힌 뒤의 값이다. 요정의 화살이 같이
+   * 터졌으면 그 몫도 들어 있다 — **기술 쪽만** 그렇다. 평타는 화면이 그
+   * 한 대를 따로 그리므로 (`TickEvent.fey`) 여기서는 뺀다.
+   */
+  dmg: number;
+  /** 치명타였나 (`rollCrit`) */
+  crit: boolean;
 }
 
 export interface TickResult {
@@ -3544,10 +3592,13 @@ export interface TickResult {
   ev: TickEvent;
 }
 
+/** 아무 데도 안 맞았다 — 매번 새 배열을 만들면 화면이 헛돈다 (`NO_MARK` 와 같은 이유) */
+export const NO_LAND: readonly Landed[] = [];
+
 const NOTHING: TickEvent = {
   hit: 0, taken: 0, hurt: null, fell: null, killed: 0, cleared: false, elixir: 0,
   bossCame: false, wiped: false, gold: 0, healed: 0, pattern: null, fey: 0,
-  applied: false,
+  applied: false, landed: NO_LAND,
 };
 
 /**
@@ -4540,6 +4591,8 @@ export function battleTick(
         killed, cleared: false, elixir: 0, bossCame, wiped: true, gold, healed,
         /* 적이 때린 틱이다 — 요정의 화살은 아군이 때릴 때만 터진다 */
         fey: 0,
+        /* 여기서 나가는 피해는 기믹이 낸 것이라 적 머리 위에 숫자가 안 뜬다 */
+        landed: NO_LAND,
         applied: true,
       },
     };
@@ -4602,6 +4655,7 @@ export function battleTick(
       hit, taken, hurt: hurtId, fell, pattern,
       /* 적이 때린 틱이다 — 요정의 화살은 아군이 때릴 때만 터진다 */
       fey: 0,
+      landed: NO_LAND,
       killed: gimCleared ? killed + 1 : killed,
       cleared: gimCleared,
       elixir: gimCleared ? rollElixir(st.stage, rand) : 0,
@@ -4808,12 +4862,26 @@ export function applyHit(
   const alive = livingMembers(party, chars, st.hp, st.fade);
   const mineHex = hexOf(st.hex, who);
   const kind = foeAt(st, foes[at]);
+  /*
+    ── 굴린 값을 **들고 있는다** ──
+
+    여태 `rollCrit(...)` 을 인자 자리에서 바로 썼다. 그러면 터졌는지 아닌지가
+    이 줄에서 소모되고 끝나서, 화면은 치명타가 났다는 것을 알 방법이 없다.
+    돌려주는 것이 배수라 1 보다 크면 터진 것이다 (`TickEvent.landed`).
+  */
+  const critMul = rollCrit(mine, rand, mineHex);
   const dmg = Math.max(1, Math.round(strikeFor(
-    mine.atk * allyAtkMul(alive) * mulOf(mineHex, 'st_weak') * mul,
-    rollCrit(mine, rand, mineHex),
+    /* 파티 배수 · 격노 · 약화가 한 벌로 걸린다 (`core/passives` 의 `atkMul`) */
+    mine.atk * atkMul(alive, mineHex) * mul,
+    critMul,
     /* 20판은 체력이 낮으면 방어가 오른다 (`foeArmor`) */
     foeArmor(kind, foes[at].hp), blowOf(me.id),
   ) * foeTough(kind)));
+  /*
+    화면이 띄울 **그 한 대.** 요정의 화살 몫은 뺀다 — 저건 따로 그린다
+    (`TickEvent.fey`).
+  */
+  const landed: readonly Landed[] = [{ at, dmg, crit: critMul > 1 }];
   /*
     ── 요정의 화살 ── 40% 로 한 번 더 (`feyShot`).
 
@@ -4849,7 +4917,7 @@ export function applyHit(
         합쳐서 한 숫자로 보낸다. 다만 요정의 화살 몫은 **따로도** 내보낸다 —
         화면이 그 한 대만 작은 화살로 따로 그린다 (`ev.fey`).
       */
-      ev: { ...NOTHING, hit: dmg + fey, fey },
+      ev: { ...NOTHING, hit: dmg + fey, fey, landed },
     };
   }
 
@@ -4914,7 +4982,7 @@ export function applyHit(
         goTo: nextStage(st.stage),
       },
       ev: {
-        ...NOTHING, hit: dmg, killed: 1, cleared: true, gold,
+        ...NOTHING, hit: dmg, killed: 1, cleared: true, gold, landed,
         elixir: rollElixir(st.stage, rand),
       },
     };
@@ -4930,7 +4998,7 @@ export function applyHit(
       slain: st.slain + 1,
       target: pickTarget(foes.length),
     },
-    ev: { ...NOTHING, hit: dmg, killed: 1, gold },
+    ev: { ...NOTHING, hit: dmg, killed: 1, gold, landed },
   };
 }
 
@@ -4976,8 +5044,8 @@ export function rollCrit(
    */
   hex: readonly Hex[] = NO_HEX,
 ): number {
-  const up = Math.max(0, upOf(hex, 'st_focus') - 1);
-  return rand() < Math.min(1, st.crit + up) ? st.critDmg : 1;
+  /* 확률 셈은 `core/passives` 의 `critOf` 한 곳에 있다 — 창에 적는 값과 같다 */
+  return rand() < critOf(st.crit, hex) ? st.critDmg : 1;
 }
 
 /**
@@ -5464,8 +5532,8 @@ export function applySkill(
   const foes = [...st.foes];
   const alive = livingMembers(party, chars, st.hp, st.fade);
   const mineHex = hexOf(st.hex, who);
-  /* 파티 패시브와 약화가 같이 걸린다 — 평타(`applyHit`)와 같은 값이어야 한다 */
-  const sup = allyAtkMul(alive) * mulOf(mineHex, 'st_weak');
+  /* 파티 패시브 · 격노 · 약화가 같이 걸린다 — 평타(`applyHit`)와 같은 값이다 */
+  const sup = atkMul(alive, mineHex);
   let hit = 0;
   let killed = 0;
   /** 5판 가시 갑옷이 되돌려 준 양 */
@@ -5492,11 +5560,23 @@ export function applySkill(
     시듦이 엉뚱한 놈에게 옮겨 간다.
   */
   const foeHex: Record<number, Hex[]> = { ...(st.foeHex ?? {}) };
+  /*
+    ── 화면이 띄울 숫자 ── 맞는 놈마다 하나씩 (`TickEvent.landed`).
+
+    여태 화면이 `skillDamage` 로 **따로 재서** 띄웠다. 저건 창에 미리 적는
+    값이라 맨몸 기준에 치명타도 없다 — 그래서 성검 발현이 두 배로 터진 판과
+    안 터진 판이 화면에서 같은 숫자였다.
+
+    `idx` 와 **같은 차례**로 담는다. 부르는 쪽이 그 차례로 자리를 잡아
+    두었으므로 (`BattleView` 의 `spots`) 나란히 짚으면 된다.
+  */
+  const landed: Landed[] = [];
   for (const i of idx) {
     const kind = foeAt(st, foes[i]);
+    /* 스킬에도 집중이 걸린다 — 평타만 오르면 "치명타 확률" 이 반쪽이다 */
+    const critMul = rollCrit(mine, rand, mineHex);
     const dmg = Math.max(1, Math.round(strikeFor(
-      /* 스킬에도 집중이 걸린다 — 평타만 오르면 "치명타 확률" 이 반쪽이다 */
-      skillBase(mine, sk, sup), rollCrit(mine, rand, mineHex),
+      skillBase(mine, sk, sup), critMul,
       foeArmor(kind, foes[i].hp), blow,
     ) * foeTough(kind)));
     /*
@@ -5550,6 +5630,12 @@ export function applySkill(
     const fey = feyShot(mineHex, foeArmor(kind, foes[i].hp), rand);
     foes[i] = biteFoe(foes[i], dmg + fey);
     hit += dmg + fey;
+    /*
+      **요정의 화살 몫까지 한 숫자에 담는다.** 평타는 그 한 대를 따로
+      그리지만 (`FeyDart`) 기술은 안 그린다 — 여기서 빼면 화면에 뜬 숫자와
+      실제로 닳은 체력이 또 갈린다.
+    */
+    landed.push({ at: i, dmg: dmg + fey, crit: critMul > 1 });
     /* 여러 마리를 치는 기술은 **친 만큼** 되돌아온다 (`applyHit` 과 같은 규칙) */
     const back = kind.passive?.reflect ?? 0;
     if (back > 0) {
@@ -5588,7 +5674,7 @@ export function applySkill(
   foes.push(...born);
 
   if (!killed) {
-    return { battle: { ...st, foes, hp, foeHex }, ev: { ...NOTHING, hit } };
+    return { battle: { ...st, foes, hp, foeHex }, ev: { ...NOTHING, hit, landed } };
   }
   /* 죽은 놈에게 걸려 있던 것은 같이 지운다 — 번호가 남으면 영영 안 없어진다 */
   for (const id of Object.keys(foeHex)) {
@@ -5624,7 +5710,10 @@ export function applySkill(
         clearKind: 'boss',
         goTo: nextStage(st.stage),
       },
-      ev: { ...NOTHING, hit, killed, cleared: true, gold, elixir: rollElixir(st.stage, rand) },
+      ev: {
+        ...NOTHING, hit, killed, cleared: true, gold, landed,
+        elixir: rollElixir(st.stage, rand),
+      },
     };
   }
 
@@ -5638,6 +5727,6 @@ export function applySkill(
       slain: st.slain + killed,
       target: pickTarget(foes.length, rand),
     },
-    ev: { ...NOTHING, hit, killed, gold },
+    ev: { ...NOTHING, hit, killed, gold, landed },
   };
 }

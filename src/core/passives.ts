@@ -278,17 +278,46 @@ export const fadingOut = (
 ): boolean => (fade?.[who] ?? 0) > 0;
 
 /**
+ * 지금 이 사람의 공격력에 걸려 있는 **배수 한 벌**.
+ *
+ *   파티 배수 × 격노 × 약화
+ *
+ * ## 격노가 여태 아무 일도 안 했다
+ *
+ * `st_rage`(격노 — 공격력 증가)를 **아무도 안 읽고 있었다.** 이졸데의
+ * 전투의 함성이 1.3배를, 비앙카의 불굴의 의지가 2.0배를 걸고 있었는데
+ * (`core/chars` 의 `SkillDef.self`), 파티 칸에는 로고가 뜨고 머리 위에는
+ * "공격력 증가" 가 뜨는데 **피해는 한 톨도 안 늘었다.**
+ *
+ * 걸어 두기만 하고 읽는 자리를 안 만든 것이라, 표에도 화면에도 안 보이는
+ * 종류의 빠짐이었다. 캐릭터 창에 "액티브 스킬이 올린 만큼" 을 적기 시작하니
+ * 그 자리에 `(+0)` 이 떠서 드러났다.
+ *
+ * ## 순서
+ *
+ * 약화를 **제일 마지막에** 곱한다. 그래야 "파티 버프와 격노까지 포함해서
+ * 25% 가 깎인다" 가 되고, 그게 사양이 말하는 감소다.
+ *
+ * @param alive 살아 있는 파티원들. 쓰러진 사람의 패시브는 안 센다
+ * @param hex   이 사람에게 걸려 있는 것들
+ */
+export function atkMul(
+  alive: readonly OwnedChar[], hex: readonly Hex[],
+): number {
+  return allyAtkMul(alive) * upOf(hex, 'st_rage') * mulOf(hex, 'st_weak');
+}
+
+/**
  * 지금 이 사람의 **실제 공격력**.
  *
- * 원래 공격력 × 파티 배수 × 약화.
- *
- * 순서가 중요하다. 약화를 제일 마지막에 곱해야 "파티 버프까지 포함해서 25%
- * 가 깎인다" 가 되고, 그게 사양이 말하는 감소다.
+ * 원래 공격력 × `atkMul`. 전투 계산도 같은 배수를 쓴다
+ * (`core/autoBattle` 의 `applyHit` · `applySkill`) — 두 벌로 세면 창에
+ * 적힌 값과 실제로 박히는 피해가 갈린다.
  */
 export function liveAtk(
   c: OwnedChar, alive: readonly OwnedChar[], hex: readonly Hex[],
 ): number {
-  return statOf(c).atk * allyAtkMul(alive) * mulOf(hex, 'st_weak');
+  return statOf(c).atk * atkMul(alive, hex);
 }
 
 /**
@@ -337,6 +366,23 @@ export function liveArmor(c: OwnedChar, hex: readonly Hex[]): Armor {
   const m = mulOf(hex, 'st_break');
   if (m >= 1) return { def: s.def, res: s.res };
   return { def: Math.floor(s.def * m), res: Math.floor(s.res * m) };
+}
+
+/**
+ * 지금 이 사람의 **실제 치명타 확률** (0~1).
+ *
+ * 원래 확률 + 집중이 올려 준 몫. **더하기다** — 배수로 두면 넷 중 셋이
+ * 확률 0 이라 아무 일도 안 일어난다 (0 × 1.3 은 0). 그 이야기는
+ * `core/autoBattle` 의 `rollCrit` 에 적어 두었고, 여기가 그 셈의 창구다.
+ *
+ * 굴리는 쪽과 화면이 **같은 함수**를 부른다. 여태 화면에는 이 값이 아예
+ * 안 나왔는데 (`crit > 0` 일 때만 줄이 떴고 넷 다 0 이었다), 캐릭터 창에
+ * 늘 적기로 하면서 두 벌로 세지 않도록 한 곳으로 모았다.
+ *
+ * @param base 그 사람의 원래 확률 (`core/chars` 의 `Stat.crit`)
+ */
+export function critOf(base: number, hex: readonly Hex[]): number {
+  return Math.min(1, base + Math.max(0, upOf(hex, 'st_focus') - 1));
 }
 
 /** 받는 치유량 배수 — 시듦(`st_wither`)이 걸려 있으면 줄어든다 */

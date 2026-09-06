@@ -73,7 +73,7 @@ export const SWING_MS = CUT_MS.reduce((a, b) => a + b, 0);
  * 매핑하므로 동작이 조금 뚝뚝하지만 빠지는 그림은 없다.
  */
 const CUT_FRAMES = ['cut_1', 'cut_2', 'cut_3'] as const;
-const CUT_FALLBACK: Record<string, string> = {
+export const CUT_FALLBACK: Record<string, string> = {
   cut_1: 'windup', cut_2: 'strike', cut_3: 'recover',
 };
 
@@ -90,7 +90,7 @@ const HIT_AT = CUT_MS[0];
  *
  * 베는 칸이 길어야 검기가 떠나는 게 그 칸 안에서 보인다.
  */
-const SK_MS = [140, 150, 200];
+export const SK_MS = [140, 150, 200];
 
 /*
   기술마다 다른 박자는 `core/chars` 의 `SkillDef.beat` 에 있다.
@@ -144,7 +144,7 @@ const SK3_FRAMES = ['sk3_1', 'sk3_2', 'sk3_3'] as const;
  * 시트가 아직 없으면 **한 단계씩 물러난다**: `sk3` → `sk2` → `sk`.
  * `Sprite` 의 `fallbackSet` 으로는 안 된다 — 저건 한 단계뿐이다.
  */
-function skFramesOf(id: string, sk: SkillDef): readonly string[] {
+export function skFramesOf(id: string, sk: SkillDef): readonly string[] {
   const want = sk.pose ?? 'sk';
   if (want === 'sk3' && SK3_FRAMES.every((f) => spriteLoose(id, f))) return SK3_FRAMES;
   if (want !== 'sk' && SK2_FRAMES.every((f) => spriteLoose(id, f))) return SK2_FRAMES;
@@ -157,7 +157,7 @@ function skFramesOf(id: string, sk: SkillDef): readonly string[] {
  * 기술마다 닿는 칸이 다르다 — 검기는 베는 2번 칸에서 떠나고, 도약은 착지하는
  * 3번 칸에서 터진다. 이걸 안 나누면 비앙카가 공중에 뜬 채로 적이 죽는다.
  */
-function landAtOf(spans: readonly number[], landOn: number): number {
+export function landAtOf(spans: readonly number[], landOn: number): number {
   let t = 0;
   for (let i = 0; i < landOn - 1; i++) t += spans[i];
   return t;
@@ -173,7 +173,7 @@ function landAtOf(spans: readonly number[], landOn: number): number {
 const WAVE_AT = SK_MS[0];
 
 /** 스킬을 못 받은 캐릭터는 평타 프레임으로 떨어진다 */
-const SK_FALLBACK: Record<string, string> = {
+export const SK_FALLBACK: Record<string, string> = {
   sk_1: 'cut_1', sk_2: 'cut_2', sk_3: 'cut_3',
   /* §F 를 아직 안 받았으면 여기까지 안 온다 (`skFramesOf`) — 그래도 적어 둔다 */
   sk2_1: 'cut_1', sk2_2: 'cut_2', sk2_3: 'cut_3',
@@ -211,7 +211,7 @@ type Frame = 'guard' | 'lose'
 function FighterView({
   ch, back, down, hp, spd, stun, silent, held, noCharge, canCast, costSeq,
   struck, purify, cut, onCharge, damage, bless, advance, leapTo, marks, markKey,
-  live, hitNo, hitKind, cc, bound, boundWeb, charmed, warded, shock, turn, noteLift = 0,
+  live, hitNo, hitKind, cc, bound, boundWeb, charmed, warded, shock, turn,
   x, width, onAim, onSwing, onSkill,
 }: {
   ch: OwnedChar;
@@ -402,7 +402,6 @@ function FighterView({
    * 나란히 선 사람끼리 **같은 줄을 안 쓰게** 하는 값이다. 자세한 것은
    * 아래 `MarkNotes` 를 그리는 자리에 적어 두었다.
    */
-  noteLift?: number;
   /**
    * 이 사람에게서 **나쁜 것이 걷힌** 횟수 (아녜스의 정화).
    *
@@ -1273,13 +1272,27 @@ function FighterView({
         높이에 서면 옆 사람 글과 맞붙어 `미니 화살 추가타미니 화살 추가타`
         같은 덩어리가 된다.
 
-        **왼쪽부터 센 순서**로 두 줄을 번갈아 쓴다 (`noteLift` — 무대가
-        정해서 넘긴다). 자리 번호(`back`)로 세면 안 된다: 대형이 앞뒤로
-        서므로 0번과 2번이 가로로는 43px 밖에 안 떨어져 있어서, 홀짝이 같은
-        그 둘이 그대로 맞붙는다. 가로 자리로 세야 나란히 선 둘이 언제나
-        다른 줄에 온다.
+        여태 **자리마다 층이 못 박혀** 있었다 (가로로 센 순서의 홀짝).
+        겹침은 풀렸는데, 둘째 층에 걸린 사람은 옆 사람 머리 위가 텅 비어
+        있을 때도 늘 28px 을 더 올라가 있었다 — "너무 머리에서부터 위에서
+        뜨는 거 같아" 가 그 자리다.
+
+        이제 **뜨는 그 순간에** 층을 받는다 (`noteLane`). 가까이 있는 사람이
+        지금 실제로 글을 띄우고 있을 때만 한 층 올라가고, 아니면 0층 —
+        머리 바로 위다.
+
+        `x` 는 아군 구역 왼쪽 끝에서 잰 값이고, 견주는 것도 같은 자를 쓰는
+        아군끼리뿐이다 (`zone`). 자리 번호(`back`)로 세면 안 된다: 대형이
+        앞뒤로도 서므로 0번과 2번이 가로로는 43px 밖에 안 떨어져 있다.
       */}
-      <MarkNotes marks={marks} markKey={markKey} live={live} lift={noteLift} />
+      <MarkNotes
+        marks={marks}
+        markKey={markKey}
+        live={live}
+        who={ch.id}
+        zone="ally"
+        x={x}
+      />
 
       {/*
         ── 기술이 나갈 때의 큰 연출 ──
@@ -1553,7 +1566,6 @@ export const Fighter = React.memo(FighterView, (a, b) => (
   && a.warded === b.warded
   && a.shock === b.shock
   && a.turn === b.turn
-  && a.noteLift === b.noteLift
   && a.purify === b.purify
   && a.canCast === b.canCast
   && a.onCharge === b.onCharge
