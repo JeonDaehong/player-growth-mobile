@@ -52,7 +52,8 @@ import { Sprite } from '@/ui/Sprite';
 import { ICONS, NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
-import { FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
+import { FrameArt, frameStyle } from '@/ui/Frame';
+import { FS, LINE, O, R, SP, SURF } from '@/ui/theme';
 import { ProfilePopup } from './ProfilePopup';
 import { SettingsPopup } from './SettingsPopup';
 
@@ -109,15 +110,17 @@ function Gate({ label, art, onPress }: {
     <Pressable
       onPress={() => { sfx('tap'); onPress(); }}
       hitSlop={4}
-      style={({ pressed }) => ({
-        flex: 1,
-        paddingVertical: 4,
-        alignItems: 'center',
-        gap: 2,
-        borderRadius: R.md,
-        backgroundColor: pressed ? '#FFFFFF2E' : 'transparent',
-      })}
+      style={({ pressed }) => [
+        frameStyle({ pressed }),
+        {
+          flex: 1,
+          paddingVertical: 4,
+          alignItems: 'center',
+          gap: 2,
+        },
+      ]}
     >
+      <FrameArt />
       <Sprite set="nav_top" name={art} size={18} fallback={NAV[art]} opacity={O.sub} />
       <T size={8} bold>{label}</T>
     </Pressable>
@@ -125,10 +128,14 @@ function Gate({ label, art, onPress }: {
 }
 
 /**
- * 재화 한 덩이 — 그림 하나에 숫자 하나.
+ * 재화 한 칸 — 그림 하나에 숫자 하나, 제 액자 안에.
  *
- * 세 덩이가 **알약 하나 안에** 들어간다 (`TopBar` 의 지갑). 따로 두면 셋
- * 사이 간격이 곧 "이건 다른 것" 이라는 말이 되는데, 내가 가진 것은 한 벌이다.
+ * 한동안 둘을 **알약 하나 안에** 넣어 뒀다. "내가 가진 것은 한 벌" 이라는
+ * 이유였는데, 시안(`assets/2026-09-06/456456.jpg`)은 재화마다 칸을 따로
+ * 준다. 그쪽이 맞다 — 골드와 다이아는 **버는 데도 쓰는 데도 다른 것**이라,
+ * 한 칸에 넣으면 칸막이 하나로 그 사실을 말해야 하고 그 칸막이는 잘 안 보인다.
+ *
+ * 칸이 갈리면 눈이 세지 않고 바로 짚는다.
  *
  * 그림은 흐리고 숫자는 진하다. 여기서 읽는 것은 숫자이고 그림은 그 숫자가
  * 무엇인지 말할 뿐이라, 둘이 같은 밝기면 눈이 그림에서 한 번 멈춘다.
@@ -138,16 +145,18 @@ function Coin({ art, icon, text }: {
   art: string; icon: typeof ICONS.coin; text: string;
 }) {
   return (
-    <Row gap={3}>
+    <Row
+      gap={3}
+      style={[
+        frameStyle(),
+        { paddingHorizontal: SP.sm, paddingVertical: 4, alignItems: 'center' },
+      ]}
+    >
+      <FrameArt />
       <Sprite set="coin_ui" name={art} size={11} fallback={icon} opacity={O.sub} />
       <T size={FS.label} bold>{text}</T>
     </Row>
   );
-}
-
-/** 지갑 안의 칸막이 — 재화 사이를 가르는 세로줄 */
-function VBar() {
-  return <View style={{ width: 1, height: 10, backgroundColor: WHITE, opacity: 0.14 }} />;
 }
 
 /**
@@ -282,18 +291,9 @@ export function TopBar({ gates = true }: {
             <T size={FS.label} bold numberOfLines={1}>{nickname || '이름 없음'}</T>
           </Pressable>
 
-          {/* ── 지갑 ── 셋이 알약 하나 안에 들어간다 */}
-          <Row
-            gap={SP.xs}
-            style={{
-              paddingHorizontal: SP.sm,
-              paddingVertical: 5,
-              borderRadius: R.round,
-              backgroundColor: SURF.veil,
-            }}
-          >
+          {/* ── 지갑 ── **재화마다 제 액자**다 (`Coin` 머리말) */}
+          <Row gap={SP.xs}>
             <Coin art="coin" icon={ICONS.coin} text={fmtShort(money).replace(' 골드', '')} />
-            <VBar />
             <Coin art="gem" icon={ICONS.gem} text={String(dia)} />
             {/*
               ── 여기 있던 하트를 걷었다 ──
@@ -311,22 +311,22 @@ export function TopBar({ gates = true }: {
         </Row>
 
         {/*
-          ── 아랫줄 · 갈 곳 여섯 ──
+          ── 아랫줄 · 갈 곳 여섯 ── **각자 액자를 두른다.**
 
-          **알약 하나 위에 여섯**이다. 테두리도 칸막이도 없다 — 한 판 위에
-          나란히 놓인 것들은 설명 없이 한 벌로 읽힌다. 칸마다 네모를 두르거나
-          세로줄로 가르면 작은 상자 여섯, 또는 표가 된다. 둘 다 해 봤다.
+          한동안 알약 하나 위에 여섯을 얹어 뒀다. 테두리도 칸막이도 없이 —
+          "한 판 위에 나란히 놓인 것들은 설명 없이 한 벌로 읽힌다" 는 이유였고,
+          칸마다 네모를 두르면 작은 상자 여섯이 된다고 봤다.
+
+          시안은 여섯을 각자 액자에 넣는다. 다시 해 보니 예전에 실패한 까닭이
+          테두리 자체가 아니었다 — **두 겹**이 아니어서였다. 순백 한 줄만
+          두르면 그건 칸막이지만, 바깥 줄과 안쪽 흐린 줄이 같이 있으면 판때기가
+          된다 (`ui/Frame`). 판때기 여섯은 상자가 아니라 **누를 것 여섯**이다.
+
+          여섯이 다 같은 밝기인 것도 여기서는 맞다. 아래 띠와 달리 이 줄에는
+          "지금 여기" 가 없다 — 전부 다른 데로 나가는 문이다.
         */}
         {gates && (
-          <Row
-            gap={2}
-            style={{
-              paddingHorizontal: SP.xs,
-              paddingVertical: 2,
-              borderRadius: R.lg,
-              backgroundColor: SURF.veil,
-            }}
-          >
+          <Row gap={SP.xs}>
             {GATES.map((g) => (
               <Gate
                 key={g.id}

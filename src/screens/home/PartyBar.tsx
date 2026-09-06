@@ -68,7 +68,8 @@ import { marksOf } from '@/core/passives';
 import { Row, Stars, T, Tag } from '@/ui/atoms';
 import { StatusRow } from './StatusRow';
 import { Sprite } from '@/ui/Sprite';
-import { BORDER, FS, LINE, O, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
+import { FrameArt, frameStyle } from '@/ui/Frame';
+import { FS, LINE, O, R, SHIELD_C, SP, SURF, WHITE } from '@/ui/theme';
 
 /** 얼굴 한 변 (px) — 34 였다. 줄을 걷어 낸 만큼 얼굴이 커진다 */
 const FACE = 46;
@@ -179,25 +180,28 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
               key={i}
               onPress={() => onPick(i)}
               style={({ pressed }) => [
-                BORDER,
+                /*
+                  ── 찬 칸과 빈 칸이 다른 **면**이다 ──
+
+                  찬 칸은 액자를 두르고 한 단 **올라오고**, 빈 칸은 한 단
+                  **파인다** (`sunk`) — 파인 자리는 설명 없이 "여기에 넣어라"
+                  로 읽힌다.
+
+                  액자가 두 겹인 까닭은 `ui/Frame` 에 적어 두었다. 시안의
+                  파티 칸이 도톰해 보이는 것이 그 두 줄에서 온다.
+                */
+                frameStyle({ hi: !!c, sunk: !c, pressed }),
                 {
                   flex: 1,
                   padding: 3,
                   alignItems: 'center',
                   opacity: pressed ? 0.6 : 1,
-                  /*
-                    ── 찬 칸과 빈 칸이 다른 **면**이다 ──
-
-                    찬 칸은 한 단 **올라오고** (`SURF.up`) 빈 칸은 한 단
-                    **파인다** (`SURF.down`) — 파인 자리는 설명 없이 "여기에
-                    넣어라" 로 읽힌다.
-                  */
                   borderStyle: c ? 'solid' : 'dashed',
-                  borderColor: c ? LINE.mid : LINE.low,
-                  backgroundColor: c ? SURF.up : SURF.down,
                 },
               ]}
             >
+              {/* 빈 칸에는 안 두른다 — 파인 자리에 액자를 두르면 차 보인다 */}
+              {!!c && <FrameArt hi />}
               {c && d ? (
                 <>
                   {/*

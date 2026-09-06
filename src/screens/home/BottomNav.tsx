@@ -19,16 +19,26 @@
  * 칸 위에 얹혀서 화면을 한 번 더 갈랐다. 흑백이라 솟은 것과 얹힌 것을
  * 그림자로 이을 수가 없어서, 그냥 **떠 있는 네모**가 됐다.
  *
- * 지금은 솟지 않는다. 대신 셋으로 말한다.
+ * ## 다시 액자를 두른다 — 다만 **하나만 밝게**
  *
- *   1. **알약 배경** — 고른 칸에만 깔린다. 네모가 아니라 알약이라, 띠를
- *      가르는 칸막이가 아니라 **띠 위를 미끄러지는 표시**로 읽힌다
- *   2. **밝기** — 안 고른 칸은 그림도 글자도 흐리다 (`O.sub`). 흑백에서
- *      "지금 여기" 를 말하는 제일 싼 수단이다
+ * 그다음에는 반대로 갔다. 테두리를 통째로 지우고 고른 칸에만 알약을 깔았다.
+ * 이유는 "다섯이 각자 네모를 두르면 띠 하나가 아니라 **작은 상자 다섯**이
+ * 된다" 였고, 그때는 맞았다 — 다섯이 **똑같이 밝은 네모**였기 때문이다.
+ *
+ * 받은 시안(`assets/2026-09-06/456456.jpg`)은 그 함정을 다르게 피한다.
+ * 네모를 지우는 대신 **하나만 도드라지게** 한다. 고른 칸은 테두리가 밝고
+ * 면이 차 있고 그림이 크고, 나머지 넷은 테두리가 거의 안 보인다. 그러면
+ * 상자 다섯이 아니라 **눌린 건반 하나가 있는 건반 다섯 줄**로 읽힌다.
+ *
+ * 액자는 두 겹이다 (`ui/Frame`) — 바깥 줄과 그 한 칸 안의 흐린 줄. 1-bit
+ * 에는 그림자가 없으므로, 그 틈을 눈이 모서리의 경사로 읽는 것이 여기서
+ * 낼 수 있는 유일한 입체감이다.
+ *
+ * 넷을 흐리게 두는 규칙은 그대로다.
+ *
+ *   1. **액자** — 고른 칸만 테두리가 밝고 면이 찬다 (`frameStyle`)
+ *   2. **밝기** — 안 고른 칸은 그림도 글자도 흐리다 (`O.dim`)
  *   3. **크기** — 고른 칸의 그림만 한 단계 크다
- *
- * 칸마다 두르던 테두리는 지웠다. 다섯이 각자 네모를 두르면 띠 하나가 아니라
- * 작은 상자 다섯이 된다.
  */
 import React from 'react';
 import { Pressable, View } from 'react-native';
@@ -38,7 +48,8 @@ import { Sprite } from '@/ui/Sprite';
 import { NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
-import { C, FS, LINE, O, R, SP, SURF } from '@/ui/theme';
+import { FrameArt, frameStyle } from '@/ui/Frame';
+import { C, FS, LINE, O, SP } from '@/ui/theme';
 
 /** 아래 띠가 여는 화면들 — 지금 실제로 있는 것은 둘이다 */
 export type TabId = 'main' | 'hero';
@@ -79,6 +90,8 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
         paddingTop: SP.xs + 2,
         paddingBottom: insets.bottom + SP.xs,
         paddingHorizontal: SP.xs + insets.left,
+        /* 액자끼리 붙으면 테두리가 두 줄로 겹쳐 보인다 */
+        gap: SP.xs,
       }}
     >
       {TABS.map((t) => {
@@ -92,17 +105,19 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
               if (t.id === 'hero' || t.id === 'main') { onTab(t.id as TabId); return; }
               soon(t.label);
             }}
-            style={({ pressed }) => ({
-              /* 다섯이 **정확히 같은 폭**이다 — 라벨 길이가 자리를 못 바꾼다 */
-              flex: 1,
-              paddingVertical: SP.xs + 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 3,
-              borderRadius: R.round,
-              backgroundColor: here ? SURF.up : (pressed ? SURF.up : 'transparent'),
-            })}
+            style={({ pressed }) => [
+              frameStyle({ hi: here, pressed }),
+              {
+                /* 다섯이 **정확히 같은 폭**이다 — 라벨 길이가 자리를 못 바꾼다 */
+                flex: 1,
+                paddingVertical: SP.xs + 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 3,
+              },
+            ]}
           >
+            <FrameArt hi={here} />
             {/*
               `assets/sprites/nav_bot/` 이 있으면 그것을, 없으면 코드 도트를
               그린다 (`Sprite` 의 `fallback`). `NAV` 는 아트가 올 때까지
