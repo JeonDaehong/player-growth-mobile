@@ -21,15 +21,23 @@
  * 셋 다 **같은 부품**을 쓴다 (`CharStats` · `SkillPanel`). 창과 화면이 각자
  * 그리면 한쪽만 고쳐지고, 그때부터 같은 사람의 공격력이 자리마다 다르게 뜬다.
  *
- * ## 얼굴이 아니라 **전신**이다
+ * ## 무대 하나에 인물이 선다
+ *
+ * 얼굴만 띄우던 자리를 **상자 하나**로 바꿨다 (`STAGE_H`). 배경이 깔리고,
+ * 그 위에 전신이 서고, 좌우 화살표가 그 위에 얹힌다.
  *
  * 목록 어디에나 뜨는 흉상을 여기서도 썼었다 (`avatar`). 그런데 이 화면은
  * 한 사람만 세워 놓고 들여다보는 자리라, 파티 칸에 46px 로 박히는 것과
  * **같은 그림**이면 크게 띄운 값을 못 한다 — 키운 티가 안 난다.
  *
- * 전신은 아직 안 왔다. 그동안은 흉상으로 버틴다 (`fallbackSet`) — 상자 크기와
- * 자리는 지금 잡아 두므로, 그림이 들어오면 `assets/sprites/char_full/` 에
- * 넣는 것으로 끝난다. 프롬프트는 `docs/CHAR_FULL_PROMPTS.md` 다.
+ * 전신도 배경도 아직 안 왔다. 그동안은 흉상이 대신 서고 배경 자리는 그냥
+ * 어둡다 (`fallbackSet` · `SURF.down`) — 상자 크기와 자리는 지금 잡아 두므로,
+ * 그림이 들어오면 폴더에 넣는 것으로 끝난다. 프롬프트는
+ * `docs/CHAR_FULL_PROMPTS.md` (인물) 와 `docs/HERO_BG_PROMPT.md` (배경) 다.
+ *
+ * 화살표를 무대 **안**에 얹은 이유는, 밖에 두면 인물이 설 폭이 화살표 둘만큼
+ * 좁아지기 때문이다. 배경은 어차피 화면 폭을 다 쓰는 그림이라, 그 위에
+ * 얹으면 인물은 넓은 무대를 그대로 쓰고 화살표는 무대 양 끝에 붙는다.
  *
  * ## 코스튬과 인연
  *
@@ -87,9 +95,18 @@ function Arrow({ on, label, onPress }: {
   );
 }
 
-/** 전신이 서는 상자 — 그림이 오기 전에도 자리는 이 크기다 */
-const FULL_W = 104;
-const FULL_H = 132;
+/**
+ * 무대 — 배경이 깔리고 인물이 서는 상자. 폭은 화면을 다 쓴다.
+ *
+ * 그림이 오기 전에도 자리는 이 크기다. 높이를 값으로 박아 두는 이유는,
+ * 인물마다 그림 비율이 달라도 **무대가 안 움직여야** 하기 때문이다 — 좌우로
+ * 넘길 때 상자가 늘었다 줄면 아래 이름·별·레벨이 통째로 오르내린다.
+ */
+const STAGE_H = 176;
+
+/** 무대 위 인물 — 발밑에 조금 남겨 배경 바닥이 보이게 한다 */
+const FULL_W = 110;
+const FULL_H = 140;
 
 /**
  * 얼굴 옆의 작은 단추 — 코스튬 · 인연 · 월페이퍼.
@@ -232,78 +249,115 @@ export function HeroManage({ pick, onPick }: {
       />
 
       {/*
-        ── 누구인가 ── 얼굴을 가운데 두고 좌우로 넘긴다.
+        ── 무대 ── 배경 · 인물 · 화살표가 이 상자 하나 안에 겹쳐 있다.
 
-        목록에서 고르는 것보다 이쪽이 맞다. 가진 사람이 넷 안팎이라 목록을
-        따로 둘 만큼 많지 않고, 넘기는 동안 **바로 앞뒤 사람과 견주게** 된다 —
-        누구를 키울까가 원래 그런 비교다.
+        목록에서 고르는 것보다 좌우로 넘기는 쪽이 맞다. 가진 사람이 넷
+        안팎이라 목록을 따로 둘 만큼 많지 않고, 넘기는 동안 **바로 앞뒤
+        사람과 견주게** 된다 — 누구를 키울까가 원래 그런 비교다.
+
+        인물은 바닥에 붙여 세운다 (`flex-end`). 전신은 발이 아래에 있는
+        그림이라 가운데로 맞추면 사람마다 발 높이가 달라지고, 좌우로 넘길
+        때마다 인물이 위아래로 흔들린다.
       */}
-      <Row between style={{ alignItems: 'center' }}>
-        <Arrow on={at > 0} label="‹" onPress={() => onPick(owned[at - 1])} />
+      <View
+        style={{
+          height: STAGE_H,
+          borderRadius: R.md,
+          overflow: 'hidden',
+          backgroundColor: SURF.down,
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+        }}
+      >
+        {/*
+          ── 배경 ──
 
-        <View style={{ alignItems: 'center', flex: 1 }}>
-          {/*
-            ── 전신이 서는 자리 ──
+          **늘 같은 한 장**이다. 사람마다 다른 곳에 세우면 넘길 때 장소가
+          바뀌어서, 바뀐 것이 사람인지 화면인지가 안 갈린다. 여기는 인물을
+          견주는 자리라 뒤가 고정이어야 앞이 비교된다.
 
-            아직 그림이 없어 흉상이 대신 선다 (`fallbackSet`). 상자를 먼저
-            잡아 두는 이유는 머리말에 있다 — 그림이 와도 자리는 안 움직인다.
+          `stretch` 로 늘린다 — 배경은 상자에 빈틈없이 들어차야 하고, 먼
+          풍경은 조금 늘어나도 안 보인다 (`Sprite` 의 `fit`).
 
-            바닥에 붙여 세운다 (`flex-end`). 전신은 발이 아래에 있는 그림이라
-            가운데로 맞추면 사람마다 발 높이가 달라지고, 좌우로 넘길 때마다
-            인물이 위아래로 흔들린다.
-          */}
-          <View
-            style={{
-              width: FULL_W,
-              height: FULL_H,
-              borderRadius: R.md,
-              backgroundColor: SURF.down,
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              overflow: 'hidden',
-            }}
-          >
-            <Sprite
-              set="char_full"
-              name={d.art}
-              fallbackSet="avatar"
-              size={FULL_W}
-              style={{ width: FULL_W, height: FULL_H }}
-            />
-          </View>
+          많이 죽여서 깐다. 인물도 흰 선이라, 배경이 또렷하면 둘이 같은
+          밝기로 다투고 그러면 **사람이 안 읽힌다.** 배경은 여기가 어디인지만
+          말하면 된다.
+        */}
+        <Sprite
+          set="bg_hero"
+          name="hall"
+          size={STAGE_H}
+          fit="stretch"
+          opacity={0.3}
+          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, width: '100%', height: '100%' }}
+        />
 
-          <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
-            <T size={FS.hero} bold>{d.name}</T>
-            <Tag
-              label={RARITY_NAME[d.rarity]}
-              fill={d.rarity === 'mythic' || d.rarity === 'legendary'}
-            />
-            <Sprite set="role_icon" name={BATTLE_TYPE_ART[battleTypeOf(c.id)]} size={13} />
-          </Row>
-          <View style={{ marginTop: 3 }}>
-            <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={13} />
-          </View>
+        {/*
+          아직 그림이 없어 흉상이 대신 선다 (`fallbackSet`). 상자를 먼저
+          잡아 두는 이유는 머리말에 있다 — 그림이 와도 자리는 안 움직인다.
+        */}
+        <Sprite
+          set="char_full"
+          name={d.art}
+          fallbackSet="avatar"
+          size={FULL_W}
+          style={{ width: FULL_W, height: FULL_H, marginBottom: SP.sm }}
+        />
 
-          {/*
-            ── 레벨과 전투력은 **다른 줄**이다 ──
+        {/*
+          ── 화살표는 무대 **위에** 얹힌다 ──
 
-            `Lv 27 / 50   전투력 51,770` 이 한 줄에 있었다. 숫자가 넷이라
-            어디까지가 레벨이고 어디부터가 전투력인지 한눈에 안 갈렸다 —
-            특히 `/ 50` 과 `51,770` 이 붙어 있으면 한 덩어리로 읽힌다.
+          밖에 두면 인물이 설 폭이 화살표 둘만큼 좁아진다. 양 끝에 붙여
+          두면 배경 위를 밟고 서는 셈이라 무대는 폭을 다 쓴다.
+        */}
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Arrow on={at > 0} label="‹" onPress={() => onPick(owned[at - 1])} />
+          <Arrow on={at < owned.length - 1} label="›" onPress={() => onPick(owned[at + 1])} />
+        </View>
+      </View>
 
-            줄을 나누고, 전투력에는 이름표를 붙여 앞에 세운다.
-          */}
-          <T size={FS.label} bold style={{ marginTop: SP.xs }}>
-            {`Lv ${c.lv} / ${capOf(c)}`}
-          </T>
-          <Row gap={SP.xs} style={{ marginTop: 2, alignItems: 'baseline' }}>
-            <T size={FS.tiny} dim="sub">전투력</T>
-            <T size={FS.label} bold>{charPower(c).toLocaleString()}</T>
-          </Row>
+      {/* ── 누구인가 ── 무대 바로 아래. 이름 · 등급 · 역할 · 별 · 레벨 */}
+      <View style={{ alignItems: 'center' }}>
+        <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
+          <T size={FS.hero} bold>{d.name}</T>
+          <Tag
+            label={RARITY_NAME[d.rarity]}
+            fill={d.rarity === 'mythic' || d.rarity === 'legendary'}
+          />
+          <Sprite set="role_icon" name={BATTLE_TYPE_ART[battleTypeOf(c.id)]} size={13} />
+        </Row>
+        <View style={{ marginTop: 3 }}>
+          <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={13} />
         </View>
 
-        <Arrow on={at < owned.length - 1} label="›" onPress={() => onPick(owned[at + 1])} />
-      </Row>
+        {/*
+          ── 레벨과 전투력은 **다른 줄**이다 ──
+
+          `Lv 27 / 50   전투력 51,770` 이 한 줄에 있었다. 숫자가 넷이라
+          어디까지가 레벨이고 어디부터가 전투력인지 한눈에 안 갈렸다 —
+          특히 `/ 50` 과 `51,770` 이 붙어 있으면 한 덩어리로 읽힌다.
+
+          줄을 나누고, 전투력에는 이름표를 붙여 앞에 세운다.
+        */}
+        <T size={FS.label} bold style={{ marginTop: SP.xs }}>
+          {`Lv ${c.lv} / ${capOf(c)}`}
+        </T>
+        <Row gap={SP.xs} style={{ marginTop: 2, alignItems: 'baseline' }}>
+          <T size={FS.tiny} dim="sub">전투력</T>
+          <T size={FS.label} bold>{charPower(c).toLocaleString()}</T>
+        </Row>
+      </View>
 
       {/*
         ── 얼굴에 붙는 것들 ──
@@ -324,13 +378,39 @@ export function HeroManage({ pick, onPick }: {
         )}
       </Row>
 
+      {/*
+        ── 무엇을 쓰나 ── 예시 화면처럼 로고 칸이 가로로 선다 (`grid`).
+
+        줄로 늘어놓으면 기술 넷이 세로를 그만큼 먹고, 그만큼 아래 수치와
+        키우는 상자가 밀린다. 자세한 것은 칸을 누르면 아래에 펴진다.
+      */}
+      <SkillPanel c={c} party={party} chars={chars} grid />
+
       <Sep />
 
       {/*
-        ── 자라는 세 축 ── 등급 · 성 · 레벨 (`core/growth`).
+        ── 지금 얼마나 ── 두 칸으로 선다 (`cols`).
 
-        **스킬보다 먼저 온다.** 성이 스킬을 여는 축이라 (`skillSlots`), 아래
-        기술 목록에서 잠긴 칸을 보기 전에 "왜 잠겼나" 가 여기 있어야 한다.
+        여덟 줄이 한 칸으로 서면 세로를 여덟 줄만큼 먹는다. 두 칸이면 넷이고,
+        그 차이가 곧 아래 키우는 단추가 화면 안에 있느냐 밖에 있느냐다.
+      */}
+      <CharStats c={c} party={party} chars={chars} cols={2} />
+      <Sep />
+
+      {/*
+        ── 자라는 축 ── 레벨 · 성 · 각성 (`core/growth`).
+
+        **맨 아래다.** 한동안 스킬보다 위에 뒀다 — 성이 스킬을 여는 축이라
+        (`skillSlots`) 잠긴 칸을 보기 전에 "왜 잠겼나" 가 먼저여야 한다고
+        봤다. 그런데 그러면 화면을 열자마자 **단추 세 개**부터 마주치고,
+        이 사람이 누구이고 무엇을 하는지는 그 아래로 밀린다.
+
+        받은 예시 화면도 같은 차례다: 인물 · 기술 · 수치를 다 보여 준 다음
+        맨 밑에 승급과 레벨업이 있다. **보는 것이 먼저고 하는 것이 나중**인데,
+        키우는 단추는 손이 닿아야 하는 것이라 아래쪽이 오히려 맞다.
+
+        잠긴 칸은 제 자리에서 몇 성이 필요한지를 말하므로 (`skillNeeds`)
+        위아래가 바뀌어도 길이 끊기지 않는다.
       */}
       <View
         style={{
@@ -401,12 +481,6 @@ export function HeroManage({ pick, onPick }: {
         style={{ marginTop: SP.sm, marginBottom: SP.sm }}
         onPress={() => setTree(true)}
       />
-
-      <SkillPanel c={c} party={party} chars={chars} />
-
-      <Sep />
-      <CharStats c={c} party={party} chars={chars} />
-
     </>
   );
 }
