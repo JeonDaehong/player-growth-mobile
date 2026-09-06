@@ -63,15 +63,15 @@
  * 늘 같은 한 마디는 두 번째 볼 때부터 안 읽힌다 — 자세한 까닭은 `core/lines`
  * 머리말에.
  *
- * ## 머리를 쓰다듬으면 다른 말을 한다
+ * ## 어디를 누르느냐에 따라 다른 말을 한다
  *
- * 인물의 **위쪽**을 누르면 (`PAT_ZONE`) 평소 대사 대신 쓰다듬기 대사가 나오고
- * (`patOf`), 그동안 부끄러워하는 그림으로 바뀐다 (`char_shy`). 아래쪽을
- * 누르면 여느 때처럼 다음 말이다.
+ * 인물 그림 통째가 과녁이고, 그 안에 **가슴께 띠 하나**가 따로 있다
+ * (`PAT_TOP`~`PAT_BOT`). 띠 안을 누르면 특별한 반응 셋 중 하나가 나오고
+ * (`patOf`) 그동안 부끄러워하는 그림으로 바뀐다 (`char_shy`). 그 밖을 누르면
+ * 여느 때처럼 다음 말이다.
  *
- * 과녁을 둘로 나눈 티는 안 낸다. 테두리도 안내도 없다 — 눌러 보다 알게 되는
- * 편이 낫고, 무엇보다 **모르고 지나가도 손해가 없다.** 위를 눌러도 말은
- * 나오니까.
+ * 띠가 있다는 티는 안 낸다. 테두리도 안내도 없다 — 눌러 보다 알게 되는 편이
+ * 낫고, 무엇보다 **모르고 지나가도 손해가 없다.** 어디를 눌러도 말은 나온다.
  *
  * 그림이 아직 없으면 평소 그림 그대로다 (`fallbackSet`). 대사만 바뀐다.
  */
@@ -196,13 +196,17 @@ function ActBtn({ art, label, onPress }: {
 }
 
 /**
- * 인물 그림에서 **머리로 치는** 위쪽 비율.
+ * 인물 그림에서 **가슴께로 치는** 띠 — 위에서 이만큼 내려온 데부터 이만큼까지.
  *
- * 넷 다 7~8등신으로 그려져 있어 (`docs/CHAR_FULL_PROMPTS.md`) 머리는 위
- * 8분의 1 남짓이다. 조금 넉넉하게 잡는다 — 정확히 머리만 과녁으로 두면
- * 손가락이 자꾸 빗나가고, 조금 넘겨 잡아도 "머리 쪽을 눌렀다" 로 읽힌다.
+ * 넷 다 7~8등신으로 그려져 있다 (`docs/CHAR_FULL_PROMPTS.md`). 그러면 머리가
+ * 위 8분의 1, 목과 어깨가 그 아래 한 뼘, 가슴이 대략 **위에서 16%~34%** 다.
+ *
+ * 띠로 잡는 까닭은 인물마다 조금씩 다르기 때문이다 — 아녜스는 치맛단이 길어
+ * 몸이 위로 몰리고 비앙카는 다리가 길어 아래로 내려간다. 좁게 잡으면 어떤
+ * 사람은 눌러도 반응이 없고, 그건 고장으로 읽힌다.
  */
-const PAT_ZONE = 0.22;
+const PAT_TOP = 0.16;
+const PAT_BOT = 0.34;
 
 /** 말풍선이 떠 있는 시간 · 사라져 있는 시간 */
 const TALK_ON = 5000;
@@ -610,28 +614,30 @@ export function HeroManage({ pick, onPick }: {
             size={FULL_W}
             style={{ width: FULL_W, height: FULL_H }}
           />
+          {/*
+            아래에 **통째로 깔린 과녁**이 말 걸기다. 그 위에 좁은 띠 하나를
+            얹어 특별한 반응을 받는다 — 나중에 그린 것이 손가락을 먼저 먹으므로
+            띠 안이면 띠가, 밖이면 통짜가 받는다.
+
+            셋으로 쪼개는 것보다 이쪽이 낫다. 띠 위아래를 따로 만들면 인물
+            그림이 바뀔 때마다 세 값을 다 맞춰야 한다.
+          */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${d.name} 머리 쓰다듬기`}
+            accessibilityLabel={`${d.name}에게 말 걸기`}
+            onPress={talk.bump}
+            style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${d.name}에게 짓궂게 굴기`}
             onPress={talk.pat}
             style={{
               position: 'absolute',
               left: 0,
               right: 0,
-              top: 0,
-              height: FULL_H * PAT_ZONE,
-            }}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${d.name}에게 말 걸기`}
-            onPress={talk.bump}
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: FULL_H * PAT_ZONE,
-              bottom: 0,
+              top: FULL_H * PAT_TOP,
+              height: FULL_H * (PAT_BOT - PAT_TOP),
             }}
           />
         </View>

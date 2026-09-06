@@ -7,7 +7,7 @@
 
 | | |
 |---|---|
-| 어디에 쓰나 | 영웅 관리에서 인물의 **머리를 눌렀을 때** (`screens/home/HeroManage` 의 `PAT_ZONE`) |
+| 어디에 쓰나 | 영웅 관리에서 인물의 **가슴께를 눌렀을 때** (`screens/home/HeroManage` 의 `PAT_TOP`~`PAT_BOT`) |
 | 폴더 | `assets/sprites/char_shy/` |
 | 파일 이름 | `knightgirl.png` · `bunnyaxe.png` · `elfarcher.png` · `nun.png` |
 | 모델 | Gemini |
@@ -15,16 +15,25 @@
 
 ---
 
-## 무엇을 만지나 — **머리입니다**
+## 화면에서 어떻게 쓰이나
 
-가슴을 만지면 반응하는 쪽으로 만들어 달라는 이야기가 있었고, 그건 안 만듭니다.
-`CHARACTER_ART_PROMPTS.md` 에 같은 판단이 이미 적혀 있습니다 — 싫다는 반응을
-눌러서 얻는 것을 게임 규칙으로 가르치는 꼴이 됩니다.
+인물 그림 안에 가슴께 띠가 하나 있고 (`PAT_TOP`~`PAT_BOT`), 그 안을 누르면
+이 그림으로 바뀌면서 특별한 대사 셋 중 하나가 나옵니다 (`core/lines` 의
+`PAT`). 5초 뒤에 평소 그림으로 돌아갑니다.
 
-대상만 바꾸면 하고 싶던 것은 그대로 됩니다. 부끄러워하는 얼굴도, 특별한 대사
-셋도, 계속 눌러 보고 싶어지는 것도. 오히려 **넷의 성격이 더 갈립니다** —
-이졸데는 갑옷은 뚫려도 이건 못 막고, 리안느는 화살을 쏘겠다고 하고, 아녜스는
-기도를 잊어버립니다 (`core/lines` 의 `PAT`).
+**넷이 다르게 당황합니다.** 그게 이 넉 장을 따로 그리는 이유입니다 — 넷이 다
+같은 표정이면 한 장을 돌려 쓰는 것과 다를 게 없습니다.
+
+| | |
+|---|---|
+| 이졸데 | 대처법이 없다. 겁이 아니라 처음 겪는 일이다 |
+| 비앙카 | 농담으로 덮으려다 실패한다. 웃고 있는데 화나 있다 |
+| 리안느 | 말이 짧아진다. 표정도 짧다 |
+| 아녜스 | 존댓말이 무너진다 |
+
+**받아 주는 얼굴은 안 그립니다.** 좋아하거나 유혹하는 표정이면 이 그림이
+"계속 누르라" 가 되는데, 그러면 넷의 성격이 아니라 보상표가 됩니다. 넷 다
+**싫어하는데 방식이 다른** 쪽입니다.
 
 ## 안 와도 굴러갑니다
 
@@ -54,15 +63,18 @@
 
 셋입니다.
 
-1. **얼굴** — 뺨에 1-bit 홍조(짧은 빗금 두세 줄), 눈이 살짝 커지거나 옆으로
-   비끼고, 눈썹이 안쪽으로 올라갑니다
-2. **한쪽 손** — 머리 쪽으로 반쯤 올라갑니다. 막는 것도 아니고 안 막는 것도
-   아닌 어정쩡한 높이입니다
-3. **자세가 한 뼘 움츠러듭니다** — 어깨가 조금 올라가고 턱이 조금 당겨집니다.
-   발은 그대로입니다
+1. **얼굴** — 뺨에 1-bit 홍조(짧은 빗금 두세 줄), 눈이 커지고 옆으로 비끼고,
+   눈썹이 안쪽으로 올라갑니다
+2. **한쪽 팔** — 가슴 앞을 가로질러 올라옵니다. 다 가리는 것도 아니고 안
+   가리는 것도 아닌 어정쩡한 높이입니다
+3. **자세가 한 뼘 움츠러듭니다** — 어깨가 올라가고 턱이 당겨지고 상체가 살짝
+   비틀립니다. 발은 그대로입니다
 
 **무기는 그대로 듭니다.** 놓거나 떨어뜨리면 다른 장면이 되고, 무엇보다 실루엣이
-바뀌어서 두 그림이 다른 사람으로 보입니다.
+바뀌어서 두 그림이 다른 사람으로 보입니다. 그래서 **움직이는 팔은 하나**입니다.
+
+**옷은 한 올도 안 바뀝니다.** 흐트러지거나 벗겨지거나 비치지 않습니다 — 그건
+다른 그림이고, 무엇보다 실루엣이 달라져서 두 장이 안 겹칩니다.
 
 ## 받은 다음
 
@@ -131,19 +143,21 @@ She is SEVEN AND A HALF HEADS TALL. Her hips sit at the exact vertical midpoint.
 NOT chibi, NOT stubby, NOT squat. Same height in the frame as the reference:
 crown one twelfth below the top edge, soles one twelfth above the bottom.
 
-WHAT CHANGES — SOMEONE HAS JUST PATTED HER ON THE HEAD.
+WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST AND SHE IS NOT AMUSED.
 This is the one thing armour does not stop, and she has no procedure for it.
-- HER FACE: eyes wide and cast slightly to one side, not meeting the viewer.
+- HER FACE: eyes wide and cast sharply to one side, not meeting the viewer.
   Eyebrows tilted up at the inner ends. Mouth a small flat line, caught mid-word.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone — this is how a blush is
   drawn in 1-bit. Not a filled patch, not a circle: two or three clean strokes.
-- HER LEFT HAND leaves the pommel and rises HALF WAY toward the top of her head —
-  stopped in the air, fingers open, not actually touching the hair. It is the
-  gesture of someone who started to block and thought better of it.
+- HER LEFT FOREARM comes UP AND ACROSS THE FRONT OF HER BREASTPLATE, held flat
+  against herself, elbow out. It is a guard, not a pose — the gesture of someone
+  who was too slow and is now late to it.
 - HER RIGHT HAND stays on the pommel. THE GREATSWORD STAYS PLANTED POINT-DOWN
   exactly where it is in the reference. She does not let go of it.
-- HER SHOULDERS rise a little and her chin tucks slightly. Her feet do not move.
-Everything else is identical to the reference.
+- HER SHOULDERS rise, her chin tucks, her torso turns a few degrees away from the
+  viewer. Her feet do not move.
+Everything else is identical to the reference. The armour and the dress are drawn
+exactly as before: nothing is loosened, displaced, opened, or removed.
 
 CAMERA — STRAIGHT-ON, EYE LEVEL. Flat and frontal, same as the reference.
 
@@ -198,22 +212,24 @@ PROPORTIONS — UNCHANGED FROM THE REFERENCE.
 She is EIGHT HEADS TALL, the tallest of the four. Hips at the exact vertical
 midpoint. NOT chibi, NOT stubby. Same height in the frame as the reference.
 
-WHAT CHANGES — SOMEONE HAS JUST PATTED HER ON THE HEAD, EARS AND ALL.
-She jokes first and it does not work this time.
+WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
+She jokes first and it does not work this time. She is smiling and she is angry.
 - HER FACE: eyes wide, one eye slightly more open than the other. Eyebrows up at
-  the inner ends. Mouth open in a small startled grin that has gone crooked —
-  she is trying to laugh it off and failing.
+  the inner ends. Mouth open in a startled grin that has gone crooked and tight —
+  the smile is still there and it has stopped meaning anything friendly.
   TWO OR THREE SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes,
   not a filled patch.
-- HER RABBIT EARS: BOTH FOLD BACK AND DOWN, flattened against her head the way a
-  real rabbit's ears go when startled. THE ONE BENT TIP IS STILL BENT — that is
-  who she is. The ears must still fit inside the frame; nothing is cropped.
-- HER LEFT HAND comes off her hip and rises toward the top of her head, stopping
-  in the air, fingers spread. The torn cuff swings with it.
+- HER RABBIT EARS: BOTH FOLD BACK AND DOWN, flattened the way a startled rabbit
+  lays its ears. THE ONE BENT TIP IS STILL BENT — that is who she is. The ears
+  must still fit inside the frame; nothing is cropped.
+- HER LEFT FOREARM comes off her hip and UP ACROSS THE FRONT OF THE LEOTARD,
+  held flat against herself, elbow out. The torn cuff hangs from that wrist.
 - HER RIGHT HAND stays up on the haft. THE AXE STAYS SHOULDERED exactly as in
   the reference. She does not drop it.
 - HER SHOULDERS rise; her weight stays cocked on the same leg. Her feet do not move.
-Everything else is identical to the reference.
+Everything else is identical to the reference. The leotard, collar, bow tie, belt
+and stockings are drawn exactly as before: nothing is loosened, displaced, pulled
+aside, or made transparent.
 
 CAMERA — STRAIGHT-ON, EYE LEVEL. Flat and frontal, same as the reference.
 
@@ -267,20 +283,22 @@ PROPORTIONS — UNCHANGED FROM THE REFERENCE.
 She is SEVEN HEADS TALL and SLIGHT — narrow, never short-legged, never a child.
 Hips at the exact vertical midpoint. Same height in the frame as the reference.
 
-WHAT CHANGES — SOMEONE HAS JUST PATTED HER ON THE HEAD.
-She does not have a reaction ready for this and it shows.
+WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
+She does not have a reaction ready for this and it shows. She says almost nothing.
 - HER FACE: eyes wide and turned sharply to one side, deliberately not looking at
-  the viewer. Eyebrows up at the inner ends. Mouth a small tight line — she has
-  decided not to say anything and it is costing her.
+  the viewer. Eyebrows up at the inner ends. Mouth a small tight flat line — she
+  has decided not to say anything and it is costing her.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes only.
 - HER EARS: the long swept ears DROOP, tilting down and back. This is the loudest
   signal on her, because her ears are the first thing anyone notices.
-- HER RIGHT HAND leaves the quiver and rises HALF WAY toward her head, stopping
-  in the air, fingers half closed. It does not touch the hair.
+- HER RIGHT FOREARM leaves the quiver and comes UP ACROSS THE FRONT OF HER TUNIC,
+  held flat against herself, elbow tucked in close — she is small and she makes
+  herself smaller.
 - HER LEFT HAND stays down at her side. THE BOW STAYS EXACTLY WHERE IT IS in the
   reference, lower limb near her boot. She does not raise or drop it.
-- HER SHOULDERS rise slightly and her chin tucks. Her feet do not move.
-Everything else is identical to the reference.
+- HER SHOULDERS rise and her chin tucks. Her feet do not move.
+Everything else is identical to the reference. The tunic, belt, bracer and cloak
+are drawn exactly as before: nothing is loosened, displaced, or removed.
 
 CAMERA — STRAIGHT-ON, EYE LEVEL. Flat and frontal, same as the reference.
 
@@ -334,22 +352,21 @@ She is SEVEN HEADS TALL. The habit is a TALL NARROW BELL, hem no more than two
 and a half head-widths across — a wide skirt makes her look squat. Same height
 in the frame as the reference; the hem is the bottom of her silhouette.
 
-WHAT CHANGES — SOMEONE HAS JUST PATTED HER ON THE HEAD, OVER THE VEIL.
+WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
 She was in the middle of something and has entirely lost it.
 - HER FACE: eyes wide and looking up and away, which is the opposite of her usual
   lowered gaze — that reversal is the whole point. Eyebrows up at the inner ends.
   Mouth small and open, a word that did not finish.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes only.
-- HER VEIL: pushed slightly askew, one edge lifted where the hand touched it, a
-  few more pale strands escaping at the temples than in the reference. THE PIN
-  IS STILL ON HER LEFT SIDE ONLY.
-- HER RIGHT HAND comes up from the censer toward the veil, stopping in the air
-  beside her head, fingers half open. The short chain is still wound twice
-  around it.
-- HER LEFT HAND still holds the censer, now hanging lower and swinging slightly.
-  The ribbon of smoke bends with it. THE CENSER STAYS IN HER HAND.
-- HER SHOULDERS rise a little and her chin tucks. The hem does not move.
-Everything else is identical to the reference.
+- HER RIGHT FOREARM comes up and ACROSS THE FRONT OF THE PALE SCAPULAR, held flat
+  against herself, the wide bell sleeve falling over it. The short chain is still
+  wound twice around that hand.
+- HER LEFT HAND still holds the censer, now hanging lower and swinging out to one
+  side. The ribbon of smoke bends with it. THE CENSER STAYS IN HER HAND.
+- HER SHOULDERS rise and her chin tucks. A few more pale strands escape at the
+  temples. THE VEIL IS STILL PINNED ON HER LEFT SIDE ONLY. The hem does not move.
+Everything else is identical to the reference. The habit, scapular, sash and veil
+are drawn exactly as before: nothing is loosened, displaced, opened, or removed.
 
 CAMERA — STRAIGHT-ON, EYE LEVEL. Flat and frontal, same as the reference.
 
@@ -379,8 +396,15 @@ a small sprite.
 평소 전신을 나란히 놓고 보세요 — 발 위치와 어깨 높이가 다르면 다시 받습니다.
 누를 때마다 인물이 홱 튑니다.
 
-**무기를 놓습니다.** "부끄러워한다" 를 읽고 손을 둘 다 얼굴로 올려 버립니다.
-한 손은 반드시 무기에 남아 있어야 실루엣이 지켜집니다.
+**무기를 놓습니다.** "부끄러워한다" 를 읽고 팔을 둘 다 올려 버립니다. 한
+손은 반드시 무기에 남아 있어야 실루엣이 지켜집니다 — 움직이는 팔은 하나입니다.
+
+**옷을 손봅니다.** 이 대목을 읽으면 옷깃을 벌리거나 끈을 흘러내리게 하려
+합니다. 옷은 평소 그림과 **한 올도 같아야** 합니다. 달라진 것은 얼굴과 팔
+하나뿐이고, 그래야 두 장이 겹쳐집니다.
+
+**좋아하는 얼굴을 그립니다.** 눈웃음이나 유혹하는 표정으로 가면 이 그림이
+"계속 누르라" 가 됩니다. 넷 다 **싫어하는데 방식이 다른** 쪽입니다.
 
 **하트와 반짝이를 뿌립니다.** 얼굴 옆에 ♥ 나 별을 넣으려 합니다. 검은 바닥에
 인물 하나뿐이어야 하고, 그래야 슬라이서가 여백을 제대로 깎습니다.
