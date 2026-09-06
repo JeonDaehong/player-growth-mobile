@@ -25,7 +25,7 @@ import type { HitFx } from '@/core/chars';
 import type { Mark } from '@/core/passives';
 import { Sprite } from '@/ui/Sprite';
 import { BAD_C, BLACK, GOOD_C, MONO, WHITE } from '@/ui/theme';
-import { NOTE_SHIFT } from './noteLane';
+import { NOTE_SHIFT, noteNeedsRoom } from './noteLane';
 
 /** 이펙트 한 판의 길이 */
 export const FX_MS = 260;
@@ -1305,11 +1305,16 @@ export function StatusNote({
 }: {
   text: string;
   /**
-   * 옆으로 얼마나 비켜설까 (px). 왼쪽이 음수 (`noteLane` 의 `NOTE_SHIFT`).
+   * 옆으로 비켜설 **방향과 거리** (px). 왼쪽이 음수 (`noteLane`).
    *
    * 나란히 선 둘이 같은 글을 동시에 띄울 때 서로 반대쪽으로 물러난다.
    * **위로 올리는 것보다 이쪽이 낫다** — 어느 쪽으로 밀리든 글은 여전히
    * 제 주인 머리 위에 있고, 위로 올리면 그만큼 주인에게서 멀어진다.
+   *
+   * **다만 글이 실제로 넓을 때만 쓴다** (`noteNeedsRoom`). 나란히 선 둘은
+   * 61px 떨어져 있으므로 그보다 좁은 글은 애초에 안 물린다 — 길이를 안 보고
+   * 늘 비키면 `공격력 증가`(50px) 같은 짧은 글까지 옆으로 밀려서, 판이
+   * 열릴 때마다 한 사람만 치우쳐 뜨는 것으로 보인다.
    */
   shift?: number;
   /**
@@ -1366,6 +1371,9 @@ export function StatusNote({
     inputRange: [0, 1], outputRange: [0, -4],
   }), [t]);
 
+  /* 옆과 물릴 만큼 넓은 글만 비켜선다 — 짧은 글은 제자리 가운데다 */
+  const step = noteNeedsRoom(text) ? shift : 0;
+
   return (
     <Animated.View
       pointerEvents="none"
@@ -1405,7 +1413,7 @@ export function StatusNote({
         right: -(14 + NOTE_SHIFT),
         alignItems: 'center',
         opacity: fade,
-        transform: [{ translateX: shift }, { translateY: rise }],
+        transform: [{ translateX: step }, { translateY: rise }],
         zIndex: 48,
       }}
     >
