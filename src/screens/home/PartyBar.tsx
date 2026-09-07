@@ -437,7 +437,7 @@ export function PartyBar({ onPick }: { onPick: (slot: number) => void }) {
                   */}
                   <StatusRow
                     status={marksOf(
-                      c.id, hp, statOf(c).hp, hexOf(hexMap, c.id), alive, fadeMap,
+                      c, hp, statOf(c).hp, hexOf(hexMap, c.id), alive, fadeMap,
                       /*
                         **보호막은 안 넘긴다.** 바로 위에 하늘색 띠로 이미
                         그리고 있고, 저건 로고보다 많은 말을 한다 — 걸렸나뿐

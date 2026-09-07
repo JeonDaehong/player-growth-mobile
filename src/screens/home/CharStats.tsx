@@ -139,7 +139,7 @@ export function CharStats({ c, party, chars, cols = 1, live = true }: {
   const critNow = critOf(base.crit, hex);
 
   /* 관통은 **가진 사람에게만** — 0 짜리 줄이 넷에게 다 붙으면 잡음이다 */
-  const p = anyPierce(c.id);
+  const p = anyPierce(c);
   const pierces: string[] = [];
   if (p.phys) pierces.push('물리');
   if (p.magic) pierces.push('마법');

@@ -34,7 +34,7 @@ import { Row } from '@/ui/atoms';
 import {
   CHARS, HitFx, OwnedChar, SkillDef,
   chargeUp, cutCharge, newCharge, readySkill, skillOf, skillOpen, skillsFor,
-  skillsOf, spendCharge, statOf, swingMs,
+  spendCharge, statOf, swingMs,
 } from '@/core/chars';
 
 import { Sprite } from '@/ui/Sprite';

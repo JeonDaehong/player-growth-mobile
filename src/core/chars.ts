@@ -2241,9 +2241,19 @@ export function blowOf(id: string, sk?: SkillDef): Blow {
  *
  * 패시브와 모든 기술을 다 훑는다. 하나라도 있으면 캐릭터 창이 그 줄을
  * 내건다 (`CharPopup`).
+ *
+ * ## `skillsOf` 가 아니라 `skillsFor` 다
+ *
+ * 여태 캐릭터 **이름**만 받아서 표에 적힌 기술을 훑었다 (`skillsOf`). 관통을
+ * 주는 것이 표가 아니라 **트리**인데 (파쇄의 태세가 검기에 붙인다) 표만 보니
+ * 늘 없는 것으로 나왔다 — 찍어서 실제로 방어를 뚫고 있는 이졸데의 창에
+ * 관통 줄이 안 떴다.
+ *
+ * 그래서 사람을 통째로 받는다. 무엇을 찍었는지는 그 사람에게 물어야 한다.
  */
-export function anyPierce(id: string): Pierce {
-  const all = [blowOf(id), ...skillsOf(id).map((sk) => blowOf(id, sk))];
+export function anyPierce(c: OwnedChar): Pierce {
+  const id = c.id;
+  const all = [blowOf(id), ...skillsFor(c).map((sk) => blowOf(id, sk))];
   return {
     phys: all.some((b) => b.pierce.phys),
     magic: all.some((b) => b.pierce.magic),

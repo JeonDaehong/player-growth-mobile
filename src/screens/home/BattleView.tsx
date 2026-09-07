@@ -715,7 +715,7 @@ export function BattleView({ top, corner }: Props = {}) {
     const out: Record<string, { marks: readonly Mark[]; key: string }> = {};
     for (const c of members(party, chars)) {
       const mine = marksOf(
-        c.id,
+        c,
         hpOf(c, battle.hp),
         statOf(c).hp,
         hexOf(battle.hex, c.id),

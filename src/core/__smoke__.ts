@@ -3409,6 +3409,72 @@ console.log('\n── 스킬 트리 · 코스트 ──');
     (Object.keys(tr.TREE) as CharId[]).every((id) => tr.TREE[id].every(
       (n) => !('cost' in n),
     )));
+
+  /*
+    ── 찍으면 **무엇이든 달라져야 한다** ── 패시브 일곱 자리 전수조사.
+
+    말만 있고 손이 안 간 자리를 잡는다. 트리를 먼저 세우고 효과를 하나씩
+    붙이는 중이라, 표에는 `live: true` 라고 적혀 있는데 정작 `skillsFor` 에
+    가지가 없는 자리가 생길 수 있다 — 그러면 찍어도 아무 일이 안 일어나는데
+    화면은 "적용중" 이라고 말한다.
+
+    이 자리를 찍은 줄기와 그 자리만 뺀 줄기로 기술 목록을 지어서, 필드 하나도
+    안 달라지면 실패다.
+
+    **과열만 예외다.** 저건 기술이 아니라 평타를 손보는 것이라 기술 목록에
+    나타날 수가 없다 (`Fighter` 의 `heatRef` 가 센다). 예외를 이름으로 못
+    박아 두는 까닭: 새 자리가 슬그머니 "아무것도 안 하는 자리" 로 끼는 것을
+    막으려는 것이므로, 빠지는 것은 하나하나 적혀 있어야 한다.
+  */
+  {
+    const chainOf = (id: CharId, at: string): string[] => {
+      const out: string[] = [];
+      let n = tr.TREE[id].find((x) => x.id === at);
+      while (n) {
+        out.unshift(n.id);
+        const up: string | undefined = n.needs;
+        n = up ? tr.TREE[id].find((x) => x.id === up) : undefined;
+      }
+      return out;
+    };
+    /** 기술 데이터로는 표가 안 나는 자리 — 까닭을 적어 둔다 */
+    const NOT_SKILL: Record<string, string> = { ba4: '평타를 손본다 (`Fighter` 의 heatRef)' };
+
+    let dead = '';
+    let n = 0;
+    for (const id of Object.keys(tr.TREE) as CharId[]) {
+      for (const node of tr.TREE[id]) {
+        if (node.kind !== 'passive') continue;
+        n++;
+        const chain = chainOf(id, node.id);
+        const withIt = ct.skillsFor(mk(id, 5, tr.fixTree(id, chain)));
+        const without = ct.skillsFor(mk(id, 5, tr.fixTree(id, chain.filter((x) => x !== node.id))));
+        const same = JSON.stringify(withIt) === JSON.stringify(without);
+        if (same && !NOT_SKILL[node.id]) dead = dead || `${node.id} ${node.name}`;
+        if (!same && NOT_SKILL[node.id]) dead = dead || `${node.id} 는 예외인데 기술이 바뀐다`;
+      }
+    }
+    ok('패시브 자리는 찍으면 정말로 무엇이 달라진다', !dead, dead || `${n}자리`);
+  }
+
+  /*
+    ── 화면이 없는 것을 있다고 말하지 않는가 ──
+
+    둘 다 **표만 보고** 있었다. 관통을 주는 것도 회복을 끄는 것도 트리인데,
+    묻는 쪽은 캐릭터 이름만 들고 물었다.
+  */
+  {
+    const pv = require('./passives') as typeof import('./passives');
+    const plain = mk('knightgirl', 3, ['kg2b']);
+    const brk = mk('knightgirl', 3, ['kg2b', 'kg3b']);
+
+    ok('파쇄의 태세 전에는 관통이 없다', !ct.anyPierce(plain).phys);
+    ok('찍으면 캐릭터 창에 관통이 뜬다', ct.anyPierce(brk).phys);
+
+    const has = (c: OwnedChar) => pv.marksOf(c, 100, 100, []).some((m) => m.label === '불굴의 맹세');
+    ok('불굴의 맹세는 켜져 있을 때만 로고가 뜬다', has(plain));
+    ok('파쇄의 태세가 끄면 로고도 사라진다', !has(brk) && pv.regenOf(brk) === 0);
+  }
 }
 
 console.log(NL + '── 경험의 서 ──');

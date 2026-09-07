@@ -462,7 +462,18 @@ export interface Mark {
  * @param alive 지금 살아 있는 파티원들. 쓰러진 사람의 패시브는 안 걸린다
  */
 export function marksOf(
-  who: string,
+  /**
+   * 누구인가 — **사람 통째로** 받는다.
+   *
+   * 여태 이름만 받았다 (`who: string`). 그래서 `passiveOf(who)` 로 표만 보고
+   * 로고를 띄웠는데, 불굴의 맹세는 **트리가 끌 수 있는** 패시브다 (파쇄의
+   * 태세). 꺼진 이졸데의 머리 위에 계속 초록 로고가 떠 있었고, 전투는 한
+   * 톨도 안 채우고 있었다 — 화면이 없는 것을 있다고 말한 셈이다.
+   *
+   * 무엇이 실제로 걸려 있는지는 `regenOf` 가 안다. 그것을 물으려면 성과
+   * 찍은 자리를 알아야 하므로 사람이 필요하다.
+   */
+  who: OwnedChar,
   cur: number,
   max: number,
   hex: readonly Hex[],
@@ -514,9 +525,13 @@ export function marksOf(
   });
 
   /* 제 것이 먼저 — 이 칸은 이 사람의 칸이다 */
-  const mine = passiveOf(who);
-  if (mine?.regenPct) good.push(mark(mine, false));
-  if (mine?.frenzy && frenzyMul(who, cur, max) >= FRENZY_SHOW) good.push(mark(mine, false));
+  const mine = passiveOf(who.id);
+  /*
+    **켜져 있나를 묻는다** — 표에 적혀 있나가 아니라. 파쇄의 태세를 찍으면
+    이 사람의 회복은 0 이 되고 (`regenOf`), 그때는 로고도 없어야 한다.
+  */
+  if (mine?.regenPct && regenOf(who) > 0) good.push(mark(mine, false));
+  if (mine?.frenzy && frenzyMul(who.id, cur, max) >= FRENZY_SHOW) good.push(mark(mine, false));
 
   /*
     그다음이 남이 주는 것 — 파티 자리 순서라 매번 같은 차례로 뜬다.
