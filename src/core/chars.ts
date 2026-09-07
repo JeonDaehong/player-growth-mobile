@@ -952,7 +952,17 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     /* 아무도 안 때린다. 쓰는 사람을 따라 물리로 적는다 */
     dmg: 'phys',
     mul: 0, defMul: 0, heal: 0, healPct: 0,
-    flies: false, landOn: 2, cost: 15, aura: 'rune', leaps: false,
+    /*
+      ── 15 였다 ── 2단계인데 3단계 수호의 결의(10)보다도, 4단계 성검
+      발현(12)보다도 비쌌다. 단계가 오를수록 비싸지는 흐름에서 이것 혼자
+      튀었고, 그래서 같은 2단계 갈래인 함성(8)과 저울질이 안 됐다 —
+      "둘 중 무엇을 찍을까" 가 갈래인데 한쪽이 두 배 가까이 비싸면 고를
+      것이 없다.
+
+      10 이면 검기(4)를 두어 번 흘리는 사이에 한 번 나간다. 10초를 끄는
+      기술이라 그보다 자주 나갈 이유도 없다 (`taunt`).
+    */
+    flies: false, landOn: 2, cost: 10, aura: 'rune', leaps: false,
     taunt: 10,
     /* 포효라 소리가 퍼지는 그림이다 — 몸에서 고리가 나간다 */
     cast: 'roar',

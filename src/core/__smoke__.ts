@@ -3251,18 +3251,44 @@ console.log('\n── 스킬 트리 · 코스트 ──');
     ({ id, star, awake: false, lv: 1, exp: 0, copies: 0, tree } as OwnedChar);
 
   /*
-    ── 안 찍으면 안 깎인다 ──
+    ── 코스트를 깎는 자리 전수조사 ── 안 찍으면 제값, 찍으면 깎인 값.
 
-    코스트를 깎는 자리는 둘뿐이다 — 파쇄의 태세(`kg3b`)가 검기를 1 깎고,
-    정화의 손길(`nu3b`)이 정화를 25% 깎는다. **넷 × 모든 갈래 조합 × 1~5성**을
-    다 돌려서, 그 둘을 안 찍었는데 표에 적힌 값과 다른 코스트가 나오는 자리가
-    하나라도 있으면 실패다.
+    깎는 자리는 둘뿐이다 — 파쇄의 태세(`kg3b`)가 검기를 1 깎고, 정화의
+    손길(`nu3b`)이 정화를 25% 깎는다. 아래 `want` 가 그 사양 전부이고,
+    **넷 × 모든 갈래 조합 × 1~5성**을 다 돌려 한 자리도 어긋나지 않는지 본다.
 
-    전수로 도는 까닭: 깎는 자리가 늘어날 때 조건을 잘못 걸면 한 조합에서만
-    새는데, 그건 손으로 짚어서는 못 찾는다.
+    ## 양쪽을 다 본다
+
+    여태 한쪽만 봤다 — "안 찍었는데 깎이나". 반대쪽(찍었는데 안 깎이나)이
+    사실 더 조용한 고장이다: 화면에도 15 가 뜨고 전투도 15 를 쓰면 아무도
+    이상한 줄 모르는 채로 그 자리를 찍은 값이 사라진다.
+
+    ## 찍는 것과 걸리는 것은 다르다
+
+    3단계 자리는 **3성이 되어야 걸린다** (`activeNodes`). 그래서 기대값도
+    `tree.includes` 가 아니라 `nodeOn` 으로 묻는다 — 2성인데 찍혀만 있는
+    자리는 아직 안 깎는 것이 맞다.
+
+    ## 값만 보지 않는다
+
+    실제로 **그 수만큼 휘둘러야 나가는지**까지 돌린다. 코스트를 읽는 곳이
+    다섯 군데인데(`chargeUp` · `readySkill` · `spendCharge` · `fitCharge` ·
+    `costOf`) 그중 하나만 옛 표를 보고 있으면, 창에는 3 이 뜨는데 전투는 4 를
+    받는다. 값 비교만으로는 그걸 못 잡는다.
   */
+  const wantCost = (id: CharId, star: number, name: string, base: number, tree: string[]) => {
+    if (name === ct.SKILLS.wave.name && tr.nodeOn(id, star, tree, 'kg3b')) {
+      return Math.max(1, base - 1);
+    }
+    if (name === ct.SKILLS.purify.name && tr.nodeOn(id, star, tree, 'nu3b')) {
+      return Math.max(1, Math.round(base * 0.75));
+    }
+    return base;
+  };
+
   let leak = '';
   let combos = 0;
+  let checks = 0;
   for (const id of Object.keys(tr.TREE) as CharId[]) {
     const picks = tr.TREE[id].filter(tr.isPick).map((n) => n.id);
     for (let m = 0; m < (1 << picks.length); m++) {
@@ -3273,25 +3299,44 @@ console.log('\n── 스킬 트리 · 코스트 ──');
       for (let star = 1; star <= 5; star++) {
         combos++;
         const c = mk(id, star, tree);
-        for (const sk of ct.skillsFor(c)) {
+        const list = ct.skillsFor(c);
+        list.forEach((sk, slot) => {
+          checks++;
+          const at = `${id} ${star}성 [${tree.join(',')}] ${sk.name}`;
           const base = Object.values(ct.SKILLS).find((v) => v.name === sk.name)?.cost;
-          if (base === undefined || sk.cost === base) continue;
-          const earned = (sk.name === ct.SKILLS.wave.name && tree.includes('kg3b'))
-            || (sk.name === ct.SKILLS.purify.name && tree.includes('nu3b'));
-          if (!earned && !leak) {
-            leak = `${id} ${star}성 [${tree.join(',')}] ${sk.name} ${base}→${sk.cost}`;
+          if (base === undefined) { leak = leak || `${at} 표에 없음`; return; }
+          const exp = wantCost(id, star, sk.name, base, tree);
+          if (sk.cost !== exp) { leak = leak || `${at} ${sk.cost} (기대 ${exp})`; return; }
+          if (ct.costOf(c, slot) !== exp) { leak = leak || `${at} costOf`; return; }
+
+          /* 그 수만큼 휘두르면 나가고, 한 대 모자라면 안 나간다 */
+          let on: number[] = ct.newCharge(c);
+          const only = (i: number) => i === slot;
+          for (let k = 1; k <= exp; k++) {
+            on = ct.chargeUp(c, on);
+            const ready = ct.readySkill(c, on, only) === slot;
+            if (k < exp && ready) leak = leak || `${at} ${k}대에 이르게 나감`;
+            if (k === exp && !ready) leak = leak || `${at} ${exp}대에 안 나감`;
           }
-        }
+          if (on[slot] !== exp) leak = leak || `${at} 칸이 ${on[slot]}`;
+          if (ct.spendCharge(c, on, slot)[slot] !== 0) leak = leak || `${at} 안 비움`;
+          /* 깎이기 전에 차 있던 칸은 새 값으로 내려앉는다 */
+          if (ct.fitCharge(c, list.map(() => 99))[slot] !== exp) leak = leak || `${at} fitCharge`;
+        });
       }
     }
   }
-  ok('안 찍은 갈래로 코스트가 깎이는 조합이 없다', !leak, leak || `${combos}가지`);
+  ok('코스트는 찍은 대로만 깎인다 (값 · 충전 · 소모 · 보정)', !leak,
+    leak || `${combos}조합 ${checks}자리`);
 
   /* 찍으면 제대로 깎인다 — 위 시험이 "늘 안 깎임" 으로 통과하지 않게 */
   ok('파쇄의 태세: 검기 4 → 3',
     ct.skillsFor(mk('knightgirl', 3, ['kg2b', 'kg3b']))[0].cost === ct.SKILLS.wave.cost - 1);
   ok('정화의 손길: 정화 20 → 15',
     ct.skillsFor(mk('nun', 3, ['nu3b']))[1].cost === 15);
+  /* 성이 모자라면 아직 안 깎인다 — 찍는 것과 걸리는 것은 다르다 */
+  ok('2성 아녜스는 아직 20',
+    ct.skillsFor(mk('nun', 2, ['nu3b']))[1].cost === 20);
 
   /*
     ── 저절로 열리는 자리는 `tree` 에 안 적힌다 ──
@@ -3353,9 +3398,9 @@ console.log('\n── 스킬 트리 · 코스트 ──');
   /*
     ── 트리 칸의 코스트는 **기술에서 온다** ──
 
-    트리 표에도 `cost` 를 적어 두었었다. 둘이 갈렸다: 도발은 기술 표에서 15 가
-    되었는데 트리 칸에는 6 이 남았고, 기도는 4 로 내렸는데 6 이 남았다. 찍기
-    전 칸과 찍은 뒤 창이 서로 다른 수를 말한 셈이다.
+    트리 표에도 `cost` 를 적어 두었었다. 둘이 갈렸다: 도발은 기술 표에서 줄곧
+    15 였는데 트리 칸에는 6 이, 기도는 4 인데 6 이 적혀 있었다. 찍기 전 칸과
+    찍은 뒤 창이 서로 다른 수를 말한 셈이다.
 
     지금은 칸이 `nodeDemo` 로 받아 적는다 (`SkillTreePopup` 의 `Node`). 표에
     그 칸이 되살아나면 여기서 걸린다.
