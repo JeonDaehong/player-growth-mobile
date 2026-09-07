@@ -31,6 +31,11 @@
   minPart               가장 큰 덩어리의 이 비율보다 작은 **떨어진 조각**을 버린다.
                         글자는 물체와 붙어 있지 않으므로 0.05 정도면 대개 사라진다.
   killCorner            우하단 워터마크 제거
+  dimRects              이 네모 안의 **애매하게 밝은 것**만 지운다 (0~1 비율, 원본 기준).
+                        임계값(128)은 넘지만 흰색은 아닌 것 = 회색 워터마크다.
+                        `maskRects` 와 달리 **그림 위에 겹친 워터마크**를 지울 수
+                        있다 — 네모째 지우면 밑에 깔린 그림까지 파인다.
+  dimThresh             그 네모에서 살아남을 밝기 (기본 200)
   size                  출력 한 변 상한. 기본은 192 (`SIZE`). 화면에서 크게 뜨는
                         세트만 올린다 — 원본 도트 격자보다 더 줄이면 체크무늬
                         음영이 솎여서 깨진다 (`to_png` 머리말).
@@ -407,6 +412,34 @@ def run(only=None):
             report.append((name, '원본 없음', 0))
             continue
         im = Image.open(path).convert('RGB')
+        """
+        ── 회색 워터마크 ── **오려내기 전에** 죽인다.
+
+        Gemini 가 우하단에 반짝이를 하나 박아 준다. 대개는 휘도 85 라 임계값
+        (128) 아래로 저절로 떨어지는데, 배치에 따라 142 로 나와서 그대로 살아
+        남는 일이 있다.
+
+        `maskRects` 로는 못 지운다. 반짝이가 **그림 위에 겹쳐** 있으면 (이졸데는
+        망토 위다) 네모째 지울 때 망토가 같이 파이고, 그 그림만 실루엣이 달라져
+        갈아 끼울 때 튄다.
+
+        그래서 밝기로 가른다. 그림은 1-bit 라 흰 데는 255 이고 반짝이는 142 다.
+        **애매한 것만** 검게 눕히면 망토는 그대로 남는다.
+
+        오려내기(`region`)보다 먼저 하는 까닭: 네모 비율을 **원본 기준**으로
+        적을 수 있어서다. 오린 뒤에 하면 사람마다 오린 자리가 달라 같은 반짝이의
+        비율이 넷 다 달라진다.
+        """
+        dims = s.get('dimRects') or []
+        if dims:
+            W0, H0 = im.size
+            keep = s.get('dimThresh', 200)
+            for rx0, ry0, rx1, ry1 in dims:
+                box = (int(W0 * rx0), int(H0 * ry0), int(W0 * rx1), int(H0 * ry1))
+                a = np.array(im.crop(box))
+                lum = a.mean(axis=2)
+                a[(lum >= THRESH) & (lum < keep)] = 0
+                im.paste(Image.fromarray(a), box)
         reg = s.get('region')
         if reg:
             W0, H0 = im.size

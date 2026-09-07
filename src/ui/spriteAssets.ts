@@ -1917,7 +1917,14 @@ export const CHAR_SHY_SPRITES = {
   'nun': require('../../assets/sprites/char_shy/nun.png'),
 } as const;
 
-export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'bfx_bind' | 'boss_passive' | 'status_icon' | 'sfx_erupt' | 'passive_icon' | 'sw_grub' | 'sw_hopper' | 'sw_spitter' | 'sw_weaver' | 'sw_roller' | 'sw_soldier' | 'sw_drone' | 'sw_lancer' | 'sw_husk' | 'sw_mantis' | 'sw_glider' | 'sw_bomb' | 'b21_centipeda' | 'b22_apis' | 'b23_nucanus' | 'b24_biblis' | 'b25_arachnes' | 'b26_pyros' | 'b27_locusta' | 'b28_mosquito' | 'b29_formica' | 'b30_baal' | 'nav_top' | 'nav_bot' | 'coin_ui' | 'growth' | 'rarity' | 'bfx_cocoon' | 'elfarcher_dragon' | 'sfx_holysword' | 'char_full' | 'bg_hero' | 'ui_frame' | 'char_shy';
+export const CHAR_PAT_SPRITES = {
+  'bunnyaxe': require('../../assets/sprites/char_pat/bunnyaxe.png'),
+  'elfarcher': require('../../assets/sprites/char_pat/elfarcher.png'),
+  'knightgirl': require('../../assets/sprites/char_pat/knightgirl.png'),
+  'nun': require('../../assets/sprites/char_pat/nun.png'),
+} as const;
+
+export type SpriteSet = 'scroll' | 'weapon' | 'attend' | 'gear' | 'card' | 'title' | 'bubble' | 'jackpot' | 'creature' | 'cr_slime' | 'cr_wolf' | 'cr_golem' | 'cr_bat' | 'cr_boar' | 'cr_skeleton' | 'cr_toad' | 'cr_mantis' | 'cr_ogre' | 'cr_tentacle' | 'bg_chapter' | 'bg_place' | 'job' | 'avatar' | 'single_icon' | 'single_icon_alt' | 'single_splash' | 'pl_attack' | 'card_back' | 'coin' | 'crowd' | 'player' | 'lottery' | 'fx' | 'tierframe' | 'slot' | 'eq_spear' | 'eq_blade' | 'eq_mace' | 'eq_hammer' | 'eq_bow' | 'eq_staff' | 'eq_boot' | 'eq_ear' | 'eq_ring' | 'eq_belt' | 'eq_chest' | 'eq_sword' | 'eq_axe' | 'eq_crossbow' | 'eq_greaves' | 'eq_glove' | 'eq_rod' | 'eq_neck' | 'eq_fan' | 'guild' | 'guild_ui' | 'eq_helm' | 'map' | 'map_pin' | 'bg_forest' | 'stone' | 'grade' | 'fx_rune' | 'synergy' | 'tab' | 'auth' | 'potion' | 'abyssmat' | 'family' | 'tool' | 'holo' | 'mines' | 'sp_herb' | 'sp_ore' | 'sp_mushroom' | 'sp_beast' | 'sp_fish' | 'food' | 'material' | 'duel' | 'tutorial' | 'raid_boss' | 'event' | 'elf' | 'smith' | 'maid' | 'knightgirl' | 'knightgirl_wave' | 'bunnyaxe' | 'elfarcher' | 'elfarcher_shot' | 'nun' | 'nun_wave' | 'sl_melee' | 'sl_ranged' | 'sl_boss' | 'role_icon' | 'skill_icon' | 'sg_grass' | 'sg_mud' | 'sg_stone' | 'sg_bone' | 'sg_twin' | 'sg_spore' | 'sg_thorn' | 'sg_acid' | 'sb_grass' | 'sb_mud' | 'sb_spore' | 'sb_thorn' | 'sb_stone' | 'sb_twin' | 'sb_acid' | 'sb_bone' | 'sb_king' | 'pf_vine' | 'pf_maw' | 'pf_bramble' | 'pf_moss' | 'pf_spore' | 'pf_sap' | 'pw_stump' | 'pw_hollow' | 'pw_root' | 'pw_bark' | 'pw_branch' | 'pw_pod' | 'pb_bramble' | 'pb_bloom' | 'pb_spore' | 'pb_carrion' | 'pb_stump' | 'pb_hollow' | 'pb_thornwood' | 'pb_rot' | 'pb_elder' | 'pb_creeper' | 'b01_gelatus' | 'b02_floratus' | 'b03_acidus' | 'b04_sporia' | 'b05_spinatus' | 'b06_petros' | 'b07_idolatus' | 'b08_solvenus' | 'b09_osseus' | 'b10_sludginus' | 'b11_acanthus' | 'b12_nepenthia' | 'b13_matrona' | 'b14_columna' | 'b15_cadavera' | 'b16_truncus' | 'b17_cavus' | 'b18_spinosa' | 'b19_putridus' | 'b20_silvanus' | 'bfx_rock' | 'bfx_thorn' | 'bfx_glob' | 'bfx_spore' | 'bfx_drip' | 'bfx_miasma' | 'bfx_bolt' | 'bfx_bind' | 'boss_passive' | 'status_icon' | 'sfx_erupt' | 'passive_icon' | 'sw_grub' | 'sw_hopper' | 'sw_spitter' | 'sw_weaver' | 'sw_roller' | 'sw_soldier' | 'sw_drone' | 'sw_lancer' | 'sw_husk' | 'sw_mantis' | 'sw_glider' | 'sw_bomb' | 'b21_centipeda' | 'b22_apis' | 'b23_nucanus' | 'b24_biblis' | 'b25_arachnes' | 'b26_pyros' | 'b27_locusta' | 'b28_mosquito' | 'b29_formica' | 'b30_baal' | 'nav_top' | 'nav_bot' | 'coin_ui' | 'growth' | 'rarity' | 'bfx_cocoon' | 'elfarcher_dragon' | 'sfx_holysword' | 'char_full' | 'bg_hero' | 'ui_frame' | 'char_shy' | 'char_pat';
 
 export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   scroll: SCROLL_SPRITES,
@@ -2123,6 +2130,7 @@ export const SPRITES: Record<SpriteSet, Record<string, number>> = {
   bg_hero: BG_HERO_SPRITES,
   ui_frame: UI_FRAME_SPRITES,
   char_shy: CHAR_SHY_SPRITES,
+  char_pat: CHAR_PAT_SPRITES,
 };
 
 /** 세트에서 키를 안전하게 꺼낸다. 없으면 undefined — 호출부가 대체 렌더를 하도록. */
@@ -2464,11 +2472,15 @@ export const SPRITE_RATIO: Record<string, number> = {
   'char_full/bunnyaxe': 1.5484,
   'char_full/elfarcher': 1.6991,
   'char_full/knightgirl': 1.5802,
-  'char_full/nun': 2.3704,
+  'char_full/nun': 2.1943,
+  'char_pat/bunnyaxe': 1.5484,
+  'char_pat/elfarcher': 1.6991,
+  'char_pat/knightgirl': 1.5802,
+  'char_pat/nun': 2.1943,
   'char_shy/bunnyaxe': 1.5484,
   'char_shy/elfarcher': 1.6991,
   'char_shy/knightgirl': 1.5802,
-  'char_shy/nun': 2.3704,
+  'char_shy/nun': 2.1943,
   'coin/copper': 1.0,
   'coin/gold': 0.9531,
   'coin/silver': 0.9792,

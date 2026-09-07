@@ -4597,7 +4597,7 @@
       "append": true,
       "size": 384,
       "region": [
-        0.2751,
+        0.2271,
         0.0381,
         0.8617,
         0.9697
@@ -4716,7 +4716,7 @@
       "size": 384,
       "append": true,
       "region": [
-        0.2751,
+        0.2271,
         0.0381,
         0.8617,
         0.9697
@@ -4740,7 +4740,15 @@
         0.968,
         0.9912
       ],
-      "noTrim": true
+      "noTrim": true,
+      "dimRects": [
+        [
+          0.828,
+          0.884,
+          0.89,
+          0.927
+        ]
+      ]
     },
     {
       "file": "char-pat-bunnyaxe.jpg",
@@ -4760,7 +4768,15 @@
         0.999
       ],
       "noTrim": true,
-      "append": true
+      "append": true,
+      "dimRects": [
+        [
+          0.828,
+          0.884,
+          0.89,
+          0.927
+        ]
+      ]
     },
     {
       "file": "char-pat-elfarcher.jpg",
@@ -4780,7 +4796,15 @@
         0.9971
       ],
       "noTrim": true,
-      "append": true
+      "append": true,
+      "dimRects": [
+        [
+          0.828,
+          0.884,
+          0.89,
+          0.927
+        ]
+      ]
     },
     {
       "file": "char-pat-nun.jpg",
@@ -4794,13 +4818,21 @@
       ],
       "size": 384,
       "region": [
-        0.2751,
+        0.2271,
         0.0381,
         0.8617,
         0.9697
       ],
       "noTrim": true,
-      "append": true
+      "append": true,
+      "dimRects": [
+        [
+          0.828,
+          0.884,
+          0.89,
+          0.927
+        ]
+      ]
     }
   ],
   "_srcDirs": []
