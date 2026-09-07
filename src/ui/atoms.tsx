@@ -148,27 +148,44 @@ export function Btn({ label, onPress, disabled, fill, sub, style, size = 'md', b
   );
 }
 
-/** 목록 항목 — 누르면 반전 */
+/**
+ * 목록 항목 — 누르면 반전.
+ *
+ * ## 누를 데가 없으면 **눌린 티도 안 낸다**
+ *
+ * `onPress` 를 안 주면 `Pressable` 이 아무 일도 안 하지만, 그래도 손가락은
+ * 받는다 — 눌리는 동안 `pressed` 가 참이 되므로 **반전만 일어나고 아무 일도
+ * 안 일어났다.** 눌러 놓고 안 열리는 줄이 되는 셈이라, 보러 연 창(파티 칸)의
+ * 기술 줄에서 그게 고장으로 읽혔다.
+ *
+ * 그래서 `pressed` 를 그대로 안 쓰고 `live` 로 한 번 거른다. 반전은 "이걸
+ * 누르면 무슨 일이 일어난다" 는 약속인데, 지킬 수 없으면 하지 않는 편이 낫다.
+ */
 export function ListItem({ title, sub, left, right, onPress, disabled, sound = 'tap' }: { title: string; sub?: string; left?: ReactNode; right?: ReactNode; onPress?: () => void; disabled?: boolean; sound?: SfxId | null }) {
+  /** 정말로 눌리는 줄인가 */
+  const live = !!onPress && !disabled;
   return (
     <Pressable
-      onPress={disabled || !onPress ? undefined : () => { if (sound) sfx(sound); onPress(); }}
+      onPress={live ? () => { if (sound) sfx(sound); onPress(); } : undefined}
       style={({ pressed }) => [
         s.item,
-        pressed && { backgroundColor: C.bgInv },
+        live && pressed && { backgroundColor: C.bgInv },
         disabled && { opacity: O.dim },
       ]}
     >
-      {({ pressed }: { pressed: boolean }) => (
-        <Row between>
-          {!!left && <View style={{ marginRight: SP.sm }}>{left}</View>}
-          <View style={{ flex: 1 }}>
-            <Text style={[font(14, 'bold'), { color: pressed ? C.fgInv : C.fg }]}>{title}</Text>
-            {!!sub && <Text style={[font(11), { color: pressed ? C.fgInv : C.fg, opacity: O.sub, marginTop: 2 }]}>{sub}</Text>}
-          </View>
-          {right}
-        </Row>
-      )}
+      {({ pressed }: { pressed: boolean }) => {
+        const on = live && pressed;
+        return (
+          <Row between>
+            {!!left && <View style={{ marginRight: SP.sm }}>{left}</View>}
+            <View style={{ flex: 1 }}>
+              <Text style={[font(14, 'bold'), { color: on ? C.fgInv : C.fg }]}>{title}</Text>
+              {!!sub && <Text style={[font(11), { color: on ? C.fgInv : C.fg, opacity: O.sub, marginTop: 2 }]}>{sub}</Text>}
+            </View>
+            {right}
+          </Row>
+        );
+      }}
     </Pressable>
   );
 }
