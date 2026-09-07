@@ -69,11 +69,32 @@
 
 ---
 
+## ⚠ 제일 흔한 실패: **그냥 서 있는 채로 나옵니다**
+
+레퍼런스가 서 있는 그림이고 "옷·무기·머리를 그대로" 라고 못을 박아 두므로,
+생성기가 **자세까지 그대로 두는** 쪽으로 기웁니다. 특히 앉는 자세와 어긋나는
+지시가 하나라도 있으면 거기서 무너집니다.
+
+실제로 이졸데에서 났습니다. 처음 문장이 "손은 검 손잡이에 그대로" 였는데,
+검이 키만 한 것을 세워 두고 손잡이를 잡으려면 **서 있어야만 합니다.** 서라는
+말과 앉으라는 말이 같이 있으니 서는 쪽으로 갔습니다.
+
+그래서 넷 다 이렇게 고쳤습니다.
+
+- **자세를 맨 앞에 씁니다.** 사람 설명보다 먼저 "바닥에 있다" 를 못 박습니다
+- **무기를 몸에서 떼거나, 앉은 키에 맞게 다시 잡습니다.** 서 있어야만 가능한
+  자세는 하나도 안 남깁니다
+- **안 되는 것을 적습니다.** `서 있지 않는다 · 무릎만 굽히지 않는다 ·
+  기대 서지 않는다`
+
+**나온 그림을 볼 때는 머리 높이만 보세요.** 머리 꼭대기가 그림의 절반 위에
+있으면 실패입니다 — 앉으면 반드시 절반 아래로 내려옵니다.
+
 ## 넷이 **다르게 주저앉습니다**
 
 | | 어떻게 무너지나 |
 |---|---|
-| 이졸데 | 무릎이 꺾인다. **검은 안 놓는다** — 그걸 짚고 버티려다 실패한 자세다 |
+| 이졸데 | 무릎이 꺾인다. **검은 안 놓는다** — 다만 손이 손잡이에서 **날 아래쪽으로 미끄러져 내려온다.** 앉은 채로 잡을 수 있는 자리는 거기뿐이다 |
 | 비앙카 | 뒤로 털썩. 다리를 뻗고 손으로 뒤를 짚는다. 넷 중 제일 크게 무너진다 |
 | 리안느 | 소리 없이 웅크린다. 무릎을 안고 얼굴을 반쯤 묻는다. 제일 작아진다 |
 | 아녜스 | 무릎을 꿇는다. 기도하던 자세와 같은데 **이번엔 기도가 아니다** |
@@ -129,16 +150,30 @@ ARMOUR — PARTIAL, NEVER A FULL SUIT: an ornate fitted breastplate, one pauldro
 CAPE: a half-cape pinned at her RIGHT shoulder only.
 WEAPON: a greatsword as tall as she is, straight double-edged blade, plain cross guard, a ring pommel.
 
-WHAT CHANGES — HER KNEES HAVE GIVEN OUT.
-She tried to stay upright, put her weight on the sword, and went down anyway.
+WHAT CHANGES — SHE IS ON THE GROUND. SHE IS NOT STANDING.
+
+READ THIS PARAGRAPH BEFORE ANYTHING ELSE. In the attached reference she is
+standing on her feet. IN THIS DRAWING SHE IS NOT. Her knees have given out and
+she has gone all the way down. She is NOT standing, NOT half-standing, NOT
+merely bending her knees, NOT crouching on her toes, and NOT leaning against
+her sword while upright. HER HIPS ARE ON THE GROUND. If her head is anywhere
+in the upper half of the picture, the drawing is wrong.
 
 SHE IS SITTING ON THE GROUND, SIDE-SADDLE: both legs folded to her LEFT, one
 knee crossed over the other, her weight on her left hip. Her skirt has fallen
 into a pool AROUND HER AND IN FRONT OF HER — FORWARD, NOT OUTWARD.
-- THE GREATSWORD IS STILL PLANTED POINT-DOWN, upright, exactly where it was in
-  the reference. HER RIGHT HAND IS STILL ON THE POMMEL — she has slid down the
-  length of it without letting go. That one unbroken vertical line is what makes
-  this read as "she failed to stay up" rather than "she sat down".
+
+- THE GREATSWORD IS STILL PLANTED POINT-DOWN AND UPRIGHT, its tip stuck in the
+  ground at EXACTLY THE SAME SPOT as in the reference. IT DID NOT MOVE. SHE DID.
+- SHE HAS SLID DOWN THE LENGTH OF IT WITHOUT LETTING GO. Because she is now
+  sitting, the pommel is far above her — so HER RIGHT HAND IS NO LONGER ON THE
+  POMMEL. Her right arm reaches UP and her hand grips THE BLADE LOW DOWN, just
+  above where it enters the ground, near the bottom of the cross guard. That is
+  the only part of the sword a seated person can reach.
+  ⚠ DO NOT put her hand on the pommel. Reaching the pommel requires standing,
+  and that single detail is what will make you draw her standing by mistake.
+  The tall unbroken vertical of the blade beside her, with her small seated
+  figure at the foot of it, is what says "she failed to stay up".
 - HER LEFT ARM is folded across her chest, hand gripping her own right elbow.
 - HER FACE: EYES CLOSED, or barely open. Head turned down and away, chin tucked
   hard toward her collarbone. Eyebrows UP AT THE INNER ENDS. Mouth closed in a
@@ -150,9 +185,15 @@ into a pool AROUND HER AND IN FRONT OF HER — FORWARD, NOT OUTWARD.
 Everything else is identical to the reference. The armour and the dress are drawn
 exactly as before: nothing is loosened, displaced, opened, or removed.
 
-HER HEAD IS NOW AT ABOUT 55% OF THE FRAME HEIGHT — she has dropped roughly half
-her standing height. The BOTTOM of her — skirt, hip, folded legs — RESTS ON THE
-SAME GROUND LINE HER FEET STOOD ON in the reference. Nothing floats.
+HEIGHT CHECK — THE SINGLE EASIEST WAY TO TELL THIS DRAWING IS RIGHT.
+HER HEAD IS AT ABOUT 55% OF THE FRAME HEIGHT, measured from the top: the crown of
+her head sits BELOW THE VERTICAL MIDDLE OF THE PICTURE. Standing, her head was
+near the top. She has lost roughly half her height. The BOTTOM of her — skirt,
+hip, folded legs — RESTS ON THE SAME GROUND LINE HER FEET STOOD ON in the
+reference. Nothing floats.
+
+THE SWORD, however, IS STILL FULL HEIGHT and still reaches into the upper half of
+the picture. She is short now and it is not. That contrast IS the drawing.
 
 ⚠ SHE MUST NOT GET WIDER. Draw the whole figure INSIDE THE SAME LEFT AND RIGHT
 LIMITS as the standing reference — measure it. Knees together, skirt folded
@@ -207,8 +248,16 @@ OUTFIT: a fitted strapless leotard with a small bow tie at the throat, a stiff c
 THE CUFF ON HER LEFT WRIST IS TORN and hangs loose.
 WEAPON: a single-bit battle axe on a haft nearly as long as she is tall, a broad slab head with a wide curved edge and a short spike on the back.
 
-WHAT CHANGES — SHE HAS LANDED ON THE FLOOR.
-She is the one who usually laughs first, and she has just run out of ways to.
+WHAT CHANGES — SHE IS ON THE GROUND. SHE IS NOT STANDING.
+
+READ THIS PARAGRAPH BEFORE ANYTHING ELSE. In the attached reference she is
+standing on her feet. IN THIS DRAWING SHE IS NOT. She is NOT standing, NOT
+half-standing, NOT merely bending her knees, NOT leaning on anything while
+upright. HER HIPS ARE ON THE GROUND. If her head is anywhere in the upper half
+of the picture, the drawing is wrong.
+
+She has landed on the floor. She is the one who usually laughs first, and she
+has just run out of ways to.
 
 SHE IS SITTING FLAT ON THE GROUND, dropped straight down: KNEES UP AND PRESSED
 TOGETHER in front of her, both feet flat, heels close to her hips. Her arms wrap
@@ -229,8 +278,14 @@ Everything else is identical to the reference. The leotard, collar, bow tie, bel
 and stockings are drawn exactly as before: nothing is loosened, displaced, pulled
 aside, or made transparent.
 
-HER HEAD IS NOW AT ABOUT 55% OF THE FRAME HEIGHT. Her hips and the soles of her
+HEIGHT CHECK — THE SINGLE EASIEST WAY TO TELL THIS DRAWING IS RIGHT.
+The crown of her head sits BELOW THE VERTICAL MIDDLE OF THE PICTURE. Standing,
+her head was near the top; she has lost roughly half her height.
+HER HEAD IS AT ABOUT 55% OF THE FRAME HEIGHT. Her hips and the soles of her
 boots REST ON THE SAME GROUND LINE her feet stood on in the reference.
+
+THE AXE, laid on the ground, is the only thing still at her old scale — it is
+nearly as long as she was tall, and now she is folded up beside it.
 
 ⚠ SHE MUST NOT GET WIDER. She has the LEAST ROOM OF THE FOUR — draw the whole
 figure, the axe included, INSIDE THE SAME LEFT AND RIGHT LIMITS as the standing
@@ -283,9 +338,17 @@ CLOTHING: a short hooded tunic belted at the waist over a fitted long-sleeved un
 QUIVER: slim, worn low on her RIGHT hip.
 WEAPON: a SHORT recurve bow, about half her height, pale dry wood with a bound grip.
 
-WHAT CHANGES — SHE HAS CROUCHED DOWN AND MADE HERSELF SMALL.
-She does not fall and she does not make a sound. She just folds up, which for her
-is the loudest thing she has ever done.
+WHAT CHANGES — SHE IS ON THE GROUND. SHE IS NOT STANDING.
+
+READ THIS PARAGRAPH BEFORE ANYTHING ELSE. In the attached reference she is
+standing on her feet. IN THIS DRAWING SHE IS NOT. She is NOT standing, NOT
+half-standing, NOT merely bending her knees, NOT leaning on anything while
+upright. HER HIPS ARE ON THE GROUND. If her head is anywhere in the upper half
+of the picture, the drawing is wrong.
+
+She has crouched all the way down and made herself small. She does not fall and
+she does not make a sound. She just folds up, which for her is the loudest thing
+she has ever done.
 
 SHE IS CROUCHING ON HER HEELS, knees drawn all the way up to her chest and
 PRESSED TOGETHER, feet flat, arms wrapped around her own shins. Her back is
@@ -303,9 +366,12 @@ rounded. SHE IS THE SMALLEST SHAPE OF THE FOUR — a single tucked bundle.
 Everything else is identical to the reference. The tunic, bracer, half-cloak and
 leggings are drawn exactly as before. The hood stays DOWN.
 
-HER HEAD IS NOW AT ABOUT 58% OF THE FRAME HEIGHT — she goes lower than the
-others because she folds rather than sits. Her heels and hips REST ON THE SAME
-GROUND LINE her feet stood on in the reference.
+HEIGHT CHECK — THE SINGLE EASIEST WAY TO TELL THIS DRAWING IS RIGHT.
+The crown of her head sits BELOW THE VERTICAL MIDDLE OF THE PICTURE. Standing,
+her head was near the top; she has lost roughly half her height.
+HER HEAD IS AT ABOUT 58% OF THE FRAME HEIGHT — she goes lower than the others
+because she folds rather than sits. Her heels and hips REST ON THE SAME GROUND
+LINE her feet stood on in the reference.
 
 ⚠ SHE MUST NOT GET WIDER. Draw the whole figure INSIDE THE SAME LEFT AND RIGHT
 LIMITS as the standing reference. Knees together, arms wrapped, ears down rather
@@ -355,9 +421,17 @@ HABIT: a long dark layered habit to the ankle with wide bell sleeves, a pale sca
 HANDS: bare, with a short chain wound twice around her RIGHT hand.
 WEAPON: a censer — a small pierced metal vessel on a SHORT chain about a forearm long.
 
-WHAT CHANGES — SHE HAS SUNK TO HER KNEES.
-This is the posture she takes to pray in, and that is exactly the problem: her
-body went to the one place it knows and none of it helps.
+WHAT CHANGES — SHE IS ON THE GROUND. SHE IS NOT STANDING.
+
+READ THIS PARAGRAPH BEFORE ANYTHING ELSE. In the attached reference she is
+standing on her feet. IN THIS DRAWING SHE IS NOT. She is NOT standing, NOT
+half-standing, NOT merely bending her knees, NOT leaning on anything while
+upright. HER HIPS ARE ON THE GROUND. If her head is anywhere in the upper half
+of the picture, the drawing is wrong.
+
+She has sunk all the way down to her knees and sat back on her heels. This is the
+posture she takes to pray in, and that is exactly the problem: her body went to
+the one place it knows and none of it helps.
 
 SHE IS KNEELING, sitting back on her heels, knees together, back rounded
 forward. The long habit has settled into a BELL AROUND HER, folding FORWARD over
@@ -379,8 +453,11 @@ her knees toward the viewer rather than spreading sideways.
 Everything else is identical to the reference. The habit, scapular, sash and veil
 are drawn exactly as before: nothing is loosened, displaced, opened, or removed.
 
-HER HEAD IS NOW AT ABOUT 55% OF THE FRAME HEIGHT. The hem of the habit RESTS ON
-THE SAME GROUND LINE her feet stood on in the reference.
+HEIGHT CHECK — THE SINGLE EASIEST WAY TO TELL THIS DRAWING IS RIGHT.
+The crown of her head sits BELOW THE VERTICAL MIDDLE OF THE PICTURE. Standing,
+her head was near the top; she has lost roughly half her height.
+HER HEAD IS AT ABOUT 55% OF THE FRAME HEIGHT. The hem of the habit RESTS ON THE
+SAME GROUND LINE her feet stood on in the reference.
 
 ⚠ SHE MUST NOT GET WIDER. She has the most room of the four, but the habit is the
 thing most likely to spread — fold it FORWARD over her knees, not outward. Elbows
