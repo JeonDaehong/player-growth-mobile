@@ -92,7 +92,7 @@ import {
   battleTypeOf, canAwaken, capOf, charPower, lvCost, maxStar, starUpCost,
 } from '@/core/chars';
 import { fmtShort } from '@/core/currency';
-import { chestOf, headOf, linesOf } from '@/core/lines';
+import { chestOf, downOf, headOf, linesOf } from '@/core/lines';
 import { passiveOf } from '@/core/passives';
 import { seatRows } from '@/core/party';
 import { openPicks } from '@/core/skillTree';
@@ -323,6 +323,8 @@ function useTalk(
   id: string,
   lines: readonly string[],
   react: Readonly<Partial<Record<Touch, readonly string[]>>>,
+  /** 같은 자리를 한 번 더 눌렀을 때 — 주저앉아서 하는 말 */
+  deep: Readonly<Partial<Record<Touch, readonly string[]>>>,
 ) {
   const [at, setAt] = useState(() => Math.floor(Math.random() * lines.length));
   const [on, setOn] = useState(true);
@@ -336,7 +338,7 @@ function useTalk(
    * **어디를 눌렀는지도 같이 든다** (`how`). 몸짓이 머리 쪽에만 붙기 때문인데,
    * 글만 들고 있으면 부르는 쪽이 그걸 대사 내용으로 되짚어야 한다.
    */
-  const [shy, setShy] = useState<{ text: string; how: Touch } | null>(null);
+  const [shy, setShy] = useState<{ text: string; how: Touch; deep: boolean } | null>(null);
   /**
    * 눌린 횟수.
    *
@@ -374,9 +376,22 @@ function useTalk(
   const touch = (how: Touch) => {
     /* 눌린 것부터 센다 — 대사가 없는 자리라도 몸짓은 나가야 한다 */
     setPoke((n) => n + 1);
-    const say = react[how] ?? [];
+    /*
+      ── 같은 자리를 **한 번 더** ── 주저앉는다 (`deep`).
+
+      이미 그 자리 때문에 부끄러워하고 있는데 또 눌렀을 때다. 첫 누름에 바로
+      앉히지 않는 까닭: 서 있는 부끄러운 그림을 아무도 못 보게 된다.
+
+      한 번 앉으면 **그 판에서는 계속 앉아 있는다.** 세 번째 누름에 도로
+      일어서면 눌렀는데 되돌아간 셈이고, 그건 반응이 아니라 고장으로 읽힌다.
+      말풍선이 사라질 때 같이 풀린다 (아래 시계).
+
+      머리 쪽에는 안 붙는다. 저건 애정이라 주저앉을 일이 아니다.
+    */
+    const down = how !== 'head' && shy?.how === how;
+    const say = (down ? deep[how] : react[how]) ?? [];
     if (!say.length) { bump(); return; }
-    setShy({ text: say[Math.floor(Math.random() * say.length)] ?? '', how });
+    setShy({ text: say[Math.floor(Math.random() * say.length)] ?? '', how, deep: down });
     setOn(true);
     setBeat((n) => n + 1);
   };
@@ -402,6 +417,8 @@ function useTalk(
     shy: !!shy,
     /** 방금 어디를 눌렸나 — 아무것도 아니면 `null` */
     how: shy?.how ?? null,
+    /** 주저앉았나 — 같은 자리를 한 번 더 눌렀을 때 (`char_down`) */
+    deep: !!shy?.deep,
     /** 몸짓을 다시 트는 신호. 같은 자리를 연달아 눌러도 이 값은 늘 바뀐다 */
     poke,
     touch,
@@ -588,7 +605,9 @@ export function HeroManage({ pick, onPick }: {
     () => ({ head: headOf(id ?? ''), chest: chestOf(id ?? '') }),
     [id],
   );
-  const talk = useTalk(id ?? '', lines, react);
+  /* 한 번 더 눌렀을 때 — 가슴 쪽에만 있다 (`useTalk` 의 `touch`) */
+  const deep = useMemo(() => ({ chest: downOf(id ?? '') }), [id]);
+  const talk = useTalk(id ?? '', lines, react, deep);
   /*
     이 사람의 좁은 과녁 둘이 화면 어디인가 (`HEAD` · `CHEST`).
 
@@ -610,10 +629,12 @@ export function HeroManage({ pick, onPick }: {
    * 눌렀는데 빈자리가 뜨는 것보다 낫다.
    */
   const pose = useMemo(() => {
+    /* 주저앉은 것이 제일 세다 — 다른 무엇보다 먼저 본다 */
+    if (talk.deep) return { set: 'char_down', back: 'char_shy' };
     if (talk.how === 'head') return { set: 'char_pat', back: 'char_shy' };
     if (talk.shy) return { set: 'char_shy', back: 'char_full' };
     return { set: 'char_full', back: 'avatar' };
-  }, [talk.how, talk.shy]);
+  }, [talk.deep, talk.how, talk.shy]);
 
   /**
    * ── 누르면 눌렸다 온다 ── **어디를 누르든.**

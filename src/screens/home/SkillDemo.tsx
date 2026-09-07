@@ -54,12 +54,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import {
-  CHARS, OwnedChar, SkillDef, blowOf, projFrame, projSet,
+  CHARS, OwnedChar, SkillDef, blowOf, projFrame, projSet, statOf,
 } from '@/core/chars';
 import { GOOD, STATUS_WHAT, StatusId } from '@/core/status';
 import { Sprite } from '@/ui/Sprite';
 import { T } from '@/ui/atoms';
-import { BORDER, R, SP, SURF } from '@/ui/theme';
+import { BORDER, O, R, SP, SURF } from '@/ui/theme';
 import {
   CUT_FALLBACK, SK_FALLBACK, SK_MS, landAtOf, skFramesOf,
 } from './Fighter';
@@ -67,6 +67,7 @@ import { HolySword, SWORD_HIT, SWORD_MS, SkillFx } from './SkillFx';
 import { SkillAura } from './SkillAura';
 import { SwordWave } from './SwordWave';
 import { GiantArrow, PierceAura } from './PierceAura';
+import { Veil } from './BossFx';
 import {
   DamageNumber, FallingArrow, HealMarks, HitBurst, StatusNote,
 } from './HitFx';
@@ -278,6 +279,28 @@ export function SkillDemo({
   const [land, setLand] = useState(0);
   const [drop, setDrop] = useState(0);
   const [heal, setHeal] = useState(0);
+  /**
+   * ── 정화 시연에서 **걸려 있는 상태** ──
+   *
+   * 정화는 걷어내는 기술인데, 걷을 것이 화면에 없으면 몸짓 말고는 아무 일도
+   * 안 일어난다 — 코스트 20 을 모아 쓴 것이 "잠깐 무릎 꿇었다" 로 끝난다.
+   *
+   * 그래서 한 바퀴가 시작할 때 **아군에게 기절을 하나 걸어 두고**, 기술이
+   * 닿는 칸에서 그것을 지운다. 사라지는 것을 봐야 걷어냈다는 것이 읽힌다.
+   */
+  const [hexOn, setHexOn] = useState(false);
+  /**
+   * ── 막이 둘러져 있나 ── 수호의 결의 하나다 (`SkillDef.ward`).
+   *
+   * 여태 이 기술은 시연에서 **아무 일도 안 일어났다.** 글자로 `피해 흡수`
+   * 한 줄이 뜨는 것이 전부였는데, 그건 무엇이 생겼는지가 아니라 무슨 낱말이
+   * 붙는지다.
+   *
+   * 무대에서 쓰는 것과 같은 것을 쓴다 (`Fighter` 의 `ward > 0` — `Veil`).
+   * 한 바퀴가 시작할 때 꺼지고 닿는 칸에서 켜지므로, 돌 때마다 **없다가
+   * 생긴다.**
+   */
+  const [wardOn, setWardOn] = useState(false);
   /*
     한 바퀴에 걸어 두는 시계들.
 
@@ -318,6 +341,18 @@ export function SkillDemo({
   */
   const rains = hurts && CHARS[c.id].range === 'ranged' && !sk.flies;
   const notes = useMemo(() => notesOf(sk), [sk]);
+  /**
+   * 한 번에 채우는 양 — **계산과 같은 식**이다 (`core/autoBattle` 의 `applySkill`).
+   *
+   * 옆 줄의 피해 숫자(`hit`)는 부르는 쪽에서 받아 오는데 (창에 이미 적혀
+   * 있는 값이라 두 번 세면 갈린다), 회복은 창에 적히는 줄이 없다. 그래서
+   * 여기서 센다 — 식이 한 줄이고 `applySkill` 과 같으므로 갈릴 것이 없다.
+   */
+  const healAmt = useMemo(() => {
+    if (sk.heal <= 0 && sk.healPct <= 0) return 0;
+    const st = statOf(c);
+    return Math.round(st.hp * sk.healPct + st.atk * sk.heal);
+  }, [c, sk]);
   /*
     ── 오른쪽에 누가 서나 ──
 
@@ -350,6 +385,14 @@ export function SkillDemo({
     };
 
     const beat = () => {
+      /*
+        한 바퀴의 **처음 상태**로 되돌린다.
+
+        정화면 걷을 것을 하나 걸어 두고, 막은 벗겨 둔다 — 둘 다 "기술이
+        일으킨 변화" 라, 기술 전에 이미 그 상태면 변화가 안 보인다.
+      */
+      setHexOn(!!sk.cleanse);
+      setWardOn(false);
       at(START, () => { setFrame(list[0]); setCast((n) => n + 1); });
       at(START + beats[0], () => {
         setFrame(list[1]);
@@ -359,6 +402,9 @@ export function SkillDemo({
       at(START + beats[0] + beats[1], () => setFrame(list[2]));
       /* 닿는 칸 — 기술마다 다르다 (`SkillDef.landOn`) */
       at(landAt, () => {
+        /* 이 둘은 **어느 기술이든** 닿는 칸에서 일어난다 — 아래 이른 반환 위에 */
+        if (sk.cleanse) setHexOn(false);
+        if (sk.ward) setWardOn(true);
         if (sk.heal > 0) { setHeal((n) => n + 1); return; }
         /* 하늘에서 내려오는 것은 여기서 **부르기만** 한다 */
         if (sk.drop === 'sword') { setDrop((n) => n + 1); return; }
@@ -531,6 +577,14 @@ export function SkillDemo({
           */}
           {sk.heal > 0 && !helps && <HealMarks nonce={heal} size={ME_W} />}
           {/*
+            ── 막 ── **쓰는 사람에게도 둘러진다.**
+
+            수호의 결의는 아군 전체에 걸린다 (`SkillDef.pick` 이 `none` 이라
+            제 몸까지 포함이다). 둘 다에 뜨는 것이 곧 "전체" 라, 한쪽에만
+            그리면 받는 사람 하나만 지켜 주는 기술로 보인다.
+          */}
+          {wardOn && <Veil size={ME_W} />}
+          {/*
             날아가는 것 — 검기와 화살. 몸에서 나가 적 앞에서 멎는다.
 
             거대 화살은 여기서 안 그린다 (`giant`) — `SwordWave` 가 저
@@ -695,7 +749,49 @@ export function SkillDemo({
             쓰는 사람이 아니라 **채워지는 사람** 몸에서 오른다 (무대와 같은
             규칙 — `BattleView` 가 사람마다 제 자리에 띄운다).
           */}
-          {helps && sk.heal > 0 && <HealMarks nonce={heal} size={FOE_W} />}
+          {helps && sk.heal > 0 && (
+            <>
+              <HealMarks nonce={heal} size={FOE_W} />
+              {/*
+                ── `+10` ── 얼마나 채웠나.
+
+                표시 셋만 오르고 숫자가 없었다. 그러면 "무언가 좋아졌다" 까지는
+                읽히는데 **얼마나**가 안 읽힌다 — 때리는 기술에는 `-숫자` 가
+                뜨므로, 회복만 숫자가 없으면 두 기술을 같은 자로 못 잰다.
+
+                `key` 에 시계를 물리는 까닭은 아래 피해 숫자와 같다.
+              */}
+              {heal > 0 && healAmt > 0 && (
+                <View
+                  key={`heal${heal}`}
+                  style={{
+                    position: 'absolute', left: 0, right: 0, top: -13, alignItems: 'center',
+                  }}
+                >
+                  <DamageNumber text={`+${healAmt}`} dx={0} dy={0} good onDone={NOOP} />
+                </View>
+              )}
+            </>
+          )}
+          {/*
+            ── 걷어낼 것 ── 정화 하나다 (`hexOn`).
+
+            머리 위에 걸린 것 하나를 얹어 두었다가 닿는 칸에서 지운다.
+            무엇이 걸렸는지는 중요하지 않아서 기절 하나로 못 박았다 — 이
+            상자에서 읽는 것은 "붙어 있던 것이 사라졌다" 이고, 그건 로고가
+            무엇이든 같다.
+          */}
+          {helps && hexOn && (
+            <View
+              style={{
+                position: 'absolute', left: 0, right: 0, top: -14, alignItems: 'center',
+              }}
+            >
+              <Sprite set="status_icon" name="st_stun" size={13} opacity={O.sub} />
+            </View>
+          )}
+          {/* 막 — 받는 쪽에도 둘러진다 (쓰는 사람 쪽 주석 참고) */}
+          {helps && wardOn && <Veil size={FOE_W} />}
           {/*
             ── 걸리는 쪽에 뜨는 글 ──
 
