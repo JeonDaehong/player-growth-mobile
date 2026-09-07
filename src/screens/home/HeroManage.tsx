@@ -65,10 +65,14 @@
  *
  * ## 어디를 누르느냐에 따라 다른 말을 한다
  *
- * 인물 그림 통째가 과녁이고, 그 안에 **좁은 네모 하나**가 따로 있다
- * (`CHEST`). 그 안을 누르면 특별한 반응 셋 중 하나가 나오고 (`patOf`) 그동안
- * 부끄러워하는 그림으로 바뀐다 (`char_shy`). 그 밖을 누르면 여느 때처럼
- * 다음 말이다.
+ * 인물 그림 통째가 과녁이고, 그 안에 **좁은 네모 둘**이 따로 있다 —
+ * 머리(`HEAD`)와 가슴(`CHEST`). 어느 쪽이든 그 안을 누르면 특별한 반응 셋 중
+ * 하나가 나오고 (`core/lines`) 그동안 부끄러워하는 그림으로 바뀐다
+ * (`char_shy`). 그 밖을 누르면 여느 때처럼 다음 말이다.
+ *
+ * **둘은 다른 목록을 쓴다.** 쓰다듬는 것과 사고는 부끄러운 종류가 달라서다 —
+ * 까닭은 `core/lines` 머리말에. 머리 쪽에는 몸짓도 하나 붙는다 (`bob`):
+ * 그림 둘이 같으므로, 안 그러면 어디를 눌렀든 화면이 똑같아 보인다.
  *
  * **네모는 사람마다 자리가 다르다.** 넷에게 같은 띠를 썼더니 어떤 사람은
  * 목이, 어떤 사람은 허리가 걸렸다 — 까닭과 잰 값은 `CHEST` 에 있다.
@@ -77,8 +81,8 @@
  * 편이 낫고, 무엇보다 **모르고 지나가도 손해가 없다.** 어디를 눌러도 말은
  * 나온다.
  */
-import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import {
   AWAKEN_COPIES, AWAKEN_ELIXIR, BATTLE_TYPE_ART, BATTLE_TYPE_NAME, CHARS, CharId,
@@ -86,7 +90,7 @@ import {
   battleTypeOf, canAwaken, capOf, charPower, lvCost, maxStar, starUpCost,
 } from '@/core/chars';
 import { fmtShort } from '@/core/currency';
-import { linesOf, patOf } from '@/core/lines';
+import { chestOf, headOf, linesOf } from '@/core/lines';
 import { passiveOf } from '@/core/passives';
 import { seatRows } from '@/core/party';
 import { openPicks } from '@/core/skillTree';
@@ -217,7 +221,41 @@ function ActBtn({ art, label, onPress }: {
  *
  * 값을 고칠 일이 생기면 여기 넷만 만지면 된다.
  */
-const CHEST: Record<string, { x0: number; y0: number; x1: number; y1: number }> = {
+type Zone = { x0: number; y0: number; x1: number; y1: number };
+
+/**
+ * 어디를 눌렀나. 이 둘 말고는 인물 그림 통째이고, 그건 평소 대사다.
+ *
+ * 갈래를 늘리려면 세 곳이 짝을 이뤄야 한다 — 여기, 자리 표(`HEAD` 같은),
+ * 대사 표(`core/lines`).
+ */
+type Touch = 'head' | 'chest';
+
+/**
+ * ── 머리 ── 쓰다듬는 자리.
+ *
+ * **얼굴까지 넣는다.** 정수리만 좁게 잡으면 사람은 대개 얼굴을 누르는데,
+ * 그러면 눌러도 아무 일이 없어서 그런 자리가 있다는 걸 영영 모른다. 위로는
+ * 머리카락 끝(아녜스는 베일, 비앙카는 귀, 리안느는 뾰족한 귀)까지, 아래로는
+ * 턱까지다.
+ *
+ * 가슴 과녁과 **안 겹친다.** 넷 다 이 네모의 아래끝과 저 네모의 위끝 사이가
+ * 비어 있다 (턱과 가슴 사이의 목·어깨). 겹치면 나중에 그린 것이 손가락을
+ * 먼저 먹으므로 한쪽이 영영 안 눌린다.
+ */
+const HEAD: Record<string, Zone> = {
+  /* 정수리가 그림 꼭대기다. 관까지 넣는다 */
+  knightgirl: { x0: 0.33, y0: 0.01, x1: 0.61, y1: 0.22 },
+  /* 귀가 그림의 5분의 1을 먹는다 — 그 귀도 머리다 */
+  bunnyaxe: { x0: 0.34, y0: 0.04, x1: 0.62, y1: 0.29 },
+  /* 뾰족한 귀가 옆으로 나오고 머리 장식이 위로 솟는다 */
+  elfarcher: { x0: 0.27, y0: 0.05, x1: 0.64, y1: 0.27 },
+  /* 베일이 얼굴을 감싼다 — 그림이 좁아 가로를 많이 차지한다 */
+  nun: { x0: 0.22, y0: 0.01, x1: 0.66, y1: 0.25 },
+};
+
+/** ── 가슴 ── 위 `HEAD` 와 같은 규칙으로 잰 값이다 */
+const CHEST: Record<string, Zone> = {
   /* 정수리가 그림 꼭대기라 넷 중 제일 위 — 흉갑 한 장이 그대로 과녁이다 */
   knightgirl: { x0: 0.36, y0: 0.26, x1: 0.64, y1: 0.39 },
   /* 토끼 귀가 위를 먹어 몸이 통째로 내려간다 — 넷 중 제일 아래 */
@@ -245,8 +283,8 @@ const CHEST: Record<string, { x0: number; y0: number; x1: number; y1: number }> 
  *
  * 표에 없는 사람은 `null` 이고, 그때는 부르는 쪽이 그림 통째를 과녁으로 둔다.
  */
-function chestBox(art: string) {
-  const r = CHEST[art];
+function zoneBox(art: string, table: Record<string, Zone>) {
+  const r = table[art];
   if (!r) return null;
   const ratio = SPRITE_RATIO[`char_full/${art}`] ?? 1.5;
   const drawnH = Math.min(FULL_H, FULL_W * ratio);
@@ -275,17 +313,24 @@ const TALK_OFF = 5000;
  * 안 바뀐 것처럼 보여서 "고장" 으로 읽힌다. 순서를 통째로 섞어 돌리는 방법도
  * 있지만 열 줄짜리에 그건 과하다 — 앞엣것 하나만 피하면 충분하다.
  */
-function useTalk(id: string, lines: readonly string[], pats: readonly string[]) {
+function useTalk(
+  id: string,
+  lines: readonly string[],
+  react: Readonly<Record<Touch, readonly string[]>>,
+) {
   const [at, setAt] = useState(() => Math.floor(Math.random() * lines.length));
   const [on, setOn] = useState(true);
   /**
-   * 쓰다듬어서 나온 한 마디. 있으면 이게 평소 대사를 **덮는다.**
+   * 만져서 나온 한 마디. 있으면 이게 평소 대사를 **덮는다.**
    *
-   * 목록의 번호가 아니라 글 자체를 들고 있다. 쓰다듬기 대사는 셋뿐이라
+   * 목록의 번호가 아니라 글 자체를 들고 있다. 만졌을 때 대사는 셋뿐이라
    * 번호로 돌리면 순서가 뻔히 보이는데, 그러면 세 번 만에 다 본 것이 아니라
    * **세 번 만에 규칙이 들킨다.**
+   *
+   * **어디를 눌렀는지도 같이 든다** (`how`). 몸짓이 머리 쪽에만 붙기 때문인데,
+   * 글만 들고 있으면 부르는 쪽이 그걸 대사 내용으로 되짚어야 한다.
    */
-  const [shy, setShy] = useState<string | null>(null);
+  const [shy, setShy] = useState<{ text: string; how: Touch } | null>(null);
   /**
    * 눌린 횟수.
    *
@@ -310,12 +355,13 @@ function useTalk(id: string, lines: readonly string[], pats: readonly string[]) 
   };
 
   /*
-    쓰다듬기 — 대사가 없는 사람은 그냥 다음 말로 넘긴다. 눌렀는데 아무 일도
+    만졌다 — 대사가 없는 사람은 그냥 다음 말로 넘긴다. 눌렀는데 아무 일도
     안 일어나는 것보다 낫다.
   */
-  const pat = () => {
-    if (!pats.length) { bump(); return; }
-    setShy(pats[Math.floor(Math.random() * pats.length)] ?? null);
+  const touch = (how: Touch) => {
+    const say = react[how];
+    if (!say.length) { bump(); return; }
+    setShy({ text: say[Math.floor(Math.random() * say.length)] ?? '', how });
     setOn(true);
     setBeat((n) => n + 1);
   };
@@ -335,7 +381,17 @@ function useTalk(id: string, lines: readonly string[], pats: readonly string[]) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [on, at, beat, id]);
 
-  return { text: shy ?? lines[at] ?? '', on, shy: !!shy, bump, pat };
+  return {
+    text: shy?.text ?? lines[at] ?? '',
+    on,
+    shy: !!shy,
+    /** 방금 어디를 눌렸나 — 아무것도 아니면 `null` */
+    how: shy?.how ?? null,
+    /** 몸짓을 다시 트는 신호. 같은 자리를 연달아 눌러도 이 값은 늘 바뀐다 */
+    beat,
+    bump,
+    touch,
+  };
 }
 
 /**
@@ -514,15 +570,46 @@ export function HeroManage({ pick, onPick }: {
     안 그린다.
   */
   const lines = useMemo(() => linesOf(id ?? '', d?.quote), [id, d?.quote]);
-  const pats = useMemo(() => patOf(id ?? ''), [id]);
-  const talk = useTalk(id ?? '', lines, pats);
+  const react = useMemo(
+    () => ({ head: headOf(id ?? ''), chest: chestOf(id ?? '') }),
+    [id],
+  );
+  const talk = useTalk(id ?? '', lines, react);
   /*
-    이 사람의 좁은 과녁이 화면 어디인가 (`CHEST`).
+    이 사람의 좁은 과녁 둘이 화면 어디인가 (`HEAD` · `CHEST`).
 
     이것도 **이른 반환보다 위**다. 위 셋과 같은 까닭이고, 없을 수도 있는 값을
     빈 문자열로 받아 둔다 — 표에 없으면 `null` 이라 그때는 안 그린다.
   */
-  const chest = useMemo(() => chestBox(d?.art ?? ''), [d?.art]);
+  const head = useMemo(() => zoneBox(d?.art ?? '', HEAD), [d?.art]);
+  const chest = useMemo(() => zoneBox(d?.art ?? '', CHEST), [d?.art]);
+
+  /**
+   * ── 쓰다듬으면 고개가 눌린다 ──
+   *
+   * 부끄러워하는 그림은 **머리와 가슴이 같은 한 장**이다. 그래서 몸짓이 없으면
+   * 어디를 눌렀든 화면이 똑같아 보이고, 다른 대사가 나오는 것이 실수처럼
+   * 읽힌다 — "왜 아까랑 다른 말을 하지".
+   *
+   * 손이 닿는 만큼만 내려갔다 온다. 두 번 눌리는 것은 **한 번은 그냥 움직임**
+   * 이지만 두 번이면 쓰다듬는 것이 되기 때문이다. 4px 과 3px 로 두 번째를
+   * 얕게 두는 것도 같은 까닭 — 같은 깊이로 두 번이면 튕기는 것으로 보인다.
+   *
+   * 그림만 움직인다. 과녁까지 같이 움직이면 몸짓 도중에 누른 손가락이 다른
+   * 데로 떨어진다.
+   */
+  const bob = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (talk.how !== 'head') return undefined;
+    const dip = (to: number, ms: number) => Animated.timing(bob, {
+      toValue: to, duration: ms, easing: Easing.out(Easing.quad), useNativeDriver: true,
+    });
+    bob.setValue(0);
+    const run = Animated.sequence([dip(4, 90), dip(0, 130), dip(3, 90), dip(0, 160)]);
+    run.start();
+    /* 사람을 바꾸거나 다시 누르면 하던 몸짓을 접고 제자리로 */
+    return () => { run.stop(); bob.setValue(0); };
+  }, [talk.beat, talk.how, bob]);
 
   if (!c || !d) {
     return (
@@ -651,46 +738,62 @@ export function HeroManage({ pick, onPick }: {
           빌 뿐이다. 발 높이는 넷이 같다.
         */}
         {/*
-          ── 인물이 과녁이다 ── 위는 쓰다듬기, 아래는 말 걸기.
+          ── 인물이 과녁이다 ── 머리 · 가슴 · 그 밖.
 
           말풍선 자체를 과녁으로 두면 사라져 있는 5초 동안 누를 데가 없어진다.
-          그래서 그림 통째가 과녁이고, 그 안에서 위아래로 갈린다.
+          그래서 그림 통째가 과녁이고, 그 안에 좁은 네모 둘이 얹힌다.
 
           가르는 티는 안 낸다 — 테두리도 안내도 없다. 눌러 보다 알게 되는
-          편이 낫고, 모르고 지나가도 손해가 없다: 위를 눌러도 말은 나온다.
+          편이 낫고, 모르고 지나가도 손해가 없다: 어디를 눌러도 말은 나온다.
         */}
         <View style={{ width: FULL_W, height: FULL_H, marginBottom: SP.sm }}>
-          <Sprite
-            /*
-              부끄러워하는 그림이 있으면 그걸로 바꾼다. 없으면 평소 그림
-              그대로다 (`fallbackSet`) — 대사만 바뀐다.
-              프롬프트는 `docs/CHAR_SHY_PROMPTS.md`.
-
-              ── 두 그림은 **같은 자리에서 오려 냈다** ──
-
-              한동안 각자 여백을 깎았더니 (`trim`) 갈아 끼울 때 인물이 튀었다.
-              비앙카는 부끄러운 쪽에서 귀가 접혀 위쪽 경계가 귀끝에서 머리로
-              바뀌므로 몸이 통째로 올라갔고, 아녜스는 향로가 옆으로 나와 오른쪽
-              경계가 넓어지므로 몸이 왼쪽으로 밀렸다. 그림은 멀쩡한데 **깎는
-              기준이 서로 달랐던** 것이다.
-
-              지금은 둘의 경계를 합쳐 그 한 자리로 둘 다 오린다 (`region`)
-              — 여백은 안 깎는다 (`noTrim`). 그래서 두 그림의 크기가 픽셀까지
-              같고, 갈아 끼워도 인물이 안 움직인다.
-            */
-            set={talk.shy ? 'char_shy' : 'char_full'}
-            name={d.art}
-            fallbackSet={talk.shy ? 'char_full' : 'avatar'}
-            size={FULL_W}
-            style={{ width: FULL_W, height: FULL_H }}
-          />
           {/*
-            아래에 **통째로 깔린 과녁**이 말 걸기다. 그 위에 좁은 띠 하나를
-            얹어 특별한 반응을 받는다 — 나중에 그린 것이 손가락을 먼저 먹으므로
-            띠 안이면 띠가, 밖이면 통짜가 받는다.
+            몸짓이 실리는 것은 **그림뿐이다** (`bob`). 과녁은 아래에 가만히
+            있으므로, 고개가 눌리는 동안 누른 손가락이 다른 데로 안 떨어진다.
+          */}
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: FULL_W,
+              height: FULL_H,
+              transform: [{ translateY: bob }],
+            }}
+          >
+            <Sprite
+              /*
+                부끄러워하는 그림이 있으면 그걸로 바꾼다. 없으면 평소 그림
+                그대로다 (`fallbackSet`) — 대사만 바뀐다.
+                프롬프트는 `docs/CHAR_SHY_PROMPTS.md`.
 
-            셋으로 쪼개는 것보다 이쪽이 낫다. 띠 위아래를 따로 만들면 인물
-            그림이 바뀔 때마다 세 값을 다 맞춰야 한다.
+                ── 두 그림은 **같은 자리에서 오려 냈다** ──
+
+                한동안 각자 여백을 깎았더니 (`trim`) 갈아 끼울 때 인물이 튀었다.
+                비앙카는 부끄러운 쪽에서 귀가 접혀 위쪽 경계가 귀끝에서 머리로
+                바뀌므로 몸이 통째로 올라갔고, 아녜스는 향로가 옆으로 나와 오른쪽
+                경계가 넓어지므로 몸이 왼쪽으로 밀렸다. 그림은 멀쩡한데 **깎는
+                기준이 서로 달랐던** 것이다.
+
+                지금은 둘의 경계를 합쳐 그 한 자리로 둘 다 오린다 (`region`)
+                — 여백은 안 깎는다 (`noTrim`). 그래서 두 그림의 크기가 픽셀까지
+                같고, 갈아 끼워도 인물이 안 움직인다.
+              */
+              set={talk.shy ? 'char_shy' : 'char_full'}
+              name={d.art}
+              fallbackSet={talk.shy ? 'char_full' : 'avatar'}
+              size={FULL_W}
+              style={{ width: FULL_W, height: FULL_H }}
+            />
+          </Animated.View>
+          {/*
+            아래에 **통째로 깔린 과녁**이 말 걸기다. 그 위에 좁은 네모 둘을
+            얹어 특별한 반응을 받는다 — 나중에 그린 것이 손가락을 먼저 먹으므로
+            네모 안이면 네모가, 밖이면 통짜가 받는다.
+
+            그래서 통짜를 여러 조각으로 쪼갤 것이 없다. 네모 위아래를 따로
+            만들면 인물 그림이 바뀔 때마다 여러 값을 다 맞춰야 한다.
           */}
           <Pressable
             accessibilityRole="button"
@@ -699,15 +802,25 @@ export function HeroManage({ pick, onPick }: {
             style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
           />
           {/*
-            좁은 과녁은 **사람마다 자리가 다르다** (`CHEST`). 표에 없는
+            좁은 과녁은 **사람마다 자리가 다르다** (`HEAD` · `CHEST`). 표에 없는
             사람은 안 그린다 — 그러면 아래 깔린 통짜가 다 받아서, 어디를
             눌러도 평소 대사가 나온다.
+
+            둘은 안 겹치므로 (`HEAD` 주석) 그리는 차례는 상관없다.
           */}
+          {!!head && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${d.name}의 머리를 쓰다듬기`}
+              onPress={() => talk.touch('head')}
+              style={{ position: 'absolute', ...head }}
+            />
+          )}
           {!!chest && (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`${d.name}에게 짓궂게 굴기`}
-              onPress={talk.pat}
+              onPress={() => talk.touch('chest')}
               style={{ position: 'absolute', ...chest }}
             />
           )}
