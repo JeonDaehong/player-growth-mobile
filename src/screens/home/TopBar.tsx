@@ -139,6 +139,19 @@ function Gate({ label, art, onPress }: {
  *
  * 그림은 흐리고 숫자는 진하다. 여기서 읽는 것은 숫자이고 그림은 그 숫자가
  * 무엇인지 말할 뿐이라, 둘이 같은 밝기면 눈이 그림에서 한 번 멈춘다.
+ *
+ * ## 꺾쇠는 안 붙인다
+ *
+ * 네 귀퉁이의 꺾쇠(`FrameArt`)를 걷었다. 저건 **누르는 것**의 표시다 —
+ * 아래 넉 장의 문(`Gate`)과 도감의 알약이 그걸 달고 있고, 거기서는 "이건
+ * 눌린다" 를 말한다.
+ *
+ * 재화 칸은 안 눌린다. 그냥 숫자다. 같은 꺾쇠를 달아 두면 눌러 보게 되고,
+ * 눌러도 아무 일이 없으면 그때부터 **꺾쇠가 무엇을 뜻하는지가 흐려진다** —
+ * 바로 아래 줄의 진짜 단추들까지 같이 흐려진다.
+ *
+ * 칸 자체(`frameStyle`)는 남긴다. 옅은 테두리와 면은 "여기까지가 이 숫자의
+ * 자리" 를 말하는 것이라 누름과 상관이 없다.
  */
 function Coin({ art, icon, text }: {
   /** `assets/sprites/coin_ui/` 안의 이름. 없으면 아래 코드 도트로 떨어진다 */
@@ -152,7 +165,6 @@ function Coin({ art, icon, text }: {
         { paddingHorizontal: SP.sm, paddingVertical: 4, alignItems: 'center' },
       ]}
     >
-      <FrameArt />
       <Sprite set="coin_ui" name={art} size={11} fallback={icon} opacity={O.sub} />
       <T size={FS.label} bold>{text}</T>
     </Row>

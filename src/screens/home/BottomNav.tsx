@@ -216,7 +216,12 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
               },
             ]}
           >
-            <FrameArt hi={here} noBottom={home} />
+            {/*
+              메인도 **네 귀퉁이를 다 갖는다.** 아래 둘을 빼 뒀었는데, 그러면
+              부각하려고 만든 칸이 혼자만 덜 그려진 것으로 보였다 — 까닭은
+              `ui/Frame` 의 `FrameArt` 머리말에.
+            */}
+            <FrameArt hi={here} />
             {/*
               `assets/sprites/nav_bot/` 이 있으면 그것을, 없으면 코드 도트를
               그린다 (`Sprite` 의 `fallback`). `NAV` 는 아트가 올 때까지

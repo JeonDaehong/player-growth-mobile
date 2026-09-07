@@ -66,6 +66,9 @@ const COLS = 2;
  */
 const GUT = SP.xs;
 
+/** 알약 줄 왼쪽 이름표의 폭 — 두 줄의 알약이 같은 자리에서 시작하게 */
+const LABEL_W = 26;
+
 /** 역할 갈래 — `null` 이 전체다 */
 const KINDS: readonly { id: BattleType | null; label: string }[] = [
   { id: null, label: '전체' },
@@ -78,6 +81,14 @@ const KINDS: readonly { id: BattleType | null; label: string }[] = [
 type SortId = 'rarity' | 'star' | 'lv';
 
 const SORTS: readonly { id: SortId; label: string }[] = [
+  /*
+    ── `높은 순` 을 이름에 안 적는다 ──
+
+    셋 다 높은 것이 위로 온다. `등급 높은 순` 처럼 적으면 알약 셋이 다
+    같은 꼬리를 달게 되고, 그러면 폭이 세 배로 늘면서 정작 다른 부분인
+    앞 두 글자가 묻힌다. 줄 이름표(`정렬`)가 이미 "줄 세우는 말" 이라고
+    말하고 있으므로, 알약에는 **무엇으로** 만 적는다.
+  */
   { id: 'rarity', label: '등급' },
   { id: 'star', label: '성' },
   { id: 'lv', label: '레벨' },
@@ -92,13 +103,26 @@ const SORTS: readonly { id: SortId; label: string }[] = [
  *
  * 고른 것만 반전된다. 흑백에서 "지금 이것" 을 말하는 제일 짧은 방법이다.
  */
-function PickRow<T extends string | null>({ items, at, onGo }: {
+function PickRow<T extends string | null>({ label, items, at, onGo }: {
+  /**
+   * 줄 왼쪽의 이름표 — **이 줄이 무엇을 고르는 줄인가.**
+   *
+   * 없이도 돌아갔지만, 같은 모양의 알약 줄이 둘 겹쳐 있으니 아래 줄이
+   * 차례를 고르는 줄이라는 것이 화면에 없었다. `등급 · 성 · 레벨` 만
+   * 놓고 보면 그게 거르는 말인지 줄 세우는 말인지 알 길이 없다 —
+   * 바로 위에 `전체 · 탱커 · 근접` 이 거르는 말로 있으니 더 그렇다.
+   *
+   * 폭을 박아 둔다 (`LABEL_W`). 두 줄의 알약이 같은 자리에서 시작해야
+   * 이름표만 다르고 나머지는 같은 줄이라는 것이 보인다.
+   */
+  label: string;
   items: readonly { id: T; label: string }[];
   at: T;
   onGo: (v: T) => void;
 }) {
   return (
     <Row gap={3} style={{ marginBottom: SP.xs }}>
+      <T size={FS.tiny} dim="dim" style={{ width: LABEL_W }}>{label}</T>
       {items.map((it) => {
         const here = it.id === at;
         return (
@@ -170,9 +194,9 @@ export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
       </Row>
 
       {/* 무엇을 볼까 */}
-      <PickRow items={KINDS} at={kind} onGo={setKind} />
-      {/* 무엇을 먼저 볼까 */}
-      <PickRow items={SORTS} at={sort} onGo={setSort} />
+      <PickRow label="역할" items={KINDS} at={kind} onGo={setKind} />
+      {/* 무엇을 먼저 볼까 — 셋 다 **높은 것이 위**다 */}
+      <PickRow label="정렬" items={SORTS} at={sort} onGo={setSort} />
 
       {/*
         ── 늘어나지 않는 격자 ──
