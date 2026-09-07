@@ -1,186 +1,102 @@
-# 캐릭터 전신 — 부끄러워하는 얼굴
+# 캐릭터 전신 — 머리를 쓰다듬길 때
 
 **이 파일은 손으로 씁니다** — 생성기가 없습니다.
 
-[CHAR_FULL_PROMPTS.md](CHAR_FULL_PROMPTS.md) 의 **한 벌 더**입니다. 같은 사람,
-같은 틀, 같은 크기 — **얼굴과 손만** 다릅니다.
+[CHAR_SHY_PROMPTS.md](CHAR_SHY_PROMPTS.md) 의 **한 벌 더**입니다. 같은 사람,
+같은 틀, 같은 크기 — **얼굴과 한쪽 팔만** 다릅니다.
 
 | | |
 |---|---|
-| 어디에 쓰나 | 영웅 관리에서 인물의 **머리나 가슴을 눌렀을 때** (`screens/home/HeroManage` 의 `HEAD` · `CHEST`) |
-| 폴더 | `assets/sprites/char_shy/` |
+| 어디에 쓰나 | 영웅 관리에서 인물의 **머리를 눌렀을 때** (`screens/home/HeroManage` 의 `HEAD`) |
+| 폴더 | `assets/sprites/char_pat/` |
 | 파일 이름 | `knightgirl.png` · `bunnyaxe.png` · `elfarcher.png` · `nun.png` |
 | 모델 | Gemini |
 | 요청 | **4번** (한 명당 한 번) |
 
+⚠ **평소 전신(`assets/sprites/char_full/<id>.png`)을 레퍼런스로 꼭 첨부하세요.**
+아래 프롬프트는 그 그림이 옆에 있다는 것을 전제로 씁니다.
+
 ---
 
-## 화면에서 어떻게 쓰이나
+## 부끄러운 그림과 무엇이 다른가
 
-인물 그림 안에 좁은 네모가 **둘** 있습니다 — 머리(`HEAD`)와 가슴(`CHEST`).
-어느 쪽이든 그 안을 누르면 이 그림으로 바뀌면서 특별한 대사 셋 중 하나가
-나옵니다 (`core/lines` 의 `HEAD_LINES` · `CHEST_LINES`). 5초 뒤에 평소 그림으로
-돌아갑니다.
+**같은 부끄러움이 아닙니다.** 이게 넉 장을 더 그리는 이유입니다.
 
-### 머리 쪽은 **다른 문서**입니다
+| | 무엇이 무너지나 | 얼굴 |
+|---|---|---|
+| **가슴** ([CHAR_SHY](CHAR_SHY_PROMPTS.md)) | 사고입니다. 무너지는 것은 **말**입니다 | 눈이 **커지고**, 시선이 **비끼고**, 입이 벌어집니다. 웃음은 없습니다 |
+| **머리** (이 문서) | 애정입니다. 무너지는 것은 **위엄**입니다 | 눈이 **부드러워지고**, 시선이 **위로** 갑니다. **작은 웃음이 있어야 합니다** |
 
-한동안 두 자리가 이 한 장을 같이 썼습니다. 지금은 갈렸습니다 —
-[CHAR_PAT_PROMPTS.md](CHAR_PAT_PROMPTS.md) 가 머리 쪽 넉 장입니다.
+**웃음이 있어야 한다**는 것이 두 문서의 제일 큰 차이입니다. 가슴 쪽 문서는
+"웃지 마라" 를 세 번 반복해서 적어 뒀는데, 이 문서에서는 반대입니다 — 쓰다듬는
+것을 싫어하는 얼굴을 그리면 다시 누를 이유가 없어집니다.
 
-노리는 자리가 다르기 때문입니다. **이쪽은 사고라 무너지는 것이 말이고**(말이
-막히고 존댓말이 무너집니다), **저쪽은 애정이라 무너지는 것이 위엄입니다**
-(기사한테 이러지 마라 · 나 연상이다). 같은 얼굴로는 그 둘이 안 갈립니다.
+## 셋만 지키면 됩니다
 
-머리 쪽 그림이 아직 안 들어와 있으면 화면이 **이 그림으로 떨어집니다**
-(`HeroManage` 의 `pose`) — 대사와 몸짓만 갈리고 얼굴은 같습니다.
+### 1. **시선이 위로 갑니다**
 
-**넷이 다르게 부끄러워합니다.** 그게 이 넉 장을 따로 그리는 이유입니다 —
-넷이 다 같은 표정이면 한 장을 돌려 쓰는 것과 다를 게 없습니다.
+넷 다 이것 하나로 "머리 위에 손이 있다" 가 읽힙니다. 손은 안 그리기 때문에,
+시선이 아래나 정면이면 그냥 부끄러운 그림이 한 장 더 있는 것이 됩니다.
 
-| | |
+### 2. **고개는 내려가고 눈은 올라갑니다**
+
+턱을 당기고 고개를 몇 도 숙이는데 눈만 위를 봅니다. 이 어긋남이 곧 "머리에
+무게가 얹혀 있다" 입니다. 둘 중 하나만 하면 안 됩니다.
+
+### 3. **손은 안 그립니다**
+
+쓰다듬는 손을 그리면 화면 위쪽에 잘려 들어오는데, 거기는 말풍선 자리입니다.
+그리고 손 하나가 실루엣을 통째로 바꿔 놓아서 두 그림이 안 겹칩니다.
+
+## ⚠ 바깥 경계가 **바뀌면 안 됩니다**
+
+이게 이 문서에서 제일 자주 깨질 자리입니다.
+
+세 그림(평소 · 부끄러움 · 쓰다듬김)은 **같은 자리에서 오려냅니다.** 원본에서
+잘라낼 네모가 하나이고 그 뒤로는 여백을 안 깎습니다 (`region` + `noTrim`) —
+그래야 갈아 끼울 때 인물이 안 튑니다. 까닭과 지난번에 났던 일은
+[CHAR_SHY_PROMPTS.md](CHAR_SHY_PROMPTS.md) 의 같은 항목에 있습니다.
+
+그래서 **새 그림이 그 네모 밖으로 나가면 잘립니다.** 특히 이 넷:
+
+| | 나갈 만한 것 |
 |---|---|
-| 이졸데 | 이런 걸 겪어 본 적이 없어 말이 막힌다 |
-| 비앙카 | 늘 걸치고 있던 웃음이 사라진다. 그 빈자리가 곧 신호다 |
-| 리안느 | 표정이 짧다. 딴 데를 본다 |
-| 아녜스 | 늘 내리깔던 눈이 위로 올라간다 |
+| 비앙카 | 귀가 지금도 그림 꼭대기에 붙어 있습니다. 더 서면 잘립니다 |
+| 아녜스 | 넷 중 제일 좁게 잘려 있습니다 (원본 폭의 59%). **향로가 옆으로 나가면 안 됩니다** — 부끄러운 그림에서 실제로 45px 나갔었습니다 |
+| 리안느 | 뾰족한 귀와 꽁지머리 |
+| 이졸데 | 올린 팔꿈치 |
 
-## 노리는 자리는 **화난 것과 좋아하는 것 사이**입니다
+그래서 프롬프트 넷에 **팔꿈치를 옆구리에 붙이라**는 문장이 들어 있습니다. 손을
+머리 쪽으로 올리되 팔이 옆으로 벌어지지 않게 하는 것이 목적입니다.
 
-이 문서를 한 번 화난 쪽으로 써 놨었고, 그림이 넷 다 노려보는 얼굴로 나왔습니다.
-받아 주는 표정이 되지 않게 하려던 것인데 반대쪽으로 너무 갔습니다.
-
-두 쪽 다 틀립니다.
-
-| | 왜 안 되나 |
-|---|---|
-| **화난 얼굴** | 눈꼬리가 올라가고 입이 굳으면 부끄러운 게 아니라 위협입니다. 눌렀을 때 재미가 아니라 불쾌가 돌아옵니다 |
-| **좋아하는 얼굴** | 눈웃음이나 유혹하는 표정이면 "계속 누르라" 가 되고, 그러면 넷의 성격이 아니라 보상표가 됩니다 |
-
-**부끄러움은 그 사이**입니다. 눈이 **커지고**(가늘어지지 않습니다), 눈썹 안쪽이
-**올라가고**(바깥쪽이 내려가지 않습니다), 시선이 **비끼고**(노려보지 않습니다),
-입이 **살짝 벌어집니다**(일자로 굳지 않습니다).
-
-넷 다 눈썹은 **팔자**입니다. 눈썹 하나가 화난 얼굴과 부끄러운 얼굴을 가릅니다.
-
-## 넷 다 들어와 있습니다 ✅
-
-`assets/2026-09-06/char-shy-*.jpg` 로 받아서 잘랐습니다.
-
-| | 크기 (평소 = 부끄러움) |
-|---|---|
-| 이졸데 | 243x384 |
-| 비앙카 | 248x384 |
-| 리안느 | 226x384 |
-| 아녜스 | 162x384 |
-
-## ⚠ 두 그림은 **같은 자리에서 오려야** 합니다
-
-처음에 각자 여백을 깎았더니 (`trim`) 갈아 끼울 때 인물이 튀었습니다.
-
-| | 무슨 일이 났나 |
-|---|---|
-| 비앙카 | 부끄러운 쪽에서 **귀가 접힙니다.** 위쪽 경계가 귀끝에서 머리로 올라오니 깎고 나면 몸이 통째로 위로 올라갑니다 (원본에서 53px 차이) |
-| 아녜스 | **향로가 옆으로 나옵니다.** 오른쪽 경계가 넓어지니 가운데 맞출 때 몸이 왼쪽으로 밀립니다 (45px) |
-| 이졸데·리안느 | 팔만 움직여서 경계가 1px 차이. 그래서 이 둘은 멀쩡해 보였습니다 |
-
-그림이 잘못된 게 아니라 **깎는 기준이 서로 달랐던** 것입니다. 부끄러운 그림은
-정의상 실루엣이 조금 달라지므로, 따로 깎으면 반드시 어긋납니다.
-
-그래서 두 그림의 경계를 **합쳐서** 그 한 자리로 둘 다 오립니다.
-
-```json
-{ "file": "char-full-nun.jpg", "name": "char_full", "grid": [1, 1],
-  "labels": ["nun"], "size": 384,
-  "region": [0.2751, 0.0381, 0.8617, 0.9697], "noTrim": true },
-{ "file": "char-shy-nun.jpg",  "name": "char_shy",  "grid": [1, 1],
-  "labels": ["nun"], "size": 384,
-  "region": [0.2751, 0.0381, 0.8617, 0.9697], "noTrim": true }
-```
-
-- `region` 은 원본에서 오려낼 자리입니다. **두 항목이 같은 값**이어야 합니다
-- `noTrim` 은 오린 뒤에 여백을 더 깎지 말라는 뜻입니다. 이게 없으면 오려 놓고
-  다시 각자 깎아서 도로 어긋납니다
-
-**새 그림을 받으면 이 값을 다시 구해야 합니다.** 두 원본에서 흰 픽셀의 경계를
-각각 구한 뒤 합집합을 잡고, 사방 4px 쯤 여유를 주면 됩니다.
-
-## 과녁 자리는 그림마다 따로 잽니다
-
-**이 문서에서 제일 손이 많이 가는 부분입니다.** 넷에게 같은 띠를 쓰면 어떤
-사람은 목이, 어떤 사람은 허리가 걸립니다 — 아녜스는 베일이 머리 위로 솟아 몸이
-통째로 내려가고, 비앙카는 토끼 귀가 그림의 5분의 1을 먹어서 더 내려가고,
-이졸데는 정수리가 그림 꼭대기라 제일 위에 있습니다.
-
-그래서 `screens/home/HeroManage` 의 **`CHEST` 표**에 넷을 따로 적습니다. 제
-그림 안에서의 비율이고, 가로도 같이 적습니다 (안 그러면 리안느의 활이나
-비앙카의 도끼를 눌러도 반응이 나옵니다).
-
-**그림을 새로 받으면 이 표도 다시 재야 합니다.** 픽셀만 봐서는 어디가 가슴인지
-알 수 없어서 자동으로는 못 뽑습니다. 재는 방법은 간단합니다 — 잘린 그림을 10%
-격자에 올려 놓고 눈으로 읽으면 됩니다.
-
-## 평소 그림과 무엇이 같아야 하나
-
-**전부입니다.** 하나만 다르면 눌렀을 때 사람이 바뀐 것처럼 보입니다.
-
-| | 같아야 하는 것 |
-|---|---|
-| 틀 | 2:3 세로, 1024x1536 |
-| 등신 | 평소와 **같은 수** (비앙카 8, 이졸데 7.5, 리안느·아녜스 7) |
-| 카메라 | 정면 눈높이. 평평하고 앞에서 |
-| 옷·무기·머리 | 한 올도 안 바뀝니다 |
-| 배경 | 검은 바닥에 오려낸 인물 하나 |
-| 키 | 화면에서 같은 상자에 들어갑니다 — 발끝에서 정수리까지 평소와 같은 높이 |
-
-**두 장을 겹쳐 놓았을 때 얼굴과 팔만 움직여야 합니다.** 몸이 통째로 돌아가
-있으면 눌렀을 때 인물이 홱 튑니다.
-
-그래서 **평소 전신(`char_full/<id>.png`)을 레퍼런스로 꼭 첨부하세요.** 이
-문서의 프롬프트는 그 그림이 옆에 있다는 것을 전제로 씁니다.
-
-## 무엇이 달라야 하나
-
-셋입니다.
-
-1. **얼굴** — 뺨에 1-bit 홍조(짧은 빗금 두세 줄), 눈이 커지고 옆으로 비끼고,
-   눈썹이 안쪽으로 올라갑니다
-2. **한쪽 팔** — 가슴 앞을 가로질러 올라옵니다. 다 가리는 것도 아니고 안
-   가리는 것도 아닌 어정쩡한 높이입니다
-3. **자세가 한 뼘 움츠러듭니다** — 어깨가 올라가고 턱이 당겨지고 상체가 살짝
-   비틀립니다. 발은 그대로입니다
-
-**무기는 그대로 듭니다.** 놓거나 떨어뜨리면 다른 장면이 되고, 무엇보다 실루엣이
-바뀌어서 두 그림이 다른 사람으로 보입니다. 그래서 **움직이는 팔은 하나**입니다.
-
-**옷은 한 올도 안 바뀝니다.** 흐트러지거나 벗겨지거나 비치지 않습니다 — 그건
-다른 그림이고, 무엇보다 실루엣이 달라져서 두 장이 안 겹칩니다.
+받은 뒤에 세 그림의 경계를 다시 합쳐서 재고, 넘치면 넷을 통째로 다시 오립니다
+(그때는 과녁 표도 다시 재야 합니다).
 
 ## 받은 다음
 
-1. `assets/<날짜>/char-shy-<id>.jpg` 로 넣습니다
-2. `tools/sprites.config.json` 에 넷을 더합니다 — `char_full` 과 같은 꼴이고
-   폴더 이름만 다릅니다
+1. `assets/<날짜>/char-pat-<id>.jpg` 로 넣습니다
+2. `tools/sprites.config.json` 에 넷이 **이미 들어가 있습니다** — 부끄러운
+   그림과 같은 `region` 을 쓰도록 미리 적어 뒀습니다
 
 ```json
-{ "file": "char-shy-knightgirl.jpg", "name": "char_shy", "grid": [1, 1],
-  "labels": ["knightgirl"], "size": 384 },
-{ "file": "char-shy-bunnyaxe.jpg", "name": "char_shy", "grid": [1, 1],
-  "labels": ["bunnyaxe"], "size": 384, "append": true },
-{ "file": "char-shy-elfarcher.jpg", "name": "char_shy", "grid": [1, 1],
-  "labels": ["elfarcher"], "size": 384, "append": true },
-{ "file": "char-shy-nun.jpg", "name": "char_shy", "grid": [1, 1],
-  "labels": ["nun"], "size": 384, "append": true }
+{ "file": "char-pat-nun.jpg", "name": "char_pat", "grid": [1, 1],
+  "labels": ["nun"], "size": 384, "append": true,
+  "region": [0.2751, 0.0381, 0.8617, 0.9697], "noTrim": true }
 ```
 
-`size: 384` 를 꼭 넣으세요. 까닭은 `CHAR_FULL_PROMPTS.md` 의 "192 가 아니라
-384 인 이유" 에 있습니다 — 기본 상한으로 줄이면 도트 격자가 반토막 나서
-치마와 수도복이 얼룩이 됩니다.
+3. `python3 tools/slice.py char_pat`
+4. 네 그림의 크기가 부끄러운 쪽과 **픽셀까지 같은지** 확인합니다
+   (243x384 · 248x384 · 226x384 · 162x384). 다르면 경계가 넘친 것입니다
 
-3. `python3 tools/slice.py char_shy`
+`size: 384` 를 꼭 두세요. 까닭은 `CHAR_FULL_PROMPTS.md` 의 "192 가 아니라 384 인
+이유" 에 있습니다 — 기본 상한으로 줄이면 도트 격자가 반토막 나서 치마와 수도복이
+얼룩이 됩니다.
 
-⚠ 슬라이서가 여백을 깎으므로 (`trim`), **평소 그림과 여백이 비슷해야** 두
-그림의 인물 크기가 같아집니다. 부끄러운 쪽만 몸을 잔뜩 웅크려 놓으면 트림
-뒤에 그쪽이 더 크게 박혀서, 누를 때마다 인물이 커졌다 작아집니다.
+## 아직 없어도 화면은 돕니다
+
+머리 그림이 없으면 **부끄러운 그림으로 떨어집니다** (`HeroManage` 의 `pose`).
+대사와 몸짓만 갈리고 얼굴은 가슴 쪽과 같습니다 — 눌렀는데 빈자리가 뜨는 것보다
+낫습니다.
 
 ---
 
@@ -222,24 +138,42 @@ She is SEVEN AND A HALF HEADS TALL. Her hips sit at the exact vertical midpoint.
 NOT chibi, NOT stubby, NOT squat. Same height in the frame as the reference:
 crown one twelfth below the top edge, soles one twelfth above the bottom.
 
-WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST AND SHE IS FLUSTERED.
-This is the one thing armour does not stop, and she has no procedure for it.
-SHE IS EMBARRASSED, NOT ANGRY. She is not glaring, not scowling, not threatening.
-Her composure has simply fallen off and she has no idea where to put her face.
-- HER FACE: eyes WIDE and OPEN — never narrowed — and cast to one side, not
-  meeting the viewer. Eyebrows tilted UP AT THE INNER ENDS, the classic worried
-  slant. Mouth SMALL AND SLIGHTLY OPEN, caught mid-word — not a hard flat line.
+WHAT CHANGES — SOMEONE IS PATTING HER ON THE HEAD, RIGHT NOW.
+A hand is resting on her crown. THE HAND IS NOT DRAWN — only her reaction to it.
+
+SHE IS EMBARRASSED AND SHE DOES NOT ACTUALLY MIND. This is the important part and
+it is what separates this drawing from her flustered one: she is being treated
+like a child in front of everyone, her dignity is gone, and some part of her is
+enjoying it anyway. A SMALL RELUCTANT ALMOST-SMILE IS WANTED HERE.
+
+SHE IS NOT ANGRY, NOT ALARMED, NOT SHOUTING. Nothing is startling her. The blush
+is not panic; it is being caught liking something.
+- HER FACE: eyes open but SOFTER than usual — the lids relax, they do NOT go wide
+  with alarm and they do NOT narrow into a glare. She is LOOKING UP AND SLIGHTLY
+  TO ONE SIDE, toward whatever is above her head. THIS UPWARD GAZE IS THE SINGLE
+  MOST IMPORTANT THING IN THE DRAWING: it is what tells the viewer there is a
+  hand up there.
+  Eyebrows UP AT THE INNER ENDS, the worried slant.
+  Mouth SMALL AND CLOSED, with ONE CORNER PULLED VERY SLIGHTLY HIGHER — the start
+  of a smile she is trying to suppress and failing to.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone — this is how a blush is
   drawn in 1-bit. Not a filled patch, not a circle: two or three clean strokes.
-- HER LEFT FOREARM comes UP AND ACROSS THE FRONT OF HER BREASTPLATE, held flat
-  against herself, elbow out. It is a guard, not a pose — the gesture of someone
-  who was too slow and is now late to it.
+- HER HEAD TILTS DOWN a few degrees and HER CHIN TUCKS, as if under a light weight
+  resting on the crown. The eyes go up while the head goes down. That combination
+  IS the gesture.
+- HER LEFT HAND comes up to her own circlet, fingertips just touching it, as if
+  checking whether her hair is still in order. THE ELBOW STAYS TUCKED IN AGAINST
+  HER RIBS — the arm does not swing outward.
 - HER RIGHT HAND stays on the pommel. THE GREATSWORD STAYS PLANTED POINT-DOWN
   exactly where it is in the reference. She does not let go of it.
-- HER SHOULDERS rise, her chin tucks, her torso turns a few degrees away from the
-  viewer. Her feet do not move.
+- HER SHOULDERS rise slightly. Her feet do not move.
 Everything else is identical to the reference. The armour and the dress are drawn
 exactly as before: nothing is loosened, displaced, opened, or removed.
+
+THE OUTER EDGES OF THE DRAWING MUST NOT CHANGE. Nothing reaches further up, down,
+left or right than it does in the reference — not the circlet, not the raised
+elbow, not the cape, not one strand of hair. The two images get cropped from the
+same rectangle, so anything that sticks out further gets cut off.
 
 CAMERA — STRAIGHT-ON, EYE LEVEL. Flat and frontal, same as the reference.
 
@@ -260,6 +194,9 @@ RESOLUTION: read at about 200 pixels tall. Her face has real features — the
 widened eyes, the tilted brows, the hatch lines on the cheeks all get their own
 pixels. Do NOT upscale a small sprite; draw it at this size.
 ```
+
+---
+
 
 ---
 
@@ -294,37 +231,46 @@ PROPORTIONS — UNCHANGED FROM THE REFERENCE.
 She is EIGHT HEADS TALL, the tallest of the four. Hips at the exact vertical
 midpoint. NOT chibi, NOT stubby. Same height in the frame as the reference.
 
-WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
-The joke she was about to make does not arrive.
+WHAT CHANGES — SOMEONE IS PATTING HER ON THE HEAD, RIGHT NOW.
+A hand is resting on her head, between the ears. THE HAND IS NOT DRAWN — only her
+reaction to it.
 
-SHE IS EMBARRASSED. Draw the SAME KIND OF FLUSTERED FACE you would draw for any
-shy anime girl: wide eyes, worried brows, a small open mouth, a deep blush.
-Nothing clever, nothing knowing.
+SHE IS EMBARRASSED AND SHE LIKES IT AND SHE HATES THAT SHE LIKES IT. Unlike her
+flustered drawing, A SMALL CROOKED SMILE IS WANTED HERE — she is the one who
+usually does the teasing and she has just lost that job. She is the oldest of the
+four and is being handled like the youngest.
 
-SHE IS NOT ANGRY — not glaring, not scowling, not threatening.
-SHE IS NOT AMUSED — NOT GRINNING, NOT SMIRKING, NOT SMILING AT ALL, not winking,
-not teasing, not enjoying it. THIS IS THE MOST COMMON WAY THIS CELL FAILS. In her
-normal artwork she is always half-smiling; here that smile is GONE, and its
-absence is the entire point. A confident grin on this face makes her look like
-she is playing along, which is the opposite of the drawing.
-- HER FACE: eyes WIDE and OPEN — never narrowed, never half-lidded — looking off
-  to one side, away from the viewer. Eyebrows UP AT THE INNER ENDS, the worried
-  slant. Mouth SMALL AND SLIGHTLY OPEN, an ordinary startled "o" — a word that
-  did not come. Exactly the mouth the other three characters have.
+SHE IS NOT ANGRY, NOT ALARMED, NOT SHOUTING.
+- HER FACE: eyes open and SOFT, not wide with alarm, not narrowed. LOOKING UP AND
+  SLIGHTLY TO ONE SIDE, toward whatever is above her head. THIS UPWARD GAZE IS THE
+  SINGLE MOST IMPORTANT THING IN THE DRAWING.
+  Eyebrows UP AT THE INNER ENDS.
+  Mouth SMALL, with ONE CORNER PULLED HIGHER — a crooked half-smile, closed or
+  barely open. Not a grin, not a smirk, not teeth.
   TWO OR THREE SHORT DIAGONAL HATCH LINES across each cheekbone, HEAVIER than on
-  the others — she blushes harder than anyone, and on her the blush is doing the
-  work the smile usually does. Clean strokes, not a filled patch.
-- HER RABBIT EARS: BOTH FOLD BACK AND DOWN, flattened the way a startled rabbit
-  lays its ears. THE ONE BENT TIP IS STILL BENT — that is who she is. The ears
-  must still fit inside the frame; nothing is cropped.
-- HER LEFT FOREARM comes off her hip and UP ACROSS THE FRONT OF THE LEOTARD,
-  held flat against herself, elbow out. The torn cuff hangs from that wrist.
-- HER RIGHT HAND stays up on the haft. THE AXE STAYS SHOULDERED exactly as in
-  the reference. She does not drop it.
-- HER SHOULDERS rise; her weight stays cocked on the same leg. Her feet do not move.
+  the others — she blushes harder than anyone. Clean strokes, not a filled patch.
+- HER RABBIT EARS: BOTH SNAP STRAIGHT UP, STIFF AND ALERT — the opposite of the
+  flattened ears in her flustered drawing. THE ONE BENT TIP IS STILL BENT: that is
+  who she is and it never straightens.
+  THE EAR TIPS MUST NOT REACH ANY HIGHER IN THE FRAME THAN IN THE REFERENCE. They
+  stiffen in place; they do not grow.
+- HER LEFT HAND comes off her hip and UP TO THE BASE OF ONE EAR, fingers half
+  closed around the headband, as if to move the hand away and not actually doing
+  it. THE ELBOW STAYS TUCKED IN — the arm does not swing outward. The torn cuff
+  hangs from that wrist.
+- HER RIGHT HAND stays up on the haft. THE AXE STAYS SHOULDERED exactly as in the
+  reference. She does not drop it.
+- HER HEAD TILTS DOWN a few degrees and HER CHIN TUCKS. The eyes go up while the
+  head goes down. That combination IS the gesture. Her weight stays cocked on the
+  same leg; her feet do not move.
 Everything else is identical to the reference. The leotard, collar, bow tie, belt
 and stockings are drawn exactly as before: nothing is loosened, displaced, pulled
 aside, or made transparent.
+
+THE OUTER EDGES OF THE DRAWING MUST NOT CHANGE. Nothing reaches further up, down,
+left or right than it does in the reference — not the ears, not the axe head, not
+the raised elbow. The two images get cropped from the same rectangle, so anything
+that sticks out further gets cut off.
 
 CAMERA — STRAIGHT-ON, EYE LEVEL. Flat and frontal, same as the reference.
 
@@ -343,6 +289,9 @@ STYLE (strict, non-negotiable):
 RESOLUTION: read at about 200 pixels tall. Draw it at this size — do not upscale
 a small sprite.
 ```
+
+---
+
 
 ---
 
@@ -378,23 +327,43 @@ PROPORTIONS — UNCHANGED FROM THE REFERENCE.
 She is SEVEN HEADS TALL and SLIGHT — narrow, never short-legged, never a child.
 Hips at the exact vertical midpoint. Same height in the frame as the reference.
 
-WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
-She does not have a reaction ready for this and it shows. She says almost nothing.
-SHE IS EMBARRASSED, NOT ANGRY. Not glaring, not scowling, not threatening.
-- HER FACE: eyes WIDE and OPEN — never narrowed — turned firmly to one side,
-  deliberately not looking at the viewer. Eyebrows UP AT THE INNER ENDS. Mouth
-  small and slightly open, one word begun and abandoned.
+WHAT CHANGES — SOMEONE IS PATTING HER ON THE HEAD, RIGHT NOW.
+A hand is resting on her crown. THE HAND IS NOT DRAWN — only her reaction to it.
+
+SHE HAS DECIDED TO ALLOW IT. That decision is the whole drawing. She does not
+flinch, she does not step back, she does not say anything — she simply stops and
+lets it happen, and her ears give her away.
+
+THIS IS THE ONE PLACE WHERE SHE DOES NOT GO WIDE-EYED. In her flustered drawing
+her eyes are wide; here they are the opposite.
+- HER FACE: eyes HALF-LIDDED and calm, tilted UP AND SLIGHTLY TO ONE SIDE toward
+  whatever is above her head. THIS UPWARD GAZE IS THE SINGLE MOST IMPORTANT THING
+  IN THE DRAWING.
+  Eyebrows UP AT THE INNER ENDS, faintly.
+  Mouth a SMALL FLAT LINE, corners neither up nor down — she is not smiling and
+  she is not unhappy. All the feeling is in the eyes and the ears.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes only.
-- HER EARS: the long swept ears DROOP, tilting down and back. This is the loudest
-  signal on her, because her ears are the first thing anyone notices.
-- HER RIGHT FOREARM leaves the quiver and comes UP ACROSS THE FRONT OF HER TUNIC,
-  held flat against herself, elbow tucked in close — she is small and she makes
-  herself smaller.
-- HER LEFT HAND stays down at her side. THE BOW STAYS EXACTLY WHERE IT IS in the
-  reference, lower limb near her boot. She does not raise or drop it.
-- HER SHOULDERS rise and her chin tucks. Her feet do not move.
-Everything else is identical to the reference. The tunic, belt, bracer and cloak
-are drawn exactly as before: nothing is loosened, displaced, or removed.
+- HER LONG ELVEN EARS DROOP — the tips tilt downward and back, the way an animal's
+  ears go when it relaxes. This is the loudest thing on her, because those ears
+  never move. THE EAR TIPS MUST NOT REACH FURTHER OUT TO THE SIDES than in the
+  reference; they tilt down, not outward.
+- HER HEAD TILTS DOWN a few degrees and HER CHIN TUCKS. The eyes go up while the
+  head goes down. That combination IS the gesture. Her ponytail hangs a little
+  further forward over one shoulder.
+- HER LEFT HAND comes up and takes hold of one of the thin braids in front of her
+  ear, holding it rather than fiddling with it. THE ELBOW STAYS TUCKED IN — the
+  arm does not swing outward.
+- HER RIGHT HAND stays on the bow. THE BOW STAYS EXACTLY WHERE IT IS in the
+  reference, held down at her side. She does not raise it or drop it.
+- Her shoulders drop rather than rise — she is not braced. Her feet do not move.
+Everything else is identical to the reference. The tunic, bracer, half-cloak,
+quiver and leggings are drawn exactly as before: nothing is loosened, displaced,
+opened, or removed. The hood stays DOWN.
+
+THE OUTER EDGES OF THE DRAWING MUST NOT CHANGE. Nothing reaches further up, down,
+left or right than it does in the reference — not the ears, not the ponytail, not
+the bow, not the raised elbow. The two images get cropped from the same rectangle,
+so anything that sticks out further gets cut off.
 
 CAMERA — STRAIGHT-ON, EYE LEVEL. Flat and frontal, same as the reference.
 
@@ -416,6 +385,9 @@ a small sprite.
 
 ---
 
+
+---
+
 ## §4. 아녜스 — `nun.png`
 
 ```
@@ -433,7 +405,7 @@ THIS IS A SECOND POSE OF A CHARACTER YOU HAVE ALREADY DRAWN.
 A reference image of her normal standing pose is attached. Match it exactly:
 same height in frame, same proportions, same camera, same habit, same censer,
 same veil, same line weight, same dithering density. If the two images were laid
-on top of each other, ONLY THE FACE, THE VEIL AND ONE ARM would move.
+on top of each other, ONLY THE FACE AND ONE ARM would move.
 
 THE CHARACTER:
 A young nun, composed and very quiet. She keeps her eyes lowered by habit, not from timidity.
@@ -448,23 +420,41 @@ She is SEVEN HEADS TALL. The habit is a TALL NARROW BELL, hem no more than two
 and a half head-widths across — a wide skirt makes her look squat. Same height
 in the frame as the reference; the hem is the bottom of her silhouette.
 
-WHAT CHANGES — SOMEONE HAS JUST POKED HER IN THE CHEST.
-She was in the middle of something and has entirely lost it.
-SHE IS EMBARRASSED, NOT ANGRY. Not glaring, not scowling, not scandalised into
-sternness. She is a quiet person who has been knocked completely off her rhythm.
-- HER FACE: eyes WIDE and OPEN — never narrowed — looking UP AND AWAY, which is
-  the opposite of her usual lowered gaze; that reversal is the whole point.
-  Eyebrows UP AT THE INNER ENDS. Mouth small and open, a word that did not finish.
+WHAT CHANGES — SOMEONE IS PATTING HER ON THE HEAD, RIGHT NOW.
+A hand is resting on her veil. THE HAND IS NOT DRAWN — only her reaction to it.
+
+NOBODY HAS EVER DONE THIS TO HER AND SHE DOES NOT KNOW WHAT IT IS. She is not
+frightened and she is not offended; she has simply run out of procedure. The
+smallest, most tentative pleasure is showing on her face and she does not know
+it is showing.
+
+SHE IS NOT ALARMED AND SHE IS NOT SCANDALISED INTO STERNNESS.
+- HER FACE: eyes OPEN AND ROUND AND SOFT — not wide with shock, not narrowed —
+  looking STRAIGHT UP, directly at what is above her. Her habit is to keep her
+  eyes lowered, so this straight-up gaze is a reversal, AND IT IS THE SINGLE MOST
+  IMPORTANT THING IN THE DRAWING.
+  Eyebrows UP AT THE INNER ENDS.
+  Mouth SMALL AND CLOSED, corners lifted the tiniest amount — the very beginning
+  of a smile she is not aware of.
   TWO SHORT DIAGONAL HATCH LINES across each cheekbone. Clean strokes only.
-- HER RIGHT FOREARM comes up and ACROSS THE FRONT OF THE PALE SCAPULAR, held flat
-  against herself, the wide bell sleeve falling over it. The short chain is still
-  wound twice around that hand.
-- HER LEFT HAND still holds the censer, now hanging lower and swinging out to one
-  side. The ribbon of smoke bends with it. THE CENSER STAYS IN HER HAND.
-- HER SHOULDERS rise and her chin tucks. A few more pale strands escape at the
-  temples. THE VEIL IS STILL PINNED ON HER LEFT SIDE ONLY. The hem does not move.
+- HER HEAD TILTS DOWN a few degrees and HER CHIN TUCKS under the weight on her
+  veil, while her eyes go up. That combination IS the gesture.
+- HER RIGHT HAND comes up and touches the PINNED EDGE OF THE VEIL on her left
+  side, fingertips only, steadying it. The wide bell sleeve falls back a little.
+  The short chain is still wound twice around that hand. THE ELBOW STAYS TUCKED
+  IN AGAINST HER RIBS — the arm does not swing outward.
+- HER LEFT HAND still holds the censer AND THE CENSER DOES NOT MOVE. It hangs
+  exactly where it hangs in the reference, and the ribbon of smoke rises exactly
+  as before. IT MUST NOT SWING OUT TO THE SIDE.
+- A few more pale strands escape at the temples. THE VEIL IS STILL PINNED ON HER
+  LEFT SIDE ONLY. The hem does not move.
 Everything else is identical to the reference. The habit, scapular, sash and veil
 are drawn exactly as before: nothing is loosened, displaced, opened, or removed.
+
+THE OUTER EDGES OF THE DRAWING MUST NOT CHANGE. Nothing reaches further up, down,
+left or right than it does in the reference — and THE CENSER ESPECIALLY MUST NOT
+SWING OUTWARD. Hers is the narrowest crop of the four; anything that sticks out
+further gets cut off.
 
 CAMERA — STRAIGHT-ON, EYE LEVEL. Flat and frontal, same as the reference.
 

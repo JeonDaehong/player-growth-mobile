@@ -67,12 +67,14 @@
  *
  * 인물 그림 통째가 과녁이고, 그 안에 **좁은 네모 둘**이 따로 있다 —
  * 머리(`HEAD`)와 가슴(`CHEST`). 어느 쪽이든 그 안을 누르면 특별한 반응 셋 중
- * 하나가 나오고 (`core/lines`) 그동안 부끄러워하는 그림으로 바뀐다
- * (`char_shy`). 그 밖을 누르면 여느 때처럼 다음 말이다.
+ * 하나가 나오고 (`core/lines`) 그동안 그 자리의 그림으로 바뀐다 (`pose`).
+ * 그 밖을 누르면 여느 때처럼 다음 말이다.
  *
- * **둘은 다른 목록을 쓴다.** 쓰다듬는 것과 사고는 부끄러운 종류가 달라서다 —
- * 까닭은 `core/lines` 머리말에. 머리 쪽에는 몸짓도 하나 붙는다 (`bob`):
- * 그림 둘이 같으므로, 안 그러면 어디를 눌렀든 화면이 똑같아 보인다.
+ * **셋이 다 다르다** — 대사도 그림도. 쓰다듬는 것과 사고는 부끄러운 종류가
+ * 달라서다 (까닭은 `core/lines` 머리말에).
+ *
+ * **몸짓은 셋이 같다** (`bob`). 어디를 누르든 인물이 한 번 눌렸다 온다 —
+ * 저건 "네 손가락이 닿았다" 는 대답이지 "어디를 눌렀나" 의 답이 아니다.
  *
  * **네모는 사람마다 자리가 다르다.** 넷에게 같은 띠를 썼더니 어떤 사람은
  * 목이, 어떤 사람은 허리가 걸렸다 — 까닭과 잰 값은 `CHEST` 에 있다.
@@ -224,12 +226,16 @@ function ActBtn({ art, label, onPress }: {
 type Zone = { x0: number; y0: number; x1: number; y1: number };
 
 /**
- * 어디를 눌렀나. 이 둘 말고는 인물 그림 통째이고, 그건 평소 대사다.
+ * 어디를 눌렀나. `body` 는 좁은 네모 **밖**, 곧 그림 아무 데나다.
+ *
+ * `body` 가 갈래로 들어와 있는 까닭은 **몸짓 때문**이다. 어디를 누르든
+ * 인물이 눌렸다 오므로 (`bob`), 누른 자리를 아는 것이 특별한 반응이 있는
+ * 자리뿐이면 통짜를 눌렀을 때만 아무 일도 안 일어난다.
  *
  * 갈래를 늘리려면 세 곳이 짝을 이뤄야 한다 — 여기, 자리 표(`HEAD` 같은),
  * 대사 표(`core/lines`).
  */
-type Touch = 'head' | 'chest';
+type Touch = 'head' | 'chest' | 'body';
 
 /**
  * ── 머리 ── 쓰다듬는 자리.
@@ -316,7 +322,7 @@ const TALK_OFF = 5000;
 function useTalk(
   id: string,
   lines: readonly string[],
-  react: Readonly<Record<Touch, readonly string[]>>,
+  react: Readonly<Partial<Record<Touch, readonly string[]>>>,
 ) {
   const [at, setAt] = useState(() => Math.floor(Math.random() * lines.length));
   const [on, setOn] = useState(true);
@@ -339,6 +345,13 @@ function useTalk(
    * 5초가 새로 시작된다.
    */
   const [beat, setBeat] = useState(0);
+  /**
+   * **사람이** 누른 횟수. 몸짓이 이 값에 붙는다 (`bob`).
+   *
+   * `beat` 로는 안 된다. 저건 시계가 스스로 다음 말로 넘길 때도 오르므로,
+   * 저기에 몸짓을 걸면 아무도 안 만졌는데 10초마다 인물이 움찔한다.
+   */
+  const [poke, setPoke] = useState(0);
 
   /* 사람이 바뀌면 처음부터 — 앞사람의 말이 남아 있으면 안 된다 */
   useEffect(() => {
@@ -359,7 +372,9 @@ function useTalk(
     안 일어나는 것보다 낫다.
   */
   const touch = (how: Touch) => {
-    const say = react[how];
+    /* 눌린 것부터 센다 — 대사가 없는 자리라도 몸짓은 나가야 한다 */
+    setPoke((n) => n + 1);
+    const say = react[how] ?? [];
     if (!say.length) { bump(); return; }
     setShy({ text: say[Math.floor(Math.random() * say.length)] ?? '', how });
     setOn(true);
@@ -388,8 +403,7 @@ function useTalk(
     /** 방금 어디를 눌렸나 — 아무것도 아니면 `null` */
     how: shy?.how ?? null,
     /** 몸짓을 다시 트는 신호. 같은 자리를 연달아 눌러도 이 값은 늘 바뀐다 */
-    beat,
-    bump,
+    poke,
     touch,
   };
 }
@@ -585,11 +599,31 @@ export function HeroManage({ pick, onPick }: {
   const chest = useMemo(() => zoneBox(d?.art ?? '', CHEST), [d?.art]);
 
   /**
-   * ── 쓰다듬으면 고개가 눌린다 ──
+   * ── 지금 어느 그림인가 ── 평소 · 부끄러움 · 쓰다듬김.
    *
-   * 부끄러워하는 그림은 **머리와 가슴이 같은 한 장**이다. 그래서 몸짓이 없으면
-   * 어디를 눌렀든 화면이 똑같아 보이고, 다른 대사가 나오는 것이 실수처럼
-   * 읽힌다 — "왜 아까랑 다른 말을 하지".
+   * 셋이 **같은 자리에서 오려낸 같은 크기**라 갈아 끼워도 인물이 안 움직인다
+   * (`tools/sprites.config.json` 의 `region`+`noTrim` — 까닭은 아래 `Sprite`
+   * 주석에). 그래서 과녁 표(`HEAD`·`CHEST`) 하나가 셋 다에 맞는다.
+   *
+   * `back` 은 **그 그림이 아직 없을 때** 대신 그릴 것이다. 머리 쪽 그림이 안
+   * 들어와 있으면 부끄러운 그림으로 떨어지고, 그러면 대사와 몸짓만 갈린다 —
+   * 눌렀는데 빈자리가 뜨는 것보다 낫다.
+   */
+  const pose = useMemo(() => {
+    if (talk.how === 'head') return { set: 'char_pat', back: 'char_shy' };
+    if (talk.shy) return { set: 'char_shy', back: 'char_full' };
+    return { set: 'char_full', back: 'avatar' };
+  }, [talk.how, talk.shy]);
+
+  /**
+   * ── 누르면 눌렸다 온다 ── **어디를 누르든.**
+   *
+   * 처음에는 머리 쪽에만 달았다. 머리와 가슴이 같은 그림을 쓰던 때라, 어느
+   * 쪽을 눌렀는지 화면에 남기려던 것이었다. 그런데 그러면 **통짜를 눌렀을 때만
+   * 아무 반응이 없어서**, 손가락이 닿았는지 아닌지가 그때만 불확실해진다.
+   *
+   * 지금은 셋 다 같은 몸짓이다. 몸짓은 "네 손가락이 닿았다" 는 대답이지 "어디를
+   * 눌렀나" 의 답이 아니다 — 그건 대사와 얼굴이 말한다.
    *
    * 손이 닿는 만큼만 내려갔다 온다. 두 번 눌리는 것은 **한 번은 그냥 움직임**
    * 이지만 두 번이면 쓰다듬는 것이 되기 때문이다. 4px 과 3px 로 두 번째를
@@ -600,7 +634,8 @@ export function HeroManage({ pick, onPick }: {
    */
   const bob = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    if (talk.how !== 'head') return undefined;
+    /* 첫 렌더에는 아무도 안 눌렀다 — 화면에 들어오자마자 움찔하면 안 된다 */
+    if (!talk.poke) return undefined;
     const dip = (to: number, ms: number) => Animated.timing(bob, {
       toValue: to, duration: ms, easing: Easing.out(Easing.quad), useNativeDriver: true,
     });
@@ -609,7 +644,7 @@ export function HeroManage({ pick, onPick }: {
     run.start();
     /* 사람을 바꾸거나 다시 누르면 하던 몸짓을 접고 제자리로 */
     return () => { run.stop(); bob.setValue(0); };
-  }, [talk.beat, talk.how, bob]);
+  }, [talk.poke, bob]);
 
   if (!c || !d) {
     return (
@@ -764,11 +799,10 @@ export function HeroManage({ pick, onPick }: {
           >
             <Sprite
               /*
-                부끄러워하는 그림이 있으면 그걸로 바꾼다. 없으면 평소 그림
-                그대로다 (`fallbackSet`) — 대사만 바뀐다.
-                프롬프트는 `docs/CHAR_SHY_PROMPTS.md`.
+                무엇을 그릴지는 위에서 골랐다 (`pose`). 프롬프트는
+                `docs/CHAR_SHY_PROMPTS.md` 와 `docs/CHAR_PAT_PROMPTS.md`.
 
-                ── 두 그림은 **같은 자리에서 오려 냈다** ──
+                ── 세 그림은 **같은 자리에서 오려 냈다** ──
 
                 한동안 각자 여백을 깎았더니 (`trim`) 갈아 끼울 때 인물이 튀었다.
                 비앙카는 부끄러운 쪽에서 귀가 접혀 위쪽 경계가 귀끝에서 머리로
@@ -776,13 +810,13 @@ export function HeroManage({ pick, onPick }: {
                 경계가 넓어지므로 몸이 왼쪽으로 밀렸다. 그림은 멀쩡한데 **깎는
                 기준이 서로 달랐던** 것이다.
 
-                지금은 둘의 경계를 합쳐 그 한 자리로 둘 다 오린다 (`region`)
-                — 여백은 안 깎는다 (`noTrim`). 그래서 두 그림의 크기가 픽셀까지
+                지금은 셋의 경계를 합쳐 그 한 자리로 셋 다 오린다 (`region`)
+                — 여백은 안 깎는다 (`noTrim`). 그래서 세 그림의 크기가 픽셀까지
                 같고, 갈아 끼워도 인물이 안 움직인다.
               */
-              set={talk.shy ? 'char_shy' : 'char_full'}
+              set={pose.set}
               name={d.art}
-              fallbackSet={talk.shy ? 'char_full' : 'avatar'}
+              fallbackSet={pose.back}
               size={FULL_W}
               style={{ width: FULL_W, height: FULL_H }}
             />
@@ -798,7 +832,7 @@ export function HeroManage({ pick, onPick }: {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${d.name}에게 말 걸기`}
-            onPress={talk.bump}
+            onPress={() => talk.touch('body')}
             style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
           />
           {/*
