@@ -59,7 +59,7 @@ import {
 import { GOOD, STATUS_WHAT, StatusId } from '@/core/status';
 import { Sprite } from '@/ui/Sprite';
 import { T } from '@/ui/atoms';
-import { BORDER, LINE, R, SP, SURF } from '@/ui/theme';
+import { BORDER, R, SP, SURF } from '@/ui/theme';
 import {
   CUT_FALLBACK, SK_FALLBACK, SK_MS, landAtOf, skFramesOf,
 } from './Fighter';
@@ -86,6 +86,37 @@ const START = 500;
 const H = 156;
 /** 바닥선이 상자 밑에서 얼마나 떠 있나 */
 const FLOOR = 12;
+
+/**
+ * ── 땅의 두께 ── 풍경이 여기서 끝나고 그 아래가 땅이다.
+ *
+ * **본 무대와 같은 얼개다** (`BattleView`). 저기서는 하늘 그림을 `bottom:
+ * GROUND_H` 로 잘라 두고 그 아래를 비워 두는데, 그 경계선이 곧 지평선이 되고
+ * 아래가 땅으로 읽힌다. 땅에는 아무것도 안 그린다 — 격자를 그으면 평면이
+ * 아니라 무늬가 된다 (`Ground` 의 `LINES` 가 0 인 까닭).
+ *
+ * 비율을 그대로 옮겼다. 본 무대가 462 에 땅이 95 이고 발이 그 34% 높이에
+ * 선다 — 여기 156 에 35 를 주면 발 높이가 12 로 지금 값과 같다 (`FLOOR`).
+ *
+ * 여태 1px 짜리 가로선 하나였다. 그러면 **옆에서 본 무대**가 되어, 위에서
+ * 살짝 내려다보는 본 무대와 인상이 갈렸다 — 이펙트만 본 무대 것을 쓰니
+ * 그것들이 따로 노는 것으로 보였다.
+ */
+const GROUND_BAND = 35;
+
+/**
+ * 적이 한 줄 물러난 만큼 떠오르는 높이.
+ *
+ * 쿼터뷰에서 **뒤로 간다는 것은 위로 간다는 것**이다 (`Ground` 의 `depthAt`).
+ * 적 몸이 이미 아군보다 작은데 (`FOE_W` 62 → 52, 본 무대에서 두 줄 뒤에 선
+ * 것과 같은 배수다) 발 높이가 같으면 **작은 놈이 앞에 서 있는** 꼴이라, 작아진
+ * 것이 원근이 아니라 그냥 작은 종으로 읽힌다.
+ *
+ * 본 무대는 한 줄에 24px 이고 무대가 462 다. 여기 156 에 옮기면 한 줄이 8px
+ * 이고, 두 줄이면 16 이다 — 14 는 거기서 조금 줄인 값이다 (상자가 낮아서
+ * 그대로 띄우면 적의 머리가 천장에 닿는다).
+ */
+const FOE_LIFT = 14;
 /** 쓰는 사람의 몸 길이 */
 const ME_W = 62;
 /** 맞는 사람의 몸 길이 — 잡몹이라 조금 작다 (무대에서도 그렇다) */
@@ -421,17 +452,38 @@ export function SkillDemo({
           },
         ]}
       >
-        {/* 바닥선 — 둘이 같은 땅을 밟고 있다는 것만 말한다 */}
+        {/*
+          ── 하늘 ── 땅 위로만 깔린다.
+
+          본 무대와 같은 그림을 같은 진하기로 쓴다 (`BattleView` — 20%).
+          아래끝을 `GROUND_BAND` 에서 자르므로 **그 경계가 곧 지평선**이고,
+          그 아래 빈 곳이 땅이 된다.
+
+          `stretch` 인 까닭도 본 무대와 같다. 비율을 지키면 상자보다 세로로
+          긴 그림은 위가 잘려 구름이 사라진다 — 먼 풍경이고 20% 로 흐려져
+          있어서 조금 늘어나는 것은 안 보인다.
+        */}
         <View
+          pointerEvents="none"
           style={{
             position: 'absolute',
             left: 0,
             right: 0,
-            bottom: FLOOR,
-            height: 1,
-            backgroundColor: LINE.low,
+            top: 0,
+            bottom: GROUND_BAND,
+            opacity: 0.2,
+            overflow: 'hidden',
+            justifyContent: 'flex-end',
           }}
-        />
+        >
+          <Sprite
+            set="bg_chapter"
+            name="01"
+            size={H}
+            fit="stretch"
+            style={{ width: '100%', height: '100%' }}
+          />
+        </View>
 
         {/* ── 쓰는 사람 ── */}
         <Animated.View
@@ -537,11 +589,15 @@ export function SkillDemo({
         )}
 
         {/* ── 맞는 사람 ── */}
+        {/*
+          맞는 쪽은 **한 줄 뒤에 선다** (`FOE_LIFT`). 몸이 이미 작으므로,
+          발까지 같은 높이면 작아진 것이 원근이 아니라 종으로 읽힌다.
+        */}
         <View
           style={{
             position: 'absolute',
             left: foeLeft,
-            bottom: FLOOR,
+            bottom: FLOOR + FOE_LIFT,
             width: FOE_W,
             height: FOE_W,
           }}

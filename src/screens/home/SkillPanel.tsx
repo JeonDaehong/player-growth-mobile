@@ -230,9 +230,15 @@ export function SkillPanel({
   /**
    * **보기만 하는 창인가** (`CharPopup` 의 같은 이름).
    *
-   * 켜져 있으면 정화의 "언제 쓸까" 칸을 안 그린다. 저건 읽는 것이 아니라
-   * **고르는 것**이라, 보러 연 창에 있으면 무엇을 하는 창인지 흐려진다 —
-   * 키우러 들어간 창(영웅 탭)에는 그대로 있다.
+   * 두 가지를 끈다.
+   *
+   *   · 정화의 "언제 쓸까" 칸. 저건 읽는 것이 아니라 **고르는 것**이라,
+   *     보러 연 창에 있으면 무엇을 하는 창인지 흐려진다
+   *   · **줄을 눌러 펴는 것.** 홈에서 파티 칸을 눌러 여는 창이라 "지금 누가
+   *     서 있나" 를 훑는 자리인데, 거기서 줄을 펴면 수치 열 줄이 쏟아져
+   *     창이 길어진다. 자세히 볼 자리는 따로 있다 (영웅 탭 · 스킬 트리)
+   *
+   * 키우러 들어간 창(영웅 탭)에는 둘 다 그대로 있다.
    */
   readOnly?: boolean;
   /**
@@ -510,7 +516,8 @@ export function SkillPanel({
             */
             left={<Sprite set="passive_icon" name={pv.art} size={22} />}
             right={<Tag label={passiveOff ? '꺼짐' : '패시브'} />}
-            onPress={() => setOpen(openPv ? null : PV_KEY)}
+            /* 보기만 하는 창에서는 안 펴진다 — 까닭은 `readOnly` 에 */
+            onPress={readOnly ? undefined : () => setOpen(openPv ? null : PV_KEY)}
           />
           {openPv && (
             <View style={[BORDER, { padding: SP.sm, marginBottom: SP.xs }]}>
@@ -560,7 +567,7 @@ export function SkillPanel({
               /* 잠긴 것에는 쿨타임 대신 **열리는 조건**을 적는다 */
               <Tag label={`${skillNeeds(r.slot)}성 필요`} />
             )}
-            onPress={() => setOpen(r.on ? null : r.sk.name)}
+            onPress={readOnly ? undefined : () => setOpen(r.on ? null : r.sk.name)}
           />
           {r.on && detailOf(r)}
         </View>

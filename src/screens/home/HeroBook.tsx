@@ -30,6 +30,10 @@
  * 볼까**다. 그래서 갈래를 바꿔도 차례는 안 바뀌고 그 반대도 그렇다 — 탱커만
  * 레벨 순으로 보는 것이 자연스러운 물음이다.
  *
+ * 지금 나가 있는 사람에게는 카드 꼭대기에 **출정 띠**가 두른다 (`BAND_H`).
+ * 도감을 여는 이유의 하나가 "누구를 넣을까" 인데, 여태 이 화면에는 지금 누가
+ * 나가 있는지가 없어서 편성으로 건너갔다 돌아와야 했다.
+ *
  * 차례의 기본은 **등급**이다. 도감을 여는 이유가 대개 "뭐가 더 있나" 라서,
  * 좋은 것이 위에 있어야 한다. 성과 레벨은 **내가 키운 순서**라 안 가진 사람이
  * 전부 바닥으로 밀리는데, 그건 도감이 하려는 말과 반대다.
@@ -48,7 +52,7 @@ import { Row, Stars, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
 import { FrameArt, frameStyle } from '@/ui/Frame';
-import { BORDER, FS, LINE, O, SP, SURF } from '@/ui/theme';
+import { BORDER, C, FS, LINE, O, SP, SURF } from '@/ui/theme';
 
 /** 한 줄에 둘 — 얼굴이 작아지면 누구인지가 안 보인다 */
 const COLS = 2;
@@ -68,6 +72,19 @@ const GUT = SP.xs;
 
 /** 알약 줄 왼쪽 이름표의 폭 — 두 줄의 알약이 같은 자리에서 시작하게 */
 const LABEL_W = 26;
+
+/**
+ * ── 출정 띠의 높이 ──
+ *
+ * **모든 칸이 이만큼을 비워 둔다.** 나가 있는 사람에게만 자리를 주면 그 칸만
+ * 키가 커지고, 한 줄에 선 둘의 얼굴 높이가 어긋난다 (안 가진 칸도 같은 높이를
+ * 지키는 것과 같은 규칙이다 — 아래쪽 `모집에서 나옵니다`).
+ *
+ * 넉 장 때문에 스무 칸이 14px 씩 비워 두는 셈인데, 그래도 이쪽이 낫다.
+ * 격자에서 눈이 먼저 잡는 것은 **줄 맞음**이라, 그것이 깨지면 띠 하나 얻고
+ * 목록 전체를 잃는다.
+ */
+const BAND_H = 14;
 
 /** 역할 갈래 — `null` 이 전체다 */
 const KINDS: readonly { id: BattleType | null; label: string }[] = [
@@ -148,6 +165,18 @@ function PickRow<T extends string | null>({ label, items, at, onGo }: {
 
 export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
   const raw = useGame((s) => s.chars);
+  const party = useGame((s) => s.party);
+  /*
+    지금 파티에 든 사람들. 빈 자리(`null`)는 걸러 낸다.
+
+    `members` 를 안 쓰는 까닭: 저건 사람 객체를 주는데 여기서 물어보는 것은
+    "이 이름표가 파티에 있나" 하나뿐이라, 스무 칸을 그리면서 매번 배열을
+    훑는 대신 한 번 만들어 둔 집합에 묻는다.
+  */
+  const onDuty = useMemo(
+    () => new Set(party.filter((v): v is CharId => !!v)),
+    [party],
+  );
 
   /** 어느 역할만 볼까 — `null` 이면 전부 */
   const [kind, setKind] = useState<BattleType | null>(null);
@@ -246,6 +275,11 @@ export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
                     /* 자리를 꽉 채운다 — 틈은 자리가 이미 물고 있다 */
                     width: '100%',
                     /*
+                      출정 띠가 카드 폭을 꽉 채우며 위 모서리까지 간다. 안 자르면
+                      둥근 귀 밖으로 흰 네모 귀퉁이가 삐져나온다.
+                    */
+                    overflow: 'hidden',
+                    /*
                       한 줄에 선 둘의 **키를 맞춘다.** 자리는 줄에서 제일 큰
                       것만큼 늘어나므로 (`alignItems` 기본값), 카드가 그 자리를
                       세로로 마저 채우게 둔다. 안 그러면 소개 글이 두 줄인
@@ -253,6 +287,8 @@ export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
                     */
                     flexGrow: 1,
                     padding: SP.sm,
+                    /* 위쪽 여백은 띠가 대신한다 (`Band`) */
+                    paddingTop: 0,
                     alignItems: 'center',
                     borderColor: have ? LINE.mid : LINE.low,
                     borderStyle: have ? 'solid' : 'dashed',
@@ -260,6 +296,36 @@ export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
                   },
                 ]}
               >
+                {/*
+                  ── 출정 띠 ── **지금 나가 있는 사람.**
+
+                  도감을 여는 이유의 하나가 "누구를 넣을까" 인데, 여태 이
+                  화면에는 **지금 누가 나가 있는지가 없었다.** 편성 화면으로
+                  건너가서 확인하고 돌아와야 했다.
+
+                  띠로 두른 까닭: 딱지(`Tag`) 하나를 더 붙이면 아래 등급
+                  딱지와 나란히 서서 **같은 종류의 말**로 읽힌다. 등급은 이
+                  사람이 원래 어떤 사람인가이고 출정은 지금 무엇을 하고 있나라,
+                  섞이면 둘 다 흐려진다. 색을 뒤집은 띠는 카드에서 그것 하나뿐이라
+                  안 헷갈린다.
+
+                  안 나간 칸에서는 **빈 자리로 남는다** (`BAND_H` 머리말).
+                */}
+                <View
+                  style={{
+                    alignSelf: 'stretch',
+                    /* 카드 여백 밖까지 — 띠는 폭을 꽉 채워야 띠로 보인다 */
+                    marginHorizontal: -SP.sm,
+                    height: BAND_H,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: onDuty.has(id) ? C.fg : 'transparent',
+                  }}
+                >
+                  {onDuty.has(id) && (
+                    <T size={FS.tiny} bold style={{ color: C.bg }}>출정</T>
+                  )}
+                </View>
                 {/*
                   안 가진 사람은 **실루엣만** 남는다. 지우거나 물음표로 바꾸면
                   누구인지가 사라져서 뽑고 싶어지지도 않는다.
