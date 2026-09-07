@@ -20,19 +20,30 @@
  *
  * 잠긴 칸을 지우지 않는다. 지우면 이 갈래로 가면 무엇이 나오는지가 화면에
  * 없어서, 고르는 일이 "지금 눌리는 것을 누르는 일" 이 된다.
+ *
+ * ## 누르면 **창이 하나 더 뜬다** (`NodePopup`)
+ *
+ * 여태 칸을 누르면 그 자리에서 바로 찍혔다. 되돌리기가 공짜라 큰 사고는
+ * 아니지만, **무엇을 고르는지 모르고 고르는 것**은 그대로였다 — 칸에 적힌
+ * 두 줄이 전부였으니까.
+ *
+ * 이제 누르면 그 기술이 도는 그림이 뜨고 (`SkillDemo`), 거기서 적용하거나
+ * 그만둔다. 찍을 수 없는 칸도 열린다 — **먼저 보고 나서 성을 올릴지 정하는
+ * 것**이 이 창의 값이라, 잠긴 칸이야말로 열려야 한다.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { CHARS, CharId, maxStar } from '@/core/chars';
+import { CHARS, CharId, maxStar, nodeDemo } from '@/core/chars';
 import {
   TreeNode, activeNodes, isPick, treeOf, whyLocked,
 } from '@/core/skillTree';
-import { Btn, Row, Stars, T, Tag } from '@/ui/atoms';
+import { Btn, KV, Row, Stars, T, Tag } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
 import { BORDER, BORDER_HI, FS, LINE, O, R, SP, SURF } from '@/ui/theme';
+import { SkillDemo } from './SkillDemo';
 
 /** 단계 사이를 잇는 세로 선 — 갈래면 Y 자로 벌어진다 */
 function Link({ split }: { split: boolean }) {
@@ -59,18 +70,22 @@ function Link({ split }: { split: boolean }) {
 }
 
 /** 자리 하나 */
-function Node({ n, state, why, onPick }: {
+function Node({ n, state, why, onOpen }: {
   n: TreeNode;
   state: 'on' | 'open' | 'off';
   why: string | null;
-  onPick: () => void;
+  onOpen: () => void;
 }) {
   const on = state === 'on';
   const open = state === 'open';
   return (
     <Pressable
-      disabled={!open}
-      onPress={() => { sfx('tap'); onPick(); }}
+      /*
+        **잠긴 칸도 눌린다.** 누르는 것이 곧 찍는 것이던 때는 못 찍는 칸을
+        막아야 했는데, 지금은 누르면 창이 뜰 뿐이다 (`NodePopup`). 못 찍는
+        칸일수록 먼저 봐야 하는 칸이다 — 그걸 보고 성을 올릴지 정한다.
+      */
+      onPress={() => { sfx('tap'); onOpen(); }}
       style={({ pressed }) => [
         on ? BORDER_HI : BORDER,
         {
@@ -108,17 +123,124 @@ function Node({ n, state, why, onPick }: {
         </View>
       </Row>
       <T size={FS.tiny} dim="sub">{n.desc}</T>
-      {open && <T size={FS.tiny} bold>눌러서 찍기</T>}
+      {open && <T size={FS.tiny} bold>눌러서 보기 · 찍기</T>}
       {state === 'off' && !!why && <T size={FS.tiny} dim="dim">{why}</T>}
     </Pressable>
   );
 }
 
-export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: () => void }) {
+/**
+ * ── 칸 하나를 열어 본 창 ── 도는 그림과 적용·취소.
+ *
+ * ## 왜 그림이 여기 있나
+ *
+ * 이 그림은 한동안 캐릭터 창의 기술 목록에 붙어 있었다 (`SkillPanel`). 거기는
+ * **이미 고른 것의 수치를 읽는 자리**라 그림이 할 일이 없었다 — 무엇처럼
+ * 생겼는지를 알아도 고칠 것이 없으니까. 게다가 목록을 펼 때마다 무대가 하나씩
+ * 붙어서, 정작 읽으러 온 숫자가 그만큼 아래로 밀렸다.
+ *
+ * 고르는 자리는 여기다. 그래서 그림도 여기다.
+ *
+ * ## **찍은 뒤의 기술**을 보여 준다
+ *
+ * 파쇄의 태세를 눌렀는데 손 안 댄 검기가 돌면 그 자리를 찍을 이유가 화면에
+ * 없다. `nodeDemo` 가 "이 줄기를 끝까지 찍은 사람" 을 지어내서 계산한다
+ * (`core/chars`).
+ *
+ * 비앙카의 과열만 그림이 없다. 저건 기술이 아니라 **평타**를 손보는 것이라
+ * 무대에 올릴 기술이 없다.
+ *
+ * ## 적용과 취소
+ *
+ * 누르는 것이 곧 찍는 것이던 때는 단추가 필요 없었다. 지금은 창이 한 겹
+ * 끼었으므로 **나가는 길이 둘**이다 — 찍고 나가거나, 안 찍고 나가거나.
+ * 되돌리기가 공짜여도 이 둘은 갈라 두어야 한다: 보러 들어온 사람이 창을
+ * 닫았다는 이유로 뭔가 찍혀 있으면 그건 사고다.
+ *
+ * 못 찍는 칸에서도 단추는 **지우지 않고 흐려 둔다.** 지우면 "이 칸은 원래
+ * 찍는 것이 아닌가" 로 읽히는데, 실제로는 성만 올리면 찍는 칸이다. 대신
+ * 그 옆에 왜 안 되는지를 적는다.
+ */
+function NodePopup({ who, n, onClose }: {
+  who: CharId;
+  n: TreeNode;
+  onClose: () => void;
+}) {
   const chars = useGame((s) => s.chars);
   const pickSkill = useGame((s) => s.pickSkill);
+  const toast = useGame((s) => s.toast);
+  const c = chars[who];
+  if (!c) return null;
+
+  const on = activeNodes(who, c.star, c.tree).some((x) => x.id === n.id);
+  /*
+    갈래가 아닌 자리는 `whyLocked` 가 "저절로 열리는 자리" 를 돌려준다. 그건
+    잠긴 것이 아니므로 성만 보고 가른다 — 트리 본문과 같은 규칙이다.
+  */
+  const why = isPick(n)
+    ? whyLocked(who, c.star, c.tree, n.id)
+    : (c.star < n.tier ? `${n.tier}성이 되어야 합니다` : null);
+  const can = isPick(n) && why === null;
+  const sk = nodeDemo(c, n.id);
+
+  return (
+    <Popup visible title={n.name} onClose={onClose}>
+      <Row gap={SP.xs} style={{ marginBottom: SP.sm }}>
+        <Sprite set="skill_icon" name={n.art} size={24} />
+        <View style={{ flex: 1 }}>
+          <Row gap={4}>
+            <Tag label={n.kind === 'active' ? '액티브' : '패시브'} />
+            {on && <Tag label="적용중" fill />}
+            {!n.live && <Tag label="준비중" />}
+          </Row>
+        </View>
+      </Row>
+
+      <T size={FS.body} dim="sub" style={{ marginBottom: SP.sm }}>{n.desc}</T>
+
+      {/*
+        무대는 **있을 때만** 올린다. 비앙카의 과열 하나가 여기 걸리는데
+        (`nodeDemo` 가 `null`), 빈 상자를 두면 고장 난 것으로 보인다.
+      */}
+      {!!sk && <SkillDemo c={c} sk={sk} hit={0} />}
+
+      {n.cost !== undefined && (
+        <KV k="스킬 코스트" v={`${n.cost} (평타 한 번에 1 씩 찹니다)`} />
+      )}
+      <KV k="단계" v={`${n.tier}단계 · ${n.tier}성부터`} />
+
+      {/* 왜 못 찍는지는 단추 **위**에 — 눌러 보고 나서 알면 늦다 */}
+      {!can && !on && (
+        <T size={FS.tiny} dim="dim" style={{ marginTop: SP.sm }}>
+          {isPick(n) ? (why ?? '') : '갈래가 아니라 성만 되면 저절로 열립니다'}
+        </T>
+      )}
+
+      <Row gap={SP.xs} style={{ marginTop: SP.md }}>
+        <Btn
+          label={on ? '적용중' : '적용'}
+          fill={can}
+          disabled={!can}
+          style={{ flex: 1 }}
+          onPress={() => {
+            const bad = pickSkill(who, n.id);
+            if (bad) { toast(bad, 'bad'); return; }
+            toast(`${n.name} 을(를) 찍었습니다`, 'good');
+            onClose();
+          }}
+        />
+        <Btn label="취소" style={{ flex: 1 }} onPress={onClose} />
+      </Row>
+    </Popup>
+  );
+}
+
+export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: () => void }) {
+  const chars = useGame((s) => s.chars);
   const resetSkills = useGame((s) => s.resetSkills);
   const toast = useGame((s) => s.toast);
+  /** 열어 본 칸 — `null` 이면 트리만 보인다 */
+  const [at, setAt] = useState<TreeNode | null>(null);
 
   if (!who) return null;
   const c = chars[who];
@@ -171,11 +293,7 @@ export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: 
                     n={n}
                     state={state}
                     why={isPick(n) ? why : (c.star < n.tier ? `${n.tier}성이 되어야 합니다` : null)}
-                    onPick={() => {
-                      const bad = pickSkill(who, n.id);
-                      if (bad) toast(bad, 'bad');
-                      else toast(`${n.name} 을(를) 찍었습니다`, 'good');
-                    }}
+                    onOpen={() => setAt(n)}
                   />
                 );
               })}
@@ -185,9 +303,12 @@ export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: 
       </View>
 
       <T size={FS.tiny} dim="dim" style={{ marginTop: SP.md }}>
-        스물네 자리가 전부 전투에 들어가 있습니다. 찍으면 그 자리에서 수치가
-        바뀌고, 되돌리기는 공짜입니다.
+        스물네 자리가 전부 전투에 들어가 있습니다. 칸을 누르면 도는 그림을
+        볼 수 있고, 찍는 것은 거기서 정합니다. 되돌리기는 공짜입니다.
       </T>
+
+      {/* 칸을 열어 본 창 — 트리 위에 한 겹 더 뜬다 */}
+      {!!at && <NodePopup who={who} n={at} onClose={() => setAt(null)} />}
     </Popup>
   );
 }

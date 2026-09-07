@@ -43,7 +43,6 @@ import {
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { BLACK, BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
-import { SkillDemo } from './SkillDemo';
 
 /**
  * 이 기술이 **빨라야 몇 초마다** 나가나.
@@ -305,17 +304,20 @@ export function SkillPanel({
             */}
             <T size={10} dim="sub" style={{ marginBottom: SP.sm }}>{sk.desc}</T>
             {/*
-              ── 무엇처럼 생겼나가 그다음 ──
+              ── 도는 그림은 **여기 없다** ──
 
-              아래 열 줄은 전부 숫자다. 숫자는 견주는 데 쓰고, 그림은
-              "이걸 찍을까" 를 정하는 데 쓴다 — 스킬 트리에서 갈래를
-              고르는 사람이 먼저 알고 싶은 쪽이 뒤엣것이라 위에 둔다.
+              한동안 이 자리에 시연 무대가 있었다 (`SkillDemo`). 걷어서
+              스킬 트리로 옮겼다 (`SkillTreePopup`).
 
-              **잠긴 기술도 보여 준다.** 아직 못 쓰는 것이 무엇처럼
-              생겼는지가 곧 성을 올릴 이유다 (목록에서 안 지우는 것과
-              같은 까닭). 흐리게 깔린 채로 그대로 돈다.
+              여기는 **지금 쓰는 기술의 수치를 읽는 자리**다. 아래 열 줄이
+              전부 숫자이고, 숫자는 견주는 데 쓴다. 반면 그림은 "이걸 찍을까"
+              를 정하는 데 쓰는 것이라, 고르는 자리에 있어야 값이 산다 —
+              여기서는 이미 고른 것을 볼 뿐이라 고칠 것이 없다.
+
+              그리고 무대가 넷이 한꺼번에 돌고 있었다. 목록을 펼 때마다
+              작은 사람이 칼을 휘두르는 상자가 하나씩 붙으니, 정작 읽으러 온
+              숫자가 그만큼 아래로 밀렸다.
             */}
-            <SkillDemo c={c} sk={sk} hit={sk.heal > 0 ? 0 : hit} />
             <KV
               k="스킬 코스트"
               v={`${sk.cost} (평타 한 번에 1 씩 찹니다)`}
@@ -427,7 +429,7 @@ export function SkillPanel({
               set="passive_icon"
               art={pv.art}
               name={pv.name}
-              tag={passiveOff ? '꺼짐' : '항상'}
+              tag={passiveOff ? '꺼짐' : '패시브'}
               on={openPv}
               off={passiveOff}
               onPress={() => setOpen(openPv ? null : PV_KEY)}
@@ -477,9 +479,13 @@ export function SkillPanel({
       {!!pv && (
         <View style={passiveOff ? { opacity: O.dim } : undefined}>
           {/*
-            오른쪽에 `늘 켜져 있습니다` 가 있었다. 아래 `항상` 딱지가 같은
+            오른쪽에 `늘 켜져 있습니다` 가 있었다. 아래 `패시브` 딱지가 같은
             말을 하고 있어서 (`Tag`) 한 줄에 같은 말이 두 번이었다 — 꺼진
             경우에만 이유를 적는다.
+
+            딱지는 한동안 `항상` 이었다. 뜻은 맞지만 **트리와 말이 갈렸다** —
+            트리는 같은 것을 `패시브` 라고 부른다 (`SkillTreePopup`). 한 가지를
+            두 이름으로 부르면 그 둘이 같은 것인지 화면 어디서도 알 수 없다.
           */}
           <Row between style={{ marginBottom: SP.xs }}>
             <T size={11} bold>패시브</T>
@@ -503,7 +509,7 @@ export function SkillPanel({
               아직 그림이 없으면 빈 자리로 남고, 도착하는 순간 저절로 붙는다.
             */
             left={<Sprite set="passive_icon" name={pv.art} size={22} />}
-            right={<Tag label={passiveOff ? '꺼짐' : '항상'} />}
+            right={<Tag label={passiveOff ? '꺼짐' : '패시브'} />}
             onPress={() => setOpen(openPv ? null : PV_KEY)}
           />
           {openPv && (

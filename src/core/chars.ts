@@ -46,7 +46,7 @@
  * 다음 사람을 만들면 여기 한 줄, `CHARS` 에 한 덩어리를 더한다.
  */
 import type { StatusId } from './status';
-import { activeNodes, fixTree } from './skillTree';
+import { activeNodes, fixTree, nodeOf } from './skillTree';
 import {
   RARITY_GROWTH, Rarity, STAR_CAP,
   canAwaken, lvCap, maxStar, skillSlots,
@@ -1397,6 +1397,55 @@ const NODE_SKILL: Record<string, SkillKind> = {
   nu2: 'purify',
   nu3a: 'judge',
 };
+
+/**
+ * ── 패시브 자리가 **손보는** 기술 ──
+ *
+ * 패시브는 기술을 하나 더 주지 않고 이미 있는 것을 고친다 (`NODE_SKILL` 머리말).
+ * 그래서 "이 자리를 찍으면 무엇이 달라지나" 를 보여 주려면 **어느 기술이
+ * 달라지는지**를 알아야 한다.
+ *
+ * 비앙카의 과열(`ba4`)은 여기 없다. 저건 기술이 아니라 **평타**를 손보는
+ * 것이라 보여 줄 기술이 없다.
+ */
+const NODE_TOUCH: Record<string, SkillKind> = {
+  kg3b: 'wave',     // 파쇄의 태세 → 검기
+  kg4a: 'ward',     // 수호신의 가호 → 수호의 결의
+  ea3a: 'rain',     // 강화된 화살 → 화살비
+  nu3b: 'purify',   // 정화의 손길 → 정화
+  nu4a: 'judge',    // 신의 천벌   → 신의 심판
+  nu4b: 'purify',   // 찬란한 빛   → 정화
+};
+
+/**
+ * ── 이 자리를 찍으면 기술이 **어떻게 되나** ── 미리보기 (`SkillTreePopup`).
+ *
+ * 트리에서 칸 하나를 누르면 그 기술이 도는 그림을 보여 준다. 그런데 보여 줄
+ * 것은 **찍기 전의 기술이 아니라 찍은 뒤의 기술**이다 — 파쇄의 태세를 눌렀는데
+ * 손 안 댄 검기가 돌면 그 자리를 찍을 이유가 화면에 없다.
+ *
+ * 그래서 **찍은 셈 치고 계산한다.** 이 자리에 이르는 줄기를 앞 단계부터 쭉
+ * 모아서(`needs`) 그것만 찍은 사람을 하나 지어내고, 거기에 `skillsFor` 를
+ * 돌린다. 실제 명부는 안 건드린다.
+ *
+ * 성은 상한으로 둔다. 4단계를 2성일 때 눌러도 보이게 하려는 것이고, 그게
+ * 트리에서 앞을 내다보는 일의 전부다 — 잠긴 칸을 지우지 않는 것과 같은 까닭.
+ *
+ * 보여 줄 기술이 없으면 `null` 이다 (비앙카의 과열 하나).
+ */
+export function nodeDemo(c: OwnedChar, id: string): SkillDef | null {
+  const kind = NODE_SKILL[id] ?? NODE_TOUCH[id];
+  if (!kind) return null;
+  /* 앞 단계부터 이 자리까지 — `needs` 를 거슬러 오르며 모은다 */
+  const chain: string[] = [];
+  for (let n = nodeOf(c.id, id); n; n = n.needs ? nodeOf(c.id, n.needs) : null) {
+    chain.unshift(n.id);
+    if (chain.length > 8) break;   /* 표가 잘못 이어져 고리가 생겨도 안 멎지 않게 */
+  }
+  const hypo: OwnedChar = { ...c, star: STAR_CAP, tree: fixTree(c.id, chain) };
+  const want = SKILLS[kind].name;
+  return skillsFor(hypo).find((sk) => sk.name === want) ?? SKILLS[kind];
+}
 
 /**
  * ── 이 사람이 지금 쓰는 기술들 ── **트리가 짠다.**
