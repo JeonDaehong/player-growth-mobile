@@ -75,15 +75,26 @@
 생성기가 **자세까지 그대로 두는** 쪽으로 기웁니다. 특히 앉는 자세와 어긋나는
 지시가 하나라도 있으면 거기서 무너집니다.
 
-실제로 이졸데에서 났습니다. 처음 문장이 "손은 검 손잡이에 그대로" 였는데,
-검이 키만 한 것을 세워 두고 손잡이를 잡으려면 **서 있어야만 합니다.** 서라는
-말과 앉으라는 말이 같이 있으니 서는 쪽으로 갔습니다.
+실제로 이졸데에서 났습니다. **넷 중 이졸데만 안 앉았습니다.**
 
-그래서 넷 다 이렇게 고쳤습니다.
+두 번에 걸쳐 고쳤는데, 첫 번째는 절반만 맞았습니다. 처음 문장이 "손은 검
+손잡이에 그대로" 였고, 검이 키만 한 것을 세워 두고 손잡이를 잡으려면 서 있어야
+하므로 — 손을 날 아래쪽으로 내렸습니다. 그런데도 계속 섰습니다.
 
-- **자세를 맨 앞에 씁니다.** 사람 설명보다 먼저 "바닥에 있다" 를 못 박습니다
-- **무기를 몸에서 떼거나, 앉은 키에 맞게 다시 잡습니다.** 서 있어야만 가능한
-  자세는 하나도 안 남깁니다
+**남은 원인은 검 자체였습니다.** 잘 되는 셋을 다시 보니 셋 다 무기가 **바닥에
+누워 있었습니다** (도끼 · 활 · 향로). 이졸데만 제 키만 한 것을 세워 두고
+있었고, 그 긴 세로 하나가 그림 전체를 서 있는 구도로 끌어당겼습니다. 옆에 선
+것이 있으면 사람도 서게 됩니다.
+
+그래서 검도 눕혔습니다. "검은 안 놓는다" 는 성격은 **쓰러진 검 위에 손을
+얹는 것**으로 남겼습니다.
+
+넷에 공통으로 박은 것은 셋입니다.
+
+- **자세를 맨 앞에 씁니다.** 사람 설명보다 **먼저** "바닥에 앉아 있다" 를 못
+  박고, "아래 설명은 이 문단을 못 뒤집는다" 를 덧붙입니다
+- **무기를 전부 바닥에 눕힙니다.** 서 있어야만 가능한 자세도, 서 있는 물건도
+  하나도 안 남깁니다
 - **안 되는 것을 적습니다.** `서 있지 않는다 · 무릎만 굽히지 않는다 ·
   기대 서지 않는다`
 
@@ -94,7 +105,7 @@
 
 | | 어떻게 무너지나 |
 |---|---|
-| 이졸데 | 무릎이 꺾인다. **검은 안 놓는다** — 다만 손이 손잡이에서 **날 아래쪽으로 미끄러져 내려온다.** 앉은 채로 잡을 수 있는 자리는 거기뿐이다 |
+| 이졸데 | 무릎이 꺾여 옆으로 앉는다. **검이 옆에 쓰러져 있고** 손은 그 위에 얹혀 있다 — 놓지는 않았다 |
 | 비앙카 | 뒤로 털썩. 다리를 뻗고 손으로 뒤를 짚는다. 넷 중 제일 크게 무너진다 |
 | 리안느 | 소리 없이 웅크린다. 무릎을 안고 얼굴을 반쯤 묻는다. 제일 작아진다 |
 | 아녜스 | 무릎을 꿇는다. 기도하던 자세와 같은데 **이번엔 기도가 아니다** |
@@ -138,10 +149,17 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 FRAME: ONE single tall portrait image, 2 wide by 3 tall. Output at 1024x1536.
 ONE character. Not a sheet: no cells, no grid, no dividing lines, no variants.
 
+THE POSE — READ THIS FIRST, BEFORE THE CHARACTER DESCRIPTION.
+SHE IS SITTING ON THE FLOOR. Both legs are folded to one side underneath her —
+the ordinary anime "side sit". HER HIPS AND ONE THIGH ARE FLAT ON THE GROUND.
+Her greatsword is NOT in her hands: IT IS LYING ON THE GROUND BESIDE HER.
+Everything below describes who she is; none of it overrides this paragraph.
+
 THIS IS A FOURTH POSE OF A CHARACTER YOU HAVE ALREADY DRAWN.
 A reference image of her FLUSTERED STANDING pose is attached. Same costume, same
 armour, same greatsword, same hair, same circlet, same line weight, same
-dithering density. Only the BODY and the FACE change.
+dithering density. THE POSE IS THE ONE THING THAT DOES NOT CARRY OVER — she was
+standing there and she is sitting here.
 
 THE CHARACTER:
 A young woman knight, calm and unhurried, though not right now.
@@ -159,21 +177,22 @@ merely bending her knees, NOT crouching on her toes, and NOT leaning against
 her sword while upright. HER HIPS ARE ON THE GROUND. If her head is anywhere
 in the upper half of the picture, the drawing is wrong.
 
-SHE IS SITTING ON THE GROUND, SIDE-SADDLE: both legs folded to her LEFT, one
-knee crossed over the other, her weight on her left hip. Her skirt has fallen
-into a pool AROUND HER AND IN FRONT OF HER — FORWARD, NOT OUTWARD.
+SHE IS SITTING ON THE GROUND IN A SIDE SIT: both legs folded to her LEFT and
+tucked under her, one knee just in front of the other, her weight resting on her
+left hip and thigh. Her skirt has fallen into a pool AROUND HER AND IN FRONT OF
+HER — FORWARD, NOT OUTWARD.
 
-- THE GREATSWORD IS STILL PLANTED POINT-DOWN AND UPRIGHT, its tip stuck in the
-  ground at EXACTLY THE SAME SPOT as in the reference. IT DID NOT MOVE. SHE DID.
-- SHE HAS SLID DOWN THE LENGTH OF IT WITHOUT LETTING GO. Because she is now
-  sitting, the pommel is far above her — so HER RIGHT HAND IS NO LONGER ON THE
-  POMMEL. Her right arm reaches UP and her hand grips THE BLADE LOW DOWN, just
-  above where it enters the ground, near the bottom of the cross guard. That is
-  the only part of the sword a seated person can reach.
-  ⚠ DO NOT put her hand on the pommel. Reaching the pommel requires standing,
-  and that single detail is what will make you draw her standing by mistake.
-  The tall unbroken vertical of the blade beside her, with her small seated
-  figure at the foot of it, is what says "she failed to stay up".
+- ⚠ THE GREATSWORD IS ON THE GROUND. She is not holding it up, not planting it,
+  not leaning on it, not resting her hand on a raised pommel. IT HAS FALLEN AND
+  IT IS LYING FLAT.
+  It lies BESIDE HER, ON HER RIGHT, running FORWARD AND BACK (its length going
+  toward and away from the viewer) so that it is FORESHORTENED and does not
+  stretch out sideways across the picture.
+  THIS IS THE MOST IMPORTANT LINE IN THIS PROMPT. A tall sword held upright drags
+  the whole drawing back onto its feet: if the sword is standing, she ends up
+  standing. It has to be down before she can be.
+- HER RIGHT HAND rests loosely on the fallen grip — she went down and it went
+  down with her, and she still has not really let go.
 - HER LEFT ARM is folded across her chest, hand gripping her own right elbow.
 - HER FACE: EYES CLOSED, or barely open. Head turned down and away, chin tucked
   hard toward her collarbone. Eyebrows UP AT THE INNER ENDS. Mouth closed in a
@@ -192,8 +211,9 @@ near the top. She has lost roughly half her height. The BOTTOM of her — skirt,
 hip, folded legs — RESTS ON THE SAME GROUND LINE HER FEET STOOD ON in the
 reference. Nothing floats.
 
-THE SWORD, however, IS STILL FULL HEIGHT and still reaches into the upper half of
-the picture. She is short now and it is not. That contrast IS the drawing.
+NOTHING IN THIS PICTURE STANDS UPRIGHT. Not her, not the sword. The tallest
+thing in the frame is her own bowed head. If some tall vertical shape reaches the
+top of the picture, something has gone wrong — go back and put the sword down.
 
 ⚠ SHE MUST NOT GET WIDER. Draw the whole figure INSIDE THE SAME LEFT AND RIGHT
 LIMITS as the standing reference — measure it. Knees together, skirt folded
