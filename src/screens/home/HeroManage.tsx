@@ -99,7 +99,7 @@ import { openPicks } from '@/core/skillTree';
 import { Row, Sep, Stars, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { FrameArt, frameStyle } from '@/ui/Frame';
-import { HERO_ACT, ICONS } from '@/ui/sprites';
+import { HEART, HERO_ACT, ICONS } from '@/ui/sprites';
 import { SPRITE_RATIO } from '@/ui/spriteAssets';
 import { Pixel } from '@/ui/Pixel';
 import { soon } from '@/ui/SoonPopup';
@@ -333,117 +333,109 @@ const RUN_GAP = 1000;
  */
 const HIDDEN_MS = 5000;
 
-/** 김 한 무더기가 피었다 스러지는 데 걸리는 시간 (ms) */
-const STEAM_MS = 1400;
-/** 시트가 몇 칸인가 (`assets/sprites/bfx_miasma/`) */
-const STEAM_FRAMES = 5;
-/** 몇 무더기가 겹쳐 도나 */
-const STEAM_N = 3;
+/** 하트 하나가 뿅 하고 떠올랐다 사라지는 데 걸리는 시간 (ms) */
+const HEART_MS = 1250;
+/** 몇 개가 겹쳐 도나 */
+const HEART_N = 8;
 
 /**
- * ── 김 한 무더기 ── 피었다 오르며 스러진다.
+ * ── 하트 하나 ── **뿅** 하고 나타나 떠오르다 사라진다.
  *
- * 그림은 **우두머리 것을 빌려 쓴다** (`bfx_miasma` — 15판 부패의 악취).
- * 다섯 칸이 바닥의 얇은 층에서 시작해 뭉게뭉게 부풀었다가 조각조각 흩어지는데,
- * 그게 정확히 수증기가 하는 일이다.
+ * ## `뿅` 은 **크기**로 만든다
  *
- * ## 도형으로 그려 보다 갈아탔다
+ * 2색이라 반짝임도 번짐도 못 쓴다. 남는 것은 크기와 시간뿐인데, 나타나는
+ * 순간에 **제 크기보다 크게 부풀었다 도로 줄면** 그게 "뿅" 이다. 처음부터
+ * 제 크기로 떠 있으면 나타난 것이 아니라 **원래 있던 것**으로 보인다.
  *
- * 흰 동그라미 스물을 띄워 올려 봤다. 올라가며 퍼지게까지 했는데도 **김이
- * 아니라 점들**이었다. 2색에서 김의 생김새는 뭉게뭉게한 **덩어리의 윤곽**에
- * 있고, 그 윤곽은 원 몇 개로는 안 나온다 — 손으로 그린 시트가 그 일을 이미
- * 하고 있었다.
+ * 부풀고 줄어드는 데 한 바퀴의 앞 5분의 1만 쓴다. 길게 끌면 뿅이 아니라
+ * 풍선이 부는 것이 된다.
  *
- * 타격 이펙트(`fx/`)와 화산(`sfx_erupt`)이 도형을 버리고 시트로 간 것과 같은
- * 갈림길이다.
+ * ## 몸 위에서는 안 보인다
+ *
+ * 인물도 흰 그림이고 하트도 흰색이다. 그래서 **몸 밖에서 나서 위로 뜬다** —
+ * 나는 자리를 인물 어깨 높이쯤에 두고 좌우로 넓게 흩어 놓으면, 도는 동안
+ * 대부분을 검은 데서 보낸다. 김을 만들 때 배운 것이 그대로 여기 쓰인다.
  */
-function Puff({ w, h, delay, dx, flip }: {
-  w: number; h: number; delay: number; dx: number; flip: boolean;
-}) {
+function Heart({ w, h, i }: { w: number; h: number; i: number }) {
   const v = useRef(new Animated.Value(0)).current;
-  const [n, setN] = useState(1);
+
+  /* 자리와 크기는 한 번만 정한다 — 매 렌더마다 굴리면 도는 중에 튄다 */
+  const at = useMemo(() => {
+    /* -1 ~ 1. 나는 자리가 곧 비껴 가는 쪽이다 */
+    const side = ((i % 5) - 2) / 2;
+    return {
+      left: w * (0.5 + side * 0.38),
+      /* 어깨 높이쯤에서 난다. 층지게 두어야 한 줄로 서지 않는다 */
+      bottom: h * (0.34 + (i % 3) * 0.09),
+      /* 크기를 섞는다 — 다 같으면 여덟이 한 벌로 보인다 */
+      size: 9 + (i % 3) * 2,
+      /* 떠오르며 비껴 가는 폭. 번갈아 반대쪽으로 */
+      sway: (i % 2 === 0 ? 7 : -7) + side * 6,
+      ms: HEART_MS + (i % 4) * 160,
+      delay: (i * HEART_MS) / HEART_N,
+    };
+  }, [w, h, i]);
 
   useEffect(() => {
-    let step: ReturnType<typeof setInterval> | null = null;
-    const run = Animated.loop(Animated.timing(v, {
-      toValue: 1, duration: STEAM_MS, easing: Easing.out(Easing.quad), useNativeDriver: true,
-    }));
-    /*
-      칸 넘기기는 **따로 센다.** `Animated.Value` 는 화면을 다시 그리지 않고
-      흐르므로 그 값으로는 칸을 못 넘긴다 (`SkillFx` 의 `Erupt` 와 같은 사정).
-      5초 동안 서너 바퀴라 둘이 조금 어긋나도 눈에 안 띈다.
-    */
-    const start = setTimeout(() => {
-      setN(1);
-      run.start();
-      let i = 0;
-      step = setInterval(() => {
-        i = (i + 1) % STEAM_FRAMES;
-        setN(i + 1);
-      }, STEAM_MS / STEAM_FRAMES);
-    }, delay);
-
-    return () => {
-      clearTimeout(start);
-      if (step) clearInterval(step);
-      run.stop();
-    };
-  }, [delay, v]);
-
-  const fade = useMemo(() => v.interpolate({
-    inputRange: [0, 0.12, 0.6, 1], outputRange: [0, 0.6, 0.45, 0],
-  }), [v]);
-  /* 피어오르는 동안 뜬다 — 칸만 갈리면 그림 다섯 장이 갈아 끼워지는 것으로 보인다 */
-  const rise = useMemo(() => v.interpolate({
-    inputRange: [0, 1], outputRange: [0, -h * 0.42],
-  }), [v, h]);
+    const run = Animated.sequence([
+      Animated.delay(at.delay),
+      Animated.loop(Animated.timing(v, {
+        toValue: 1, duration: at.ms, easing: Easing.out(Easing.quad), useNativeDriver: true,
+      })),
+    ]);
+    run.start();
+    return () => run.stop();
+  }, [at, v]);
 
   return (
     <Animated.View
       pointerEvents="none"
       style={{
         position: 'absolute',
-        left: dx,
-        /* 발치에서 난다 */
-        bottom: h * 0.04,
-        opacity: fade,
-        transform: [{ translateY: rise }],
+        left: at.left,
+        bottom: at.bottom,
+        opacity: v.interpolate({
+          /* 뜨는 것은 순식간, 지는 것은 천천히 — 그래야 "떠올랐다" 가 된다 */
+          inputRange: [0, 0.08, 0.6, 1], outputRange: [0, 1, 0.85, 0],
+        }),
+        transform: [
+          { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -h * 0.42] }) },
+          {
+            translateX: v.interpolate({
+              inputRange: [0, 0.45, 1], outputRange: [0, at.sway, at.sway * 0.5],
+            }),
+          },
+          {
+            /* ── 뿅 ── 제 크기보다 한 번 크게 부풀었다 줄어든다 */
+            scale: v.interpolate({
+              inputRange: [0, 0.09, 0.2, 1], outputRange: [0.2, 1.35, 1, 0.85],
+            }),
+          },
+        ],
       }}
     >
-      <Sprite set="bfx_miasma" name={String(n)} size={Math.round(w * 0.78)} flip={flip} />
+      <Pixel sprite={HEART} scale={at.size / 9} />
     </Animated.View>
   );
 }
 
 /**
- * ── 후끈후끈 ── 숨겨진 반응 동안 몸에서 오르는 김.
+ * ── 뿅뿅 ── 숨겨진 반응 동안 몸에서 떠오르는 하트들.
  *
- * 무더기 셋이 **어긋나게 돌아** 끊이지 않는다. 하나만 돌리면 한 바퀴가 끝날
- * 때마다 김이 통째로 사라졌다 다시 피는데, 5초 동안 그게 서너 번이면 김이
- * 아니라 깜빡이는 그림이 된다.
- *
- * 좌우를 뒤집어 섞는다 (`flip`). 같은 시트 셋이 나란히 있으면 같은 모양이
- * 세 번 보이고, 그러면 손으로 그린 티가 도로 난다.
+ * 여덟 개가 **어긋나게 돈다.** 한꺼번에 뜨면 여덟이 한 덩어리로 맥박치고,
+ * 그건 하트가 뿅뿅 하는 것이 아니라 무언가가 깜빡이는 것이다.
  *
  * 그림 **위**에 얹는다. 몸 뒤로 보내면 실루엣에 다 가려서, 인물이 넓은
  * 이졸데에서는 거의 안 보인다.
  */
-function Steam({ w, h }: { w: number; h: number }) {
+function Hearts({ w, h }: { w: number; h: number }) {
   return (
     <View
       pointerEvents="none"
       style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
     >
-      {Array.from({ length: STEAM_N }, (_v, i) => (
-        <Puff
-          key={i}
-          w={w}
-          h={h}
-          delay={(i * STEAM_MS) / STEAM_N}
-          /* 셋을 조금씩 어긋나게 놓아 한 자리에 겹쳐 보이지 않게 */
-          dx={w * (0.11 + (i - 1) * 0.06)}
-          flip={i % 2 === 1}
-        />
+      {Array.from({ length: HEART_N }, (_v, i) => (
+        <Heart key={i} w={w} h={h} i={i} />
       ))}
     </View>
   );
@@ -1037,13 +1029,8 @@ export function HeroManage({ pick, onPick }: {
               style={{ width: FULL_W, height: FULL_H }}
             />
           </Animated.View>
-          {/*
-            ── 후끈후끈 ── 숨겨진 반응 동안만 (`talk.deep`).
-
-            그림 **위**에 얹는다. 몸 뒤로 보내면 실루엣에 다 가려서, 인물이
-            넓은 이졸데에서는 거의 안 보인다.
-          */}
-          {talk.deep && <Steam w={FULL_W} h={FULL_H} />}
+          {/* 숨겨진 반응 동안만 하트가 뜬다 (`talk.deep`) */}
+          {talk.deep && <Hearts w={FULL_W} h={FULL_H} />}
           {/*
             아래에 **통째로 깔린 과녁**이 말 걸기다. 그 위에 좁은 네모 둘을
             얹어 특별한 반응을 받는다 — 나중에 그린 것이 손가락을 먼저 먹으므로
