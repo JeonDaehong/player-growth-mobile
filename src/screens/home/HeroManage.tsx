@@ -333,151 +333,116 @@ const RUN_GAP = 1000;
  */
 const HIDDEN_MS = 5000;
 
-/** 김 한 덩이가 올라갔다 흩어지는 데 걸리는 시간 (ms) — 덩이마다 조금씩 다르다 */
-const STEAM_MS = 1700;
+/** 김 한 무더기가 피었다 스러지는 데 걸리는 시간 (ms) */
+const STEAM_MS = 1400;
+/** 시트가 몇 칸인가 (`assets/sprites/bfx_miasma/`) */
+const STEAM_FRAMES = 5;
+/** 몇 무더기가 겹쳐 도나 */
+const STEAM_N = 3;
+
 /**
- * 몇 가닥인가.
+ * ── 김 한 무더기 ── 피었다 오르며 스러진다.
  *
- * 열넷을 크게 띄웠더니 **김이 아니라 방울**이었다. 2색이라 큰 동그라미는
- * 그냥 회색 원반이고, 그게 몇 개 떠 있으면 김이 아니라 거품으로 읽힌다.
+ * 그림은 **우두머리 것을 빌려 쓴다** (`bfx_miasma` — 15판 부패의 악취).
+ * 다섯 칸이 바닥의 얇은 층에서 시작해 뭉게뭉게 부풀었다가 조각조각 흩어지는데,
+ * 그게 정확히 수증기가 하는 일이다.
  *
- * **작게, 여럿, 길게.** 수를 늘리고 하나하나를 작고 세로로 길쭉하게 두면
- * 낱개가 안 읽히고 흐름만 남는다 — 그게 김이다.
+ * ## 도형으로 그려 보다 갈아탔다
+ *
+ * 흰 동그라미 스물을 띄워 올려 봤다. 올라가며 퍼지게까지 했는데도 **김이
+ * 아니라 점들**이었다. 2색에서 김의 생김새는 뭉게뭉게한 **덩어리의 윤곽**에
+ * 있고, 그 윤곽은 원 몇 개로는 안 나온다 — 손으로 그린 시트가 그 일을 이미
+ * 하고 있었다.
+ *
+ * 타격 이펙트(`fx/`)와 화산(`sfx_erupt`)이 도형을 버리고 시트로 간 것과 같은
+ * 갈림길이다.
  */
-const STEAM_N = 20;
-/** 다 올라갔을 때 가운데에서 얼마나 벌어지나 — 인물 폭의 몇 할 */
-const STEAM_SPREAD = 0.42;
-/**
- * 얼마나 높이 오르나 — **상자 높이**의 몇 할.
- *
- * 폭으로 재고 있었다. 상자가 153x230 이라 폭으로 재면 0.62 가 95px 이고,
- * 그건 상자의 40% 다 — 김이 **인물 머리 위로 못 올라간다.** 인물은 흰
- * 그림이고 김도 흰색이라, 몸 위에 있는 동안은 아예 안 보인다. 검은 데로
- * 나가야 비로소 보인다.
- */
-const STEAM_RISE = 0.78;
+function Puff({ w, h, delay, dx, flip }: {
+  w: number; h: number; delay: number; dx: number; flip: boolean;
+}) {
+  const v = useRef(new Animated.Value(0)).current;
+  const [n, setN] = useState(1);
+
+  useEffect(() => {
+    let step: ReturnType<typeof setInterval> | null = null;
+    const run = Animated.loop(Animated.timing(v, {
+      toValue: 1, duration: STEAM_MS, easing: Easing.out(Easing.quad), useNativeDriver: true,
+    }));
+    /*
+      칸 넘기기는 **따로 센다.** `Animated.Value` 는 화면을 다시 그리지 않고
+      흐르므로 그 값으로는 칸을 못 넘긴다 (`SkillFx` 의 `Erupt` 와 같은 사정).
+      5초 동안 서너 바퀴라 둘이 조금 어긋나도 눈에 안 띈다.
+    */
+    const start = setTimeout(() => {
+      setN(1);
+      run.start();
+      let i = 0;
+      step = setInterval(() => {
+        i = (i + 1) % STEAM_FRAMES;
+        setN(i + 1);
+      }, STEAM_MS / STEAM_FRAMES);
+    }, delay);
+
+    return () => {
+      clearTimeout(start);
+      if (step) clearInterval(step);
+      run.stop();
+    };
+  }, [delay, v]);
+
+  const fade = useMemo(() => v.interpolate({
+    inputRange: [0, 0.12, 0.6, 1], outputRange: [0, 0.6, 0.45, 0],
+  }), [v]);
+  /* 피어오르는 동안 뜬다 — 칸만 갈리면 그림 다섯 장이 갈아 끼워지는 것으로 보인다 */
+  const rise = useMemo(() => v.interpolate({
+    inputRange: [0, 1], outputRange: [0, -h * 0.42],
+  }), [v, h]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: dx,
+        /* 발치에서 난다 */
+        bottom: h * 0.04,
+        opacity: fade,
+        transform: [{ translateY: rise }],
+      }}
+    >
+      <Sprite set="bfx_miasma" name={String(n)} size={Math.round(w * 0.78)} flip={flip} />
+    </Animated.View>
+  );
+}
 
 /**
  * ── 후끈후끈 ── 숨겨진 반응 동안 몸에서 오르는 김.
  *
- * ## 세로 막대 여섯이었다
+ * 무더기 셋이 **어긋나게 돌아** 끊이지 않는다. 하나만 돌리면 한 바퀴가 끝날
+ * 때마다 김이 통째로 사라졌다 다시 피는데, 5초 동안 그게 서너 번이면 김이
+ * 아니라 깜빡이는 그림이 된다.
  *
- * 처음엔 짧은 막대 여섯을 곧게 띄웠다. 그건 김이 아니라 **점선**이었다 —
- * 곧게만 오르면 눈이 "무언가 여섯 개가 위로 간다" 까지만 읽고 멈춘다.
+ * 좌우를 뒤집어 섞는다 (`flip`). 같은 시트 셋이 나란히 있으면 같은 모양이
+ * 세 번 보이고, 그러면 손으로 그린 티가 도로 난다.
  *
- * 김으로 읽히는 것은 **올라가면서 퍼지는 것**이다. 아래는 좁고 위는 넓은
- * 깔때기 모양이 곧 "뜨거운 것에서 김이 난다" 이고, 그 모양이 없으면 아무리
- * 여러 개를 띄워도 그냥 위로 가는 점들이다.
- *
- * 그래서 셋을 같이 굴린다.
- *
- *   **퍼진다**  가운데 좁은 자리에서 나와 올라갈수록 좌우로 벌어진다
- *   **커진다**  같은 덩이가 위로 갈수록 부푼다 (0.45 → 2.2배)
- *   **옅어진다** 커지는 것과 같이 가야 흩어지는 것이 된다
- *
- * 셋이 같이 안 가면 안 된다 — 퍼지기만 하면 흩날리는 재이고, 커지기만 하면
- * 부풀어 오르는 공이다.
- *
- * ## 2색이라 **모양이 아니라 움직임**이 일을 한다
- *
- * 흐림도 색도 못 쓴다. 그래서 덩이 하나하나는 그냥 흰 동그라미이고, 김으로
- * 보이게 하는 것은 전부 그것들이 **어떻게 움직이나**다. 시간도 크기도
- * 덩이마다 다르게 둔 것이 그래서다 — 같으면 열넷이 한 덩어리로 맥박친다.
- *
- * ## 덩이마다 제 시계를 두는 까닭
- *
- * 하나를 돌리고 구간을 밀어 쓰는 것이 이 저장소의 관례다 (`HitFx` 의
- * `HealMarks`). 그건 **한 번 돌고 마는** 것이라 여럿을 한 바퀴에 욱여넣을 수
- * 있다. 이건 5초 동안 **끊이지 않고** 돌아야 하므로 각자 제 바퀴를 돌아야
- * 하고, 그러려면 한 값으로는 나머지 연산이 필요한데 `Animated` 에 그것이 없다.
+ * 그림 **위**에 얹는다. 몸 뒤로 보내면 실루엣에 다 가려서, 인물이 넓은
+ * 이졸데에서는 거의 안 보인다.
  */
 function Steam({ w, h }: { w: number; h: number }) {
-  /*
-    덩이마다 제 자리·크기·시계. `useMemo` 로 한 번만 만든다 — 매 렌더마다
-    새로 만들면 `Animated.Value` 가 갈려서 돌던 것이 끊긴다.
-  */
-  const puffs = useMemo(() => Array.from({ length: STEAM_N }, (_v, i) => {
-    /* -1 ~ 1. 나오는 자리가 곧 퍼지는 쪽이다 — 왼쪽에서 난 것은 왼쪽으로 간다 */
-    const side = ((i % 7) - 3) / 3;
-    return {
-      v: new Animated.Value(0),
-      /* 나올 때는 몸통 가운데 좁은 자리에 모여 있다 */
-      left: w * (0.5 + side * 0.15),
-      /* 발치에서 난다. 층지게 두어야 한 줄로 서서 분수가 되지 않는다 */
-      bottom: h * (0.05 + (i % 4) * 0.05),
-      /* 가닥 굵기도 제각각이라야 김이다. 작게 — 크면 방울이 된다 */
-      r: 2 + (i % 2),
-      /* 오르며 좌우로 한 번 흔들리는 폭. 번갈아 반대쪽으로 */
-      sway: (i % 2 === 0 ? 5 : -5),
-      /* 다 올라갔을 때 갈 자리. 가운데 것은 거의 안 비끼고 바깥 것이 크게 벌어진다 */
-      to: w * STEAM_SPREAD * side,
-      /* 시간이 다르면 열넷이 한 덩어리로 맥박치지 않는다 */
-      ms: STEAM_MS + (i % 5) * 190,
-      /* 한 바퀴 안에서 어긋나게 시작한다 */
-      delay: (i * STEAM_MS) / STEAM_N,
-    };
-  }), [w, h]);
-
-  useEffect(() => {
-    const runs = puffs.map((p) => Animated.sequence([
-      Animated.delay(p.delay),
-      Animated.loop(Animated.timing(p.v, {
-        toValue: 1, duration: p.ms, easing: Easing.out(Easing.quad), useNativeDriver: true,
-      })),
-    ]));
-    runs.forEach((r) => r.start());
-    return () => runs.forEach((r) => r.stop());
-  }, [puffs]);
-
   return (
     <View
       pointerEvents="none"
       style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
     >
-      {puffs.map((p, i) => (
-        <Animated.View
+      {Array.from({ length: STEAM_N }, (_v, i) => (
+        <Puff
           key={i}
-          style={{
-            position: 'absolute',
-            left: p.left,
-            bottom: p.bottom,
-            width: p.r * 2,
-            /* **세로로 길다.** 동그라미는 방울이고, 길쭉한 것이 김이다 */
-            height: p.r * 3.4,
-            borderRadius: p.r,
-            backgroundColor: WHITE,
-            /*
-              떴다가 흩어진다. 끝을 0 으로 두어야 사라지는 것이 되고, 가운데를
-              한 번 꺾어야 **커지면서 옅어지는** 것이 된다.
-            */
-            opacity: p.v.interpolate({
-              inputRange: [0, 0.1, 0.55, 1], outputRange: [0, 0.9, 0.45, 0],
-            }),
-            transform: [
-              /* 위로 — 처음이 빠르고 위로 갈수록 느려진다 (`Easing.out`) */
-              { translateY: p.v.interpolate({ inputRange: [0, 1], outputRange: [0, -h * STEAM_RISE] }) },
-              /*
-                옆으로 — **올라간 만큼 벌어진다.** 가운데를 한 번 꺾어 두면
-                곧게 벌어지지 않고 한 번 휘어서, 열기에 실려 간 것으로 보인다.
-              */
-              {
-                /*
-                  퍼지는 것에 **흔들림을 얹는다.** 곧게 벌어지기만 하면 부챗살
-                  이고, 오르내리며 비껴야 열기에 실린 것으로 보인다.
-                */
-                translateX: p.v.interpolate({
-                  inputRange: [0, 0.3, 0.65, 1],
-                  outputRange: [0, p.to * 0.2 + p.sway, p.to * 0.6 - p.sway, p.to],
-                }),
-              },
-              /* 부푼다 — 퍼지는 것과 같이 가야 흩어지는 것이 된다 */
-              /*
-                커지는 폭을 줄였다 (2.4 → 1.5). 크게 부풀리면 가닥이 원반이
-                되어 낱개가 도로 읽힌다 — 김은 하나하나가 안 보여야 김이다.
-              */
-              { scale: p.v.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1.5] }) },
-            ],
-          }}
+          w={w}
+          h={h}
+          delay={(i * STEAM_MS) / STEAM_N}
+          /* 셋을 조금씩 어긋나게 놓아 한 자리에 겹쳐 보이지 않게 */
+          dx={w * (0.11 + (i - 1) * 0.06)}
+          flip={i % 2 === 1}
         />
       ))}
     </View>
@@ -822,8 +787,21 @@ export function HeroManage({ pick, onPick }: {
     () => ({ head: headOf(id ?? ''), chest: chestOf(id ?? '') }),
     [id],
   );
-  /* 한 번 더 눌렀을 때 — 가슴 쪽에만 있다 (`useTalk` 의 `touch`) */
-  const deep = useMemo(() => ({ chest: downOf(id ?? '') }), [id]);
+  /*
+    ── 열 번 두들겼을 때 ── **머리와 가슴 둘 다**.
+
+    가슴에만 달아 두었다가 고쳤다. 그러면 머리를 열 번 두들긴 사람에게는
+    할 말이 없어서 (`touch` 의 `say.length` 가 0), 그냥 다음 평소 대사로
+    넘어가 버렸다 — 열 번을 채웠는데 아무 일도 안 일어나는 것이 아니라
+    **엉뚱한 자세가 나왔다** (쓰다듬는 그림 그대로였다).
+
+    두 자리가 같은 말을 쓴다. 이 칸은 어디를 만졌느냐가 아니라 **너무 오래
+    만졌다**가 이유라, 자리마다 다른 말을 할 자리가 아니다.
+  */
+  const deep = useMemo(
+    () => ({ head: downOf(id ?? ''), chest: downOf(id ?? '') }),
+    [id],
+  );
   const talk = useTalk(id ?? '', lines, react, deep);
   /*
     이 사람의 좁은 과녁 둘이 화면 어디인가 (`HEAD` · `CHEST`).
