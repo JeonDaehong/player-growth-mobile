@@ -570,7 +570,7 @@ export interface SkillDef {
    * 기술이 제 동작을 지목하면 자리가 밀려도 안 어긋나고, 새 동작 시트가
    * 들어오는 날 이 한 줄만 바꾸면 된다.
    */
-  pose?: 'sk' | 'sk2' | 'sk3';
+  pose?: 'sk' | 'sk2' | 'sk3' | 'sk4';
   /**
    * 날아가는 것의 **제 시트** (`flies` 가 켜져 있을 때만).
    *
@@ -1174,7 +1174,7 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     3-2(불굴의 의지)가 정확히 그 반대라, 둘이 고를 만한 갈래가 된다.
   */
   lava: {
-    pose: 'sk2', name: '용암 지대', art: 'sk_lava', hits: 1, pick: 'all', targets: 0,
+    pose: 'sk4', name: '용암 지대', art: 'sk_lava', hits: 1, pick: 'all', targets: 0,
     dmg: 'phys',
     mul: 1.3, defMul: 0, heal: 0, healPct: 0,
     flies: false, landOn: 3, cost: 10, aura: 'ash', leaps: false,

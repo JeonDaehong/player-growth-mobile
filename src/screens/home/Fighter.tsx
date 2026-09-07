@@ -135,6 +135,19 @@ const SK2_FRAMES = ['sk2_1', 'sk2_2', 'sk2_3'] as const;
 const SK3_FRAMES = ['sk3_1', 'sk3_2', 'sk3_3'] as const;
 
 /**
+ * 넷째 동작 — 지금은 비앙카의 용암 지대 하나뿐이다.
+ *
+ * **화산격과 같은 칸을 쓰면 안 되어서** 생겼다. 저 둘은 둘 다 불이고 둘 다
+ * `sk2` 였는데, 화산격의 몸짓은 내려찍는 것이고 (맞은 놈 발밑에서 기둥이
+ * 솟는다) 용암 지대는 **옆으로 훑는 것**이다 (적 전체에 불이 퍼진다). 한 칸을
+ * 나눠 쓰면 둘 중 하나는 하는 일과 몸짓이 어긋난다.
+ *
+ * 덮어쓰지 않은 까닭이기도 하다 — `sk2` 를 옆으로 훑는 그림으로 갈면 화산격에
+ * 맞춰 그린 그림이 사라진다.
+ */
+const SK4_FRAMES = ['sk4_1', 'sk4_2', 'sk4_3'] as const;
+
+/**
  * 이 **기술**이 쓸 동작 칸 셋.
  *
  * 여태 **자리 번호**로 골랐다 (0번이면 `sk`, 그 위면 `sk2`). 기술이 한 명당
@@ -142,11 +155,14 @@ const SK3_FRAMES = ['sk3_1', 'sk3_2', 'sk3_3'] as const;
  * 트리를 어떻게 찍었느냐에 따라 밀리기 때문이다 (`core/chars` 의
  * `SkillDef.pose` 에 그 이야기를 적어 두었다).
  *
- * 시트가 아직 없으면 **한 단계씩 물러난다**: `sk3` → `sk2` → `sk`.
+ * 시트가 아직 없으면 물러난다: `sk4`·`sk3` → `sk2` → `sk`. 넷째가 셋째로
+ * 안 가는 까닭은, 비앙카의 `sk3` 이 불굴의 의지에 맞춰 그린 그림이라 용암
+ * 지대에는 화산격 쪽(`sk2`)이 덜 어긋나기 때문이다.
  * `Sprite` 의 `fallbackSet` 으로는 안 된다 — 저건 한 단계뿐이다.
  */
 export function skFramesOf(id: string, sk: SkillDef): readonly string[] {
   const want = sk.pose ?? 'sk';
+  if (want === 'sk4' && SK4_FRAMES.every((f) => spriteLoose(id, f))) return SK4_FRAMES;
   if (want === 'sk3' && SK3_FRAMES.every((f) => spriteLoose(id, f))) return SK3_FRAMES;
   if (want !== 'sk' && SK2_FRAMES.every((f) => spriteLoose(id, f))) return SK2_FRAMES;
   return SK_FRAMES;
@@ -179,6 +195,7 @@ export const SK_FALLBACK: Record<string, string> = {
   /* §F 를 아직 안 받았으면 여기까지 안 온다 (`skFramesOf`) — 그래도 적어 둔다 */
   sk2_1: 'cut_1', sk2_2: 'cut_2', sk2_3: 'cut_3',
   sk3_1: 'cut_1', sk3_2: 'cut_2', sk3_3: 'cut_3',
+  sk4_1: 'cut_1', sk4_2: 'cut_2', sk4_3: 'cut_3',
 };
 
 export interface Swing {

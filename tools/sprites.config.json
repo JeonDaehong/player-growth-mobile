@@ -3859,6 +3859,19 @@
       ]
     },
     {
+      "file": "yongam-jidae-fx.jpg",
+      "name": "sfx_lavafan",
+      "expect": [
+        3,
+        1
+      ],
+      "labels": [
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
       "file": "13.jpg",
       "name": "passive_icon",
       "expect": [
@@ -4438,6 +4451,21 @@
         "sk3_3"
       ],
       "append": true
+    },
+    {
+      "file": "yongam-jidae-motion.jpg",
+      "name": "bunnyaxe",
+      "expect": [
+        3,
+        1
+      ],
+      "append": true,
+      "labels": [
+        "sk4_1",
+        "sk4_2",
+        "sk4_3"
+      ],
+      "floor": true
     },
     {
       "file": "rianr-skill.jpg",
