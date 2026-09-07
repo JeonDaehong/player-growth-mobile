@@ -63,7 +63,7 @@ import { BORDER, O, R, SP, SURF } from '@/ui/theme';
 import {
   CUT_FALLBACK, SK_FALLBACK, SK_MS, landAtOf, skFramesOf,
 } from './Fighter';
-import { HolySword, SWORD_HIT, SWORD_MS, SkillFx } from './SkillFx';
+import { BodyFlash, HolySword, SWORD_HIT, SWORD_MS, SkillFx } from './SkillFx';
 import { SkillAura } from './SkillAura';
 import { SwordWave } from './SwordWave';
 import { GiantArrow, PierceAura } from './PierceAura';
@@ -792,6 +792,24 @@ export function SkillDemo({
           )}
           {/* 막 — 받는 쪽에도 둘러진다 (쓰는 사람 쪽 주석 참고) */}
           {helps && wardOn && <Veil size={FOE_W} />}
+          {/*
+            ── 걷히는 순간 몸이 번쩍인다 ── 무대와 같은 것이다 (`Fighter`).
+
+            걸린 것이 사라지는 것만으로는 **언제** 사라졌는지가 안 보인다 —
+            로고 하나가 조용히 없어질 뿐이라, 눈이 다른 데 가 있으면 그냥
+            처음부터 없었던 것이 된다. 번쩍임이 그 순간을 짚어 준다.
+          */}
+          {helps && !!sk.cleanse && (
+            <BodyFlash nonce={land} size={FOE_W}>
+              <Sprite
+                set={mate}
+                name="guard"
+                size={FOE_W}
+                fallbackSet="duel"
+                fallbackName="guard"
+              />
+            </BodyFlash>
+          )}
           {/*
             ── 걸리는 쪽에 뜨는 글 ──
 

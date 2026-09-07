@@ -1445,6 +1445,35 @@ function FighterView({
           fallbackName={SK_FALLBACK[frame] ?? CUT_FALLBACK[frame] ?? frame}
         />
       </BodyFlash>
+      {/*
+        ── 걷힌 사람이 **한 번 번쩍인다** ──
+
+        조각이 위로 떠오르는 것만 있었다 (아래 `cleanse`). 그건 "무언가
+        빠져나갔다" 는 말인데, 정화에서 정작 봐야 하는 순간은 **나쁜 것이
+        떨어져 나가는 그 찰나**다. 떠오르는 조각은 그 뒤에 남는 흔적이라
+        조금 늦다.
+
+        광란이 쓰는 것과 **같은 수법**이다 (아래 `BodyFlash`). 에셋이 이미
+        흰 픽셀이라 밝게 할 방법이 없으므로, 제 실루엣을 한 장 더 뒤에 깔고
+        키운다 — 가장자리에서 빛이 새어 나온 것으로 읽힌다.
+
+        **번쩍임과 조각을 같이 둔다.** 하나는 순간이고 하나는 여운이라
+        서로를 덮지 않는다.
+
+        번쩍임 칸을 광란 것과 **나눠 둔 까닭**: 하나로 합치려면 두 신호를
+        더해야 하는데, 그러면 기술이 바뀌어 광란 쪽이 0 으로 떨어질 때 합이
+        줄면서 아무도 안 걷혔는데 번쩍인다.
+      */}
+      <BodyFlash nonce={purify} size={size}>
+        <Sprite
+          set={ch.id}
+          name={frame}
+          size={size}
+          style={bodyStyle}
+          fallbackSet="duel"
+          fallbackName={SK_FALLBACK[frame] ?? CUT_FALLBACK[frame] ?? frame}
+        />
+      </BodyFlash>
       {/* 정화를 맞은 쪽 — 쓴 사람과 상관없이 걷힌 사람에게서 난다 */}
       <SkillFx kind="cleanse" nonce={purify} size={size} />
 
