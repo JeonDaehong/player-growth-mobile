@@ -53,6 +53,19 @@ import { BORDER, FS, LINE, O, SP, SURF } from '@/ui/theme';
 /** 한 줄에 둘 — 얼굴이 작아지면 누구인지가 안 보인다 */
 const COLS = 2;
 
+/**
+ * 칸 사이 틈.
+ *
+ * 늘어놓는 상자의 `gap` 으로 주면 안 된다. 폭이 `100 / COLS` % 인 칸 둘에
+ * 틈이 더해져 한 줄을 넘고, 그러면 둘째 칸이 다음 줄로 떨어져 **한 줄에
+ * 하나씩** 늘어선다. 카드 바깥에 `margin` 을 물려도 같은 일이 난다.
+ *
+ * 그래서 **자리와 카드를 나눈다.** 자리는 정확히 절반을 차지하고 (`50%`),
+ * 틈은 그 자리의 **안쪽 여백**이며, 카드는 남은 만큼을 채운다. 더해지는
+ * 것이 없으니 둘이 늘 한 줄에 든다.
+ */
+const GUT = SP.xs;
+
 /** 역할 갈래 — `null` 이 전체다 */
 const KINDS: readonly { id: BattleType | null; label: string }[] = [
   { id: null, label: '전체' },
@@ -161,91 +174,128 @@ export function HeroBook({ onPick }: { onPick: (id: CharId) => void }) {
       {/* 무엇을 먼저 볼까 */}
       <PickRow items={SORTS} at={sort} onGo={setSort} />
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SP.xs }}>
+      {/*
+        ── 늘어나지 않는 격자 ──
+
+        한동안 카드에 `flexGrow: 1` 과 `flexBasis: 0` 을 같이 줬다. 그러면 폭이
+        **남는 자리를 나눠 갖는 값**이 되어, 적어 둔 `50%` 는 아무 일도 안 한다.
+
+        둘이 겹쳐서 이렇게 됐다.
+
+          · 줄이 넘치는지를 `flexBasis` 로 재는데 그게 0 이라, 화면이 넓으면
+            한 줄에 셋도 넷도 들어갔다 (`minWidth: 120` 이 겨우 막고 있었다)
+          · 마지막 줄에 하나만 남으면 그 하나가 **줄 전체로 벌어졌다** —
+            같은 카드가 서는 자리에 따라 크기가 달랐다
+
+        이제 폭 하나로 못을 박는다 (`flexGrow: 0`). 자리는 어디서든 화면의
+        절반이고, 마지막 줄에 하나만 남으면 왼쪽에 절반짜리로 선다 — 그게
+        격자가 뜻하는 바다.
+      */}
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          /* 자리가 사방으로 물고 있는 여백을 격자 바깥쪽에서만 도로 뺀다 */
+          marginHorizontal: -GUT / 2,
+          marginTop: -GUT,
+        }}
+      >
         {list.map((id) => {
           const d = CHARS[id];
           const c = raw[id];
           const have = !!c;
           return (
-            <Pressable
+            <View
               key={id}
-              disabled={!have}
-              onPress={() => { sfx('tap'); onPick(id); }}
-              style={({ pressed }) => [
-                BORDER,
-                {
-                  /* 한 줄에 둘 — 사이 간격만큼 빼야 두 칸이 딱 맞는다 */
-                  width: `${100 / COLS}%`,
-                  flexGrow: 1,
-                  flexBasis: 0,
-                  minWidth: 120,
-                  padding: SP.sm,
-                  alignItems: 'center',
-                  borderColor: have ? LINE.mid : LINE.low,
-                  borderStyle: have ? 'solid' : 'dashed',
-                  backgroundColor: have ? (pressed ? SURF.up : 'transparent') : SURF.down,
-                },
-              ]}
+              style={{
+                width: `${100 / COLS}%`,
+                paddingHorizontal: GUT / 2,
+                paddingTop: GUT,
+              }}
             >
-              {/*
-                안 가진 사람은 **실루엣만** 남는다. 지우거나 물음표로 바꾸면
-                누구인지가 사라져서 뽑고 싶어지지도 않는다.
-              */}
-              <Sprite
-                set="avatar"
-                name={d.art}
-                size={52}
-                tint={have ? undefined : '#000000'}
-                opacity={have ? 1 : O.dim}
-              />
-              <T
-                size={FS.label}
-                bold
-                numberOfLines={1}
-                dim={have ? 'full' : 'dim'}
-                style={{ marginTop: SP.xs }}
+              <Pressable
+                disabled={!have}
+                onPress={() => { sfx('tap'); onPick(id); }}
+                style={({ pressed }) => [
+                  BORDER,
+                  {
+                    /* 자리를 꽉 채운다 — 틈은 자리가 이미 물고 있다 */
+                    width: '100%',
+                    /*
+                      한 줄에 선 둘의 **키를 맞춘다.** 자리는 줄에서 제일 큰
+                      것만큼 늘어나므로 (`alignItems` 기본값), 카드가 그 자리를
+                      세로로 마저 채우게 둔다. 안 그러면 소개 글이 두 줄인
+                      카드 옆의 한 줄짜리가 짧아져 아래가 비어 보인다.
+                    */
+                    flexGrow: 1,
+                    padding: SP.sm,
+                    alignItems: 'center',
+                    borderColor: have ? LINE.mid : LINE.low,
+                    borderStyle: have ? 'solid' : 'dashed',
+                    backgroundColor: have ? (pressed ? SURF.up : 'transparent') : SURF.down,
+                  },
+                ]}
               >
-                {have ? d.name : '???'}
-              </T>
-              <Row gap={3} style={{ marginTop: 2, alignItems: 'center' }}>
-                <Tag
-                  label={RARITY_NAME[d.rarity]}
-                  fill={have && (d.rarity === 'mythic' || d.rarity === 'legendary')}
+                {/*
+                  안 가진 사람은 **실루엣만** 남는다. 지우거나 물음표로 바꾸면
+                  누구인지가 사라져서 뽑고 싶어지지도 않는다.
+                */}
+                <Sprite
+                  set="avatar"
+                  name={d.art}
+                  size={52}
+                  tint={have ? undefined : '#000000'}
+                  opacity={have ? 1 : O.dim}
                 />
-                <Sprite set="role_icon" name={BATTLE_TYPE_ART[battleTypeOf(id)]} size={11} />
-              </Row>
-              {have ? (
-                <>
-                  <View style={{ marginTop: 3 }}>
-                    <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={9} />
+                <T
+                  size={FS.label}
+                  bold
+                  numberOfLines={1}
+                  dim={have ? 'full' : 'dim'}
+                  style={{ marginTop: SP.xs }}
+                >
+                  {have ? d.name : '???'}
+                </T>
+                <Row gap={3} style={{ marginTop: 2, alignItems: 'center' }}>
+                  <Tag
+                    label={RARITY_NAME[d.rarity]}
+                    fill={have && (d.rarity === 'mythic' || d.rarity === 'legendary')}
+                  />
+                  <Sprite set="role_icon" name={BATTLE_TYPE_ART[battleTypeOf(id)]} size={11} />
+                </Row>
+                {have ? (
+                  <>
+                    <View style={{ marginTop: 3 }}>
+                      <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={9} />
+                    </View>
+                    <T size={FS.tiny} dim="dim" numberOfLines={1} style={{ marginTop: 2 }}>
+                      {`Lv ${c.lv} · 전투력 ${charPower(c).toLocaleString()}`}
+                    </T>
+                  </>
+                ) : (
+                  /*
+                    안 가진 칸도 **같은 높이**를 지킨다. 지우면 가진 칸과 안
+                    가진 칸의 키가 달라져서 격자가 들쭉날쭉해진다.
+                  */
+                  <View style={{ height: 9 + 3 + 2 + 12, justifyContent: 'center' }}>
+                    <T size={FS.tiny} dim="dim">모집에서 나옵니다</T>
                   </View>
-                  <T size={FS.tiny} dim="dim" numberOfLines={1} style={{ marginTop: 2 }}>
-                    {`Lv ${c.lv} · 전투력 ${charPower(c).toLocaleString()}`}
-                  </T>
-                </>
-              ) : (
-                /*
-                  안 가진 칸도 **같은 높이**를 지킨다. 지우면 가진 칸과 안
-                  가진 칸의 키가 달라져서 격자가 들쭉날쭉해진다.
-                */
-                <View style={{ height: 9 + 3 + 2 + 12, justifyContent: 'center' }}>
-                  <T size={FS.tiny} dim="dim">모집에서 나옵니다</T>
-                </View>
-              )}
-              {/*
-                한 줄 소개. 도감에서만 적는다 — 관리 화면은 수치를 보는
-                자리라 이런 글이 들어가면 숫자가 밀린다.
-              */}
-              <T
-                size={FS.tiny}
-                dim="dim"
-                center
-                numberOfLines={2}
-                style={{ marginTop: SP.xs, minHeight: 26 }}
-              >
-                {have ? d.title : ''}
-              </T>
-            </Pressable>
+                )}
+                {/*
+                  한 줄 소개. 도감에서만 적는다 — 관리 화면은 수치를 보는
+                  자리라 이런 글이 들어가면 숫자가 밀린다.
+                */}
+                <T
+                  size={FS.tiny}
+                  dim="dim"
+                  center
+                  numberOfLines={2}
+                  style={{ marginTop: SP.xs, minHeight: 26 }}
+                >
+                  {have ? d.title : ''}
+                </T>
+              </Pressable>
+            </View>
           );
         })}
       </View>
