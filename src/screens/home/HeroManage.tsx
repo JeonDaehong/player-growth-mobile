@@ -253,11 +253,11 @@ const HEAD: Record<string, Zone> = {
   /* 정수리가 그림 꼭대기다. 관까지 넣는다 */
   knightgirl: { x0: 0.33, y0: 0.01, x1: 0.61, y1: 0.22 },
   /* 귀가 그림의 5분의 1을 먹는다 — 그 귀도 머리다 */
-  bunnyaxe: { x0: 0.34, y0: 0.04, x1: 0.62, y1: 0.29 },
+  bunnyaxe: { x0: 0.3346, y0: 0.04, x1: 0.6102, y1: 0.29 },
   /* 뾰족한 귀가 옆으로 나오고 머리 장식이 위로 솟는다 */
-  elfarcher: { x0: 0.27, y0: 0.05, x1: 0.64, y1: 0.27 },
+  elfarcher: { x0: 0.3299, y0: 0.05, x1: 0.6597, y1: 0.27 },
   /* 베일이 얼굴을 감싼다 — 그림이 좁아 가로를 많이 차지한다 */
-  nun: { x0: 0.2791, y0: 0.01, x1: 0.6857, y1: 0.25 },
+  nun: { x0: 0.3699, y0: 0.01, x1: 0.7208, y1: 0.25 },
 };
 
 /** ── 가슴 ── 위 `HEAD` 와 같은 규칙으로 잰 값이다 */
@@ -265,11 +265,11 @@ const CHEST: Record<string, Zone> = {
   /* 정수리가 그림 꼭대기라 넷 중 제일 위 — 흉갑 한 장이 그대로 과녁이다 */
   knightgirl: { x0: 0.36, y0: 0.26, x1: 0.64, y1: 0.39 },
   /* 토끼 귀가 위를 먹어 몸이 통째로 내려간다 — 넷 중 제일 아래 */
-  bunnyaxe: { x0: 0.35, y0: 0.31, x1: 0.60, y1: 0.42 },
+  bunnyaxe: { x0: 0.3444, y0: 0.31, x1: 0.5905, y1: 0.42 },
   /* 활이 오른쪽으로 크게 뻗는다. 몸통은 그림 왼쪽 절반에 있다 */
-  elfarcher: { x0: 0.29, y0: 0.33, x1: 0.55, y1: 0.45 },
+  elfarcher: { x0: 0.3477, y0: 0.33, x1: 0.5795, y1: 0.45 },
   /* 향로와 연기가 오른쪽으로 나온다 — 몸통은 그만큼 왼쪽이다 */
-  nun: { x0: 0.3531, y0: 0.26, x1: 0.6119, y1: 0.38 },
+  nun: { x0: 0.4337, y0: 0.26, x1: 0.6571, y1: 0.38 },
 };
 
 /**
@@ -306,6 +306,119 @@ function zoneBox(art: string, table: Record<string, Zone>) {
 /** 말풍선이 떠 있는 시간 · 사라져 있는 시간 */
 const TALK_ON = 5000;
 const TALK_OFF = 5000;
+
+/**
+ * ── 숨겨진 반응을 여는 두들김 수 ──
+ *
+ * 열 번이다. **손이 미끄러져서 나올 수 있는 수가 아니어야** 한다 — 두세 번이면
+ * 특별한 반응을 보러 온 사람이 아니라 그냥 만지던 사람에게도 나오고, 그러면
+ * 숨겨 둔 값이 사라진다.
+ */
+const RUN_NEED = 10;
+
+/**
+ * 두들김이 **이어진 것으로 쳐 주는** 간격 (ms).
+ *
+ * 1초를 넘겨 누르면 처음부터 다시 센다. 이 값이 있어야 "열 번" 이 **연속으로
+ * 두들기는 일**이 되고, 없으면 하루 종일 열 번 누른 사람도 걸린다.
+ */
+const RUN_GAP = 1000;
+
+/**
+ * 숨겨진 반응이 서 있는 시간 (ms).
+ *
+ * 이 5초 동안은 **눌러도 아무 일이 안 일어난다.** 반응이 끝까지 돌아야 하기
+ * 때문이다 — 중간에 다음 말로 넘어가 버리면 열 번 두들겨 얻은 것이 반 초 만에
+ * 지나간다.
+ */
+const HIDDEN_MS = 5000;
+
+/** 김 한 가닥이 올라갔다 사라지는 데 걸리는 시간 (ms) */
+const STEAM_MS = 1500;
+/** 몇 가닥인가 */
+const STEAM_N = 6;
+
+/**
+ * ── 후끈후끈 ── 숨겨진 반응 동안 몸에서 오르는 김.
+ *
+ * 주저앉은 그림 한 장만으로는 **멈춰 있다.** 5초를 서 있어야 하는 자리에
+ * 안 움직이는 그림을 두면 셋째 초쯤부터 화면이 멎은 것으로 보인다 — 뭔가
+ * 계속 돌고 있어야 "지금 이 상태다" 가 유지된다.
+ *
+ * ## 왜 가닥마다 제 시계를 두나
+ *
+ * 하나를 돌리고 구간을 밀어 쓰는 방법이 이 저장소의 관례다 (`HitFx` 의
+ * `HealMarks`). 그런데 저건 **한 번 돌고 마는** 것이라 여섯을 한 바퀴에
+ * 욱여넣을 수 있다. 이건 5초 동안 **끊이지 않고** 돌아야 하므로 각자 제
+ * 바퀴를 돌아야 하고, 그러려면 한 값으로는 나머지 연산이 필요한데
+ * `Animated` 에는 그것이 없다.
+ *
+ * 여섯 개다. 인물 하나가 5초 도는 자리라 이 정도는 싸다.
+ *
+ * ## 모양
+ *
+ * 짧은 세로 막대다. 2색이라 흐림도 색도 못 쓰므로 **움직임만 남는다** —
+ * 올라가면서 좌우로 한 번 흔들리고, 커지면서 옅어진다. 그 셋이 같이 가면
+ * 딱딱한 막대도 김으로 읽힌다.
+ */
+function Steam({ size }: { size: number }) {
+  /*
+    가닥마다 제 자리와 제 시계. `useMemo` 로 한 번만 만든다 — 매 렌더마다
+    새로 만들면 `Animated.Value` 가 갈려서 돌던 것이 끊긴다.
+  */
+  const wisps = useMemo(() => Array.from({ length: STEAM_N }, (_v, i) => ({
+    v: new Animated.Value(0),
+    /* 몸통 폭에 고르게 편다. 가장자리는 비운다 — 거기는 팔이나 무기 자리다 */
+    left: size * (0.22 + (0.56 * i) / (STEAM_N - 1)),
+    /* 시작 높이를 조금씩 달리해서 여섯이 한 줄로 안 서게 */
+    bottom: size * (0.18 + (i % 3) * 0.07),
+    /* 한 바퀴 안에서 어긋나게 시작한다 — 같이 뜨면 여섯이 한 덩어리다 */
+    delay: (i * STEAM_MS) / STEAM_N,
+    /* 흔들리는 쪽을 번갈아 — 다 같은 쪽이면 바람이 부는 것으로 보인다 */
+    sway: i % 2 === 0 ? 4 : -4,
+  })), [size]);
+
+  useEffect(() => {
+    const runs = wisps.map((w) => Animated.sequence([
+      Animated.delay(w.delay),
+      Animated.loop(Animated.timing(w.v, {
+        toValue: 1, duration: STEAM_MS, easing: Easing.linear, useNativeDriver: true,
+      })),
+    ]));
+    runs.forEach((r) => r.start());
+    return () => runs.forEach((r) => r.stop());
+  }, [wisps]);
+
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}>
+      {wisps.map((w, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: w.left,
+            bottom: w.bottom,
+            width: 2,
+            height: 8,
+            borderRadius: 1,
+            backgroundColor: WHITE,
+            /* 떴다가 옅어진다. 처음과 끝이 0 이라 나타나고 사라지는 것이 보인다 */
+            opacity: w.v.interpolate({
+              inputRange: [0, 0.2, 0.65, 1], outputRange: [0, 0.75, 0.4, 0],
+            }),
+            transform: [
+              { translateY: w.v.interpolate({ inputRange: [0, 1], outputRange: [0, -size * 0.5] }) },
+              /* 올라가며 한 번 비꼈다 돌아온다 */
+              { translateX: w.v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, w.sway, 0] }) },
+              /* 위로 갈수록 퍼진다 */
+              { scaleY: w.v.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.6] }) },
+            ],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
 
 /**
  * ── 말풍선 ── 인물 머리 위에 한 마디.
@@ -354,12 +467,27 @@ function useTalk(
    * 저기에 몸짓을 걸면 아무도 안 만졌는데 10초마다 인물이 움찔한다.
    */
   const [poke, setPoke] = useState(0);
+  /**
+   * ── 연속으로 몇 번 두들겼나 ── 숨겨진 반응의 자물쇠 (`RUN_NEED`).
+   *
+   * `useState` 가 아니라 `useRef` 다. 화면에 안 나오는 값이고, 무엇보다 누를
+   * 때마다 다시 그리면 열 번 두들기는 동안 열 번 그려야 한다.
+   *
+   * `how` 를 같이 든다 — **같은 자리를** 열 번이어야 한다. 가슴 다섯 번에
+   * 머리 다섯 번은 열 번이 아니다.
+   */
+  const run = useRef<{ how: Touch; n: number; at: number }>({ how: 'body', n: 0, at: 0 });
+  /** 숨겨진 반응이 끝나는 시각 — 그때까지 손가락을 안 받는다 */
+  const lock = useRef(0);
 
   /* 사람이 바뀌면 처음부터 — 앞사람의 말이 남아 있으면 안 된다 */
   useEffect(() => {
     setAt(Math.floor(Math.random() * lines.length));
     setOn(true);
     setShy(null);
+    /* 세던 것과 잠금도 같이 푼다 — 앞사람의 두들김이 뒷사람에게 넘어가면 안 된다 */
+    run.current = { how: 'body', n: 0, at: 0 };
+    lock.current = 0;
   }, [id, lines.length]);
 
   const bump = () => {
@@ -374,24 +502,43 @@ function useTalk(
     안 일어나는 것보다 낫다.
   */
   const touch = (how: Touch) => {
+    const now = Date.now();
+    /*
+      ── 숨겨진 반응이 도는 동안은 **손가락을 안 받는다** ──
+
+      몸짓도 대사도 안 바뀐다. 반응이 끝까지 돌아야 하기 때문이다 — 눌러서
+      다음 말로 넘어가 버리면 열 번 두들겨 얻은 것이 반 초 만에 지나간다.
+    */
+    if (now < lock.current) return;
+
     /* 눌린 것부터 센다 — 대사가 없는 자리라도 몸짓은 나가야 한다 */
     setPoke((n) => n + 1);
+
     /*
-      ── 같은 자리를 **한 번 더** ── 주저앉는다 (`deep`).
+      ── 연속 두들김을 센다 ──
 
-      이미 그 자리 때문에 부끄러워하고 있는데 또 눌렀을 때다. 첫 누름에 바로
-      앉히지 않는 까닭: 서 있는 부끄러운 그림을 아무도 못 보게 된다.
-
-      한 번 앉으면 **그 판에서는 계속 앉아 있는다.** 세 번째 누름에 도로
-      일어서면 눌렀는데 되돌아간 셈이고, 그건 반응이 아니라 고장으로 읽힌다.
-      말풍선이 사라질 때 같이 풀린다 (아래 시계).
-
-      머리 쪽에는 안 붙는다. 저건 애정이라 주저앉을 일이 아니다.
+      같은 자리를 `RUN_GAP` 안에 이어서 눌러야 는다. 자리가 바뀌거나 손이
+      쉬면 하나부터 다시다.
     */
-    const down = how !== 'head' && shy?.how === how;
-    const say = (down ? deep[how] : react[how]) ?? [];
+    const r = run.current;
+    const same = r.how === how && now - r.at <= RUN_GAP;
+    run.current = { how, n: same ? r.n + 1 : 1, at: now };
+
+    /*
+      ── 열 번을 채웠다 ── 주저앉는다 (`char_down`).
+
+      몸 아무 데나(`body`)로는 안 열린다. 좁은 과녁을 열 번 맞히는 것이
+      이 반응을 찾는 일의 전부인데, 통짜로 열리면 아무나 걸린다.
+    */
+    const hit = how !== 'body' && run.current.n >= RUN_NEED;
+    if (hit) {
+      run.current = { how, n: 0, at: now };
+      lock.current = now + HIDDEN_MS;
+    }
+
+    const say = (hit ? deep[how] : react[how]) ?? [];
     if (!say.length) { bump(); return; }
-    setShy({ text: say[Math.floor(Math.random() * say.length)] ?? '', how, deep: down });
+    setShy({ text: say[Math.floor(Math.random() * say.length)] ?? '', how, deep: hit });
     setOn(true);
     setBeat((n) => n + 1);
   };
@@ -406,8 +553,14 @@ function useTalk(
     const t = setTimeout(() => {
       if (on) { setOn(false); setShy(null); }
       else bump();
-    }, on ? TALK_ON : TALK_OFF);
+      /*
+        숨겨진 반응은 **제 시간을 쓴다** (`HIDDEN_MS`). 잠금과 같은 값이라
+        (`touch`) 손가락이 다시 먹히는 순간과 그림이 풀리는 순간이 같다 —
+        갈리면 눌러도 아무 일이 없는 어정쩡한 틈이 생긴다.
+      */
+    }, on ? (shy?.deep ? HIDDEN_MS : TALK_ON) : TALK_OFF);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [on, at, beat, id]);
 
@@ -842,6 +995,13 @@ export function HeroManage({ pick, onPick }: {
               style={{ width: FULL_W, height: FULL_H }}
             />
           </Animated.View>
+          {/*
+            ── 후끈후끈 ── 숨겨진 반응 동안만 (`talk.deep`).
+
+            그림 **위**에 얹는다. 몸 뒤로 보내면 실루엣에 다 가려서, 인물이
+            넓은 이졸데에서는 거의 안 보인다.
+          */}
+          {talk.deep && <Steam size={FULL_W} />}
           {/*
             아래에 **통째로 깔린 과녁**이 말 걸기다. 그 위에 좁은 네모 둘을
             얹어 특별한 반응을 받는다 — 나중에 그린 것이 손가락을 먼저 먹으므로
