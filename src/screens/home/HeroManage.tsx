@@ -96,7 +96,7 @@ import { chestOf, downOf, headOf, linesOf } from '@/core/lines';
 import { passiveOf } from '@/core/passives';
 import { seatRows } from '@/core/party';
 import { openPicks } from '@/core/skillTree';
-import { Row, Sep, Stars, T, Tag } from '@/ui/atoms';
+import { Btn, Row, Sep, Stars, T, Tag } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { FrameArt, frameStyle } from '@/ui/Frame';
 import { HEART, HERO_ACT, ICONS } from '@/ui/sprites';
@@ -107,6 +107,7 @@ import { sfx } from '@/ui/sfx';
 import { BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 import { CharStats } from './CharStats';
 import { SkillPanel } from './SkillPanel';
+import { LevelUpPopup } from './LevelUpPopup';
 import { SkillTreePopup } from './SkillTreePopup';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
@@ -733,7 +734,6 @@ export function HeroManage({ pick, onPick }: {
   const form = useGame((s) => s.formation);
   const money = useGame((s) => s.money);
   const elixir = useGame((s) => s.elixir);
-  const levelUp = useGame((s) => s.levelUp);
   const starUp = useGame((s) => s.starUp);
   const awaken = useGame((s) => s.awaken);
   const toast = useGame((s) => s.toast);
@@ -751,6 +751,8 @@ export function HeroManage({ pick, onPick }: {
   const [tree, setTree] = useState(false);
   /** 월페이퍼를 보고 있나 */
   const [paper, setPaper] = useState(false);
+  /** 레벨업 창을 열었나 (`LevelUpPopup`) */
+  const [lvUp, setLvUp] = useState(false);
 
   /*
     가진 순서 — 표에 적힌 차례 그대로다 (`CHARS`). 가진 순서로 두면 새로
@@ -867,8 +869,6 @@ export function HeroManage({ pick, onPick }: {
 
   /* 레벨은 성이 정한 상한까지만 오른다 (`capOf`) */
   const capped = c.lv >= capOf(c);
-  const cost = lvCost(c.lv);
-  const canLv = !capped && (FREE_ENHANCE || money >= cost);
 
   /*
     ── 승급 칸은 셋 중 하나다 ──
@@ -1213,12 +1213,30 @@ export function HeroManage({ pick, onPick }: {
       */}
       <View style={{ alignItems: 'center', marginTop: SP.sm }}>
         <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={14} />
+        <Row gap={SP.xs} style={{ marginTop: SP.xs, alignItems: 'center' }}>
+        {/*
+          ── 레벨업은 레벨 **바로 옆**이다 ──
+
+          맨 아래 승급 옆에 있었다. 거기서는 "키우는 일 둘" 로 나란히 서서
+          말이 됐지만, 정작 **무엇이 올라가는지**(Lv 18 / 100)는 화면 위쪽에
+          따로 있었다 — 누르는 자리와 바뀌는 자리가 멀면 눌러 놓고 위를 다시
+          봐야 한다.
+
+          지금은 붙어 있다. 누르면 창이 뜨고 (`LevelUpPopup`), 닫고 나면 바로
+          옆의 숫자가 바뀌어 있다.
+        */}
+        <Btn
+          label="레벨업"
+          size="sm"
+          fill={!capped}
+          disabled={capped}
+          onPress={() => { sfx('tap'); setLvUp(true); }}
+        />
         <Row
           gap={SP.sm}
           style={[
             BORDER,
             {
-              marginTop: SP.xs,
               paddingVertical: SP.xs,
               paddingHorizontal: SP.md,
               alignItems: 'baseline',
@@ -1236,6 +1254,7 @@ export function HeroManage({ pick, onPick }: {
           <View style={{ width: 1, height: 10, backgroundColor: WHITE, opacity: 0.14 }} />
           <T size={FS.tiny} dim="sub">전투력</T>
           <T size={FS.body} bold>{charPower(c).toLocaleString()}</T>
+        </Row>
         </Row>
       </View>
 
@@ -1316,24 +1335,18 @@ export function HeroManage({ pick, onPick }: {
         단추는 손이 닿아야 하는 것이라 아래쪽이 오히려 맞다.
 
         스킬 트리는 여기 없다. 저건 값을 치르는 것이 아니라 **고르는 것**
-        이라, 승급·레벨업과 나란히 두면 셋 다 같은 일로 읽힌다 — 지금은 쓰는
-        기술 바로 옆에 있다.
+        이라, 승급과 나란히 두면 둘 다 같은 일로 읽힌다 — 지금은 쓰는 기술
+        바로 옆에 있다.
+
+        **레벨업도 여기 없다.** 레벨 숫자 바로 옆으로 옮겼다 (위 `Btn`) —
+        누르는 자리와 바뀌는 자리가 붙어 있어야 한다.
       */}
       <Row gap={SP.xs} style={{ alignItems: 'stretch' }}>
         {starNode}
-        <GrowBtn
-          label="레벨업"
-          now={capped ? '성 상한' : fmtShort(money).replace(' 골드', '')}
-          need={capped ? '승급 필요' : fmtShort(FREE_ENHANCE ? 0 : cost).replace(' 골드', '')}
-          icon={ICONS.coin}
-          on={canLv}
-          onPress={() => {
-            const r = levelUp(c.id);
-            if (r === 'poor') toast('골드가 부족합니다', 'bad');
-            if (r === 'max') toast('지금 성의 상한입니다', 'plain');
-          }}
-        />
       </Row>
+
+      {/* 레벨업 창 — 경험의 서를 붓는다 (`LevelUpPopup`) */}
+      {lvUp && <LevelUpPopup who={c.id} onClose={() => setLvUp(false)} />}
     </>
   );
 }

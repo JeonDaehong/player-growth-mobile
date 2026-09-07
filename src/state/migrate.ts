@@ -11,6 +11,13 @@
  * 그래서 저장본을 신뢰하지 않는다 — 기본값에서 시작해 **검증된 값만** 덮는다.
  * core 만 import 한다 (RN 없이 테스트 가능해야 한다).
  */
+/**
+ * 시작 재고 — 떨어뜨리는 자리가 붙기 전까지만 (`GameState.books`).
+ *
+ * 낡은 것을 넉넉히, 명품을 조금. 초반 몇 레벨은 낡은 것으로 올리고 명품은
+ * 만져만 보게 하는 배분이다 — 셋이 어떻게 다른지가 한 번은 보여야 한다.
+ */
+const BOOK_START = { old: 40, fine: 8, prime: 2 } as const;
 import type { GameState } from './store';
 import { BANK_CLOSE_SEQ, MARKET_CLOSE_SEQ, initial } from './initial';
 import { initCreatures } from '@/core/rush';
@@ -225,6 +232,8 @@ export function migrateState(persisted: unknown): GameState {
       star: num(c.star, NaN),
       awake: c.awake === true,
       lv: num(c.lv, NaN),
+      /* 나중에 생긴 칸 — `fixChar` 가 다듬는다 (`core/exp`) */
+      exp: num(c.exp, 0),
       copies: Math.max(0, Math.floor(num(c.copies, 0))),
       /* `fixChar` 안에서 `fixTree` 가 한 번 더 다듬는다 (`core/skillTree`) */
       tree: Array.isArray(c.tree) ? (c.tree as string[]) : [],
@@ -366,6 +375,20 @@ export function migrateState(persisted: unknown): GameState {
     dia: Math.max(0, Math.floor(num(p.dia, 0))),
     /* 나중에 생긴 칸 — 없으면 0 (`core/growth` 의 `rollElixir` 로만 는다) */
     elixir: Math.max(0, Math.floor(num(p.elixir, 0))),
+    /*
+      ── 경험의 서 ──
+
+      **아직 나오는 데가 없다.** 떨어뜨리는 자리를 붙이기 전이라, 옛 저장본과
+      새 저장본 모두에 시작 재고를 준다 (`BOOK_START`). 안 그러면 창을 열어도
+      넣을 것이 없어서 만들어 둔 것이 있는지조차 모른다.
+
+      드롭이 붙는 날 이 기본값을 0 으로 내린다.
+    */
+    books: {
+      old: Math.max(0, Math.floor(num((p.books as Record<string, unknown>)?.old, BOOK_START.old))),
+      fine: Math.max(0, Math.floor(num((p.books as Record<string, unknown>)?.fine, BOOK_START.fine))),
+      prime: Math.max(0, Math.floor(num((p.books as Record<string, unknown>)?.prime, BOOK_START.prime))),
+    },
     /* 대형이 없던 저장본은 기본 대형으로 — 모르는 이름이 들어와도 마찬가지다 */
     formation: isFormationId(p.formation) ? p.formation : DEFAULT_FORMATION,
     /*

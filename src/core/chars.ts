@@ -1899,6 +1899,16 @@ export interface OwnedChar {
   /** 레벨 (1 ~ `lvCap`). 오르면 공격과 체력이 조금씩 는다 */
   lv: number;
   /**
+   * 다음 한 칸까지 **쌓인 경험치** (`core/exp`).
+   *
+   * 레벨과 따로 두는 까닭: 경험의 서는 한 권이 반 레벨일 수도 세 레벨일
+   * 수도 있어서, 넣고 남는 것이 늘 생긴다. 그걸 버리면 사람이 계산기를
+   * 두드려 딱 맞게 넣어야 하는데 그건 이 화면이 시킬 일이 아니다.
+   *
+   * 상한에서는 0 이다 — 쌓아 봐야 쓸 데가 없고 창에 뜨는 수만 커진다.
+   */
+  exp: number;
+  /**
    * 가지고 있는 **1성 조각** 수 — 성을 올리는 데 쓴다 (`starUpCost`).
    *
    * 성별로 나눠 세지 않는다. 2성 조각 하나는 언제나 1성 조각 둘과 같은
@@ -1934,7 +1944,7 @@ export interface OwnedChar {
 }
 
 export const newChar = (id: CharId): OwnedChar => ({
-  id, star: 1, awake: false, lv: 1, copies: 0, tree: [],
+  id, star: 1, awake: false, lv: 1, exp: 0, copies: 0, tree: [],
 });
 
 /**
@@ -1961,6 +1971,8 @@ export function fixChar(c: OwnedChar): OwnedChar {
     star,
     awake,
     lv: Number.isFinite(c.lv) ? Math.max(1, Math.min(lvCap(star, awake), Math.floor(c.lv))) : 1,
+    /* 나중에 생긴 칸 — 옛 저장본에는 없다 */
+    exp: Number.isFinite(c.exp) ? Math.max(0, Math.floor(c.exp)) : 0,
     copies: Number.isFinite(c.copies) ? Math.max(0, Math.floor(c.copies)) : 0,
     /* 모르는 이름표와 말이 안 되는 조합을 걷어낸다 (`core/skillTree`) */
     tree: fixTree(c.id, c.tree),

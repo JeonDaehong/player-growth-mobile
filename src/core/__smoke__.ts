@@ -3248,7 +3248,7 @@ console.log('\n── 스킬 트리 · 코스트 ──');
   const tr = require('./skillTree') as typeof import('./skillTree');
 
   const mk = (id: CharId, star: number, tree: string[]): OwnedChar =>
-    ({ id, star, awake: false, lv: 1, copies: 0, tree } as OwnedChar);
+    ({ id, star, awake: false, lv: 1, exp: 0, copies: 0, tree } as OwnedChar);
 
   /*
     ── 안 찍으면 안 깎인다 ──
@@ -3308,6 +3308,63 @@ console.log('\n── 스킬 트리 · 코스트 ──');
   ok('갈래인 자리는 찍어야 걸린다',
     !tr.nodeOn('knightgirl', 5, [], 'kg3b')
     && tr.nodeOn('knightgirl', 5, ['kg2b', 'kg3b'], 'kg3b'));
+}
+
+console.log(NL + '── 경험의 서 ──');
+{
+  const ex = require('./exp') as typeof import('./exp');
+
+  ok('책 셋이 10배씩 벌어진다',
+    ex.BOOKS.fine.exp === ex.BOOKS.old.exp * 10
+    && ex.BOOKS.prime.exp === ex.BOOKS.fine.exp * 10,
+    `${ex.BOOKS.old.exp} · ${ex.BOOKS.fine.exp} · ${ex.BOOKS.prime.exp}`);
+
+  ok('넣은 책의 합', ex.expOf({ old: 2, prime: 1 })
+    === ex.BOOKS.old.exp * 2 + ex.BOOKS.prime.exp);
+
+  /*
+    ── 남는 것을 안 버린다 ──
+
+    이게 이 계산의 전부다. 딱 맞게 안 넣으면 넘치는 만큼이 그대로 쌓여야
+    하는데, 버리면 사람이 계산기를 두드려 딱 맞게 넣어야 한다.
+  */
+  {
+    const need = ex.lvExp(1);
+    const g = ex.feed(1, 0, need + 7, 100);
+    ok('한 칸 오르고 남는 것은 쌓인다', g.lv === 2 && g.exp === 7 && g.up === 1,
+      `Lv${g.lv} +${g.exp}`);
+  }
+
+  /* 한 번에 여러 칸 — 이 창을 만든 까닭이다 */
+  {
+    let need = 0;
+    for (let lv = 1; lv < 6; lv++) need += ex.lvExp(lv);
+    const g = ex.feed(1, 0, need, 100);
+    ok('한 번에 다섯 칸', g.lv === 6 && g.up === 5, `Lv${g.lv}`);
+  }
+
+  /*
+    ── 상한을 넘겨 부어도 레벨은 안 넘는다 ──
+
+    그리고 상한에서는 경험치를 안 쌓는다. 쌓아 봐야 쓸 데가 없고 창에 뜨는
+    수만 커진다.
+  */
+  {
+    const g = ex.feed(1, 0, 99_999_999, 10);
+    ok('상한에서 멈춘다', g.lv === 10, `Lv${g.lv}`);
+    ok('상한에서는 안 쌓는다', g.exp === 0, String(g.exp));
+  }
+
+  /* `가득` 단추가 세는 값 — 그만큼 부으면 정확히 상한이어야 한다 */
+  {
+    const left = ex.expToCap(1, 0, 20);
+    ok('상한까지 남은 값이 맞다', ex.feed(1, 0, left, 20).lv === 20, String(left));
+    ok('한 톨 모자라면 못 닿는다', ex.feed(1, 0, left - 1, 20).lv === 19);
+    ok('상한이면 남은 것이 0', ex.expToCap(20, 0, 20) === 0);
+  }
+
+  ok('골드는 경험치에 비례', ex.goldFor(1000) === Math.ceil(1000 * ex.GOLD_PER_EXP));
+  ok('음수를 넣어도 0', ex.expOf({ old: -5 }) === 0 && ex.goldFor(-1) === 0);
 }
 
 console.log(fails === 0 ? '\n전부 통과' : `\n실패 ${fails}건`);

@@ -123,6 +123,8 @@ export const initial = (): GameState => {
     /* 다이아는 0 부터. 파는 곳이 아직 없으므로 미션과 게이지에서만 들어온다 */
     dia: 0,
     elixir: 0,
+    /* 떨어뜨리는 자리가 붙기 전까지의 시작 재고 (`state/migrate` 의 `BOOK_START`) */
+    books: { old: 40, fine: 8, prime: 2 },
     /* 처음 켜는 사람의 게이지는 **빈 채로** 시작한다 — 켜자마자 가득이면 게이지가 아니다 */
     idleAt: now,
     idleInstant: { dayKey: '', used: 0 },

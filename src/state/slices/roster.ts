@@ -12,6 +12,9 @@ import {
   AWAKEN_COPIES, AWAKEN_ELIXIR, CHARS, CharId, FREE_ENHANCE, OwnedChar,
   STAR_CAP, canAwaken, capOf, isCharId, lvCost, maxStar, newChar, starUpCost,
 } from '@/core/chars';
+import {
+  BOOK_IDS, BookId, expOf, feed, goldFor,
+} from '@/core/exp';
 import { FormationId, PARTY_SIZE, Party, cleanParty, seatRows } from '@/core/party';
 import { allOwned, drawChar, poolOf, recruitCost } from '@/core/recruit';
 import { whyLocked } from '@/core/skillTree';
@@ -146,6 +149,11 @@ export interface RosterActions {
    */
   /** 레벨 한 칸. 골드를 쓰고 실패하지 않는다 */
   levelUp: (id: CharId) => 'up' | 'max' | 'poor' | 'none';
+  /** 경험의 서를 한꺼번에 붓는다 — 자세한 것은 `state/types` 에 */
+  feedBooks: (id: CharId, bag: Partial<Record<BookId, number>>)
+    => 'ok' | 'max' | 'poor' | 'none';
+  /** ⚠ 테스트용 — 레벨을 1 로 되돌린다 (쓴 것은 안 돌려준다) */
+  resetLv: (id: CharId) => void;
   /** 조각을 합쳐 한 성 (`starUpCost` — 1성 조각으로 1·2·4·8장) */
   starUp: (id: CharId) => 'up' | 'max' | 'short' | 'none';
   /** 5성 위의 한 단계 — 조각 서른둘과 강성의 영약 하나. 신화만 */
@@ -354,6 +362,43 @@ export const createRosterSlice = (
       chars: { ...st.chars, [id]: { ...c, lv: c.lv + 1 } },
     });
     return 'up';
+  },
+
+  feedBooks: (id, bag) => {
+    const st = get();
+    const c = st.chars[id];
+    if (!c) return 'none';
+    const cap = capOf(c);
+    if (c.lv >= cap) return 'max';
+
+    /* 창고에 있는 것보다 많이 넣을 수는 없다 */
+    for (const k of BOOK_IDS) {
+      const want = Math.max(0, Math.floor(bag[k] ?? 0));
+      if (want > (st.books[k] ?? 0)) return 'poor';
+    }
+    const add = expOf(bag);
+    if (add <= 0) return 'none';
+    /* 강화·레벨업과 같은 스위치를 탄다 — 시험 중에는 셋 다 공짜여야 짝이 맞는다 */
+    const gold = FREE_ENHANCE ? 0 : goldFor(add);
+    if (st.money < gold) return 'poor';
+
+    const got = feed(c.lv, c.exp, add, cap);
+    const books = { ...st.books };
+    for (const k of BOOK_IDS) books[k] = (books[k] ?? 0) - Math.max(0, Math.floor(bag[k] ?? 0));
+
+    set({
+      money: st.money - gold,
+      books,
+      chars: { ...st.chars, [id]: { ...c, lv: got.lv, exp: got.exp } },
+    });
+    return 'ok';
+  },
+
+  resetLv: (id) => {
+    const st = get();
+    const c = st.chars[id];
+    if (!c) return;
+    set({ chars: { ...st.chars, [id]: { ...c, lv: 1, exp: 0 } } });
   },
 
   starUp: (id) => {

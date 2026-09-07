@@ -26,7 +26,7 @@
  * 그러니 스킬 목록의 일부여야 하고, 늘 켜져 있는 쪽이 먼저다: 액티브는
  * "가끔 일어나는 일" 이고 패시브는 "늘 그런 사람" 이라 뒤엣것이 배경이 된다.
  */
-import React, { useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import {
@@ -41,6 +41,8 @@ import {
   CLEANSE_OPTS, CleanseOpt, OPT_DESC, OPT_NAME, cleanseOptOf,
 } from '@/core/skillOpt';
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
+import { Popup } from '@/ui/Popup';
+import { SkillDemo } from './SkillDemo';
 import { Sprite } from '@/ui/Sprite';
 import { BLACK, BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 
@@ -221,6 +223,206 @@ function SkCard({ set, art, name, tag, on, off, onPress }: {
   );
 }
 
+/**
+ * ── 기술 하나의 수치 전부 ── 창 둘이 같이 쓴다.
+ *
+ * 여기 있던 것을 **떼어 냈다.** 여태 기술 목록을 펼친 자리에만 있었는데,
+ * 지금은 창에서도 같은 것을 보여야 한다 (영웅 관리에서 기술을 누르면 뜨는
+ * 창, 그리고 스킬 트리에서 자리를 누르면 뜨는 창).
+ *
+ * **한 벌만 둔다.** 같은 표를 두 곳에 그리면 언젠가 한쪽만 고쳐지고, 그러면
+ * 창에 적힌 피해와 목록에 적힌 피해가 갈린다 — 화면이 스스로 거짓말하는 것이라
+ * 제일 나쁜 종류다.
+ *
+ * 계산도 여기서 한다. 부르는 쪽이 `hit` 이나 `sec` 을 넘겨주게 두면 그 계산이
+ * 부르는 곳마다 하나씩 생긴다.
+ */
+export function SkillDetail({ c, party, chars, sk, slot, readOnly }: {
+  c: OwnedChar;
+  party: Party;
+  chars: Record<string, OwnedChar>;
+  sk: SkillDef;
+  /** 몇 번째 기술인가 — 정화의 "언제 쓸까" 가 이 번호를 쓴다 */
+  slot: number;
+  /** 보기만 하는 창인가 (`SkillPanel` 의 같은 이름) */
+  readOnly?: boolean;
+}) {
+  const st = statOf(c);
+  /* 파티 패시브가 기술에도 걸린다 — 전투가 쓰는 것과 같은 값이다 */
+  const sup = allyAtk(party, chars);
+  const sec = skillEverySec(c, sk);
+  /*
+    한 대의 피해. **계산과 같은 함수**를 쓴다 — 적어 둔 수와 박히는 수가
+    갈리면 안 된다. 맞는 쪽은 안 본다 (`NO_ARMOR`): 적마다 다른 값을 여기서
+    정할 수 없으니 "맨몸에 몇 들어가나" 를 적는다.
+  */
+  const hit = strikeFor(skillBase(st, sk, sup), 1, NO_ARMOR, blowOf(c.id, sk));
+  const pierce = pierceText(sk, c.id);
+
+  return (
+    <>
+      {/*
+        ── 한 줄 설명 ── 편 자리의 **맨 앞**.
+
+        접혀 있을 때는 안 뜬다 (위 `ListItem`). 아래 수치 열 줄이
+        전부 "얼마나" 인데, 그 전에 **무엇을 하는 기술인가**를 한
+        번 말해 주지 않으면 숫자들이 무엇에 대한 숫자인지 모른다.
+      */}
+      <T size={10} dim="sub" style={{ marginBottom: SP.sm }}>{sk.desc}</T>
+      {/*
+        ── 도는 그림은 **여기 없다** ──
+
+        한동안 이 자리에 시연 무대가 있었다 (`SkillDemo`). 걷어서
+        스킬 트리로 옮겼다 (`SkillTreePopup`).
+
+        여기는 **지금 쓰는 기술의 수치를 읽는 자리**다. 아래 열 줄이
+        전부 숫자이고, 숫자는 견주는 데 쓴다. 반면 그림은 "이걸 찍을까"
+        를 정하는 데 쓰는 것이라, 고르는 자리에 있어야 값이 산다 —
+        여기서는 이미 고른 것을 볼 뿐이라 고칠 것이 없다.
+
+        그리고 무대가 넷이 한꺼번에 돌고 있었다. 목록을 펼 때마다
+        작은 사람이 칼을 휘두르는 상자가 하나씩 붙으니, 정작 읽으러 온
+        숫자가 그만큼 아래로 밀렸다.
+      */}
+      <KV
+        k="스킬 코스트"
+        v={`${sk.cost} (평타 한 번에 1 씩 찹니다)`}
+      />
+      {/*
+        바로 위에 코스트가 적혀 있으므로 여기서는 **초만** 말한다.
+        `코스트 4 마다` 를 한 번 더 적으면 같은 말이 두 줄이다.
+      */}
+      <KV k="빨라야" v={`${sec.toFixed(1)}초마다`} />
+      <KV k="대상" v={targetText(sk)} />
+      {/*
+        ── 때리지도 채우지도 않는 기술들 ──
+
+        도발·광란·정화는 수치가 아니라 **무슨 일이 일어나나**로
+        적어야 읽힌다. "공격력의 0%" 를 적어 두면 고장 난 기술로
+        보인다.
+      */}
+      {!!sk.taunt && (
+        <KV k="지속" v={`${sk.taunt}초 동안 적 전부가 이 사람만 노립니다`} />
+      )}
+      {!!sk.self && (
+        <KV
+          k="자기 강화"
+          v={`${sk.self.sec}초간 공격속도 ${sk.self.mul}배`
+            + (sk.self.noCharge ? ' (그동안 코스트가 안 찹니다)' : '')}
+        />
+      )}
+      {!!sk.foeHex && (
+        <KV
+          k="맞은 적에게"
+          v={`${sk.foeHex.sec}초간 받는 회복량 `
+            + `${Math.round((1 - sk.foeHex.mul) * 100)}% 감소`}
+        />
+      )}
+      {sk.heal > 0 ? (
+        <>
+          <KV
+            k="회복량"
+            v={`내 최대 체력의 ${Math.round(sk.healPct * 100)}% + 내 공격력의 ${Math.round(sk.heal * 100)}%`}
+          />
+          <KV k="한 명당" v={`+${Math.round(st.hp * sk.healPct + st.atk * sk.heal)}`} />
+          <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
+            쓰러진 사람은 안 채웁니다 — 회복이 전멸을 되돌리면 아무도
+            죽지 않습니다.
+          </T>
+        </>
+      ) : (
+        <>
+          {/*
+            식을 그대로 보여 준다. "평타의 몇 배" 로만 적으면 방어력이
+            섞이는 기술(이졸데의 검기)에서 수가 안 맞는다.
+          */}
+          <KV
+            k="계산"
+            v={sk.defMul > 0
+              ? `공격력의 ${Math.round(sk.mul * 100)}% + 방어력의 ${Math.round(sk.defMul * 100)}%`
+              : `공격력의 ${Math.round(sk.mul * 100)}%`}
+          />
+          <KV k="피해 종류" v={`(${DMG_NAME[sk.dmg]})`} />
+          {!!pierce && <KV k="관통" v={pierce} />}
+          <KV k="한 대" v={`${hit}`} />
+          {sk.hits > 1 && <KV k="발수" v={`${sk.hits}발`} />}
+          {sk.targets > 0 && <KV k="최대 대상" v={`${sk.targets}`} />}
+          {/*
+            **늘 적는다.** 넷 다 기본 확률이 0 이라 (`core/chars`)
+            `crit > 0` 조건을 달아 두면 이 줄이 아무 기술에도 안
+            뜬다 — 치명타가 스킬에도 걸린다는 것 (`rollCrit`) 이
+            화면 어디에도 안 남는다.
+          */}
+          <KV
+            k="치명타"
+            v={`${Math.round(st.crit * 100)}%`}
+            tail={`(터지면 ${Math.round(st.critDmg * 100)}% 로 들어간다)`}
+          />
+          {/*
+            별표를 쓰면 안 된다 — 여기는 마크다운이 아니라 화면이라
+            `**...**` 가 글자 그대로 뜬다. 강조는 문장 순서로 낸다.
+          */}
+          <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
+            {`곁에 선 보조까지 셈한 값이고, 아무것도 안 막는 상대 기준입니다. `
+              + `실제로는 상대의 ${sk.dmg === 'magic' ? '마법저항력' : '방어력'}만큼 `
+              + '깎여서 들어가고, 총합은 그때 서 있는 적 수에 따라 달라집니다.'}
+          </T>
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * ── 기술 하나를 열어 본 창 ── 도는 그림과 수치 전부.
+ *
+ * 두 곳이 같이 쓴다.
+ *
+ *   영웅 관리   `현재 채용중인 스킬` 칸을 누를 때 (`SkillPanel` 의 `grid`)
+ *   스킬 트리   자리를 누를 때 (`SkillTreePopup` 의 `NodePopup`)
+ *
+ * 다른 것은 **아래에 무엇이 붙느냐** 하나다. 트리에서는 적용·취소가 붙고,
+ * 영웅 관리에서는 붙지 않는다 — 거기는 이미 쓰고 있는 기술을 보는 자리라
+ * 적용할 것이 없다. 그래서 그 자리를 `footer` 로 비워 두었다.
+ *
+ * 창을 쓰는 까닭: 여태 칸 아래에 펼쳐 붙였는데, 그러면 도는 그림과 수치
+ * 열 줄이 화면을 밀어내서 **누른 칸이 화면 밖으로 나갔다.** 무엇을 눌렀는지
+ * 안 보이는 채로 그 설명을 읽게 된다.
+ */
+export function SkillPopup({
+  c, party, chars, sk, slot, title, onClose, footer,
+}: {
+  c: OwnedChar;
+  party: Party;
+  chars: Record<string, OwnedChar>;
+  /** 보여 줄 기술. 없으면 그림도 수치도 없이 `footer` 만 뜬다 (패시브 자리) */
+  sk: SkillDef | null;
+  slot: number;
+  title: string;
+  onClose: () => void;
+  /** 창 아래에 붙일 것 — 트리의 적용·취소 */
+  footer?: ReactNode;
+}) {
+  return (
+    <Popup visible title={title} onClose={onClose}>
+      {!!sk && (
+        <>
+          <T size={FS.body} dim="sub" style={{ marginBottom: SP.sm }}>{sk.desc}</T>
+          {/*
+            ── 무엇처럼 생겼나가 먼저 ──
+
+            아래 열 줄은 전부 숫자다. 숫자는 견주는 데 쓰고 그림은 "이게
+            무슨 기술인가" 를 아는 데 쓰는데, 뒤엣것이 먼저다.
+          */}
+          <SkillDemo c={c} sk={sk} hit={0} />
+          <SkillDetail c={c} party={party} chars={chars} sk={sk} slot={slot} readOnly />
+        </>
+      )}
+      {footer}
+    </Popup>
+  );
+}
+
 export function SkillPanel({
   c, party, chars, readOnly, grid,
 }: {
@@ -299,117 +501,9 @@ export function SkillPanel({
   type SkRow = (typeof rows)[number];
 
   /** 펼친 자리 — 줄 모드에서는 그 줄 밑에, 칸 모드에서는 칸 전체 밑에 붙는다 */
-  const detailOf = ({ sk, slot, sec, hit, pierce }: SkRow) => (
+  const detailOf = ({ sk, slot }: SkRow) => (
     <View style={[BORDER, { padding: SP.sm, marginBottom: SP.xs }]}>
-            {/*
-              ── 한 줄 설명 ── 편 자리의 **맨 앞**.
-
-              접혀 있을 때는 안 뜬다 (위 `ListItem`). 아래 수치 열 줄이
-              전부 "얼마나" 인데, 그 전에 **무엇을 하는 기술인가**를 한
-              번 말해 주지 않으면 숫자들이 무엇에 대한 숫자인지 모른다.
-            */}
-            <T size={10} dim="sub" style={{ marginBottom: SP.sm }}>{sk.desc}</T>
-            {/*
-              ── 도는 그림은 **여기 없다** ──
-
-              한동안 이 자리에 시연 무대가 있었다 (`SkillDemo`). 걷어서
-              스킬 트리로 옮겼다 (`SkillTreePopup`).
-
-              여기는 **지금 쓰는 기술의 수치를 읽는 자리**다. 아래 열 줄이
-              전부 숫자이고, 숫자는 견주는 데 쓴다. 반면 그림은 "이걸 찍을까"
-              를 정하는 데 쓰는 것이라, 고르는 자리에 있어야 값이 산다 —
-              여기서는 이미 고른 것을 볼 뿐이라 고칠 것이 없다.
-
-              그리고 무대가 넷이 한꺼번에 돌고 있었다. 목록을 펼 때마다
-              작은 사람이 칼을 휘두르는 상자가 하나씩 붙으니, 정작 읽으러 온
-              숫자가 그만큼 아래로 밀렸다.
-            */}
-            <KV
-              k="스킬 코스트"
-              v={`${sk.cost} (평타 한 번에 1 씩 찹니다)`}
-            />
-            {/*
-              바로 위에 코스트가 적혀 있으므로 여기서는 **초만** 말한다.
-              `코스트 4 마다` 를 한 번 더 적으면 같은 말이 두 줄이다.
-            */}
-            <KV k="빨라야" v={`${sec.toFixed(1)}초마다`} />
-            <KV k="대상" v={targetText(sk)} />
-            {/*
-              ── 때리지도 채우지도 않는 기술들 ──
-
-              도발·광란·정화는 수치가 아니라 **무슨 일이 일어나나**로
-              적어야 읽힌다. "공격력의 0%" 를 적어 두면 고장 난 기술로
-              보인다.
-            */}
-            {!!sk.taunt && (
-              <KV k="지속" v={`${sk.taunt}초 동안 적 전부가 이 사람만 노립니다`} />
-            )}
-            {!!sk.self && (
-              <KV
-                k="자기 강화"
-                v={`${sk.self.sec}초간 공격속도 ${sk.self.mul}배`
-                  + (sk.self.noCharge ? ' (그동안 코스트가 안 찹니다)' : '')}
-              />
-            )}
-            {!!sk.foeHex && (
-              <KV
-                k="맞은 적에게"
-                v={`${sk.foeHex.sec}초간 받는 회복량 `
-                  + `${Math.round((1 - sk.foeHex.mul) * 100)}% 감소`}
-              />
-            )}
-            {sk.heal > 0 ? (
-              <>
-                <KV
-                  k="회복량"
-                  v={`내 최대 체력의 ${Math.round(sk.healPct * 100)}% + 내 공격력의 ${Math.round(sk.heal * 100)}%`}
-                />
-                <KV k="한 명당" v={`+${Math.round(st.hp * sk.healPct + st.atk * sk.heal)}`} />
-                <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
-                  쓰러진 사람은 안 채웁니다 — 회복이 전멸을 되돌리면 아무도
-                  죽지 않습니다.
-                </T>
-              </>
-            ) : (
-              <>
-                {/*
-                  식을 그대로 보여 준다. "평타의 몇 배" 로만 적으면 방어력이
-                  섞이는 기술(이졸데의 검기)에서 수가 안 맞는다.
-                */}
-                <KV
-                  k="계산"
-                  v={sk.defMul > 0
-                    ? `공격력의 ${Math.round(sk.mul * 100)}% + 방어력의 ${Math.round(sk.defMul * 100)}%`
-                    : `공격력의 ${Math.round(sk.mul * 100)}%`}
-                />
-                <KV k="피해 종류" v={`(${DMG_NAME[sk.dmg]})`} />
-                {!!pierce && <KV k="관통" v={pierce} />}
-                <KV k="한 대" v={`${hit}`} />
-                {sk.hits > 1 && <KV k="발수" v={`${sk.hits}발`} />}
-                {sk.targets > 0 && <KV k="최대 대상" v={`${sk.targets}`} />}
-                {/*
-                  **늘 적는다.** 넷 다 기본 확률이 0 이라 (`core/chars`)
-                  `crit > 0` 조건을 달아 두면 이 줄이 아무 기술에도 안
-                  뜬다 — 치명타가 스킬에도 걸린다는 것 (`rollCrit`) 이
-                  화면 어디에도 안 남는다.
-                */}
-                <KV
-                  k="치명타"
-                  v={`${Math.round(st.crit * 100)}%`}
-                  tail={`(터지면 ${Math.round(st.critDmg * 100)}% 로 들어간다)`}
-                />
-                {/*
-                  별표를 쓰면 안 된다 — 여기는 마크다운이 아니라 화면이라
-                  `**...**` 가 글자 그대로 뜬다. 강조는 문장 순서로 낸다.
-                */}
-                <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
-                  {`곁에 선 보조까지 셈한 값이고, 아무것도 안 막는 상대 기준입니다. `
-                    + `실제로는 상대의 ${sk.dmg === 'magic' ? '마법저항력' : '방어력'}만큼 `
-                    + '깎여서 들어가고, 총합은 그때 서 있는 적 수에 따라 달라집니다.'}
-                </T>
-              </>
-            )}
-            {sk.opt && !readOnly && <CleanseOption who={c.id} slot={slot} />}
+      <SkillDetail c={c} party={party} chars={chars} sk={sk} slot={slot} readOnly={readOnly} />
     </View>
   );
 
@@ -420,8 +514,12 @@ export function SkillPanel({
     아래에 수치 여덟 줄과 키우는 상자가 더 오는 자리라, 목록이 길면 **키우는
     단추가 화면 밖으로 밀린다** — 이 화면에서 제일 자주 하는 일이 그건데.
 
-    칸은 로고와 이름만 이고 있고, 펼친 설명은 **칸 아래 한 자리**에 붙는다.
-    줄 모드처럼 칸마다 밑으로 열리면 격자가 중간에서 갈라진다.
+    칸은 로고와 이름만 인다. **누르면 창이 뜬다** (`SkillPopup`) — 칸 아래에
+    펼쳐 붙이던 것을 걷었다. 도는 그림과 수치 열 줄이 화면을 밀어내서 정작
+    누른 칸이 화면 밖으로 나갔는데, 무엇을 눌렀는지 안 보이는 채로 그 설명을
+    읽게 된다.
+
+    패시브만 여전히 칸 아래에 펼쳐진다. 저건 한 줄짜리라 창을 열 것이 없다.
 
     패시브가 첫 칸이다 — 늘 켜져 있는 쪽이 먼저다 (머리말).
   */
@@ -465,7 +563,17 @@ export function SkillPanel({
             )}
           </View>
         )}
-        {!!openRow && <View style={{ marginTop: SP.xs }}>{detailOf(openRow)}</View>}
+        {!!openRow && (
+          <SkillPopup
+            c={c}
+            party={party}
+            chars={chars}
+            sk={openRow.sk}
+            slot={openRow.slot}
+            title={openRow.sk.name}
+            onClose={() => setOpen(null)}
+          />
+        )}
       </>
     );
   }

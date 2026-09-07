@@ -24,6 +24,7 @@ import type {
   ScrollId,
   SlotId,
 } from '@/core/types';
+import type { BookId } from '@/core/exp';
 import type { Equipped } from '@/core/tiers';
 import type { EnhanceOutcome, tryEnhance } from '@/core/enhance';
 import type { Ghost, StaminaKind } from '@/core/combat';
@@ -198,6 +199,13 @@ export interface GameState {
    * 말하므로, 그 이야기가 벌어지는 자리(캐릭터 창)에서만 보이면 된다.
    */
   elixir: number;
+  /**
+   * ── 경험의 서 ── 세 가지를 몇 권씩 (`core/exp` 의 `BOOKS`).
+   *
+   * 영약(`elixir`)과 나란히 둔다. 둘 다 **한 사람에게 부어 넣는 것**이고,
+   * 골드·다이아처럼 무엇이든 살 수 있는 것이 아니라 쓸 데가 하나뿐이다.
+   */
+  books: Record<BookId, number>;
   /**
    * 온라인 게이지를 **마지막으로 비운 시각** (ms).
    *
@@ -593,6 +601,24 @@ export interface GameActions {
    * 어디에 쓸지가 그냥 운이 된다.
    */
   levelUp: (id: CharId) => 'up' | 'max' | 'poor' | 'none';
+  /**
+   * ── 경험의 서를 붓는다 ── 한 번에 여러 레벨 (`core/exp`).
+   *
+   * 책 수와 골드를 다 확인한 뒤에야 쓴다. 하나라도 모자라면 아무것도 안
+   * 줄이고 `poor` 를 돌려준다 — 반만 먹고 반만 오르면 무엇이 줄었는지
+   * 사람이 셀 수가 없다.
+   *
+   * `max` 는 이미 상한이라 부을 데가 없는 것이다.
+   */
+  feedBooks: (id: CharId, bag: Partial<Record<BookId, number>>)
+    => 'ok' | 'max' | 'poor' | 'none';
+  /**
+   * 레벨을 1 로 되돌린다 — **시험용**.
+   *
+   * 쓴 책도 골드도 안 돌려준다. 값을 되돌리려는 것이 아니라 **낮은 레벨의
+   * 화면을 다시 보려는** 것이라, 돌려주면 오히려 시험이 안 된다.
+   */
+  resetLv: (id: CharId) => void;
   /** 조각을 합쳐 한 성 올린다 (`starUpCost`) */
   starUp: (id: CharId) => 'up' | 'max' | 'short' | 'none';
   /** 5성 위의 한 단계 — 조각 서른둘과 영약 하나 (`AWAKEN_COPIES`) */

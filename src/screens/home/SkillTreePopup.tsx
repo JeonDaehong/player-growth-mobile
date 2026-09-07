@@ -38,12 +38,12 @@ import { CHARS, CharId, maxStar, nodeDemo } from '@/core/chars';
 import {
   TreeNode, activeNodes, isPick, treeOf, whyLocked,
 } from '@/core/skillTree';
-import { Btn, KV, Row, Stars, T, Tag } from '@/ui/atoms';
+import { Btn, Row, Stars, T, Tag } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
 import { BORDER, BORDER_HI, FS, LINE, O, R, SP, SURF } from '@/ui/theme';
-import { SkillDemo } from './SkillDemo';
+import { SkillPopup } from './SkillPanel';
 
 /** 단계 사이를 잇는 세로 선 — 갈래면 Y 자로 벌어진다 */
 function Link({ split }: { split: boolean }) {
@@ -167,6 +167,7 @@ function NodePopup({ who, n, onClose }: {
   onClose: () => void;
 }) {
   const chars = useGame((s) => s.chars);
+  const party = useGame((s) => s.party);
   const pickSkill = useGame((s) => s.pickSkill);
   const toast = useGame((s) => s.toast);
   const c = chars[who];
@@ -183,55 +184,59 @@ function NodePopup({ who, n, onClose }: {
   const can = isPick(n) && why === null;
   const sk = nodeDemo(c, n.id);
 
+  /*
+    창의 몸통은 **영웅 관리와 같은 것**을 쓴다 (`SkillPanel` 의 `SkillPopup`).
+    같은 기술을 두 곳에서 다르게 그리면 언젠가 한쪽만 고쳐진다.
+
+    다른 것은 아래에 붙는 적용·취소 하나다.
+  */
   return (
-    <Popup visible title={n.name} onClose={onClose}>
-      <Row gap={SP.xs} style={{ marginBottom: SP.sm }}>
-        <Sprite set="skill_icon" name={n.art} size={24} />
-        <View style={{ flex: 1 }}>
-          <Row gap={4}>
+    <SkillPopup
+      c={c}
+      party={party}
+      chars={chars}
+      sk={sk}
+      slot={0}
+      title={n.name}
+      onClose={onClose}
+      footer={(
+        <>
+          <Row gap={4} style={{ marginBottom: SP.sm }}>
             <Tag label={n.kind === 'active' ? '액티브' : '패시브'} />
             {on && <Tag label="적용중" fill />}
             {!n.live && <Tag label="준비중" />}
           </Row>
-        </View>
-      </Row>
-
-      <T size={FS.body} dim="sub" style={{ marginBottom: SP.sm }}>{n.desc}</T>
-
-      {/*
-        무대는 **있을 때만** 올린다. 비앙카의 과열 하나가 여기 걸리는데
-        (`nodeDemo` 가 `null`), 빈 상자를 두면 고장 난 것으로 보인다.
-      */}
-      {!!sk && <SkillDemo c={c} sk={sk} hit={0} />}
-
-      {n.cost !== undefined && (
-        <KV k="스킬 코스트" v={`${n.cost} (평타 한 번에 1 씩 찹니다)`} />
+          {/*
+            보여 줄 기술이 없는 자리 — 비앙카의 과열 하나다 (`nodeDemo` 가
+            `null`). 그때는 창이 통째로 비므로 설명만이라도 적는다.
+          */}
+          {!sk && (
+            <T size={FS.body} dim="sub" style={{ marginBottom: SP.sm }}>{n.desc}</T>
+          )}
+          {/* 왜 못 찍는지는 단추 **위**에 — 눌러 보고 나서 알면 늦다 */}
+          {!can && !on && (
+            <T size={FS.tiny} dim="dim" style={{ marginBottom: SP.sm }}>
+              {isPick(n) ? (why ?? '') : '갈래가 아니라 성만 되면 저절로 열립니다'}
+            </T>
+          )}
+          <Row gap={SP.xs}>
+            <Btn
+              label={on ? '적용중' : '적용'}
+              fill={can}
+              disabled={!can}
+              style={{ flex: 1 }}
+              onPress={() => {
+                const bad = pickSkill(who, n.id);
+                if (bad) { toast(bad, 'bad'); return; }
+                toast(`${n.name} 을(를) 찍었습니다`, 'good');
+                onClose();
+              }}
+            />
+            <Btn label="취소" style={{ flex: 1 }} onPress={onClose} />
+          </Row>
+        </>
       )}
-      <KV k="단계" v={`${n.tier}단계 · ${n.tier}성부터`} />
-
-      {/* 왜 못 찍는지는 단추 **위**에 — 눌러 보고 나서 알면 늦다 */}
-      {!can && !on && (
-        <T size={FS.tiny} dim="dim" style={{ marginTop: SP.sm }}>
-          {isPick(n) ? (why ?? '') : '갈래가 아니라 성만 되면 저절로 열립니다'}
-        </T>
-      )}
-
-      <Row gap={SP.xs} style={{ marginTop: SP.md }}>
-        <Btn
-          label={on ? '적용중' : '적용'}
-          fill={can}
-          disabled={!can}
-          style={{ flex: 1 }}
-          onPress={() => {
-            const bad = pickSkill(who, n.id);
-            if (bad) { toast(bad, 'bad'); return; }
-            toast(`${n.name} 을(를) 찍었습니다`, 'good');
-            onClose();
-          }}
-        />
-        <Btn label="취소" style={{ flex: 1 }} onPress={onClose} />
-      </Row>
-    </Popup>
+    />
   );
 }
 
@@ -255,10 +260,7 @@ export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: 
   return (
     <Popup visible title={`${d.name} · 스킬 트리`} onClose={onClose}>
       <Row between>
-        <Row gap={SP.xs}>
-          <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={12} />
-          <T size={FS.tiny} dim="dim">{c.star}성 — {c.star}단계까지 열립니다</T>
-        </Row>
+        <Stars star={c.star} max={maxStar(d.rarity)} awake={c.awake} size={12} />
         {!!c.tree.length && (
           <Btn
             label="되돌리기"
@@ -267,11 +269,6 @@ export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: 
           />
         )}
       </Row>
-
-      <T size={FS.tiny} dim="dim" style={{ marginTop: SP.xs }}>
-        갈래는 한쪽만 찍을 수 있고, 찍으면 그 줄기의 다음 단계만 열립니다.
-        되돌리기는 공짜입니다.
-      </T>
 
       <View style={{ marginTop: SP.sm }}>
         {tiers.map((row, i) => (
@@ -301,11 +298,6 @@ export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: 
           </View>
         ))}
       </View>
-
-      <T size={FS.tiny} dim="dim" style={{ marginTop: SP.md }}>
-        스물네 자리가 전부 전투에 들어가 있습니다. 칸을 누르면 도는 그림을
-        볼 수 있고, 찍는 것은 거기서 정합니다. 되돌리기는 공짜입니다.
-      </T>
 
       {/* 칸을 열어 본 창 — 트리 위에 한 겹 더 뜬다 */}
       {!!at && <NodePopup who={who} n={at} onClose={() => setAt(null)} />}
