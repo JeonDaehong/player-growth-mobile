@@ -70,10 +70,19 @@ function Link({ split }: { split: boolean }) {
 }
 
 /** 자리 하나 */
-function Node({ n, state, why, onOpen }: {
+function Node({ n, state, why, cost, onOpen }: {
   n: TreeNode;
   state: 'on' | 'open' | 'off';
   why: string | null;
+  /**
+   * 평타 몇 대인가 — **기술 표에서 받아 온 것**이다 (`nodeDemo`).
+   *
+   * 트리 표에도 같은 수를 적어 두었었다. 둘이 갈렸다 — 도발은 표에서 15 가
+   * 되었는데 트리에는 6 이 남아 있었다 (`core/skillTree` 의 머리말). 찍기 전
+   * 칸과 찍은 뒤 창이 서로 다른 수를 말하면, 둘 중 무엇이 맞는지는 실제로
+   * 찍어 봐야만 안다.
+   */
+  cost?: number;
   onOpen: () => void;
 }) {
   const on = state === 'on';
@@ -112,7 +121,7 @@ function Node({ n, state, why, onOpen }: {
               코스트는 **평타 대수**다. 초로 안 적는 이유는 `SkillPanel` 에
               적어 두었다 — 이 게임에 쿨타임이라는 것이 없다.
             */}
-            {n.cost !== undefined && <T size={8} dim="dim">· 평타 {n.cost}대</T>}
+            {cost !== undefined && <T size={8} dim="dim">· 평타 {cost}대</T>}
             {/*
               아직 전투에 안 들어간 자리에는 표를 단다. 트리를 먼저 세우고
               효과를 하나씩 붙이는 중이라, 찍었는데 숫자가 안 변하는 자리가
@@ -150,6 +159,18 @@ function Node({ n, state, why, onOpen }: {
  * 비앙카의 과열만 그림이 없다. 저건 기술이 아니라 **평타**를 손보는 것이라
  * 무대에 올릴 기술이 없다.
  *
+ * ## 패시브 자리는 **제 설명이 맨 위**다
+ *
+ * 패시브에게 `nodeDemo` 가 주는 것은 이 자리가 **손보는 기술**이지 이 자리
+ * 자신이 아니다 (`NODE_TOUCH`). 그대로 그리면 창의 제목은 수호신의 가호인데
+ * 첫 줄부터 끝까지 수호의 결의 이야기가 적힌다 — 제목과 본문이 서로 다른
+ * 것을 말하는 셈이라, 누른 자리가 무엇을 하는지는 화면 어디에도 안 남는다.
+ *
+ * 그래서 맨 위는 **자리의 설명**으로 갈아 끼우고(`desc`), 그 아래 수치
+ * 덩어리에는 어느 기술의 것인지를 밝혀 둔다(`about`). 일곱 자리가 다
+ * 그렇다 — 파쇄의 태세 · 수호신의 가호 · 강화된 화살 · 정화의 손길 ·
+ * 신의 천벌 · 찬란한 빛, 그리고 보여 줄 기술조차 없는 과열.
+ *
  * ## 적용과 취소
  *
  * 누르는 것이 곧 찍는 것이던 때는 단추가 필요 없었다. 지금은 창이 한 겹
@@ -183,6 +204,12 @@ function NodePopup({ who, n, onClose }: {
     : (c.star < n.tier ? `${n.tier}성이 되어야 합니다` : null);
   const can = isPick(n) && why === null;
   const sk = nodeDemo(c, n.id);
+  /*
+    패시브 자리는 `sk` 가 **딴것**이다 (머리말). 액티브 자리는 `sk` 가 곧 그
+    자리라 갈아 끼울 것이 없다 — 거기서 `n.desc` 를 또 적으면 같은 말이 두
+    줄이 된다.
+  */
+  const pv = n.kind === 'passive';
 
   /*
     창의 몸통은 **영웅 관리와 같은 것**을 쓴다 (`SkillPanel` 의 `SkillPopup`).
@@ -198,6 +225,8 @@ function NodePopup({ who, n, onClose }: {
       sk={sk}
       slot={0}
       title={n.name}
+      desc={pv ? n.desc : undefined}
+      about={pv && sk ? sk.name : undefined}
       onClose={onClose}
       footer={(
         <>
@@ -207,12 +236,10 @@ function NodePopup({ who, n, onClose }: {
             {!n.live && <Tag label="준비중" />}
           </Row>
           {/*
-            보여 줄 기술이 없는 자리 — 비앙카의 과열 하나다 (`nodeDemo` 가
-            `null`). 그때는 창이 통째로 비므로 설명만이라도 적는다.
+            설명은 **창 맨 위**에 있다 (`SkillPopup` 의 `desc`). 여기에도 있었는데,
+            그건 보여 줄 기술이 없는 자리(과열) 하나를 메우려던 것이었다 —
+            지금은 액티브든 패시브든 맨 위에 한 줄이 오므로 여기서는 걷는다.
           */}
-          {!sk && (
-            <T size={FS.body} dim="sub" style={{ marginBottom: SP.sm }}>{n.desc}</T>
-          )}
           {/* 왜 못 찍는지는 단추 **위**에 — 눌러 보고 나서 알면 늦다 */}
           {!can && !on && (
             <T size={FS.tiny} dim="dim" style={{ marginBottom: SP.sm }}>
@@ -290,6 +317,13 @@ export function SkillTreePopup({ who, onClose }: { who: CharId | null; onClose: 
                     n={n}
                     state={state}
                     why={isPick(n) ? why : (c.star < n.tier ? `${n.tier}성이 되어야 합니다` : null)}
+                    /*
+                      코스트는 **기술에서 받는다.** 패시브 자리는 코스트가
+                      없는데 `nodeDemo` 가 손보는 기술을 주므로 (`NODE_TOUCH`),
+                      액티브일 때만 묻는다 — 안 그러면 수호신의 가호 칸에
+                      수호의 결의의 평타 10대가 적힌다.
+                    */
+                    cost={n.kind === 'active' ? nodeDemo(c, n.id)?.cost : undefined}
                     onOpen={() => setAt(n)}
                   />
                 );

@@ -33,7 +33,7 @@ import {
   CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillNeeds, skillOpen,
   skillsFor, statOf, swingMs,
 } from '@/core/chars';
-import { passiveOf } from '@/core/passives';
+import { PassiveDef, passiveOf } from '@/core/passives';
 import { nodeOn } from '@/core/skillTree';
 import { Party, allyAtk, members } from '@/core/party';
 import { skillBase, strikeFor } from '@/core/autoBattle';
@@ -390,24 +390,58 @@ export function SkillDetail({ c, party, chars, sk, slot, readOnly }: {
  * 안 보이는 채로 그 설명을 읽게 된다.
  */
 export function SkillPopup({
-  c, party, chars, sk, slot, title, onClose, footer,
+  c, party, chars, sk, slot, title, desc, about, onClose, footer,
 }: {
   c: OwnedChar;
   party: Party;
   chars: Record<string, OwnedChar>;
-  /** 보여 줄 기술. 없으면 그림도 수치도 없이 `footer` 만 뜬다 (패시브 자리) */
+  /** 보여 줄 기술. 없으면 그림도 수치도 없이 설명과 `footer` 만 뜬다 */
   sk: SkillDef | null;
   slot: number;
   title: string;
+  /**
+   * 맨 윗줄을 **갈아 끼운다.** 없으면 기술 제 설명(`sk.desc`)이 온다.
+   *
+   * 패시브 자리 때문에 생겼다. 저기서 `sk` 는 **이 자리가 손보는 기술**이지
+   * 이 자리 자신이 아니다 — 수호신의 가호를 눌렀는데 맨 위에 수호의 결의
+   * 설명이 적혀 있으면, 창의 제목과 첫 줄이 서로 다른 것을 말한다.
+   */
+  desc?: string;
+  /**
+   * 아래 그림과 수치가 **딴것의 것**임을 밝힌다 — 손보는 기술의 이름.
+   *
+   * 패시브 자리에서만 온다. 밝히지 않으면 저 수치가 이 패시브의 수치로
+   * 읽히는데, 패시브에는 코스트도 대상도 없다.
+   */
+  about?: string;
   onClose: () => void;
   /** 창 아래에 붙일 것 — 트리의 적용·취소 */
   footer?: ReactNode;
 }) {
+  /* 갈아 끼운 것이 먼저다 — 없을 때만 기술 제 설명을 쓴다 */
+  const head = desc ?? sk?.desc ?? '';
   return (
     <Popup visible title={title} onClose={onClose}>
+      {!!head && (
+        <T size={FS.body} dim="sub" style={{ marginBottom: SP.sm }}>{head}</T>
+      )}
       {!!sk && (
         <>
-          <T size={FS.body} dim="sub" style={{ marginBottom: SP.sm }}>{sk.desc}</T>
+          {/*
+            ── 여기서부터는 **딴것의 이야기** ── 패시브 자리에서만 붙는다.
+
+            줄 하나를 긋고 이름을 적는다. 안 그으면 위의 설명과 아래의 수치가
+            한 덩어리로 읽혀서, 코스트 10 이 이 패시브의 코스트로 보인다.
+          */}
+          {!!about && (
+            <View style={{ marginBottom: SP.sm }}>
+              <View style={{ height: 1, backgroundColor: LINE.low, marginBottom: SP.sm }} />
+              <T size={FS.tiny} bold>{`손보는 기술 — ${about}`}</T>
+              <T size={9} dim="dim">
+                {`아래 그림과 수치는 이 자리를 찍은 뒤의 ${about} 입니다.`}
+              </T>
+            </View>
+          )}
           {/*
             ── 무엇처럼 생겼나가 먼저 ──
 
@@ -419,6 +453,65 @@ export function SkillPopup({
         </>
       )}
       {footer}
+    </Popup>
+  );
+}
+
+/**
+ * ── 기본 패시브를 열어 본 창 ── 칸 모드에서만 쓴다 (`SkillPanel` 의 `grid`).
+ *
+ * 여태 칸 아래에 펼쳐 붙었다. 그런데 **같은 줄의 액티브 칸들은 창을 연다** —
+ * 하나는 아래로 펴지고 하나는 창이 뜨면, 같은 격자 안에서 누르는 법을 두 번
+ * 배워야 한다. 셋 중 하나만 다르게 움직이는 것이 규칙일 리가 없으니 그건
+ * 고장으로 읽힌다.
+ *
+ * 창이 하는 일이 하나 더 있다. 펼쳐 붙일 때는 설명 위에 이름이 없었다 —
+ * 누른 칸이 어느 것이었는지는 **격자를 다시 봐야** 알았다. 창은 제목으로
+ * 그것을 들고 있는다.
+ *
+ * 그림도 수치도 없다. 패시브는 코스트도 대상도 없어서 적을 수가 없고, 도는
+ * 그림은 더더욱 없다 — 저건 누를 때 일어나는 일이 아니라 **늘 그런 사람**이다.
+ */
+function PassivePopup({ pv, off, onClose }: {
+  pv: PassiveDef;
+  /** 파쇄의 태세가 껐나 (`core/passives` 의 `regenOf`) */
+  off: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <Popup visible title={pv.name} onClose={onClose}>
+      <Row gap={SP.sm} style={{ alignItems: 'flex-start' }}>
+        {/* 액자 — 그림이 아직 없어도 "여기 그림이 들어간다" 가 보인다 (`SkCard` 와 같다) */}
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: R.sm,
+            borderWidth: 1,
+            borderColor: LINE.low,
+            backgroundColor: SURF.down,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Sprite set="passive_icon" name={pv.art} size={28} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Row gap={4} style={{ marginBottom: SP.xs }}>
+            <Tag label={off ? '꺼짐' : '패시브'} />
+          </Row>
+          <T size={FS.body} dim="sub">{pv.text}</T>
+        </View>
+      </Row>
+      {/*
+        꺼진 것은 **이유를 적는다.** 저건 규칙이 아니라 지금 이 사람에게
+        일어난 일이라, 안 적으면 설명만 읽고 걸려 있는 줄 안다.
+      */}
+      {off && (
+        <T size={FS.tiny} dim="dim" style={{ marginTop: SP.md }}>
+          파쇄의 태세를 찍어서 꺼졌습니다. 되돌리면 다시 걸립니다.
+        </T>
+      )}
     </Popup>
   );
 }
@@ -519,7 +612,9 @@ export function SkillPanel({
     누른 칸이 화면 밖으로 나갔는데, 무엇을 눌렀는지 안 보이는 채로 그 설명을
     읽게 된다.
 
-    패시브만 여전히 칸 아래에 펼쳐진다. 저건 한 줄짜리라 창을 열 것이 없다.
+    **패시브도 창이다** (`PassivePopup`). 한 줄짜리라 펼쳐 붙여도 되겠다
+    싶었는데, 그러면 셋 중 하나만 다르게 움직인다 — 격자 안에서 누르는 법을
+    두 번 배워야 하는 것이라 그건 규칙이 아니라 고장으로 읽힌다.
 
     패시브가 첫 칸이다 — 늘 켜져 있는 쪽이 먼저다 (머리말).
   */
@@ -553,15 +648,9 @@ export function SkillPanel({
           ))}
         </View>
 
+        {/* 패시브도 창이다 — 같은 격자에서 액티브만 창이 뜨면 규칙이 둘이 된다 */}
         {openPv && !!pv && (
-          <View style={[BORDER, { padding: SP.sm, marginTop: SP.xs }]}>
-            <T size={10} dim="sub">{pv.text}</T>
-            {passiveOff && (
-              <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
-                파쇄의 태세를 찍어서 꺼졌습니다. 되돌리면 다시 걸립니다.
-              </T>
-            )}
-          </View>
+          <PassivePopup pv={pv} off={passiveOff} onClose={() => setOpen(null)} />
         )}
         {!!openRow && (
           <SkillPopup

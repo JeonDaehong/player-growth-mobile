@@ -3308,6 +3308,62 @@ console.log('\n── 스킬 트리 · 코스트 ──');
   ok('갈래인 자리는 찍어야 걸린다',
     !tr.nodeOn('knightgirl', 5, [], 'kg3b')
     && tr.nodeOn('knightgirl', 5, ['kg2b', 'kg3b'], 'kg3b'));
+
+  /*
+    ── 자리를 눌렀을 때 무엇이 뜨나 ── `nodeDemo` 의 계약.
+
+    액티브 자리는 **제 기술**을 준다. 패시브 자리는 이 자리가 **손보는 기술**을
+    준다 — 저것은 이 자리 자신이 아니다 (`NODE_TOUCH`).
+
+    이 갈림을 화면이 모르고 있었다. 수호신의 가호를 누르면 제목만 그것이고
+    설명도 그림도 수치도 전부 수호의 결의 것이 떴다 — 제목과 본문이 서로 다른
+    것을 말하는 셈이라, 정작 누른 자리가 무엇을 하는지는 어디에도 안 남았다.
+    지금은 창이 맨 위를 자리의 설명으로 갈아 끼우고 아래 수치에 어느 기술의
+    것인지를 밝힌다 (`SkillPopup` 의 `desc` · `about`).
+
+    여기서 잠그는 것은 그 갈림 자체다. 새 자리를 만들면서 이 규칙을 어기면
+    (액티브인데 딴 기술을 준다든지) 화면은 아무 말 없이 틀린 것을 그린다.
+  */
+  {
+    let bad = '';
+    let act = 0;
+    let pas = 0;
+    for (const id of Object.keys(tr.TREE) as CharId[]) {
+      for (const n of tr.TREE[id]) {
+        const sk = ct.nodeDemo(mk(id, 5, []), n.id);
+        if (n.kind === 'active') {
+          act++;
+          if (sk?.name !== n.name) bad = bad || `${n.id} ${n.name} → ${sk?.name ?? '없음'}`;
+        } else {
+          pas++;
+          if (sk && sk.name === n.name) bad = bad || `${n.id} 패시브인데 제 이름`;
+        }
+      }
+    }
+    ok('액티브 자리는 제 기술을 보여 준다', !bad, bad || `${act}자리`);
+    ok('패시브 자리가 보여 주는 것은 딴 기술이다', !bad, bad || `${pas}자리`);
+  }
+
+  /* 그 딴 기술은 **찍은 뒤의 값**이어야 한다 — 안 그러면 찍을 이유가 안 보인다 */
+  ok('강화된 화살: 화살비가 다섯 발',
+    ct.nodeDemo(mk('elfarcher', 5, []), 'ea3a')?.hits === 5);
+  ok('찬란한 빛: 정화가 15',
+    ct.nodeDemo(mk('nun', 5, []), 'nu4b')?.cost === 15);
+
+  /*
+    ── 트리 칸의 코스트는 **기술에서 온다** ──
+
+    트리 표에도 `cost` 를 적어 두었었다. 둘이 갈렸다: 도발은 기술 표에서 15 가
+    되었는데 트리 칸에는 6 이 남았고, 기도는 4 로 내렸는데 6 이 남았다. 찍기
+    전 칸과 찍은 뒤 창이 서로 다른 수를 말한 셈이다.
+
+    지금은 칸이 `nodeDemo` 로 받아 적는다 (`SkillTreePopup` 의 `Node`). 표에
+    그 칸이 되살아나면 여기서 걸린다.
+  */
+  ok('트리 표에 코스트를 다시 적어 두지 않았다',
+    (Object.keys(tr.TREE) as CharId[]).every((id) => tr.TREE[id].every(
+      (n) => !('cost' in n),
+    )));
 }
 
 console.log(NL + '── 경험의 서 ──');

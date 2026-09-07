@@ -67,8 +67,17 @@ export interface TreeNode {
   rival?: NodeId;
   /** 이걸 찍으려면 먼저 찍혀 있어야 하는 자리 */
   needs?: NodeId;
-  /** 평타 몇 대를 모아야 나가나. 패시브는 없다 (`SkillDef.cost`) */
-  cost?: number;
+  /*
+    ── 코스트는 여기 없다 ──
+
+    한동안 `cost` 칸이 있었다. 트리 칸에 `평타 6대` 를 적으려던 것인데, 그
+    수를 **여기 한 번, 기술 표에 한 번** 적어 두는 꼴이라 둘이 갈렸다:
+    도발은 표에서 15 가 되었는데 트리에는 6 이 남았고, 기도는 4 로 내렸는데
+    트리에는 6 이 남았다. 찍기 전과 찍은 뒤가 다른 수를 말한 셈이다.
+
+    지금은 화면이 `nodeDemo` 로 **실제 기술**을 받아 그 코스트를 적는다
+    (`SkillTreePopup` 의 `Node`). 갈래가 코스트를 깎는 경우까지 따라온다.
+  */
   /** 화면에 적는 한 줄 */
   desc: string;
   /** 그림 (`assets/sprites/skill_icon/`). 아직 없으면 빈 자리로 뜬다 */
@@ -97,21 +106,21 @@ export interface TreeNode {
 */
 const ISOLDE: readonly TreeNode[] = [
   {
-    id: 'kg1', who: 'knightgirl', tier: 1, name: '검기', kind: 'active', cost: 4,
+    id: 'kg1', who: 'knightgirl', tier: 1, name: '검기', kind: 'active',
     desc: '적 전체를 벤다.', art: 'sk_wave', live: true,
   },
   {
-    id: 'kg2a', who: 'knightgirl', tier: 2, name: '도발', kind: 'active', cost: 6,
+    id: 'kg2a', who: 'knightgirl', tier: 2, name: '도발', kind: 'active',
     rival: 'kg2b',
     desc: '전장의 적 전체가 이졸데만 노린다.', art: 'sk_taunt', live: true,
   },
   {
-    id: 'kg2b', who: 'knightgirl', tier: 2, name: '함성', kind: 'active', cost: 8,
+    id: 'kg2b', who: 'knightgirl', tier: 2, name: '함성', kind: 'active',
     rival: 'kg2a',
     desc: '5초간 자신의 공격력이 1.3배가 된다.', art: 'sk_shout', live: true,
   },
   {
-    id: 'kg3a', who: 'knightgirl', tier: 3, name: '수호의 결의', kind: 'active', cost: 10,
+    id: 'kg3a', who: 'knightgirl', tier: 3, name: '수호의 결의', kind: 'active',
     rival: 'kg3b', needs: 'kg2a',
     desc: '아군 전체에 최대체력의 12%만큼 보호막. 다 깎이거나 8초가 지나면 사라진다.',
     art: 'sk_ward', live: true,
@@ -131,7 +140,7 @@ const ISOLDE: readonly TreeNode[] = [
     art: 'sk_aegis', live: true,
   },
   {
-    id: 'kg4b', who: 'knightgirl', tier: 4, name: '성검 발현', kind: 'active', cost: 12,
+    id: 'kg4b', who: 'knightgirl', tier: 4, name: '성검 발현', kind: 'active',
     rival: 'kg4a', needs: 'kg3b',
     desc: '적 하나에게 빛과 함께 큰 검을 떨어뜨려 공격력의 300% 물리 피해.',
     art: 'sk_holysword', live: true,
@@ -147,22 +156,22 @@ const ISOLDE: readonly TreeNode[] = [
 */
 const BIANCA: readonly TreeNode[] = [
   {
-    id: 'ba1', who: 'bunnyaxe', tier: 1, name: '강타', kind: 'active', cost: 5,
+    id: 'ba1', who: 'bunnyaxe', tier: 1, name: '강타', kind: 'active',
     desc: '앞줄이나 뒷줄 한쪽만 골라 최대 셋을 내리찍는다.', art: 'sk_leap', live: true,
   },
   {
-    id: 'ba2', who: 'bunnyaxe', tier: 2, name: '화산격', kind: 'active', cost: 8,
+    id: 'ba2', who: 'bunnyaxe', tier: 2, name: '화산격', kind: 'active',
     desc: '맞은 적 발밑에서 불기둥이 솟는다.', art: 'sk_volcano', live: true,
   },
   {
-    id: 'ba3a', who: 'bunnyaxe', tier: 3, name: '용암 지대', kind: 'active', cost: 10,
+    id: 'ba3a', who: 'bunnyaxe', tier: 3, name: '용암 지대', kind: 'active',
     rival: 'ba3b',
     desc: '적 전체에 공격력의 130% 물리 피해. 5초간 [지옥불] — 0.5초마다 '
       + '공격력의 20%가 화염 피해로 들어간다.',
     art: 'sk_lava', live: true,
   },
   {
-    id: 'ba3b', who: 'bunnyaxe', tier: 3, name: '불굴의 의지', kind: 'active', cost: 13,
+    id: 'ba3b', who: 'bunnyaxe', tier: 3, name: '불굴의 의지', kind: 'active',
     rival: 'ba3a',
     desc: '5초간 모든 디버프에 안 걸리고 공격력이 두 배가 된다. '
       + '그동안 입힌 피해의 7%만큼 체력을 회복한다.',
@@ -186,11 +195,11 @@ const BIANCA: readonly TreeNode[] = [
 */
 const RIANNE: readonly TreeNode[] = [
   {
-    id: 'ea1', who: 'elfarcher', tier: 1, name: '화살비', kind: 'active', cost: 4,
+    id: 'ea1', who: 'elfarcher', tier: 1, name: '화살비', kind: 'active',
     desc: '무작위 적 셋에게 화살을 퍼붓는다.', art: 'sk_rain', live: true,
   },
   {
-    id: 'ea2', who: 'elfarcher', tier: 2, name: '숲의 축복', kind: 'active', cost: 10,
+    id: 'ea2', who: 'elfarcher', tier: 2, name: '숲의 축복', kind: 'active',
     desc: '5초간 제 공격속도가 두 배가 된다.', art: 'sk_frenzy', live: true,
   },
   {
@@ -200,7 +209,7 @@ const RIANNE: readonly TreeNode[] = [
     art: 'sk_sharparrow', live: true,
   },
   {
-    id: 'ea3b', who: 'elfarcher', tier: 3, name: '정령의 노래', kind: 'active', cost: 10,
+    id: 'ea3b', who: 'elfarcher', tier: 3, name: '정령의 노래', kind: 'active',
     rival: 'ea3a',
     desc: '아군 전체의 치명타 확률이 5초간 30%p 오른다.', art: 'sk_spiritsong', live: true,
   },
@@ -212,13 +221,13 @@ const RIANNE: readonly TreeNode[] = [
     (흩뿌림 · 자기 강화 · 마무리) 무엇이 차고 있는지는 읽힌다.
   */
   {
-    id: 'ea4a', who: 'elfarcher', tier: 4, name: '거대 화살', kind: 'active', cost: 12,
+    id: 'ea4a', who: 'elfarcher', tier: 4, name: '거대 화살', kind: 'active',
     rival: 'ea4b', needs: 'ea3a',
     desc: '아주 큰 화살을 직선으로 쏘아 적 전체에게 공격력의 130% 물리 피해.',
     art: 'sk_bigshot', live: true,
   },
   {
-    id: 'ea4b', who: 'elfarcher', tier: 4, name: '요정의 축제', kind: 'active', cost: 15,
+    id: 'ea4b', who: 'elfarcher', tier: 4, name: '요정의 축제', kind: 'active',
     rival: 'ea4a', needs: 'ea3b',
     desc: '5초간 아군 전체 공격속도 +30%. 그동안 아군이 때릴 때마다 40% 확률로 '
       + '미니 화살이 날아가 공격력의 25%를 한 번 더 넣는다.',
@@ -234,16 +243,16 @@ const RIANNE: readonly TreeNode[] = [
 */
 const AGNES: readonly TreeNode[] = [
   {
-    id: 'nu1', who: 'nun', tier: 1, name: '기도', kind: 'active', cost: 6,
+    id: 'nu1', who: 'nun', tier: 1, name: '기도', kind: 'active',
     desc: '아군 전체의 체력을 채운다.', art: 'sk_heal', live: true,
   },
   {
-    id: 'nu2', who: 'nun', tier: 2, name: '정화', kind: 'active', cost: 20,
+    id: 'nu2', who: 'nun', tier: 2, name: '정화', kind: 'active',
     desc: '걸려 있는 나쁜 것을 걷어낸다. 무엇을 걷을지는 고를 수 있다.',
     art: 'sk_purify', live: true,
   },
   {
-    id: 'nu3a', who: 'nun', tier: 3, name: '신의 심판', kind: 'active', cost: 10,
+    id: 'nu3a', who: 'nun', tier: 3, name: '신의 심판', kind: 'active',
     rival: 'nu3b',
     desc: '적 전체의 공격력을 5초간 20% 깎는다.', art: 'sk_judge', live: true,
   },
