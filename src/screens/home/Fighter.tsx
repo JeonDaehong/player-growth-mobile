@@ -1406,11 +1406,19 @@ function FighterView({
         때리는 기술은 맞은 자리에서 불꽃이 터지고 숫자가 뜨는데, 이쪽은 몸짓
         말고 아무 일도 안 일어난다 — 그림 없이 도형으로만 그린다 (`SkillFx`).
 
-        쓰는 사람 자리에서 나는 것은 둘뿐이다 (포효 · 광란). 정화는 **걷힌
-        사람** 자리에서, 화산은 **맞은 적** 자리에서 난다.
+        쓰는 사람 자리에서 나는 것은 셋이다 (포효 · 광란 · 용암 지대). 정화는
+        **걷힌 사람** 자리에서, 화산은 **맞은 적** 자리에서 난다.
+
+        용암 지대가 이쪽인 까닭: 적 전체를 때리는 기술이라 맞은 자리마다 그리면
+        부채가 넷 겹친다. 한 번 훑어서 다 태우는 것이므로 **쓴 사람에게서 한 번**
+        나가야 맞다.
       */}
       <SkillFx
-        kind={castSk?.cast === 'roar' || castSk?.cast === 'haste' ? castSk.cast : null}
+        kind={
+          castSk?.cast === 'roar' || castSk?.cast === 'haste' || castSk?.cast === 'lavafan'
+            ? castSk.cast
+            : null
+        }
         nonce={shout.no}
         size={size}
       />

@@ -24,9 +24,14 @@
  *   haste    뒤로 흐르는 빗금 넷 + 별빛 — 옆으로 흐른다
  *   cleanse  위로 떠오르는 조각 다섯    — 위로 간다
  *   erupt    발밑에서 솟는 폭발         — 아래서 위로 간다
+ *   lavafan  옆으로 펼쳐지는 부채꼴 불  — 쓴 사람에게서 적 쪽으로 간다
  *
- * 방향이 넷 다 다르다. 54px 짜리 인물 위에서 색도 모양도 못 쓰므로, **어느
+ * 방향이 다섯 다 다르다. 54px 짜리 인물 위에서 색도 모양도 못 쓰므로, **어느
  * 쪽으로 움직이나**가 유일하게 남는 구분이다.
+ *
+ * 화산과 용암 지대는 둘 다 비앙카의 불인데 **정반대로 움직인다** — 하나는
+ * 맞은 놈 발밑에서 위로 솟고, 하나는 쓴 사람에게서 옆으로 퍼진다. 둘 다 불이라
+ * 모양으로는 못 가르고, 가르는 것은 방향뿐이다.
  *
  * ## 흰 그림은 밝게 못 한다
  *
@@ -415,6 +420,84 @@ function Erupt({ t, size }: { t: Animated.Value; size: number }) {
   );
 }
 
+/**
+ * ── 부채꼴 불 ── 용암 지대 (`core/skillTree` 의 `ba3a`).
+ *
+ * 도끼를 옆으로 훑으면 (`bunnyaxe/sk4_*`) 그 궤적에서 불이 펼쳐져 적 쪽으로
+ * 간다. 그림 셋이 **펴지고 · 다 펴지고 · 흩어진다** 를 그리고, 여기서는
+ * 그것이 옆으로 조금 흐르게만 한다.
+ *
+ * ## 자리를 손으로 맞춘다
+ *
+ * 부챗살이 모이는 꼭짓점이 그림의 왼쪽 중간쯤(`APEX`)에 있다. 그 점을 비앙카의
+ * 도끼가 지나는 자리(`HAND`)에 얹어야 "저 손에서 나왔다" 가 된다. 가운데
+ * 맞추기로는 안 된다 — 부채는 한쪽으로만 자라는 모양이라 가운데가 뜻이 없다.
+ *
+ * 세 칸이 **같은 상자로 잘려 있다** (`noTrim` + `grid`). 각자 여백을 깎으면
+ * 칸마다 꼭짓점 자리가 달라져서, 펴지는 동안 부채가 좌우로 튄다.
+ *
+ * ## 상자 밖으로 나간다
+ *
+ * 인물 상자(`size`)의 두 배 반을 옆으로 뻗는다. 적이 저기 서 있으므로 그
+ * 앞까지 닿아야 "전체에 퍼졌다" 가 되고, 상자 안에 가두면 발밑에서 뭔가
+ * 반짝이다 마는 것이 된다.
+ */
+const FAN_MS = 520;
+
+/** 그림 안에서 부챗살이 모이는 점 (가로, 세로 비율) */
+const APEX = { x: 0.11, y: 0.52 };
+/** 인물 상자 안에서 도끼가 지나는 자리 — 여기에 `APEX` 를 얹는다 */
+const HAND = { x: 0.62, y: 0.55 };
+/** 부채 폭이 인물 상자의 몇 배인가 */
+const FAN_W = 2.6;
+/** 그림 비율 (높이 ÷ 폭) — 세 칸이 같다 */
+const FAN_RATIO = 256 / 207;
+
+function LavaFan({ t, size }: { t: Animated.Value; size: number }) {
+  const [frame, setFrame] = useState(1);
+
+  /* 세 칸을 순서대로 — 까닭은 `Erupt` 에 적어 두었다 */
+  useEffect(() => {
+    setFrame(1);
+    const a = setTimeout(() => setFrame(2), FAN_MS / 3);
+    const b = setTimeout(() => setFrame(3), (FAN_MS * 2) / 3);
+    return () => { clearTimeout(a); clearTimeout(b); };
+  }, [t]);
+
+  const fade = useMemo(() => t.interpolate({
+    inputRange: [0, 0.08, 0.7, 1], outputRange: [0, 1, 1, 0],
+  }), [t]);
+  /*
+    펴지는 동안 **옆으로 조금 흐른다.**
+
+    그림이 이미 펴지는 것을 그리므로 많이 움직일 필요가 없다. 크게 밀면
+    날아가는 물체가 되어 화살이나 검기와 같은 것이 되는데, 이건 던지는 것이
+    아니라 **번지는 것**이다.
+  */
+  const slide = useMemo(() => t.interpolate({
+    inputRange: [0, 1], outputRange: [0, size * 0.45],
+  }), [t, size]);
+
+  const w = size * FAN_W;
+  const h = w * FAN_RATIO;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: size * HAND.x - w * APEX.x,
+        top: size * HAND.y - h * APEX.y,
+        width: w,
+        opacity: fade,
+        transform: [{ translateX: slide }],
+        zIndex: 45,
+      }}
+    >
+      <Sprite set="sfx_lavafan" name={String(frame)} size={w} />
+    </Animated.View>
+  );
+}
+
 /** 폭발 세 칸이 도는 시간 — `FX_MS` 보다 짧다. 터지는 것은 빨라야 한다 */
 const ERUPT_MS = 420;
 
@@ -781,5 +864,6 @@ export function SkillFx({
   if (kind === 'roar') return <Roar t={t} size={size} />;
   if (kind === 'haste') return <Haste t={t} size={size} />;
   if (kind === 'cleanse') return <Cleanse t={t} size={size} />;
+  if (kind === 'lavafan') return <LavaFan t={t} size={size} />;
   return <Erupt t={t} size={size} />;
 }

@@ -409,7 +409,7 @@ export type Range = 'melee' | 'ranged';
  * 그 차이가 곧 "누구에게 일어나는 일인가" 라서, 한 곳에 몰아 그리면
  * 정화가 아녜스에게 걸린 것처럼 보인다.
  */
-export type CastFx = 'roar' | 'haste' | 'cleanse' | 'erupt';
+export type CastFx = 'roar' | 'haste' | 'cleanse' | 'erupt' | 'lavafan';
 
 export type SkillKind =
   /* ── 첫 번째 기술 — 넷이 처음부터 갖고 있던 것 ── */
@@ -1180,7 +1180,14 @@ export const SKILLS: Record<SkillKind, SkillDef> = {
     flies: false, landOn: 3, cost: 10, aura: 'ash', leaps: false,
     /* 0.5초마다 공격력의 20% — 한 틱이 `HEX_TICK_MS` 다 (`core/status`) */
     foeDot: { id: 'st_burn', sec: 5, pct: 0.2, dmg: 'phys' },
-    cast: 'erupt',
+    /*
+      화산의 폭발을 빌려 쓰고 있었다 (`erupt`). 저건 **맞은 놈 발밑에서 위로
+      솟는 것**이라, 적 전체를 때리는 이 기술에서는 발밑 폭발이 넷 겹쳤다 —
+      화산격을 네 번 쓴 것과 화면이 같았다.
+
+      이제 제 것을 쓴다. 쓴 사람에게서 **옆으로 한 번** 펼쳐진다 (`SkillFx`).
+    */
+    cast: 'lavafan',
     fx: 'smash',
     desc: '적 전체를 불바다로 만들고 5초간 태운다',
   },
