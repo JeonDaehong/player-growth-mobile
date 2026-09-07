@@ -40,6 +40,7 @@ import {
 import { Sprite } from '@/ui/Sprite';
 import { spriteGap, spriteLoose } from '@/ui/spriteAssets';
 import type { Mark } from '@/core/passives';
+import { nodeOn } from '@/core/skillTree';
 import { BodyKind, Bound, BossBodyFx, Charmed, Shocked, Veil } from './BossFx';
 import { BAD_C, SHIELD_C, SURF, WHITE } from '@/ui/theme';
 import { ZOOM, depthAt } from './Ground';
@@ -552,9 +553,18 @@ function FighterView({
 
     `ref` 로 드는 이유는 `canCast` 와 같다: 아래 타이머 안의 닫힘이라
     그냥 읽으면 합성 직후에도 한동안 옛 트리를 본다.
+
+    ## `tree` 를 직접 뒤지면 **영영 거짓**이다
+
+    한동안 `ch.tree.includes('ba4')` 로 물었다. `tree` 에는 **갈래인 자리만**
+    적히는데 (`fixTree`), 과열은 짝이 없어 저절로 열리는 자리라 거기 적힐
+    일이 없다 — 4성 비앙카가 과열을 영영 못 받고 있었다. 둘째 대도, 그
+    대가 채우던 코스트 한 칸도 없었다.
+
+    걸렸나는 `activeNodes` 가 안다 (`nodeOn`).
   */
   const heatRef = useRef(false);
-  heatRef.current = (ch.tree ?? []).includes('ba4');
+  heatRef.current = nodeOn(ch.id, ch.star, ch.tree ?? [], 'ba4');
   /** 여태 휘두른 평타 수 — 3의 배수마다 한 대가 더 나간다 */
   const swings = useRef(0);
   const cbAim = useRef(onAim);

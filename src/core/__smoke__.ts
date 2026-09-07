@@ -14,6 +14,7 @@ import { artisanItemName, artisanOf, DUNKARAX } from './artisans';
 import { itemName } from './tiers';
 import { KIND_NAME, ARTISAN_TIER, PART_KINDS, SCROLL_IDS, SLOT_ACCEPTS, SLOT_IDS } from './types';
 import { effectsOf } from './titles';
+import type { CharId, OwnedChar } from './chars';
 import { newItem, playerIlvl, playerCurrentIlvl, currentItemLevel, itemLevel, maxSetIlvl, round1, SLOT_COUNT, toAvg } from './tiers';
 import { sellPrice, repairCost } from './economy';
 import { fmt, g } from './currency';
@@ -3239,6 +3240,74 @@ console.log('── 통계 파생 계산 ──');
   ok('대기 개념이 사라졌다',
     !('inProbation' in gs) && !('probationLeft' in gs),
     Object.keys(gs).filter((k) => /probation/i.test(k)).join(',') || '없음');
+}
+
+console.log('\n── 스킬 트리 · 코스트 ──');
+{
+  const ct = require('./chars') as typeof import('./chars');
+  const tr = require('./skillTree') as typeof import('./skillTree');
+
+  const mk = (id: CharId, star: number, tree: string[]): OwnedChar =>
+    ({ id, star, awake: false, lv: 1, copies: 0, tree } as OwnedChar);
+
+  /*
+    ── 안 찍으면 안 깎인다 ──
+
+    코스트를 깎는 자리는 둘뿐이다 — 파쇄의 태세(`kg3b`)가 검기를 1 깎고,
+    정화의 손길(`nu3b`)이 정화를 25% 깎는다. **넷 × 모든 갈래 조합 × 1~5성**을
+    다 돌려서, 그 둘을 안 찍었는데 표에 적힌 값과 다른 코스트가 나오는 자리가
+    하나라도 있으면 실패다.
+
+    전수로 도는 까닭: 깎는 자리가 늘어날 때 조건을 잘못 걸면 한 조합에서만
+    새는데, 그건 손으로 짚어서는 못 찾는다.
+  */
+  let leak = '';
+  let combos = 0;
+  for (const id of Object.keys(tr.TREE) as CharId[]) {
+    const picks = tr.TREE[id].filter(tr.isPick).map((n) => n.id);
+    for (let m = 0; m < (1 << picks.length); m++) {
+      const want = picks.filter((_p, i) => (m >> i) & 1);
+      const tree = tr.fixTree(id, want);
+      /* 말이 안 되는 조합은 건너뛴다 — `fixTree` 가 이미 걷어낸 것들 */
+      if (tree.join() !== want.join()) continue;
+      for (let star = 1; star <= 5; star++) {
+        combos++;
+        const c = mk(id, star, tree);
+        for (const sk of ct.skillsFor(c)) {
+          const base = Object.values(ct.SKILLS).find((v) => v.name === sk.name)?.cost;
+          if (base === undefined || sk.cost === base) continue;
+          const earned = (sk.name === ct.SKILLS.wave.name && tree.includes('kg3b'))
+            || (sk.name === ct.SKILLS.purify.name && tree.includes('nu3b'));
+          if (!earned && !leak) {
+            leak = `${id} ${star}성 [${tree.join(',')}] ${sk.name} ${base}→${sk.cost}`;
+          }
+        }
+      }
+    }
+  }
+  ok('안 찍은 갈래로 코스트가 깎이는 조합이 없다', !leak, leak || `${combos}가지`);
+
+  /* 찍으면 제대로 깎인다 — 위 시험이 "늘 안 깎임" 으로 통과하지 않게 */
+  ok('파쇄의 태세: 검기 4 → 3',
+    ct.skillsFor(mk('knightgirl', 3, ['kg2b', 'kg3b']))[0].cost === ct.SKILLS.wave.cost - 1);
+  ok('정화의 손길: 정화 20 → 15',
+    ct.skillsFor(mk('nun', 3, ['nu3b']))[1].cost === 15);
+
+  /*
+    ── 저절로 열리는 자리는 `tree` 에 안 적힌다 ──
+
+    이걸 모르고 `tree.includes('ba4')` 로 과열을 물어봤고, 그래서 4성 비앙카가
+    과열을 영영 못 받았다 (`Fighter` 의 `heatRef`). 걸렸나는 `nodeOn` 이 안다.
+  */
+  const bianca = mk('bunnyaxe', 4, tr.fixTree('bunnyaxe', ['ba3a', 'ba4']));
+  ok('갈래가 아닌 자리는 tree 에 안 남는다', !bianca.tree.includes('ba4'),
+    JSON.stringify(bianca.tree));
+  ok('그래도 4성이면 과열은 걸려 있다',
+    tr.nodeOn('bunnyaxe', 4, bianca.tree, 'ba4'));
+  ok('3성이면 아직 아니다', !tr.nodeOn('bunnyaxe', 3, bianca.tree, 'ba4'));
+  ok('갈래인 자리는 찍어야 걸린다',
+    !tr.nodeOn('knightgirl', 5, [], 'kg3b')
+    && tr.nodeOn('knightgirl', 5, ['kg2b', 'kg3b'], 'kg3b'));
 }
 
 console.log(fails === 0 ? '\n전부 통과' : `\n실패 ${fails}건`);

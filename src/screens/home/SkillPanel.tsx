@@ -34,6 +34,7 @@ import {
   skillsFor, statOf, swingMs,
 } from '@/core/chars';
 import { passiveOf } from '@/core/passives';
+import { nodeOn } from '@/core/skillTree';
 import { Party, allyAtk, members } from '@/core/party';
 import { skillBase, strikeFor } from '@/core/autoBattle';
 import {
@@ -260,7 +261,8 @@ export function SkillPanel({
     목록에서 지우지 않고 흐리게 남긴다 — 무엇을 잃었는지가 안 보이면 그
     갈래를 고른 값도 안 보인다.
   */
-  const passiveOff = c.tree?.includes('kg3b') ?? false;
+  /* `tree` 를 직접 뒤지지 않는다 — 까닭은 `core/skillTree` 의 `nodeOn` 에 */
+  const passiveOff = nodeOn(c.id, c.star, c.tree ?? [], 'kg3b');
   const st = statOf(c);
   /* 파티 패시브가 기술에도 걸린다 — 전투가 쓰는 것과 같은 값이다 */
   const sup = allyAtk(party, chars);

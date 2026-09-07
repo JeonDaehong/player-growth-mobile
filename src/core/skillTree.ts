@@ -300,6 +300,22 @@ export function activeNodes(
   ));
 }
 
+/**
+ * 이 자리가 지금 **걸려 있나.**
+ *
+ * `tree` 를 직접 뒤지면 안 된다. 거기에는 **갈래인 자리만** 적히기 때문이다
+ * (`fixTree` 가 갈래가 아닌 것을 걷어내고, `pickSkill` 도 안 받는다). 그래서
+ * 비앙카의 과열처럼 저절로 열리는 자리를 `tree.includes('ba4')` 로 물으면
+ * **영영 거짓**이다 — 실제로 그렇게 물어보고 있었고, 4성이 되어도 과열이
+ * 안 걸렸다.
+ *
+ * 성도 같이 본다. `tree` 에는 성이 모자란 자리도 남아 있다 (일부러 안 지운다 —
+ * 성을 오르내리며 볼 수 있게).
+ */
+export const nodeOn = (
+  who: CharId, star: number, picked: readonly NodeId[], id: NodeId,
+): boolean => activeNodes(who, star, picked).some((n) => n.id === id);
+
 /** 왜 못 찍나 — 찍을 수 있으면 `null` */
 export function whyLocked(
   who: CharId, star: number, picked: readonly NodeId[], id: NodeId,

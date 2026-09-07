@@ -24,6 +24,7 @@
 import {
   Armor, CharId, OwnedChar, statOf,
 } from './chars';
+import { nodeOn } from './skillTree';
 import {
   BLINK_MS, GOOD, Hex, STATUS_ALT, STATUS_NAME, STATUS_WHAT, StatusId,
   dying, mulOf, upOf,
@@ -219,7 +220,7 @@ export function regenOf(c: OwnedChar): number {
     를 비우면 캐릭터 창의 패시브 줄도 같이 사라지는데, 그러면 무엇을 잃었는지
     화면에 안 남는다 — 잃은 것이 안 보이면 갈래를 고른 값도 안 보인다.
   */
-  if (c.tree?.includes('kg3b')) return 0;
+  if (nodeOn(c.id, c.star, c.tree ?? [], 'kg3b')) return 0;
   const pct = regenPctOf(c.id);
   return pct > 0 ? Math.max(1, statOf(c).hp * pct) : 0;
 }
