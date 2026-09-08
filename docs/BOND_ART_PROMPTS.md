@@ -5,7 +5,7 @@
 
 | # | 무엇 | 장수 | 지금 | 급함 |
 |---|---|---|---|---|
-| 1 | 선물 로고 8종 | 1판 (8칸) | 없음 — 빈 액자로 뜸 | **높음** |
+| 1 | 선물 로고 18종 | 2판 (7칸 + 11칸) | 없음 — 빈 액자로 뜸 | **높음** |
 | 2 | 경험의 서 로고 3종 | 1판 (3칸) | 없음 | **높음** |
 | 3 | 인연 단추 · 하트 | — | 코드 도형으로 그림 | 낮음 |
 | 4 | 이야기 월페이퍼 16장 | 16판 | 사람당 1장뿐 | 중간 |
@@ -15,13 +15,17 @@
 
 ---
 
-## 1. 선물 로고 8종 — `assets/sprites/gift_icon/`
+## 1. 선물 로고 18종 — `assets/sprites/gift_icon/`
 
-가방의 **기타** 칸과 선물주기 창에 26px 로 붙습니다.
+가방의 **기타** 칸과 선물주기 창에 26px 로 붙습니다. **두 판으로 나눠**
+뽑습니다 — 한 판에 열여덟을 넣으면 칸이 작아져서 1비트로 가릴 것이 없어집니다.
 
-### 목록
+### 판 A — 얽힌 것 일곱
 
-| 로고 | 이름 | 누가 좋아하나 | 누가 싫어하나 |
+좋아하거나 싫어하는 사람이 있는 것들입니다. **이 일곱이 제일 급합니다** —
+선물이라는 기능의 내용이 여기 다 있습니다.
+
+| 로고 | 이름 | 좋아함 | 싫어함 |
 |---|---|---|---|
 | `gf_cookie` | 딸기맛 쿠키 | 이졸데 ×2 | — |
 | `gf_pie` | 호두 파이 | — | **이졸데** |
@@ -30,35 +34,74 @@
 | `gf_flower` | 진귀한 꽃 | 리안느 ×2 | — |
 | `gf_bible` | 성서 | 아녜스 ×2 | — |
 | `gf_gong` | 목탁 | — | **아녜스** |
-| `gf_tea` | 따뜻한 차 | — | — (누구에게나 1배) |
 
-### 여덟이 다 갈려야 합니다
+### 판 B — 아무나 줘도 되는 것 열하나
 
-한 목록 안에 여덟이 세로로 줄지어 섭니다. **먹는 것이 넷**이라 (쿠키 · 파이 ·
-케이크 · 고기) 그 넷이 서로 안 헷갈리는 것이 이 판의 제일 어려운 부분입니다.
+전부 1배입니다. 열하나나 두는 까닭: 좋아하는 것 하나만 있으면 그것을 다
+쓰고 난 뒤에 할 일이 없어지는데, 인연은 **매일 조금씩** 쌓는 축이라 그날
+줄 것이 늘 있어야 합니다.
 
-| 로고 | 26px 에서 남는 윤곽 |
+| 로고 | 이름 |
 |---|---|
-| `gf_cookie` | **동그라미**에 점 박힘 — 한 입 베어 문 자국 |
-| `gf_pie` | **낮고 넓은 사다리꼴** — 위가 격자 |
-| `gf_carrot` | **세로로 선 네모** — 위에 삼각 하나 |
+| `gf_tea` | 따뜻한 차 |
+| `gf_ice` | 아이스 아메리카노 |
+| `gf_bread` | 갓 구운 빵 |
+| `gf_apple` | 붉은 사과 |
+| `gf_honey` | 꿀단지 |
+| `gf_cheese` | 치즈 한 덩이 |
+| `gf_soup` | 따뜻한 수프 |
+| `gf_candy` | 박하사탕 |
+| `gf_ribbon` | 비단 리본 |
+| `gf_candle` | 밀랍 초 |
+| `gf_music` | 오르골 |
+
+**고기는 여기 없습니다.** 비앙카가 싫어하는 것이 토끼 고기라, 고기붙이가
+여럿이면 "고기를 싫어한다" 로 읽혀서 그 한 줄이 흐려집니다.
+
+### 열여덟이 다 갈려야 합니다
+
+한 목록 안에 세로로 줄지어 섭니다. **먹는 것이 열둘**이라 그 열둘이 서로
+안 헷갈리는 것이 이 판들의 제일 어려운 부분입니다. 26px 에서 남는 윤곽으로
+가릅니다.
+
+| 로고 | 26px 윤곽 |
+|---|---|
+| `gf_cookie` | **동그라미** + 점 박힘 + 한 입 자국 |
+| `gf_pie` | **낮고 넓은 사다리꼴** + 위가 격자 |
+| `gf_carrot` | **세로로 선 3층 네모** + 위에 삼각 |
 | `gf_rabbit` | **뼈 붙은 다리** — 가늘고 길쭉 |
 | `gf_flower` | 줄기 위 **꽃잎 다섯** |
-| `gf_bible` | **가로로 넓은 네모**에 세로 십자 |
-| `gf_gong` | **둥근 덩어리 + 손잡이 막대** |
-| `gf_tea` | **김이 오르는 잔** — 위에 뜬 곡선 둘 |
+| `gf_bible` | **가로로 넓은 네모** + 세로 십자 |
+| `gf_gong` | **둥근 덩어리** + 옆으로 뻗은 막대 |
+| `gf_tea` | 낮은 잔 + 받침 + **위에 뜬 곡선 둘** |
+| `gf_ice` | **키 큰 세로 컵** + 네모 얼음 + 빨대 |
+| `gf_bread` | **길쭉한 타원** + 위에 사선 칼집 셋 |
+| `gf_apple` | **동그라미** + 위에 꼭지와 잎 하나 |
+| `gf_honey` | **아래가 넓은 항아리** + 목이 잘록 + 뚜껑 |
+| `gf_cheese` | **직각삼각형** + 구멍 셋 |
+| `gf_soup` | **넓고 납작한 대접** + 위에 뜬 곡선 하나 |
+| `gf_candy` | **동그라미** + 양옆 포장 꼬리 |
+| `gf_ribbon` | **나비 매듭** — 좌우 고리 둘 |
+| `gf_candle` | **세로 막대** + 위에 작은 불꽃 |
+| `gf_music` | **낮은 상자** + 옆에 태엽 손잡이 |
 
 특히 헷갈리기 쉬운 짝:
 
-- **쿠키 ↔ 목탁** — 둘 다 둥근 덩어리다. 쿠키는 **점이 박혀 있고 테두리가
-  들쭉날쭉**하고, 목탁은 **매끈하고 옆으로 막대가 하나 뻗는다**
-- **파이 ↔ 케이크** — 파이는 **눕고 넓다**(가로 4 : 세로 2), 케이크는
-  **서고 좁다**(가로 2 : 세로 3). 케이크 위에는 삼각 당근이 하나 얹힌다
-- **성서 ↔ 경험의 서** — 둘 다 책이다. 성서는 **표지에 세로 십자**가 있고
-  경험의 서는 **왼쪽에 책등 줄**이 있다. 십자는 경험의 서 셋 중 어디에도
-  넣지 마십시오
+- **쿠키 ↔ 사과 ↔ 사탕** — 셋 다 동그라미다. 쿠키는 **점이 박히고 한 입
+  베어져** 있고, 사과는 **위에 꼭지와 잎**이 있고, 사탕은 **양옆으로 꼬리**가
+  뻗는다. 하나만 다시 뽑을 때도 이 셋을 나란히 놓고 보십시오
+- **쿠키 ↔ 목탁** — 목탁은 **매끈하고 옆으로 막대가 뻗는다**
+- **차 ↔ 수프** — 차는 **키가 있고 받침이 있고 김이 둘**, 수프는 **납작하고
+  넓고 받침이 없고 김이 하나**다
+- **아이스 아메리카노 ↔ 꿀단지 ↔ 초** — 셋 다 세로로 길다. 컵은 **위가
+  넓고 빨대가 삐져나오고**, 항아리는 **목이 잘록하고 아래가 제일 넓고**,
+  초는 **폭이 일정하고 위에 불꽃**이 있다
+- **파이 ↔ 케이크 ↔ 치즈** — 파이는 **눕고 넓다**(4:2), 케이크는 **서고
+  좁다**(2:3), 치즈는 **직각삼각형**이다
+- **성서 ↔ 경험의 서** — 성서는 **표지에 세로 십자**, 경험의 서는 **왼쪽에
+  책등 줄**. 십자는 경험의 서 셋 중 어디에도 넣지 마십시오
 
-### 프롬프트
+### 프롬프트 — 판 A (7칸)
 
 ```
 ABSOLUTE RULE — NO TEXT OF ANY KIND:
@@ -69,9 +112,7 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 - A book cover with squiggles that read as writing is a failed output.
 - A cell containing even one letter-like mark is a failed output.
 
-SUBJECT: a single sheet of EXACTLY 8 ICONS in TWO rows of FOUR, left to right, top row first. Eight cells. Not nine, not six. Each cell holds a different object; do not repeat an object anywhere on the sheet and do not add variants of one.
-
-TOP ROW, left to right:
+SUBJECT: a single sheet of EXACTLY 7 ICONS in ONE row, left to right. Seven cells. Not eight, not six. Each cell holds a different object; do not repeat an object anywhere on the sheet.
 
 Cell 1 — A ROUND COOKIE. One solid circle filling most of the cell. A BITE is taken out of its upper right edge: a clean crescent notch about a quarter of the circle's width, so the outline is not a plain circle. Scattered across the face, FOUR small solid dots of equal size, none touching the edge. No crumbs, no plate, no steam. Squint test: a circle with one chunk missing.
 
@@ -79,17 +120,13 @@ Cell 2 — A WEDGE OF PIE. A LOW WIDE TRAPEZOID sitting on the bottom edge — t
 
 Cell 3 — A SLICE OF CARROT CAKE. A TALL UPRIGHT RECTANGLE, clearly taller than it is wide (about 2 wide to 3 tall), standing on the bottom edge. Across its face, TWO horizontal bands divide it into three layers of equal height. Sitting on top, centred, a small solid TRIANGLE pointing up — about a third of the cell wide — with two short lines rising from its flat top. No plate, no fork, no icing swirls. Squint test: a standing brick in three layers with a tiny cone on top.
 
-Cell 4 — A CUT OF MEAT ON THE BONE. A long shape running diagonally from the lower left to the upper right. The lower two thirds is a THICK ROUNDED MASS. From its upper end a NARROW BONE continues, a fifth as thick as the mass, ending in a small knob at the upper right corner. One thin CURVED line inside the mass follows its edge, the only interior mark. No plate, no flames, no animal. Squint test: a lollipop-ish shape — fat at one end, a thin stick with a knob at the other.
+Cell 4 — A CUT OF MEAT ON THE BONE. A long shape running diagonally from the lower left to the upper right. The lower two thirds is a THICK ROUNDED MASS. From its upper end a NARROW BONE continues, a fifth as thick as the mass, ending in a small knob at the upper right corner. One thin CURVED line inside the mass follows its edge, the only interior mark. No plate, no flames, no animal. Squint test: fat at one end, a thin stick with a knob at the other.
 
-BOTTOM ROW, left to right:
+Cell 5 — A SINGLE FLOWER. Rising from the bottom edge, a straight vertical STEM one sixth of the cell wide, reaching to the middle of the cell. On the stem, one small solid LEAF pointing left. At the top, FIVE rounded PETALS arranged around a small solid centre dot, the whole head about half the cell wide. Exactly five petals, all the same size, evenly spaced. No pot, no sparkles, no second bloom.
 
-Cell 5 — A SINGLE FLOWER. Rising from the bottom edge, a straight vertical STEM one sixth of the cell wide, reaching to the middle of the cell. On the stem, one small solid LEAF pointing left. At the top, FIVE rounded PETALS arranged around a small solid centre dot, the whole head about half the cell wide. Exactly five petals, all the same size, evenly spaced. No pot, no sparkles, no second bloom. Squint test: a lollipop with a notched rim on a stalk.
+Cell 6 — A CLOSED BOOK, FRONT ON, WITH A CROSS. A solid rectangle WIDER than it is tall (about 4 wide to 3 tall), centred. On its face, a plain CROSS: one vertical bar from the top edge to the bottom edge of the cover, a fifth of the cover's width, and one horizontal bar above the middle, half the cover's width. The cover is otherwise blank. A narrow band of PAGE EDGES runs down the right side, a sixth of the width. No clasp, no gem, no rays, no letters.
 
-Cell 6 — A CLOSED BOOK, FRONT ON, WITH A CROSS. A solid rectangle WIDER than it is tall (about 4 wide to 3 tall), centred. On its face, a plain CROSS: one vertical bar from top edge to bottom edge of the cover, a fifth of the cover's width, and one horizontal bar above the middle, half the cover's width. The cover is otherwise blank. A narrow band of PAGE EDGES runs down the right side, a sixth of the width. No clasp, no gem, no rays, no letters. Squint test: a wide brick with a plus sign on it.
-
-Cell 7 — A WOODEN HAND-BELL. A large solid ROUNDED MASS filling the lower two thirds of the cell — wider than tall, flattened on the bottom, with a single deep SLIT cut horizontally into its lower right side, a third of the mass wide. From the top of the mass, a straight HANDLE rises diagonally to the upper right corner, a sixth of the cell wide, ending square. No mallet, no sound lines, no rope. Squint test: a fat pebble with a stick growing out of its top.
-
-Cell 8 — A CUP OF TEA WITH STEAM. On the bottom half, a CUP: a solid U shape with thick walls, wider at the rim than at the base, about half the cell wide, standing on a thin flat SAUCER line that is slightly wider than the cup. Above the rim, floating clear with a visible GAP of black between them, TWO short WAVY LINES of steam, the taller one on the left. The gap between cup and steam is the point of the icon. No handle, no leaves, no hands. Squint test: a small bucket with two squiggles floating over it.
+Cell 7 — A WOODEN HAND-BELL. A large solid ROUNDED MASS filling the lower two thirds of the cell — wider than tall, flattened on the bottom, with a single deep SLIT cut horizontally into its lower right side, a third of the mass wide. From the top of the mass, a straight HANDLE rises diagonally to the upper right corner, a sixth of the cell wide, ending square. No mallet, no sound lines, no rope.
 
 STYLE (strict, non-negotiable):
 - 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
@@ -105,24 +142,99 @@ STYLE (strict, non-negotiable):
 - No watermarks, no signatures, no sparkle marks in the corners.
 
 LAYOUT:
-- Two rows of 4 equal square cells, edge to edge, no gutters, no frames, no borders.
+- One row of 7 equal square cells, edge to edge, no gutters, no frames, no borders.
 - Each icon centred in its cell with a small margin of pure black around it.
-- The sheet is twice as wide as it is tall.
+- The sheet is 7 times as wide as it is tall.
+```
+
+### 프롬프트 — 판 B (11칸 + 빈 칸 하나)
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single sheet of EXACTLY 12 CELLS in TWO rows of SIX, left to right, top row first. Eleven of them hold an object; the LAST cell (bottom right) is empty solid black. Each object appears once; do not repeat an object anywhere on the sheet.
+
+TOP ROW, left to right:
+
+Cell 1 — A CUP OF TEA WITH STEAM. On the bottom half, a CUP: a solid U shape with thick walls, wider at the rim than at the base, about half the cell wide, standing on a thin flat SAUCER line slightly wider than the cup. Above the rim, floating clear with a visible GAP of black between them, TWO short WAVY LINES of steam, the taller one on the left. No handle, no leaves.
+
+Cell 2 — A TALL ICED DRINK. A TALL NARROW TUMBLER filling most of the cell's height, straight-sided, slightly wider at the top than at the bottom, about a third of the cell wide. Inside the upper half, THREE small solid SQUARES of ice, tilted at different angles, not touching each other. A straight STRAW rises out of the rim and leans to the upper right, poking clear of the glass by a quarter of the cell. No condensation dots, no coaster.
+
+Cell 3 — A LOAF OF BREAD. One fat solid OVAL lying on its side, wider than tall, its ends rounded. Across the top, THREE short parallel SLASHES cut at a diagonal, evenly spaced, each a fifth of the loaf's length. No basket, no crumbs, no knife.
+
+Cell 4 — AN APPLE. One solid circle filling most of the cell, with a small NOTCH dimpled into the top centre. From that notch a short straight STEM rises, and one small pointed LEAF juts off it to the right. No bite taken out. No dots on the face. Squint test: a circle with a tiny sprout on top.
+
+Cell 5 — A HONEY JAR. A POT that is widest at the bottom, pulls in to a narrow NECK about two thirds of the way up, then flares slightly to the rim. Sitting on the rim, a flat LID slightly wider than the neck, with a small knob on top. On the belly of the pot, ONE thick horizontal BAND. No dipper, no bees, no drips.
+
+Cell 6 — A WEDGE OF CHEESE. A solid RIGHT TRIANGLE with the right angle at the lower left, its flat bottom on the cell's bottom edge and its vertical side on the left, the slope running down to the lower right. THREE round HOLES of different sizes are cut out of the mass, none touching the edges. No board, no knife.
+
+BOTTOM ROW, left to right:
+
+Cell 7 — A BOWL OF SOUP. A WIDE SHALLOW BOWL on the bottom half — much wider than it is deep, a flattened U with thick walls, nearly the full width of the cell. NO saucer under it. Above the rim, floating clear with a gap of black, ONE short WAVY LINE of steam, centred. Squint test: a wide flat dish with one squiggle over it.
+
+Cell 8 — A WRAPPED CANDY. In the centre, one solid circle about half the cell wide. From its left and right sides, two small TWISTED WRAPPER ends flare outward like little triangles with notched outer edges, each a fifth of the cell wide. The three parts touch. Squint test: a bow tie with a fat middle.
+
+Cell 9 — A RIBBON BOW. Two rounded LOOPS meeting at a small solid KNOT in the centre, one loop to the left and one to the right, each a third of the cell wide. Below the knot, two short TAILS hang down and out, ending in notched V tips. No box, no gift underneath.
+
+Cell 10 — A CANDLE. A straight vertical COLUMN of constant width, a quarter of the cell wide, rising from the bottom edge to two thirds of the cell's height, its top cut flat. A short WICK line rises from the centre of that flat top, and above it a small solid TEARDROP FLAME, pointed at the top, about a fifth of the cell wide. The flame touches the wick. No holder, no melted wax runs.
+
+Cell 11 — A MUSIC BOX. A LOW WIDE BOX sitting on the bottom edge, about twice as wide as it is tall, with a thin LID line across its top. On its right side, a small CRANK: a short horizontal arm ending in a round knob, sticking clear of the box by a sixth of the cell. On the lid, ONE small solid square inlay, centred. No notes, no sparkles, no ballerina.
+
+Cell 12 — EMPTY. Solid pure black, nothing drawn at all.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Each icon must survive being shrunk to 16x16: one solid mass, one or two big notches,
+  no hairline detail, no line finer than 2 pixels.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+
+LAYOUT:
+- Two rows of 6 equal square cells, edge to edge, no gutters, no frames, no borders.
+- The last cell (bottom right) is empty black.
+- Each icon centred in its cell with a small margin of pure black around it.
+- The sheet is 3 times as wide as it is tall.
 ```
 
 ### 슬라이스
 
+두 판을 따로 넣고 뒤엣것에 `append` 를 답니다 — 같은 폴더에 이어 붙입니다.
+
 ```json
 {
-  "file": "gift.jpg",
+  "file": "gift-a.jpg",
   "name": "gift_icon",
-  "expect": [4, 2],
+  "expect": [7, 1],
   "labels": [
     "gf_cookie", "gf_pie", "gf_carrot", "gf_rabbit",
-    "gf_flower", "gf_bible", "gf_gong", "gf_tea"
+    "gf_flower", "gf_bible", "gf_gong"
   ]
+},
+{
+  "file": "gift-b.jpg",
+  "name": "gift_icon",
+  "expect": [6, 2],
+  "labels": [
+    "gf_tea", "gf_ice", "gf_bread", "gf_apple", "gf_honey", "gf_cheese",
+    "gf_soup", "gf_candy", "gf_ribbon", "gf_candle", "gf_music", "_skip"
+  ],
+  "append": true
 }
 ```
+
+빈 열두 번째 칸은 `_skip` 으로 받아 두고 슬라이스 뒤에 지웁니다 — 이름을
+안 주면 칸 수가 안 맞아 슬라이스가 멎습니다.
 
 ---
 
@@ -197,7 +309,7 @@ A young woman in worn plate armour over a padded gambeson, a long surcoat to
 the knee, hair tied back, a plain kite shield on her left arm and a straight
 sword at her hip. Her face is calm and a little tired. No helmet.
 
-SCENE — <단계에 따라 아래 넷 중 하나>:
+SCENE — pick ONE of the four below:
 (A) AWKWARD — Full figure, seen from far off across a training yard at dusk.
     She is checking the straps of her shield, turned three-quarters away.
     A second figure is implied only by a long shadow entering from the frame's
@@ -255,8 +367,8 @@ waist, hands usually folded. No weapon of any kind. Downcast eyes, gentle face.
 
 ## 붙이는 차례
 
-1. `gift.jpg` (8칸) → `tools/sprites.config.json` 에 위 블록을 더하고
-   `python tools/slice.py`
+1. `gift-a.jpg` (7칸) · `gift-b.jpg` (12칸) → `tools/sprites.config.json` 에
+   위 블록을 더하고 `python tools/slice.py`
 2. `book.jpg` (3칸) → 같은 방법 ([`ITEM_ICON_PROMPTS.md`](ITEM_ICON_PROMPTS.md))
 3. 월페이퍼는 `assets/wallpaper/` 에 그대로 넣고 `src/ui/wallpapers.ts` 에
    줄을 더합니다 (번들러가 `require` 를 정적으로 읽으므로 **손으로** 적어야

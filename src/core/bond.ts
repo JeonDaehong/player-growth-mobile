@@ -118,8 +118,12 @@ export function bondFeed(
 // ── 선물 ────────────────────────────────────────────────
 
 export type GiftId =
+  /* ── 누군가와 얽힌 것 ── 좋아하거나 싫어하는 사람이 있다 */
   | 'gf_cookie' | 'gf_pie' | 'gf_carrot' | 'gf_rabbit'
-  | 'gf_flower' | 'gf_bible' | 'gf_gong' | 'gf_tea';
+  | 'gf_flower' | 'gf_bible' | 'gf_gong'
+  /* ── 그냥 좋은 것 ── 누구에게 줘도 1배 (`GIFT_LIKE` 에 안 적혀 있다) */
+  | 'gf_tea' | 'gf_ice' | 'gf_bread' | 'gf_apple' | 'gf_honey' | 'gf_cheese'
+  | 'gf_soup' | 'gf_candy' | 'gf_ribbon' | 'gf_candle' | 'gf_music';
 
 export interface GiftDef {
   id: GiftId;
@@ -130,9 +134,18 @@ export interface GiftDef {
   desc: string;
 }
 
+/**
+ * 목록의 차례 — **얽힌 것이 먼저, 그냥 좋은 것이 뒤.**
+ *
+ * 가방과 선물 창이 이 차례로 늘어놓는다. 좋아하거나 싫어하는 사람이 있는
+ * 일곱이 위에 서므로, 목록을 내리면서 아래로 갈수록 "아무나 줘도 되는 것"
+ * 이 나온다 — 무엇을 줄지 정하는 순서가 그대로 목록의 순서다.
+ */
 export const GIFT_IDS: readonly GiftId[] = [
   'gf_cookie', 'gf_pie', 'gf_carrot', 'gf_rabbit',
-  'gf_flower', 'gf_bible', 'gf_gong', 'gf_tea',
+  'gf_flower', 'gf_bible', 'gf_gong',
+  'gf_tea', 'gf_ice', 'gf_bread', 'gf_apple', 'gf_honey', 'gf_cheese',
+  'gf_soup', 'gf_candy', 'gf_ribbon', 'gf_candle', 'gf_music',
 ];
 
 export const GIFTS: Record<GiftId, GiftDef> = {
@@ -143,7 +156,28 @@ export const GIFTS: Record<GiftId, GiftDef> = {
   gf_flower: { id: 'gf_flower', name: '진귀한 꽃', art: 'gf_flower', desc: '깊은 숲에서만 핀다는 꽃.' },
   gf_bible: { id: 'gf_bible', name: '성서', art: 'gf_bible', desc: '손때가 묻은 낡은 경전.' },
   gf_gong: { id: 'gf_gong', name: '목탁', art: 'gf_gong', desc: '어느 먼 동방에서 왔다는 나무 종.' },
-  gf_tea: { id: 'gf_tea', name: '따뜻한 차', art: 'gf_tea', desc: '누구에게 줘도 나쁘지 않은 것.' },
+  /*
+    ── 여기부터는 **아무나 줘도 되는 것** ──
+
+    좋아하는 사람도 싫어하는 사람도 없다 (`GIFT_LIKE` 에 안 적혀 있으면 1배).
+    열하나나 두는 까닭: 좋아하는 것 하나만 두면 그것을 다 쓰고 난 뒤에
+    할 일이 없어지는데, 인연은 **매일 조금씩** 쌓는 축이라 그날 줄 것이
+    늘 있어야 한다.
+
+    고기는 여기 없다. 비앙카가 싫어하는 것이 토끼 고기라, 고기붙이가 여럿이면
+    "고기를 싫어한다" 로 읽혀서 그 한 줄이 흐려진다.
+  */
+  gf_tea: { id: 'gf_tea', name: '따뜻한 차', art: 'gf_tea', desc: '김이 오르는 찻잔.' },
+  gf_ice: { id: 'gf_ice', name: '아이스 아메리카노', art: 'gf_ice', desc: '얼음이 가득한 검은 물. 어디서 났는지는 묻지 말자.' },
+  gf_bread: { id: 'gf_bread', name: '갓 구운 빵', art: 'gf_bread', desc: '아직 따뜻하다.' },
+  gf_apple: { id: 'gf_apple', name: '붉은 사과', art: 'gf_apple', desc: '반질반질하게 닦아 두었다.' },
+  gf_honey: { id: 'gf_honey', name: '꿀단지', art: 'gf_honey', desc: '뚜껑을 열면 한참 향이 남는다.' },
+  gf_cheese: { id: 'gf_cheese', name: '치즈 한 덩이', art: 'gf_cheese', desc: '구멍이 숭숭 뚫린 것.' },
+  gf_soup: { id: 'gf_soup', name: '따뜻한 수프', art: 'gf_soup', desc: '식기 전에 줘야 한다.' },
+  gf_candy: { id: 'gf_candy', name: '박하사탕', art: 'gf_candy', desc: '입에 넣으면 서늘하다.' },
+  gf_ribbon: { id: 'gf_ribbon', name: '비단 리본', art: 'gf_ribbon', desc: '손에 감기는 감촉이 좋다.' },
+  gf_candle: { id: 'gf_candle', name: '밀랍 초', art: 'gf_candle', desc: '오래 타고 그을음이 안 난다.' },
+  gf_music: { id: 'gf_music', name: '오르골', art: 'gf_music', desc: '태엽을 감으면 한 소절만 돈다.' },
 };
 
 /** 선물 하나가 올려 주는 밑값 */
@@ -162,6 +196,9 @@ export const GIFT_BASE = 20;
  * 리안느만 싫어하는 것이 없다. 넷이 다 같은 모양이면 "싫어하는 것이 하나씩
  * 있다" 가 규칙이 되어 안 줘 본 선물도 안 주게 되는데, 하나가 예외면 실제로
  * 줘 봐야 안다.
+ *
+ * 열여덟 중 일곱만 여기 적혀 있다. 나머지 열하나는 **아무나 줘도 되는 것**
+ * 이라 표에 자리가 없다 — 적어야 하는 것은 예외뿐이다.
  */
 export const GIFT_LIKE: Record<CharId, Partial<Record<GiftId, number>>> = {
   knightgirl: { gf_cookie: 2, gf_pie: -1 },
