@@ -107,7 +107,7 @@ import { BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 import { CharStats } from './CharStats';
 import { SkillPanel } from './SkillPanel';
 import { LevelUpPopup } from './LevelUpPopup';
-import { RARITY_BOND, bondStep } from '@/core/bond';
+import { bondStep } from '@/core/bond';
 import { SkillTreePopup } from './SkillTreePopup';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
@@ -1116,40 +1116,15 @@ export function HeroManage({ pick, onPick, onBond }: {
             />
             <T size={FS.hero} bold numberOfLines={1} style={{ marginTop: 2 }}>{d.name}</T>
             {/*
-              ── 인연 ── 이름 바로 밑 (`core/bond`).
+              ── 인연은 **오른쪽에** ── (아래 `ActBtn` 줄)
 
-              ## 하트 열 개를 늘어놓지 않는다
+              이름 바로 밑에 뒀었다. 그 자리는 이미 등급 딱지와 이름이 서
+              있고 그 위로 역할·패시브 두 줄이 붙는 자리라, 넷째 줄이
+              들어오니 왼쪽 귀퉁이가 글자로 빽빽해졌다.
 
-              처음엔 그렇게 했다. 그런데 이 자리는 **인물 그림 위에 얹힌 왼쪽
-              귀퉁이**라 폭이 좁고, 아홉 픽셀짜리 열 개면 백 픽셀이 넘어서
-              얼굴을 가로질렀다. 게다가 위에 선 역할·패시브 줄은 로고 하나에
-              글자 하나인데 여기만 도형 열 개라 한 벌로 안 읽혔다.
-
-              **한 줄로 줄인다** — 하트 하나 · 단계 이름 · `3/10`. 위 두 줄과
-              같은 모양(`SideRow`)이 되고, 열 칸짜리 게이지는 자리가 넉넉한
-              인연 화면에서 본다 (`BondGauge`).
-
-              누르면 그리로 간다. 오른쪽 위 하트 단추와 같은 곳인데, 이 줄이
-              곧 그 화면의 요약이라 더 보고 싶은 사람의 손가락이 제일 먼저
-              닿는 자리다.
+              하트 단추가 이미 오른쪽에 있다. 단계 이름은 그 단추가 무엇으로
+              데려가는지를 말하는 것이므로, 단추 밑에 붙는 편이 짧고 맞다.
             */}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${d.name}와의 인연 보기 — ${bondStep(bondLv).name}`}
-              onPress={() => { sfx('tap'); onBond(c.id); }}
-              style={({ pressed }) => ({
-                marginTop: 4,
-                opacity: pressed ? O.sub : 1,
-              })}
-            >
-              <Row gap={SP.xs} style={{ alignItems: 'center' }}>
-                <Pixel sprite={HEART} scale={10 / 9} />
-                <T size={FS.tiny} bold>{bondStep(bondLv).name}</T>
-                <T size={9} dim="dim">
-                  {`${bondLv}/${RARITY_BOND[d.rarity]}`}
-                </T>
-              </Row>
-            </Pressable>
           </View>
         </View>
 
@@ -1173,8 +1148,24 @@ export function HeroManage({ pick, onPick, onBond }: {
           사람에게 안 눌리는 단추를 남겨 두면, 그게 "아직 안 나왔다" 인지
           "고장" 인지 알 수가 없다.
         */}
-        <View style={{ position: 'absolute', right: SP.sm, top: SP.sm, gap: SP.xs }}>
+        <View
+          style={{
+            position: 'absolute',
+            right: SP.sm,
+            top: SP.sm,
+            gap: SP.xs,
+            alignItems: 'center',
+          }}
+        >
           <ActBtn art="bond" label="인연" onPress={() => onBond(c.id)} />
+          {/*
+            ── 단계 이름은 하트 **바로 밑** ── (`core/bond` 의 `BOND_STEPS`)
+
+            숫자(`3/10`)는 안 적는다. 이 자리가 말할 것은 **지금 어떤 사이인가**
+            하나이고, 몇 칸인지는 눌러서 들어가면 게이지가 말한다 — 좁은
+            귀퉁이에 숫자까지 넣으면 단추가 무엇인지가 흐려진다.
+          */}
+          <T size={9} dim="sub">{bondStep(bondLv).name}</T>
           {hasWallpaper(c.id) && (
             <ActBtn art="paper" label="월페이퍼" onPress={() => setPaper(true)} />
           )}

@@ -3728,7 +3728,7 @@ console.log(NL + '── 인연 ──');
   /* 구간 — 0~2 어색 · 3~5 우정 · 6~9 신뢰 · 10 애정 */
   {
     const at = (lv: number) => bd.bondStep(lv).name;
-    const want = ['어색한 관계', '어색한 관계', '어색한 관계', '우정', '우정', '우정',
+    const want = ['어색', '어색', '어색', '우정', '우정', '우정',
       '신뢰', '신뢰', '신뢰', '신뢰', '애정'];
     const got = Array.from({ length: 11 }, (_v, i) => at(i));
     ok('단계 구간이 사양대로', got.join() === want.join(), got.join(' '));

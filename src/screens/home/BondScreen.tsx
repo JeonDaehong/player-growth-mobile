@@ -136,6 +136,31 @@ function GiftResult({ who, art, name, exp, up, lv, onClose }: {
   );
 }
 
+/**
+ * ── 오늘은 더 못 준다 ── 창으로 말한다.
+ *
+ * 단추를 흐리게 멎어 두고 그 아래에 작게 적었었다. 그러면 **누른 사람이
+ * 답을 못 받는다** — 눌렀는데 아무 일도 안 일어나고, 왜 안 되는지는 화면
+ * 어딘가에 작게 적혀 있다.
+ *
+ * 누르면 뜨게 두면 물음과 답이 붙는다. 잠긴 이야기를 눌렀을 때와 같은
+ * 규칙이다 (`StoryPopup` 의 `why`).
+ */
+function GiftFull({ onClose }: { onClose: () => void }) {
+  return (
+    <Popup visible title="선물" onClose={onClose}>
+      <View style={{ alignItems: 'center', paddingVertical: SP.lg, gap: SP.sm }}>
+        <Pixel sprite={ICONS.lock} scale={2.4} opacity={O.sub} />
+        <T size={FS.body} bold center>오늘 줄 수 있는 선물을 다 줬습니다</T>
+        <T size={FS.tiny} dim="dim" center>
+          {`하루에 ${GIFT_A_DAY}개까지 줄 수 있습니다. 내일 다시 오세요.`}
+        </T>
+      </View>
+      <Btn label="닫기" size="lg" fill onPress={onClose} />
+    </Popup>
+  );
+}
+
 /** 선물 창 — 가진 것만 뜬다 */
 function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
   const gifts = useGame((s) => s.gifts);
@@ -148,6 +173,8 @@ function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
   const [done, setDone] = useState<
     { art: string; name: string; exp: number; up: number; lv: number } | null
   >(null);
+  /** 오늘 몫을 다 썼다고 말하는 창 */
+  const [full, setFull] = useState(false);
 
   const b = bonds[who];
   const today = dayKey(Date.now());
@@ -176,10 +203,8 @@ function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
                   sfx('tap');
                   const r = giveGift(who, id);
                   if (r === 'none') return;
-                  if (r === 'no') {
-                    toast('오늘은 더 줄 수 없습니다', 'plain');
-                    return;
-                  }
+                  /* 다 줬으면 창으로 말한다 — 토스트는 목록에 가려진다 */
+                  if (r === 'no') { setFull(true); return; }
                   /* 값은 창이 말한다 — 토스트는 가려져서 못 보고 지나간다 */
                   setDone({
                     art: g.art, name: g.name, exp: r.exp, up: r.up, lv: r.lv,
@@ -233,6 +258,8 @@ function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
       <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
         좋아하는 것이 사람마다 다릅니다. 싫어하는 것을 주면 애정이 깎입니다.
       </T>
+
+      {full && <GiftFull onClose={() => setFull(false)} />}
 
       {/* 준 뒤의 창 — 목록 **위**에 뜬다 (`GiftResult`) */}
       {!!done && (
@@ -414,6 +441,8 @@ export function BondScreen({ who, onBack }: { who: CharId; onBack: () => void })
   const chars = useGame((s) => s.chars);
   const bonds = useGame((s) => s.bonds);
   const [open, setOpen] = useState<'talk' | 'gift' | 'story' | null>(null);
+  /** 오늘 선물을 다 줬다고 말하는 창 */
+  const [noGift, setNoGift] = useState(false);
 
   const c = chars[who];
   const d = CHARS[who];
@@ -486,11 +515,15 @@ export function BondScreen({ who, onBack }: { who: CharId; onBack: () => void })
           on
           onPress={() => setOpen('talk')}
         />
+        {/*
+          대화와 같은 규칙으로 **늘 눌린다** — 다 줬으면 창이 뜬다
+          (`GiftFull`). 멎어 있는 단추는 눌린 사람에게 아무 답도 안 준다.
+        */}
         <Act
           label="선물주기"
           sub={gLeft > 0 ? `오늘 ${gLeft}개 남음` : '오늘은 다 줬음'}
-          on={gLeft > 0 && !maxed}
-          onPress={() => setOpen('gift')}
+          on
+          onPress={() => (gLeft > 0 ? setOpen('gift') : setNoGift(true))}
         />
         <Act
           label="스토리보기"
@@ -511,6 +544,7 @@ export function BondScreen({ who, onBack }: { who: CharId; onBack: () => void })
       {open === 'story' && (
         <StoryPopup who={who} lv={b.lv} onClose={() => setOpen(null)} />
       )}
+      {noGift && <GiftFull onClose={() => setNoGift(false)} />}
     </ScrollView>
   );
 }

@@ -26,17 +26,18 @@
  * 쌓는다" 가 화면에서 같아 보인다.
  */
 import React, { useMemo, useState } from 'react';
-import { Image, Modal, Pressable, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { CHARS, CharId } from '@/core/chars';
-import { TALKS, TalkDef } from '@/core/bond';
+import { TALKS, TALK_A_DAY, TalkDef } from '@/core/bond';
+import { dayKey } from '@/core/events';
 import { linesOf } from '@/core/lines';
-import { Row, T } from '@/ui/atoms';
+import { T } from '@/ui/atoms';
 import { Sprite } from '@/ui/Sprite';
 import { spriteLoose } from '@/ui/spriteAssets';
 import { sfx } from '@/ui/sfx';
 import { useBackClose } from '@/ui/backGuard';
-import { BLACK, BORDER, C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
+import { BLACK, BORDER, C, FS, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
 
 /** 대사창이 화면 아래 얼마를 먹나 */
 const BOX_H = 168;
@@ -57,7 +58,7 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
     () => Math.floor(Math.random() * Math.max(1, list.length)),
     [list],
   );
-  /** 오늘 몫이 남았을 때만 고르는 대화다 — 아니면 한마디로 끝난다 */
+  /** 오늘 몫을 다 썼을 때 하는 한마디 — 애정은 안 오른다 */
   const idle = useMemo(() => {
     const all = linesOf(who, d?.quote);
     return all[Math.floor(Math.random() * Math.max(1, all.length))] ?? '';
@@ -70,10 +71,9 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
   */
   const canPick = useMemo(() => {
     const b = bonds[who];
-    const today = new Date();
-    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const key = dayKey(Date.now());
     const used = b && b.talkDay === key ? b.talks : 0;
-    return used < 2 && list.length > 0;
+    return used < TALK_A_DAY && list.length > 0;
     /* 열 때 한 번만 — `bonds` 를 갈래에 넣으면 고른 뒤에 다시 센다 */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [who]);
@@ -91,6 +91,7 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
   const line = said ? said.reply : (talk ? talk.ask : idle);
   /** 아직 고를 것이 남았나 */
   const waiting = !!talk && !said;
+  const bg = spriteLoose('bg_chapter', '01');
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -101,17 +102,18 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
           무대에서 쓰는 것과 같은 그림이다 (`BattleView`). 대화가 **이 게임
           안에서** 일어나는 일로 보이려면 배경이 딴 데서 온 것이면 안 된다.
           흐리게 까는 까닭은 글을 읽는 화면이기 때문이다.
+
+          **`StyleSheet.absoluteFill` 을 쓴다.** `inset: 0` 으로 적었더니
+          크기가 안 잡혀서, 그림이 제 원래 크기로 왼쪽 위 귀퉁이에 조그맣게
+          떴다 — 화면 11시 방향에 지도 한 장이 떠 있는 꼴이었다.
         */}
-        {(() => {
-          const bg = spriteLoose('bg_chapter', '01');
-          return bg ? (
-            <Image
-              source={bg}
-              resizeMode="cover"
-              style={{ position: 'absolute', inset: 0, opacity: 0.22 }}
-            />
-          ) : null;
-        })()}
+        {!!bg && (
+          <Image
+            source={bg}
+            resizeMode="cover"
+            style={[StyleSheet.absoluteFill, { opacity: 0.22 }]}
+          />
+        )}
 
         {/* 아무 데나 누르면 넘어간다 — 답을 다 읽었으면 닫힌다 */}
         <Pressable
@@ -155,13 +157,13 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
             paddingTop: SP.md,
           }}
         >
-          <Row between>
-            <T size={FS.title} bold>{d.name}</T>
-            {/* 오늘 남은 횟수 — 다 쓰면 왜 고를 것이 없는지가 여기 적힌다 */}
-            <T size={9} dim="dim">
-              {canPick ? '' : '오늘 대화를 다 했습니다'}
-            </T>
-          </Row>
+          {/*
+            이름 오른쪽에 `오늘 대화를 다 했습니다` 를 적었었다. 걷은 까닭:
+            여기는 **그 사람의 말을 읽는 자리**인데, 그 옆에 남은 횟수를
+            적으면 대사와 살림살이가 한 줄에 선다. 남은 횟수는 들어오기
+            전에 이미 적혀 있다 (`BondScreen` 의 단추).
+          */}
+          <T size={FS.title} bold>{d.name}</T>
           <View
             style={{
               height: 1,
@@ -210,14 +212,15 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
         */}
         {asking && !!talk && (
           <View
-            style={{
-              position: 'absolute',
-              inset: 0,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(0,0,0,0.55)',
-              paddingHorizontal: SP.lg,
-            }}
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0,0,0,0.55)',
+                paddingHorizontal: SP.lg,
+              },
+            ]}
           >
             <View
               style={[
@@ -233,7 +236,9 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
                 },
               ]}
             >
-              <T size={9} dim="dim" style={{ marginBottom: 2 }}>무엇이라고 답할까요</T>
+              <T size={9} dim="dim" style={{ marginBottom: 2 }}>
+                무엇이라고 답할까요
+              </T>
               {talk.choices.map((ch, i) => (
                 <Pressable
                   key={ch.text}
@@ -281,7 +286,6 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
                 paddingVertical: SP.xs,
                 paddingHorizontal: SP.sm,
                 backgroundColor: C.bg,
-                opacity: O.full,
               },
             ]}
           >
