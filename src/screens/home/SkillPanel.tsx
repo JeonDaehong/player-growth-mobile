@@ -61,7 +61,15 @@ import { BLACK, BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
  * (강화로 공격력이 올라도 이 값은 안 변한다. `spd` 는 안 자란다.)
  */
 export function skillEverySec(c: OwnedChar, sk: SkillDef): number {
-  return (swingMs(statOf(c).spd) * sk.cost) / 1000;
+  /*
+    **코스트 + 1 이다.** 기술이 나가는 스윙은 평타가 아니라 칸을 안 채우므로
+    (`core/chars` 의 `swingPlan`), 한 바퀴는 평타 `cost` 번에 기술 한 번이다 —
+    코스트 4 면 다섯 스윙마다 한 번이다.
+
+    여태 `cost` 만 곱했다. 그때는 기술이 네 번째 평타를 **잡아먹고** 나갔으므로
+    맞는 값이었는데, 그 차례를 고치면서 여기도 한 칸 늘어난다.
+  */
+  return (swingMs(statOf(c).spd) * (sk.cost + 1)) / 1000;
 }
 
 /**
@@ -335,27 +343,21 @@ export function SkillDetail({ c, party, chars, sk, slot, readOnly }: {
   readOnly?: boolean;
 }) {
   const st = statOf(c);
-  /* 파티 패시브가 기술에도 걸린다 — 전투가 쓰는 것과 같은 값이다 */
-  const sup = allyAtk(party, chars);
   const sec = skillEverySec(c, sk);
   /*
-    한 대의 피해. **계산과 같은 함수**를 쓴다 — 적어 둔 수와 박히는 수가
-    갈리면 안 된다. 맞는 쪽은 안 본다 (`NO_ARMOR`): 적마다 다른 값을 여기서
-    정할 수 없으니 "맨몸에 몇 들어가나" 를 적는다.
+    한 대의 피해를 여기서 셈했었다 (`strikeFor` + `NO_ARMOR`). 그 줄을
+    걷으면서 계산도 같이 걷었다 — 아래 `계산` 줄이 식을 그대로 보여 준다.
   */
-  const hit = strikeFor(skillBase(st, sk, sup), 1, NO_ARMOR, blowOf(c.id, sk));
   const pierce = pierceText(sk, c.id);
 
   return (
     <>
       {/*
-        ── 한 줄 설명 ── 편 자리의 **맨 앞**.
+        ── 한 줄 설명은 **여기 없다** ──
 
-        접혀 있을 때는 안 뜬다 (위 `ListItem`). 아래 수치 열 줄이
-        전부 "얼마나" 인데, 그 전에 **무엇을 하는 기술인가**를 한
-        번 말해 주지 않으면 숫자들이 무엇에 대한 숫자인지 모른다.
+        창이 맨 위에서 이미 한 번 적는다 (`SkillPopup` 의 `head`). 여기서도
+        적으니 같은 문장이 도는 그림을 사이에 두고 위아래로 두 번 떴다.
       */}
-      <T size={10} dim="sub" style={{ marginBottom: SP.sm }}>{sk.desc}</T>
       {/*
         ── 도는 그림은 **여기 없다** ──
 
@@ -371,15 +373,20 @@ export function SkillDetail({ c, party, chars, sk, slot, readOnly }: {
         작은 사람이 칼을 휘두르는 상자가 하나씩 붙으니, 정작 읽으러 온
         숫자가 그만큼 아래로 밀렸다.
       */}
-      <KV
-        k="스킬 코스트"
-        v={`${sk.cost} (평타 한 번에 1 씩 찹니다)`}
-      />
+      {/*
+        괄호 안에 무엇으로 차는지를 적었었다 (`평타 한 번에 1 씩 찹니다`).
+        한 번 알면 되는 규칙인데 기술을 열 때마다 네 번 읽게 된다.
+      */}
+      <KV k="스킬 코스트" v={`${sk.cost}`} />
       {/*
         바로 위에 코스트가 적혀 있으므로 여기서는 **초만** 말한다.
         `코스트 4 마다` 를 한 번 더 적으면 같은 말이 두 줄이다.
+
+        `빨라야 4.0초마다` 였다. 조건이 붙은 기술은 다 차도 안 나가므로
+        (정화) 상한이라는 뜻을 담으려던 말인데, 그건 정화 한 자리의 사정이라
+        열일곱 줄에 다 붙일 값이 아니었다.
       */}
-      <KV k="빨라야" v={`${sec.toFixed(1)}초마다`} />
+      <KV k="간격" v={`${sec.toFixed(1)}초마다`} />
       {/*
         누구에게 걸리나 — **`core/chars` 가 안다** (`targetName`).
 
@@ -429,31 +436,24 @@ export function SkillDetail({ c, party, chars, sk, slot, readOnly }: {
               ? `공격력의 ${Math.round(sk.mul * 100)}% + 방어력의 ${Math.round(sk.defMul * 100)}%`
               : `공격력의 ${Math.round(sk.mul * 100)}%`}
           />
-          <KV k="피해 종류" v={`(${DMG_NAME[sk.dmg]})`} />
+          <KV k="피해 종류" v={DMG_NAME[sk.dmg]} />
           {!!pierce && <KV k="관통" v={pierce} />}
-          <KV k="한 대" v={`${hit}`} />
           {sk.hits > 1 && <KV k="발수" v={`${sk.hits}발`} />}
           {sk.targets > 0 && <KV k="최대 대상" v={`${sk.targets}`} />}
           {/*
-            **늘 적는다.** 넷 다 기본 확률이 0 이라 (`core/chars`)
-            `crit > 0` 조건을 달아 두면 이 줄이 아무 기술에도 안
-            뜬다 — 치명타가 스킬에도 걸린다는 것 (`rollCrit`) 이
-            화면 어디에도 안 남는다.
+            ── `한 대` 와 `치명타` 두 줄을 걷었다 ──
+
+            `한 대` 는 아무것도 안 막는 상대에게 들어가는 값이라 실제로 뜨는
+            숫자와 늘 달랐고, 그 차이를 설명하는 꼬리말 세 줄이 뒤따라 붙었다.
+            창에서 제일 긴 글이 **화면에서 한 번도 안 맞는 숫자의 변명**이었던
+            셈이다.
+
+            `치명타` 는 넷 다 기본 0% 라 늘 `0%` 였다. 올라가는 자리는
+            리안느의 정령의 노래 하나뿐이고, 그 이야기는 그 기술 창에서 한다.
+
+            위의 `계산` 줄이 이미 식을 그대로 보여 준다 — 견주는 데는 그것이
+            낫다. 맞는 쪽이 얼마나 막는지는 여기서 알 수 있는 값이 아니다.
           */}
-          <KV
-            k="치명타"
-            v={`${Math.round(st.crit * 100)}%`}
-            tail={`(터지면 ${Math.round(st.critDmg * 100)}% 로 들어간다)`}
-          />
-          {/*
-            별표를 쓰면 안 된다 — 여기는 마크다운이 아니라 화면이라
-            `**...**` 가 글자 그대로 뜬다. 강조는 문장 순서로 낸다.
-          */}
-          <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
-            {`곁에 선 보조까지 셈한 값이고, 아무것도 안 막는 상대 기준입니다. `
-              + `실제로는 상대의 ${sk.dmg === 'magic' ? '마법저항력' : '방어력'}만큼 `
-              + '깎여서 들어가고, 총합은 그때 서 있는 적 수에 따라 달라집니다.'}
-          </T>
         </>
       )}
     </>

@@ -2075,6 +2075,8 @@ export function BattleView({ top, corner }: Props = {}) {
       저기서는 **어깨 높이에서 나가 제일 가까운 놈 앞에서 멎어서**, 길에 선
       것을 전부 꿴다는 기술이 화면에서는 줄의 앞부분만 지나갔다.
     */
+    /** 피해를 얼마나 미룰까 (ms) — 큰 화살만 0 이 아니다 (아래 `strike`) */
+    let hitWait = 0;
     if ((sk.projMul ?? 1) >= 2 && sk.flies && spots.length) {
       /* 몸 길이의 몇 배로 그릴까 — 계산과 그림이 같은 값을 봐야 한다 */
       const { w: stageNow, party: bodyW, bow } = crossRef.current;
@@ -2083,6 +2085,8 @@ export function BattleView({ top, corner }: Props = {}) {
       const shot = bow(backRef.current[id] ?? 0);
       const goesTo = stageNow + Math.round(arrowSize * 0.4);
       const lead = spots.reduce((a, b) => (a.x < b.x ? a : b));
+      /* 화살촉이 제일 앞에 선 놈에게 닿는 시각 — 피해도 그때다 */
+      hitWait = crossDelay(lead.x, shot.x, goesTo);
       pierceNo.current += 1;
       setPierce({
         no: pierceNo.current,
@@ -2132,172 +2136,192 @@ export function BattleView({ top, corner }: Props = {}) {
       `at` 으로 넘긴 차례와 같은 차례로 돌아온다 (`TickEvent.landed`) —
       `spots` 도 같은 차례라 나란히 짚으면 된다.
     */
-    const land = skillFoe(id, idx, slot);
-    shake.fire(sk.pick === 'all' || sk.leaps ? 1.2 : 1);
-
     /*
-      ── 하늘에서 내려오는 것은 **꽂히는 순간**이 따로 있다 ──
+      ── 큰 화살은 **닿을 때** 때린다 ──
 
-      검을 부르고 나서 땅에 박히기까지가 270ms 다 (`SWORD_MS` × `SWORD_HIT`).
-      그 순간에 세 가지가 같이 일어나야 한다 — 크게 흔들리고, 불꽃이 튀고,
-      숫자가 뜨고, 적이 움찔한다. 여태 흔들림 하나만 여기 맞춰져 있었고
-      나머지 셋은 **검이 아직 하늘에 있는 동안** 이미 일어나 있었다.
+      여태 화살을 쏘는 순간에 피해가 들어갔다. 저 화살은 무대를 가로지르는
+      데 `CROSS_MS`(460ms)가 걸리므로, 아직 활 앞에 있는데 저 끝의 적이 먼저
+      죽었다 — 날아가는 그림이 무슨 소용인지 알 수 없는 상태였다.
+
+      다른 날아가는 기술은 인물 쪽이 이미 맞춰 두었다 (`Fighter` 의 `reach`
+      — `flyMsOf`). 큰 화살만 그림을 **무대가** 그리므로 (`PierceAura`) 그
+      시계를 인물이 모른다. 그래서 여기서 한 번 더 미룬다.
+
+      **적 진영에 닿는 순간**이다 (제일 앞에 선 놈). 줄을 다 지나갈 때까지
+      기다리면 앞엣놈이 화살에 꿰인 채로 한참 멀쩡히 서 있는다.
     */
-    const swordDrop = sk.drop === 'sword';
-    const swordAt = Math.round(SWORD_MS * SWORD_HIT);
-    if (swordDrop) {
-      if (swordT.current) clearTimeout(swordT.current);
-      swordT.current = setTimeout(() => shake.fire(1.9), swordAt);
-      rainT.current.push(setTimeout(() => {
-        /* 몸이 화면에서 빠졌으면 아무 데도 안 꽂는다 */
-        if (!aliveRef.current) return;
-        setHits((old) => {
-          const live = old.slice(-6);
-          const add = spots.map((spot, n) => ({
-            erupt: false,
-            /* 검은 위에서 이미 그리고 있다 — 여기는 **꽂힌 자국**만이다 */
-            sword: false,
-            mute: false,
-            id, fx: sk.fx ?? CHARS[me.id].fx,
-            dmg: land[n]?.dmg ?? dmg,
-            crit: !!land[n]?.crit,
-            key: hitSeq.current++, ...spot,
-            blast: false,
-            fey: 0,
-            arrow: '',
-            row: rowFor(live, spot.x), born: Date.now(),
-            ping: (now.current.battle.foes[idx[n]]?.gim?.shield ?? 0) > 0,
-            dx: -10 + Math.random() * 20, dy: -6 + Math.random() * 20,
-          }));
-          return [...live, ...add];
-        });
-        setFlinch(idx.map(posAt));
-        if (flinchT.current) clearTimeout(flinchT.current);
-        flinchT.current = setTimeout(() => setFlinch([]), 180);
-      }, swordAt));
-    }
+    const strike = () => {
+      /* 그 사이에 몸이 화면에서 빠졌으면 아무 일도 안 한다 */
+      if (!aliveRef.current) return;
+      const land = skillFoe(id, idx, slot);
+      shake.fire(sk.pick === 'all' || sk.leaps ? 1.2 : 1);
 
-    setHits((old) => {
-      const live = old.slice(-6);
-      /* 여럿을 한꺼번에 넣으므로 **서로도** 세어 가며 줄을 매긴다 */
-      const add: typeof live = [];
       /*
-        그 자리에 선 놈이 막을 두르고 있나 — 자리(`x`)로 되짚는다.
+        ── 하늘에서 내려오는 것은 **꽂히는 순간**이 따로 있다 ──
 
-        `spots` 는 무대 좌표라 목록 자리 번호가 없다. 때린 목록(`idx`)과
-        나란히 만들어졌으므로 그 순서로 되짚으면 된다.
+        검을 부르고 나서 땅에 박히기까지가 270ms 다 (`SWORD_MS` × `SWORD_HIT`).
+        그 순간에 세 가지가 같이 일어나야 한다 — 크게 흔들리고, 불꽃이 튀고,
+        숫자가 뜨고, 적이 움찔한다. 여태 흔들림 하나만 여기 맞춰져 있었고
+        나머지 셋은 **검이 아직 하늘에 있는 동안** 이미 일어나 있었다.
       */
-      const shieldAt = (spot: typeof spots[number]): boolean => {
-        const at = spots.indexOf(spot);
-        const f = at >= 0 ? now.current.battle.foes[idx[at]] : undefined;
-        return (f?.gim?.shield ?? 0) > 0;
-      };
-      const put = (
-        spot: typeof spots[number], amount: number, big: boolean, crit = false,
-        mute = false,
-      ) => {
-        add.push({
-          /* 발밑에서 솟는 기술인가 — 지금은 화산 하나다 */
-          erupt: sk.cast === 'erupt' && !big,
-          /* 머리 위에서 내려오는 기술인가 — 지금은 성검 하나다 */
-          sword: sk.drop === 'sword' && !big,
-          /* 하늘에서 내려오는 것은 **꽂힐 때** 따로 한 번 더 들어온다 */
-          mute,
-          /* 기술이 제 그림을 가지고 있으면 그걸 쓴다 — 없으면 평타 것 */
-          id, fx: sk.fx ?? CHARS[me.id].fx,
-          dmg: amount, crit, key: hitSeq.current++, ...spot,
-          blast: big,
-          /* 기술에는 안 붙인다 — 요정의 화살은 평타에서만 그린다 */
-          fey: 0,
-          /*
-            화살비는 맞는 자리마다 화살이 **위에서** 한 대 꽂힌다 (`FallingArrow`).
-
-            **날아가는 기술은 빼야 한다** (`sk.flies`). 거대 화살은 앞으로
-            쏘는 것인데 (`SwordWave`) 여기까지 걸려서, 정면으로 날아가는
-            큰 화살 한 대와 하늘에서 떨어지는 작은 화살들이 **같이** 나왔다.
-            보는 쪽에서는 큰 쪽이 뒤에 묻혀 "위에서 떨구는 기술" 로 읽힌다.
-
-            위에서 떨어지는 것은 하늘로 쏘는 화살비(`rain`, `flies: false`)
-            뿐이다. 정면으로 가는 것은 가는 길에 제 연출을 이미 갖고 있다.
-          */
-          arrow: CHARS[me.id].range === 'ranged' && !sk.flies ? projSet(me.id) : '',
-          row: rowFor([...live, ...add], spot.x), born: Date.now(),
-          /*
-            막이 서 있는 놈에게 들어간 것은 튕긴다 (`Ping`).
-
-            기술은 여럿을 한꺼번에 치므로 **맞는 놈마다 따로** 본다 — 22판은
-            우두머리 하나뿐이지만, 29판은 막을 두른 채 잡몹이 같이 설 수 있다.
-          */
-          ping: shieldAt(spot),
-          /* 불꽃만 흩는다 — 숫자는 제 놈 머리 한가운데에 뜬다 */
-          dx: -10 + Math.random() * 20, dy: -6 + Math.random() * 20,
-        });
-      };
-      /* 바닥 폭발이 먼저 — 뒤에 오는 숫자가 그 위에 쌓인다 */
-      for (const g of ground) put(g, 0, true);
-      /*
-        ── 흩어져 떨어지는 것은 **한 발씩 시차를 두고** 꽂힌다 ──
-
-        화살비는 세 발(강화하면 다섯)이 따로 떨어지는 기술인데
-        (`core/chars` 의 `rain` — `hits`), 세 발이 같은 놈에게 몰릴 수
-        있다 (`SkillDef.stack`). 그때 셋을 한 프레임에 같이 꽂으면 화살
-        세 대와 숫자 셋이 정확히 겹쳐서 **한 대 맞은 것과 화면이 같다** —
-        정작 이 기술의 내용인 "여러 발" 이 안 보인다.
-
-        그래서 두 번째 발부터 `RAIN_GAP` 씩 미룬다. 다른 놈에게 흩어질
-        때도 왼쪽부터 툭툭 떨어지는 것으로 읽혀서 손해가 없다.
-
-        **미루는 것은 그림뿐이다.** 피해는 이미 위에서 한 번에 들어갔다
-        (`skillFoe`) — 화면이 계산을 미루면 그사이 죽은 놈에게 화살이
-        꽂히거나, 판이 넘어간 뒤에 숫자가 뜬다.
-      */
-      const drip = sk.pick === 'random' && spots.length > 1;
-      spots.forEach((spot, n) => {
-        if (drip && n > 0) return;
-        /*
-          하늘에서 내려오는 것은 지금은 **검만** 띄운다 (`mute`). 불꽃과
-          숫자는 아래에서 꽂히는 시각에 맞춰 따로 들어온다.
-        */
-        if (swordDrop) { put(spot, 0, false, false, true); return; }
-        /* 계산이 넣은 값이 이긴다 — 못 받았을 때만 미리 잰 값으로 떨어진다 */
-        put(spot, land[n]?.dmg ?? dmg, false, !!land[n]?.crit);
-      });
-      return [...live, ...add];
-    });
-    if (sk.pick === 'random' && spots.length > 1) {
-      spots.slice(1).forEach((spot, n) => {
+      const swordDrop = sk.drop === 'sword';
+      const swordAt = Math.round(SWORD_MS * SWORD_HIT);
+      if (swordDrop) {
+        if (swordT.current) clearTimeout(swordT.current);
+        swordT.current = setTimeout(() => shake.fire(1.9), swordAt);
         rainT.current.push(setTimeout(() => {
           /* 몸이 화면에서 빠졌으면 아무 데도 안 꽂는다 */
           if (!aliveRef.current) return;
-          shake.fire(0.6);
           setHits((old) => {
             const live = old.slice(-6);
-            const f = now.current.battle.foes[idx[n + 1]];
-            return [...live, {
-              erupt: sk.cast === 'erupt',
-              sword: sk.drop === 'sword',
+            const add = spots.map((spot, n) => ({
+              erupt: false,
+              /* 검은 위에서 이미 그리고 있다 — 여기는 **꽂힌 자국**만이다 */
+              sword: false,
               mute: false,
               id, fx: sk.fx ?? CHARS[me.id].fx,
-              dmg: land[n + 1]?.dmg ?? dmg,
-              crit: !!land[n + 1]?.crit,
+              dmg: land[n]?.dmg ?? dmg,
+              crit: !!land[n]?.crit,
               key: hitSeq.current++, ...spot,
               blast: false,
               fey: 0,
-              arrow: CHARS[me.id].range === 'ranged' && !sk.flies ? projSet(me.id) : '',
+              arrow: '',
               row: rowFor(live, spot.x), born: Date.now(),
-              ping: (f?.gim?.shield ?? 0) > 0,
+              ping: (now.current.battle.foes[idx[n]]?.gim?.shield ?? 0) > 0,
               dx: -10 + Math.random() * 20, dy: -6 + Math.random() * 20,
-            }];
+            }));
+            return [...live, ...add];
           });
-        }, RAIN_GAP * (n + 1)));
+          setFlinch(idx.map(posAt));
+          if (flinchT.current) clearTimeout(flinchT.current);
+          flinchT.current = setTimeout(() => setFlinch([]), 180);
+        }, swordAt));
+      }
+
+      setHits((old) => {
+        const live = old.slice(-6);
+        /* 여럿을 한꺼번에 넣으므로 **서로도** 세어 가며 줄을 매긴다 */
+        const add: typeof live = [];
+        /*
+          그 자리에 선 놈이 막을 두르고 있나 — 자리(`x`)로 되짚는다.
+
+          `spots` 는 무대 좌표라 목록 자리 번호가 없다. 때린 목록(`idx`)과
+          나란히 만들어졌으므로 그 순서로 되짚으면 된다.
+        */
+        const shieldAt = (spot: typeof spots[number]): boolean => {
+          const at = spots.indexOf(spot);
+          const f = at >= 0 ? now.current.battle.foes[idx[at]] : undefined;
+          return (f?.gim?.shield ?? 0) > 0;
+        };
+        const put = (
+          spot: typeof spots[number], amount: number, big: boolean, crit = false,
+          mute = false,
+        ) => {
+          add.push({
+            /* 발밑에서 솟는 기술인가 — 지금은 화산 하나다 */
+            erupt: sk.cast === 'erupt' && !big,
+            /* 머리 위에서 내려오는 기술인가 — 지금은 성검 하나다 */
+            sword: sk.drop === 'sword' && !big,
+            /* 하늘에서 내려오는 것은 **꽂힐 때** 따로 한 번 더 들어온다 */
+            mute,
+            /* 기술이 제 그림을 가지고 있으면 그걸 쓴다 — 없으면 평타 것 */
+            id, fx: sk.fx ?? CHARS[me.id].fx,
+            dmg: amount, crit, key: hitSeq.current++, ...spot,
+            blast: big,
+            /* 기술에는 안 붙인다 — 요정의 화살은 평타에서만 그린다 */
+            fey: 0,
+            /*
+              화살비는 맞는 자리마다 화살이 **위에서** 한 대 꽂힌다 (`FallingArrow`).
+
+              **날아가는 기술은 빼야 한다** (`sk.flies`). 거대 화살은 앞으로
+              쏘는 것인데 (`SwordWave`) 여기까지 걸려서, 정면으로 날아가는
+              큰 화살 한 대와 하늘에서 떨어지는 작은 화살들이 **같이** 나왔다.
+              보는 쪽에서는 큰 쪽이 뒤에 묻혀 "위에서 떨구는 기술" 로 읽힌다.
+
+              위에서 떨어지는 것은 하늘로 쏘는 화살비(`rain`, `flies: false`)
+              뿐이다. 정면으로 가는 것은 가는 길에 제 연출을 이미 갖고 있다.
+            */
+            arrow: CHARS[me.id].range === 'ranged' && !sk.flies ? projSet(me.id) : '',
+            row: rowFor([...live, ...add], spot.x), born: Date.now(),
+            /*
+              막이 서 있는 놈에게 들어간 것은 튕긴다 (`Ping`).
+
+              기술은 여럿을 한꺼번에 치므로 **맞는 놈마다 따로** 본다 — 22판은
+              우두머리 하나뿐이지만, 29판은 막을 두른 채 잡몹이 같이 설 수 있다.
+            */
+            ping: shieldAt(spot),
+            /* 불꽃만 흩는다 — 숫자는 제 놈 머리 한가운데에 뜬다 */
+            dx: -10 + Math.random() * 20, dy: -6 + Math.random() * 20,
+          });
+        };
+        /* 바닥 폭발이 먼저 — 뒤에 오는 숫자가 그 위에 쌓인다 */
+        for (const g of ground) put(g, 0, true);
+        /*
+          ── 흩어져 떨어지는 것은 **한 발씩 시차를 두고** 꽂힌다 ──
+
+          화살비는 세 발(강화하면 다섯)이 따로 떨어지는 기술인데
+          (`core/chars` 의 `rain` — `hits`), 세 발이 같은 놈에게 몰릴 수
+          있다 (`SkillDef.stack`). 그때 셋을 한 프레임에 같이 꽂으면 화살
+          세 대와 숫자 셋이 정확히 겹쳐서 **한 대 맞은 것과 화면이 같다** —
+          정작 이 기술의 내용인 "여러 발" 이 안 보인다.
+
+          그래서 두 번째 발부터 `RAIN_GAP` 씩 미룬다. 다른 놈에게 흩어질
+          때도 왼쪽부터 툭툭 떨어지는 것으로 읽혀서 손해가 없다.
+
+          **미루는 것은 그림뿐이다.** 피해는 이미 위에서 한 번에 들어갔다
+          (`skillFoe`) — 화면이 계산을 미루면 그사이 죽은 놈에게 화살이
+          꽂히거나, 판이 넘어간 뒤에 숫자가 뜬다.
+        */
+        const drip = sk.pick === 'random' && spots.length > 1;
+        spots.forEach((spot, n) => {
+          if (drip && n > 0) return;
+          /*
+            하늘에서 내려오는 것은 지금은 **검만** 띄운다 (`mute`). 불꽃과
+            숫자는 아래에서 꽂히는 시각에 맞춰 따로 들어온다.
+          */
+          if (swordDrop) { put(spot, 0, false, false, true); return; }
+          /* 계산이 넣은 값이 이긴다 — 못 받았을 때만 미리 잰 값으로 떨어진다 */
+          put(spot, land[n]?.dmg ?? dmg, false, !!land[n]?.crit);
+        });
+        return [...live, ...add];
       });
-    }
-    /* 하늘에서 내려오는 것은 검이 꽂힐 때 움찔한다 (위에서 미뤄 두었다) */
-    if (!swordDrop) {
-      setFlinch(idx.map(posAt));
-      if (flinchT.current) clearTimeout(flinchT.current);
-      flinchT.current = setTimeout(() => setFlinch([]), 180);
-    }
+      if (sk.pick === 'random' && spots.length > 1) {
+        spots.slice(1).forEach((spot, n) => {
+          rainT.current.push(setTimeout(() => {
+            /* 몸이 화면에서 빠졌으면 아무 데도 안 꽂는다 */
+            if (!aliveRef.current) return;
+            shake.fire(0.6);
+            setHits((old) => {
+              const live = old.slice(-6);
+              const f = now.current.battle.foes[idx[n + 1]];
+              return [...live, {
+                erupt: sk.cast === 'erupt',
+                sword: sk.drop === 'sword',
+                mute: false,
+                id, fx: sk.fx ?? CHARS[me.id].fx,
+                dmg: land[n + 1]?.dmg ?? dmg,
+                crit: !!land[n + 1]?.crit,
+                key: hitSeq.current++, ...spot,
+                blast: false,
+                fey: 0,
+                arrow: CHARS[me.id].range === 'ranged' && !sk.flies ? projSet(me.id) : '',
+                row: rowFor(live, spot.x), born: Date.now(),
+                ping: (f?.gim?.shield ?? 0) > 0,
+                dx: -10 + Math.random() * 20, dy: -6 + Math.random() * 20,
+              }];
+            });
+          }, RAIN_GAP * (n + 1)));
+        });
+      }
+      /* 하늘에서 내려오는 것은 검이 꽂힐 때 움찔한다 (위에서 미뤄 두었다) */
+      if (!swordDrop) {
+        setFlinch(idx.map(posAt));
+        if (flinchT.current) clearTimeout(flinchT.current);
+        flinchT.current = setTimeout(() => setFlinch([]), 180);
+      }
+    };
+    if (hitWait > 0) rainT.current.push(setTimeout(strike, hitWait));
+    else strike();
   }, [skillFoe, shake, spotOf]);
 
   /*

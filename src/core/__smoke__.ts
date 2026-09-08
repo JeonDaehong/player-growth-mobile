@@ -3251,6 +3251,51 @@ console.log('\n── 스킬 트리 · 코스트 ──');
     ({ id, star, awake: false, lv: 1, exp: 0, copies: 0, tree } as OwnedChar);
 
   /*
+    ── 한 번 휘두를 때의 차례 ── 코스트 4 는 평타를 **네 번 때린 다음**이다.
+
+    여태 화면이 이 판단을 했는데 (`Fighter` 의 `cycle`) 차례가 뒤집혀 있었다 —
+    칸을 먼저 1 씩 채우고 그 자리에서 다 찼나 물었다. 그래서 코스트 4 짜리가
+    평타·평타·평타·**스킬** 로 나갔다. 네 번째 평타가 없었다.
+
+    칸이 어떻게 차는지는 검사가 다 보고 있었는데 **언제 묻느냐**는 아무도 안
+    보고 있었다. 판단을 `swingPlan` 으로 옮겨서 다섯 스윙을 그대로 돌려 본다.
+  */
+  {
+    const c = mk('knightgirl', 1, []);           /* 검기 하나 — 코스트 4 */
+    const cost = ct.skillsFor(c)[0].cost;
+    let on: number[] = ct.newCharge(c);
+    const log: string[] = [];
+    for (let k = 0; k < cost + 1; k++) {
+      const p2 = ct.swingPlan(c, on);
+      on = p2.charge;
+      log.push(p2.slot >= 0 ? '기술' : '평타');
+    }
+    ok('코스트 4 — 평타 넷을 때린 다음에 나간다',
+      log.join('·') === '평타·평타·평타·평타·기술' && on[0] === 0,
+      `${log.join('·')} (남은 칸 ${on[0]})`);
+
+    /* 기술이 나간 스윙은 평타가 아니므로 칸도 안 찬다 */
+    ok('기술을 쓴 스윙은 칸을 안 채운다', on[0] === 0, String(on[0]));
+
+    /* 광란 중에는 평타를 쳐도 안 찬다 (`noCharge`) */
+    let idle: number[] = ct.newCharge(c);
+    for (let k = 0; k < 10; k++) idle = ct.swingPlan(c, idle, { noCharge: true }).charge;
+    ok('숲의 축복 중에는 열 번 쳐도 안 찬다', idle[0] === 0, String(idle[0]));
+
+    /* 침묵이면 다 차 있어도 안 고른다 — 코스트는 그대로 남는다 */
+    let full: number[] = ct.newCharge(c);
+    for (let k = 0; k < cost; k++) full = ct.swingPlan(c, full).charge;
+    const gagged = ct.swingPlan(c, full, { silent: true });
+    ok('침묵이면 안 나가고 코스트도 안 없어진다',
+      gagged.slot === -1 && gagged.charge[0] === cost, `${gagged.slot} · ${gagged.charge[0]}`);
+
+    /* 쓸 수 없다고 하면(정화가 걷을 것이 없을 때) 기다린다 */
+    const held = ct.swingPlan(c, full, { allow: () => false });
+    ok('못 쓰는 기술은 찬 채로 기다린다',
+      held.slot === -1 && held.charge[0] === cost, String(held.charge[0]));
+  }
+
+  /*
     ── 코스트를 깎는 자리 전수조사 ── 안 찍으면 제값, 찍으면 깎인 값.
 
     깎는 자리는 둘뿐이다 — 파쇄의 태세(`kg3b`)가 검기를 1 깎고, 정화의

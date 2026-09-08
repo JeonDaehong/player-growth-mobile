@@ -33,8 +33,8 @@ import { Animated, Easing, View } from 'react-native';
 import { Row } from '@/ui/atoms';
 import {
   CHARS, HitFx, OwnedChar, SkillDef,
-  chargeUp, cutCharge, newCharge, readySkill, skillOf, skillOpen, skillsFor,
-  spendCharge, statOf, swingMs,
+  chargeUp, cutCharge, newCharge, skillOf, skillOpen, skillsFor,
+  statOf, swingMs, swingPlan,
 } from '@/core/chars';
 
 import { Sprite } from '@/ui/Sprite';
@@ -833,29 +833,25 @@ function FighterView({
       const list = skillsFor(ch);
 
       /*
-        ── 코스트가 찬다 ──
+        ── 이번 스윙에 무엇을 할까 ── 판단은 `core/chars` 가 한다 (`swingPlan`).
 
-        평타 한 번에 모든 칸이 1 씩. 광란이 켜져 있으면 안 찬다 (`noCharge`).
+        **묻는 것이 먼저고 채우는 것이 나중이다.** 여태 반대였다 — 칸을 먼저
+        1 씩 채우고 그 자리에서 다 찼나 물었으므로, 코스트 4 짜리가
+        평타·평타·평타·**스킬** 로 나갔다. 네 번째 평타가 없었다.
+
+        지금 들고 있는 것으로 먼저 묻고, 못 쓰면 평타를 치고 그 평타가 칸을
+        채운다. 그래서 평타 넷을 다 때린 **다음** 스윙에 기술이 나간다.
+
+        침묵과 `canCast` 도 저 안에서 다룬다 — 까닭은 `swingPlan` 에.
       */
-      if (!noChargeRef.current) chargeRef.current = chargeUp(ch, chargeRef.current);
-
-      /**
-       * 이번 스윙에 나갈 기술의 자리. -1 이면 평타다.
-       *
-       * **침묵이면 아예 안 고른다.** 고르고 나서 막으면 그 기술은 코스트를
-       * 쓴 채로 사라진다 — 15판 부패의 악취가 5초를 거는데, 그동안 모은 것이
-       * 통째로 없어지면 침묵이 풀린 뒤에도 한참 기술이 안 나간다.
-       *
-       * 다 찼어도 **지금 쓸 수 있는지**를 한 번 더 묻는다 (`canCast`). 정화가
-       * 걷어낼 것이 없으면 여기서 거절당하고, 코스트는 그대로 남는다.
-       */
-      const slot = silentRef.current
-        ? -1
-        : readySkill(ch, chargeRef.current, (i) => (
-          skillOpen(openRef.current, i) && canCastRef.current(ch.id, i)
-        ));
+      const plan = swingPlan(ch, chargeRef.current, {
+        silent: silentRef.current,
+        noCharge: noChargeRef.current,
+        allow: (i) => skillOpen(openRef.current, i) && canCastRef.current(ch.id, i),
+      });
+      const slot = plan.slot;
       const skill = slot >= 0;
-      if (skill) chargeRef.current = spendCharge(ch, chargeRef.current, slot);
+      chargeRef.current = plan.charge;
       pushCharge();
       const sk = list[Math.max(0, slot)] ?? skillOf(ch.id);
       setCasting(slot);

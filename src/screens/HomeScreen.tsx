@@ -60,6 +60,7 @@ import { Ticker } from './home/Ticker';
 import { TopBar } from './home/TopBar';
 import { BottomNav, TabId } from './home/BottomNav';
 import { HeroScreen } from './home/HeroPopup';
+import { ApplyPopup } from './home/ApplyPopup';
 
 export default function HomeScreen() {
   const tickOnce = useGame((s) => s.battleTickOnce);
@@ -100,6 +101,32 @@ export default function HomeScreen() {
     없다.
   */
   const [tab, setTab] = useState<TabId>('main');
+  /*
+    ── 영웅 탭을 떠날 때 한 번 묻는다 ── (`ApplyPopup`)
+
+    편성·대형·스킬을 만져 놓고 그냥 나가면 아무 일도 안 일어난다. 그 사실을
+    말해 주던 자리가 영웅 화면 **안**이라 이미 떠난 사람은 못 읽었다.
+
+    나가려는 탭을 여기 담아 두고, 창이 끝나면 그리로 간다. `null` 이면
+    나가려던 것이 없다는 뜻이다.
+  */
+  const [going, setGoing] = useState<TabId | null>(null);
+  const pendingParty = useGame((s) => s.pendingParty);
+  const pendingForm = useGame((s) => s.pendingFormation);
+  const treeMark = useGame((s) => s.treeMark);
+  /* 만진 것이 하나라도 있나 — 없으면 묻지 않고 바로 나간다 */
+  const edited = pendingParty !== null || pendingForm !== null || treeMark !== null;
+
+  /**
+   * 탭을 옮긴다 — 영웅에서 나갈 때만 한 번 걸린다.
+   *
+   * 들어올 때는 안 묻는다. 만진 것이 있는 채로 영웅에 **다시 들어오는** 것은
+   * 하던 일을 이어 하는 것이라 물을 것이 없다.
+   */
+  const goTab = (next: TabId) => {
+    if (tab === 'hero' && next !== 'hero' && edited) { setGoing(next); return; }
+    setTab(next);
+  };
 
   /*
     전투를 굴린다.
@@ -194,7 +221,17 @@ export default function HomeScreen() {
       */}
       {tab === 'item' && <ItemScreen />}
 
-      <BottomNav tab={tab} onTab={setTab} />
+      <BottomNav tab={tab} onTab={goTab} />
+
+      {/*
+        나가는 길목에서 묻는 창. 적용하면 판이 다시 서고, 되돌리면 만지기
+        전으로 돌아간다. 취소하면 안 나간다 (`ApplyPopup`).
+      */}
+      <ApplyPopup
+        open={going !== null}
+        onDone={() => { setTab(going ?? 'main'); setGoing(null); }}
+        onStay={() => setGoing(null)}
+      />
 
       {/*
         ── 홈에서 여는 창은 **읽기만 한다** ── (`CharPopup` 의 `readOnly`)

@@ -54,7 +54,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import {
-  CHARS, OwnedChar, SkillDef, blowOf, projFrame, projSet, statOf, targetName,
+  CHARS, OwnedChar, SkillDef, projFrame, projSet, statOf,
 } from '@/core/chars';
 import { GOOD, STATUS_WHAT, StatusId } from '@/core/status';
 import { Sprite } from '@/ui/Sprite';
@@ -829,19 +829,15 @@ export function SkillDemo({
           ))}
         </View>
       </View>
-      <T size={9} dim="dim" style={{ marginTop: 3 }}>
-        {`예시입니다 — 실제로는 ${
-          /*
-            여기도 `pick` 을 읽어 `아군 전체` 라고 적었다. 함성처럼 자기
-            혼자 세지는 기술까지 그렇게 떴다 (`core/chars` 의 `targetName`).
-          */
-          sk.pick === 'none' ? targetName(sk) : '그때 서 있는 적들'
-        }에게 걸리고, 숫자는 위의 "한 대" 와 같은 값입니다 (${
-          blowOf(c.id, sk).pierce.phys || blowOf(c.id, sk).pierce.magic
-            ? '관통이라 상대 방어를 안 탑니다'
-            : '실제로는 상대 방어만큼 더 깎입니다'
-        }).`}
-      </T>
+      {/*
+        ── 꼬리말을 걷었다 ──
+
+        `예시입니다 — 실제로는 그때 서 있는 적들에게 걸리고, 숫자는 위의
+        "한 대" 와 같은 값입니다 (…)` 세 줄이 여기 있었다. 위의 `한 대` 를
+        가리키는 글인데 그 줄이 없어졌고 (`SkillPanel`), 무엇보다 **무대가
+        예시라는 것은 무대가 이미 말하고 있다** — 슬라임 하나가 제자리에서
+        맞고 있는 상자를 실제 판으로 읽는 사람은 없다.
+      */}
     </View>
   );
 }

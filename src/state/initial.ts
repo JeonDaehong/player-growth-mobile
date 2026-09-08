@@ -112,6 +112,8 @@ export const initial = (): GameState => {
     formation: DEFAULT_FORMATION,
     pendingParty: null,
     pendingFormation: null,
+    /* 되돌릴 자리 — 영웅 탭에서 스킬을 만지는 순간 채워진다 (`GameState.treeMark`) */
+    treeMark: null,
     battle: newBattle(),
     /* 아무도 안 건드린 상태 — 읽을 때 기본값으로 떨어진다 (`cleanseOptOf`) */
     skillOpts: {},

@@ -404,6 +404,14 @@ export function migrateState(persisted: unknown): GameState {
     pendingParty: p.pendingParty == null ? null : cleanParty(p.pendingParty, Object.keys(chars) as CharId[]),
     pendingFormation: isFormationId(p.pendingFormation) ? p.pendingFormation : null,
     /*
+      ── 되돌릴 자리는 **저장본에서 안 읽는다** ── 늘 `null` 이다.
+
+      되돌리기는 이번에 앉아서 만진 것을 되돌리는 것이지, 지난주에 만진 것을
+      되돌리는 것이 아니다. 켰을 때 며칠 전 트리로 되돌아갈 수 있는 단추가
+      떠 있으면 그건 되돌리기가 아니라 사고다.
+    */
+    treeMark: null,
+    /*
       게이지 시각이 없는 저장본(이 칸이 생기기 전)은 **지금부터** 센다.
       0 으로 두면 1970년부터 흐른 것이 되어 켜자마자 가득 차 있다.
     */

@@ -46,6 +46,10 @@ export interface RosterActions {
    * 예약이 없으면 아무 일도 안 하고 `false`.
    */
   applyPending: () => boolean;
+  /** 영웅 탭에서 만진 것을 들여보낸다 — 판을 다시 세운다 (`state/types`) */
+  applyEdits: () => void;
+  /** 만진 것을 전부 물린다 — 예약한 편성도, 찍은 스킬도 */
+  revertEdits: () => void;
   /** 짜 둔 편성을 버린다 — 아직 안 들어간 것만 사라진다 */
   clearPending: () => void;
   /*
@@ -202,6 +206,20 @@ const seated = (st: { party: Party; chars: Record<string, OwnedChar>; formation:
  * 예약이 없으면 아무 일도 안 한다. `set` 조차 안 부른다 — 판이 넘어갈
  * 때마다 상태를 건드리면 저장이 그만큼 더 돈다.
  */
+/**
+ * 넷의 트리를 통째로 베낀다 — 되돌리기가 돌아갈 자리 (`GameState.treeMark`).
+ *
+ * 만진 사람 것만 적지 않는다. 한 번 앉은 김에 둘을 만질 수 있고, 그때 첫
+ * 사람만 적혀 있으면 되돌리기가 반만 된다.
+ */
+const snapTrees = (
+  chars: Record<string, OwnedChar>,
+): Record<string, readonly string[]> => {
+  const out: Record<string, readonly string[]> = {};
+  for (const [id, c] of Object.entries(chars)) out[id] = [...(c.tree ?? [])];
+  return out;
+};
+
 const commitPending = (set: SliceSet, get: SliceGet) => {
   const st = get();
   if (st.pendingParty == null && st.pendingFormation == null) return;
@@ -457,7 +475,11 @@ export const createRosterSlice = (
     if (!c) return '없는 캐릭터입니다';
     const why = whyLocked(id, c.star, c.tree, node);
     if (why) return why;
-    set({ chars: { ...st.chars, [id]: { ...c, tree: [...c.tree, node] } } });
+    set({
+      /* 처음 만지는 순간에만 적어 둔다 — 되돌리기가 여기로 돌아간다 */
+      treeMark: st.treeMark ?? snapTrees(st.chars),
+      chars: { ...st.chars, [id]: { ...c, tree: [...c.tree, node] } },
+    });
     return null;
   },
 
@@ -465,7 +487,35 @@ export const createRosterSlice = (
     const st = get();
     const c = st.chars[id];
     if (!c || !c.tree.length) return;
-    set({ chars: { ...st.chars, [id]: { ...c, tree: [] } } });
+    set({
+      treeMark: st.treeMark ?? snapTrees(st.chars),
+      chars: { ...st.chars, [id]: { ...c, tree: [] } },
+    });
+  },
+
+  applyEdits: () => {
+    const st = get();
+    /*
+      **판을 다시 세운다.** 짜 둔 편성은 그 순간에 들어가고 (`commitPending`
+      이 `costSeq` 가 바뀌는 것을 보고 있다), 스킬은 이미 박혀 있으므로
+      적어 둔 자리만 지우면 된다.
+    */
+    const next = restartFor(st.battle);
+    set({
+      treeMark: null,
+      ...(next === st.battle ? null : { battle: next }),
+    });
+  },
+
+  revertEdits: () => {
+    const st = get();
+    const chars = { ...st.chars };
+    /* 적어 둔 트리로 되돌린다 — 그 사이에 없어진 사람은 건너뛴다 */
+    for (const [id, tree] of Object.entries(st.treeMark ?? {})) {
+      const c = chars[id];
+      if (c) chars[id] = { ...c, tree: [...tree] };
+    }
+    set({ chars, treeMark: null, pendingParty: null, pendingFormation: null });
   },
 
   awaken: (id) => {

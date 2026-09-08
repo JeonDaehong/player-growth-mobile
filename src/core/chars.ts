@@ -1727,6 +1727,57 @@ export function cutCharge(c: OwnedChar, on: Charge, ratio = 0.5): number[] {
   return skillsFor(c).map((_sk, i) => Math.floor((on[i] ?? 0) * ratio));
 }
 
+/**
+ * ── 이번 스윙에 무엇을 할까 ── 한 번 휘두를 때의 판단 전부.
+ *
+ * ## 순서가 한 대를 삼키고 있었다
+ *
+ * 화면이 이 판단을 직접 했는데(`Fighter` 의 `cycle`), 차례가 이랬다.
+ *
+ *   1. 모든 칸이 1 씩 찬다
+ *   2. 다 찬 칸이 있으면 **이번 스윙에** 그 기술을 쓴다
+ *
+ * 그래서 코스트 4 짜리는 이렇게 됐다 — 평타, 평타, 평타, **스킬**. 네 번째
+ * 평타가 없다. 칸은 네 번 찼는데 실제로 때린 것은 세 번이라, 화면에 적힌
+ * `평타 한 번에 1 씩 찹니다` 와 맞지 않는다. 사람은 네 대를 때린 **다음에**
+ * 나가는 것으로 읽는다.
+ *
+ * 지금은 반대다.
+ *
+ *   1. **지금 들고 있는 것**으로 쓸 수 있나 본다 — 쓸 수 있으면 쓴다
+ *   2. 못 쓰면 평타를 치고, 그 평타가 칸을 채운다
+ *
+ * 코스트 4 는 평타 · 평타 · 평타 · 평타 · **스킬**이 된다. 기술이 나가는
+ * 스윙은 평타를 안 치므로 칸도 안 찬다 — 안 친 것으로 채우면 안 된다.
+ *
+ * ## 왜 화면이 아니라 여기서 정하나
+ *
+ * 이 차례가 화면 안에 있는 동안에는 검사가 못 잡았다. 칸이 어떻게 차는지는
+ * (`chargeUp`) 검사가 다 보고 있었는데, **언제 묻느냐**는 아무도 안 보고
+ * 있었다. 옮겨 두면 다섯 스윙을 그대로 돌려 볼 수 있다.
+ *
+ * @param on   지금 들고 있는 칸들
+ * @param opts `silent` 침묵이면 아예 안 고른다 — 고르고 나서 막으면 그 기술이
+ *             코스트를 쓴 채로 사라진다.
+ *             `noCharge` 켜져 있으면 평타를 쳐도 안 찬다 (숲의 축복).
+ *             `allow` 지금 실제로 쓸 수 있나 (정화는 걷을 것이 없으면 기다린다)
+ */
+export function swingPlan(
+  c: OwnedChar,
+  on: Charge,
+  opts: {
+    silent?: boolean;
+    noCharge?: boolean;
+    allow?: (slot: number) => boolean;
+  } = {},
+): { slot: number; charge: number[] } {
+  const slot = opts.silent ? -1 : readySkill(c, on, opts.allow);
+  /* 기술이 나가는 스윙은 평타가 아니다 — 그 칸에서 값을 빼고 끝 */
+  if (slot >= 0) return { slot, charge: spendCharge(c, on, slot) };
+  /* 평타를 쳤으므로 모든 칸이 1 씩 — 광란 중이면 그것도 없다 */
+  return { slot: -1, charge: opts.noCharge ? fitCharge(c, on) : chargeUp(c, on) };
+}
+
 /** 그 자리 기술의 코스트 (없는 자리는 0) */
 export const costOf = (c: OwnedChar, slot: number): number =>
   skillsFor(c)[slot]?.cost ?? 0;

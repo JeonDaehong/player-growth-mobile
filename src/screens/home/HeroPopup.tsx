@@ -40,7 +40,6 @@ import { useGame } from '@/state/store';
 import { CHARS, CharId, capOf, maxStar } from '@/core/chars';
 import { PARTY_SIZE } from '@/core/party';
 import { Btn, Row, Stars, T } from '@/ui/atoms';
-import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
 import { BORDER, C, FS, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
@@ -133,18 +132,11 @@ export function HeroScreen() {
     안 일어난 것처럼 보인다.
   */
   const party = useGame((s) => s.pendingParty ?? s.party);
-  const pendingParty = useGame((s) => s.pendingParty);
-  const pendingForm = useGame((s) => s.pendingFormation);
-  const clearPending = useGame((s) => s.clearPending);
-  const applyPending = useGame((s) => s.applyPending);
-  const stage = useGame((s) => s.battle.stage);
 
   const [slot, setSlot] = useState<number | null>(null);
   /* 저장을 누르면 뜨는 확인 창 — 판이 다시 서는 것은 되돌릴 수 없다 */
-  const [asking, setAsking] = useState(false);
 
   /* 짜 두었지만 아직 안 들어간 것이 있나 */
-  const waiting = pendingParty !== null || pendingForm !== null;
 
   return (
     <>
@@ -196,83 +188,19 @@ export function HeroScreen() {
         {at === 'party' && (
           <>
         {/*
-          ── 언제 들어가나 ──
+          ── 저장 단추는 여기 없다 ──
 
-          이 한 줄이 이 창에서 제일 중요하다. 편성이 미뤄진다는 것을 모르면
-          "바꿨는데 왜 그대로지" 가 되고, 그건 고장으로 읽힌다.
+          `저장` 과 `변경사항 되돌리기` 두 칸이 이 자리에 있었다. 걷은 까닭:
+          **이 화면에서 할 일이 아니었다.** 편성을 만지러 들어온 사람은
+          만지고 나가는데, 나가기 전에 아래로 굴려 내려와 단추를 한 번 더
+          눌러야 실제로 들어갔다. 안 누르고 나가면 아무 일도 안 일어났고,
+          그것을 알려 주는 것도 이 화면 안의 글줄뿐이었다 — 이미 떠난 사람은
+          못 읽는다.
+
+          지금은 **나가려 할 때** 묻는다 (`HomeScreen` 의 `ApplyPopup`).
+          나가는 길목이 곧 정하는 자리이므로 못 보고 지나칠 수가 없고,
+          되돌리기도 거기 같이 있다.
         */}
-        <View
-          style={{
-            padding: SP.sm,
-            borderRadius: R.md,
-            backgroundColor: waiting ? SURF.up : 'transparent',
-            borderWidth: waiting ? 1 : 0,
-            borderColor: LINE.hi,
-          }}
-        >
-          {/*
-            ── 바꾼 것이 있을 때만 말한다 ──
-
-            가만히 있을 때도 두 줄이 떠 있었다 (`편성을 바꾸면 저장을 눌러야
-            들어갑니다` · `판이 도는 중에는 저절로 안 바뀝니다 …`). 규칙을
-            미리 알려 주려던 것인데, **아직 아무것도 안 바꾼 사람에게 하는
-            말**이라 읽을 때는 쓸 데가 없고 정작 바꾸고 나면 다른 글로 갈린다.
-
-            아래 저장 단추가 흐리게 멎어 있는 것이 이미 같은 말을 한다 —
-            누를 것이 없다는 뜻이다.
-          */}
-          {waiting && (
-            <>
-              <T size={FS.body} bold>저장해야 들어갑니다</T>
-              <T size={FS.tiny} dim="dim" style={{ marginTop: 2 }}>
-                {`지금 ${stage}판은 바꾸기 전 편성 그대로 싸웁니다. `
-                  + `저장하면 ${stage}판을 처음부터 다시 시작합니다.`}
-              </T>
-            </>
-          )}
-          {/*
-            ── 단추 둘은 **늘 서 있다** ──
-
-            짜 둔 것이 있을 때만 나타났다 (`waiting`). 그러면 이 자리가
-            **있다 없다 하는 자리**가 되어, 편성을 만진 사람이 "저장이 어디
-            있지" 를 화면에서 찾게 된다 — 처음 오는 사람은 그 단추가 있다는
-            것 자체를 모른다.
-
-            늘 두고 **누를 수 있고 없고**로 말한다. 짜 둔 것이 없으면 흐리게
-            멎어 있으므로, "지금은 저장할 것이 없다" 가 그대로 읽힌다. 칸의
-            높이도 안 흔들린다.
-          */}
-          <Row gap={SP.xs} style={{ marginTop: SP.xs }}>
-            {/*
-              ── 저장 ── **누르면 그 자리에서 들어간다.**
-
-              예약은 판이 바뀔 때 저절로 들어가지만 (`commitPending`), 그때가
-              언제인지가 사람 쪽에서는 안 보인다 — 마지막 판을 도는 사람은
-              판 번호가 안 바뀌므로 한참을 기다려야 하고, 기다리는 동안
-              "안 눌린 건가" 를 알 방법이 없다.
-
-              값은 **판을 다시 세우는 것**이다. 그래서 묻고 넣는다 —
-              한창 우두머리를 깎는 중에 눌러 놓고 나중에 알면 늦다.
-            */}
-            <Btn
-              label="저장"
-              size="sm"
-              /* 짜 둔 것이 있을 때만 채운다 — 지금 눌러야 할 것이 그때뿐이다 */
-              fill={waiting}
-              disabled={!waiting}
-              style={{ flex: 1 }}
-              onPress={() => { sfx('tap'); setAsking(true); }}
-            />
-            <Btn
-              label="변경사항 되돌리기"
-              size="sm"
-              disabled={!waiting}
-              style={{ flex: 1 }}
-              onPress={() => { sfx('tap'); clearPending(); }}
-            />
-          </Row>
-        </View>
-
         <T size={FS.title} bold style={{ marginTop: SP.md, marginBottom: SP.xs }}>
           영웅 출전
         </T>
@@ -316,48 +244,6 @@ export function HeroScreen() {
       {/* 칸을 누르면 그 위에 겹쳐 열린다 */}
       <CharPopup slot={slot} onClose={() => setSlot(null)} />
 
-      {/*
-        ── 저장 확인 ──
-
-        묻는 이유는 하나다: **지금 판이 처음부터 다시 선다.** 되돌릴 수
-        없고, 우두머리를 반쯤 깎아 놓은 판이었다면 그 몫이 통째로 사라진다.
-
-        되돌릴 수 없는 것은 묻고 한다 — 이 게임에서 그 규칙을 지키는
-        자리가 여럿이다 (강화·정리).
-      */}
-      <Popup visible={asking} title="편성 저장" onClose={() => setAsking(false)}>
-        <T size={FS.body} bold>변경이 적용되고 해당 스테이지는 재시작됩니다</T>
-        <T size={FS.tiny} dim="dim" style={{ marginTop: SP.xs }}>
-          {`지금 ${stage}판을 처음부터 다시 시작합니다. 모아 둔 스킬 코스트와 걸려 있던 것은 사라지고, 쓰러진 사람은 다시 일어섭니다.`}
-        </T>
-        <Row gap={SP.xs} style={{ marginTop: SP.md }}>
-          <Btn
-            label="취소"
-            size="lg"
-            style={{ flex: 1 }}
-            onPress={() => { sfx('tap'); setAsking(false); }}
-          />
-          <Btn
-            label="확인"
-            size="lg"
-            fill
-            style={{ flex: 1 }}
-            onPress={() => {
-              sfx('tap');
-              applyPending();
-              setAsking(false);
-              /*
-                여기서 화면을 안 떠난다.
-
-                창이던 시절에는 닫았다 — 판이 다시 서는 것을 봐야 눌린 것이
-                보이기 때문이다. 이제는 탭이라 떠나는 것이 **아래 띠를 누르는
-                일**이고, 그건 사람이 정한다. 저장한 뒤에 대형을 마저 만지는
-                일이 흔한데 거기서 화면이 튕겨 나가면 다시 들어와야 한다.
-              */
-            }}
-          />
-        </Row>
-      </Popup>
     </>
   );
 }

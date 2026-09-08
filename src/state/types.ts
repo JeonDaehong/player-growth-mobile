@@ -149,6 +149,23 @@ export interface GameState {
    */
   pendingParty: Party | null;
   pendingFormation: FormationId | null;
+  /**
+   * ── 영웅 탭에 앉아 스킬을 만지기 **직전**의 트리들 ── 없으면 `null`.
+   *
+   * 편성과 대형은 예약해 두었다가 나중에 들어가는데(`pendingParty`), 스킬
+   * 트리는 찍는 즉시 `chars` 에 박힌다. 되돌리려면 무엇이었는지를 알아야
+   * 하므로, **처음 하나를 찍는 순간** 넷의 트리를 통째로 적어 둔다.
+   *
+   * 예약본을 따로 두지 않은 까닭: 트리는 화면 곳곳이 읽는다 — 기술 목록,
+   * 코스트 칸, 전투의 관통 여부까지 (`skillsFor`). 예약본을 두면 그 전부가
+   * "지금 것" 과 "짜 둔 것" 을 갈라 봐야 하는데, 찍자마자 반영되는 편이
+   * 고르는 동안 무엇이 달라지는지 보이므로 더 낫다.
+   *
+   * **저장본에 안 남긴다** (`state/migrate` 가 늘 `null` 로 읽는다). 되돌리기는
+   * 이번에 앉아서 만진 것을 되돌리는 것이지, 지난주에 만진 것을 되돌리는
+   * 것이 아니다.
+   */
+  treeMark: Record<string, readonly string[]> | null;
   /** 파티 네 자리. 빈 자리는 null */
   party: Party;
   /**
@@ -766,6 +783,21 @@ export interface GameActions {
   setFormation: (f: FormationId) => void;
   /** 짜 둔 편성을 그 자리에서 들여보낸다 — 지금 판은 처음부터 다시 선다 */
   applyPending: () => boolean;
+  /**
+   * ── 영웅 탭에서 만진 것을 **실제로 들여보낸다** ──
+   *
+   * 편성·대형·스킬 셋을 한 번에 처리한다. 판을 다시 세우므로 (`restartFor`)
+   * 짜 둔 편성이 그 순간에 들어가고 (`commitPending`), 지금 판은 처음부터
+   * 다시 돈다.
+   *
+   * **다시 세우는 까닭**: 이 셋은 다 "누가 어떻게 싸우나" 를 바꾼다. 판
+   * 중간에 갈아 끼우면 반쯤 깎인 적 앞에 새 편성이 서는데, 그러면 위험할
+   * 때마다 편성을 바꾸는 것이 늘 최선이 되어 자동 전투인데 손이 제일 바쁜
+   * 순간이 전투 중이 된다.
+   */
+  applyEdits: () => void;
+  /** 만진 것을 전부 물린다 — 예약한 편성도, 찍은 스킬도 (`treeMark`) */
+  revertEdits: () => void;
   /** 가득 찬 게이지를 받는다 (`core/idle`) */
   claimIdle: () => boolean;
   /** 다이아로 게이지를 그 자리에서 채워 받는다 — 하루 세 번 */
