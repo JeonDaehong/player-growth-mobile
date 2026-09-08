@@ -18,81 +18,12 @@
 
 ## 지금 남은 것
 
-1. **인연 대화 배경 한 장 — 세로 9:16** — 1칸 → `bg_talk`
-2. **이야기 월페이퍼 · 비앙카 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
-3. **이야기 월페이퍼 · 리안느 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
-4. **이야기 월페이퍼 · 아녜스 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
+1. **이야기 월페이퍼 · 비앙카 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
+2. **이야기 월페이퍼 · 리안느 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
+3. **이야기 월페이퍼 · 아녜스 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
 
 ---
-## 1. 인연 대화 배경 한 장 — 세로 9:16
-
-| | |
-|---|---|
-| 칸 | 1 |
-| 폴더 | `assets/sprites/bg_talk/` |
-| 원본 | `docs/BOND_ART_PROMPTS.md`  |
-
-### 프롬프트
-
-```
-┌─────────────────┐
-│                 │  ← 위: 비어도 됨 (달·하늘)
-│         ┌───────┤
-│  여기만 │ 인물이 │  ← 오른쪽 절반: 사람이 선다. 비워 둘 것
-│  보인다 │  선다  │
-│         └───────┤
-├─────────────────┤
-│   대사창이 덮음   │  ← 아래 3분의 1: 무엇을 그려도 안 보인다
-└─────────────────┘
-```
-
-```
-ABSOLUTE RULE — NO TEXT OF ANY KIND:
-- Do NOT write, print, label, caption, title, name, or number ANYTHING.
-- No signature, no watermark, no letters, no numerals, no runes, no fake script.
-
-SUBJECT: a single VERTICAL background plate for a visual-novel dialogue screen. Portrait orientation, 9:16 (for example 1080 x 1920). One image, not a sheet, no panels, no borders.
-
-THE PLACE — a quiet stone terrace at night, at the edge of a keep:
-- On the LEFT, a tall pointed ARCHWAY in a stone wall, empty and open, looking out into the dark. Its arch is drawn with two or three concentric lines only.
-- Through and beyond the arch, a simple night sky with a large plain MOON, high and to the left, and three or four small stars. No clouds with detail — at most one long thin cloud band crossing the moon.
-- Running across the LOWER-MIDDLE, a low stone PARAPET wall about waist height, drawn as two long horizontal lines with a few vertical joints. It reads as the edge of a balcony.
-- Growing up the left wall, a sparse trail of IVY — a dozen simple leaf shapes on a thin stem, no more.
-- Underfoot, a stone FLOOR suggested by three or four long lines converging slightly toward the centre. No tile grid, no cobbles.
-
-COMPOSITION — this matters as much as the drawing:
-- The RIGHT HALF of the image must stay almost EMPTY — flat dark wall or open night sky only. A character will stand there and must not overlap anything.
-- The BOTTOM THIRD must stay simple and quiet: a dialogue box will cover it. Put nothing important below that line.
-- All the visual interest belongs in the UPPER LEFT two thirds: the arch, the moon, the ivy.
-- Leave a generous amount of empty black. This is a backdrop, not a scene.
-
-STYLE (strict, non-negotiable):
-- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
-- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
-- Drawn as clean WHITE OUTLINES on solid pure black. Shapes are NOT filled in white — the black shows through them.
-- Lines are sparse and far apart. Big simple forms only. Do NOT draw individual bricks, roof tiles, cobblestones, wood grain, or dense hatching — white text will be laid over this image and dense texture would swallow it.
-- Chunky, clearly visible square pixels — every line a crisp hard-edged 1-2 pixel run.
-- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
-  and the 1-bit look of "Return of the Obra Dinn".
-- No characters, no people, no animals, no furniture, no props. The place only.
-```
-
-### 자르기
-
-```json
-{
-  "file": "bg-talk.jpg",
-  "name": "bg_talk",
-  "grid": [1, 1],
-  "labels": ["night"],
-  "size": 640,
-  "allowFilled": true
-}
-```
-
----
-
-## 2. 이야기 월페이퍼 · 비앙카 넉 장 (한 장씩 따로 뽑습니다)
+## 1. 이야기 월페이퍼 · 비앙카 넉 장 (한 장씩 따로 뽑습니다)
 
 | | |
 |---|---|
@@ -203,7 +134,7 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. He
 
 ---
 
-## 3. 이야기 월페이퍼 · 리안느 넉 장 (한 장씩 따로 뽑습니다)
+## 2. 이야기 월페이퍼 · 리안느 넉 장 (한 장씩 따로 뽑습니다)
 
 | | |
 |---|---|
@@ -312,7 +243,7 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. So
 
 ---
 
-## 4. 이야기 월페이퍼 · 아녜스 넉 장 (한 장씩 따로 뽑습니다)
+## 3. 이야기 월페이퍼 · 아녜스 넉 장 (한 장씩 따로 뽑습니다)
 
 | | |
 |---|---|

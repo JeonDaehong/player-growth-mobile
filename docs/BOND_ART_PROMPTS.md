@@ -876,16 +876,22 @@ STYLE (strict, non-negotiable):
 
 ```json
 {
-  "file": "bg-talk.jpg",
+  "file": "bg-talk.png",
   "name": "bg_talk",
   "grid": [1, 1],
   "labels": ["night"],
   "size": 640,
+  "noTrim": true,
   "allowFilled": true
 }
 ```
 
-들어오면 `TalkView` 가 저절로 씁니다 — 없으면 지금처럼 판 배경으로
-떨어지게 해 뒀습니다.
+**`noTrim` 이 중요합니다.** 슬라이서는 기본으로 검은 여백을 깎아 내는데,
+이 그림은 오른쪽 절반이 일부러 비어 있으므로 그 절반이 통째로 잘려 나갑니다 —
+비율이 9:16 에서 2:3 으로 바뀌고, 화면을 채울 때(`cover`) 왼쪽의 아치와
+담쟁이가 잘립니다. 안 깎으면 359×640 으로 나와서 딱 맞습니다.
+
+들어오면 `TalkView` 가 저절로 씁니다 — 없으면 판 배경으로 떨어지게 해
+뒀습니다.
 
 ---

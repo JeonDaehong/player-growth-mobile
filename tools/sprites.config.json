@@ -4337,6 +4337,15 @@
       "append": true
     },
     {
+      "file": "bg-talk.png",
+      "name": "bg_talk",
+      "grid": [1, 1],
+      "labels": ["night"],
+      "size": 640,
+      "noTrim": true,
+      "allowFilled": true
+    },
+    {
       "file": "item-1.jpg",
       "grid": [7, 1],
       "name": "gift_icon",
