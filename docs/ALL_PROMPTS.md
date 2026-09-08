@@ -98,23 +98,30 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. A 
 A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
 
 ART DIRECTION:
-- The CHARACTER fills most of the frame. The ruined chapel behind her is drawn LIGHTLY — a few broken arches, low contrast, softly out of focus.
-- Appealing modern anime face with large expressive eyes; her face must read clearly even though her head is lowered.
+- The CHARACTER fills most of the frame; the background is drawn LIGHTLY and softly, with much less contrast than she has.
+- Appealing modern anime face with large expressive eyes and bright highlights. Her face is the whole picture.
 - Clean inked linework, cel shading, light screentone.
-- This is a QUIET moment, not a grand one. NO cathedral-scale architecture, NO heavy god-rays, NO epic religious painting mood. Think a single sincere promise between two people.
+- Warm and uplifting. NO grand cinematic mood, NO heavy god-rays, NO epic architecture, NO museum-painting solemnity.
 
 CONTENT RULES (strict):
-- Wholesome, all-ages, non-sexualized. Fully clothed and fully armoured.
+- Wholesome, all-ages, non-sexualized. Fully clothed and fully armoured, collar closed.
 - No cleavage, no skin-tight emphasis, no suggestive posing, no low angles.
 
 CHARACTER — ISOLDE, a young knight:
-Very long straight pale hair, slim jewelled circlet, silver plate armour with layered pauldrons over a high-necked underlayer, a cape with an embroidered hem. Pretty and approachable.
+Very long straight pale hair, a slim jewelled circlet, silver plate armour with layered pauldrons over a high-necked underlayer, a cape with an embroidered hem. Pretty and approachable, not stern.
 
-SCENE — THE OATH:
-Waist-up, seen slightly from the front, kneeling on one knee. Her longsword is planted point-down in front of her and both hands are folded over the crossguard; her head is lowered a little and her eyes are closed, long lashes drawn clearly. Her mouth is set — she means it. A few strands of hair have fallen loose across her face. Soft light from somewhere above and to the side; a couple of petals drift past. The broken chapel is only suggested behind her.
+EXPRESSION — THIS IS THE POINT OF THE PICTURE:
+She is PROUD OF HERSELF and quietly delighted about it. Not solemn, not praying, not grim.
+- A wide, unguarded smile — teeth showing a little, cheeks lifted, eyes bright and crinkled at the corners.
+- Chin up, chest out, shoulders squared. She is standing tall on purpose.
+- A faint blush: she knows she is showing off a bit and cannot help it.
+- Read her as "봤어요? 제가 해냈어요." — pleased, a little boastful, completely sincere.
+
+SCENE — SHE DID IT:
+Waist-up, close, facing the viewer. She has just finished something difficult and is standing straight with her sword resting point-down in front of her, both hands stacked on the pommel — the pose of a knight at ease, but she is beaming instead of bowing. Her cape is caught mid-settle behind her. A few strands of hair are out of place and there is a light scuff on one pauldron, proof that it was not easy. Behind her, a soft bright sky and the suggestion of a field, drawn simply.
 
 RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Gentle directional light, soft shadows, a few drifting particles. Background simple and low-contrast.
+Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft bright light from above and behind haloing her hair, a few sparkle marks in the air (manga style), background low-contrast and simple.
 ```
 
 **`assets/wallpaper/knightgirl_love.jpg`**
@@ -128,17 +135,17 @@ ART DIRECTION:
 - Clean inked linework, cel shading, light screentone. Warm, sweet, charming.
 
 CONTENT RULES (strict):
-- Wholesome, all-ages, non-sexualized. Fully clothed; the armour stays on and closed at the throat.
-- No cleavage, no undressing, no suggestive posing, no low angles.
+- Wholesome, all-ages, non-sexualized. The battle damage is to her ARMOUR AND CLOAK, not to her modesty — the underlayer stays intact and closed at the throat.
+- No cleavage, no exposed chest, no torn clothing revealing skin below the collarbone, no suggestive posing, no low angles.
 
-CHARACTER — ISOLDE, a young knight:
-Very long pale hair, slim circlet, silver plate armour — here dented and dusty from a fight, with a smear of dirt on one cheek and a few strands of hair escaped.
+CHARACTER — ISOLDE, a young knight, straight out of a hard fight:
+Very long pale hair, now loose and dishevelled with strands stuck to her cheek; the circlet is knocked slightly crooked. Her armour has taken a beating — one pauldron is gone entirely, the breastplate is dented and scored with deep scratches, a buckle hangs loose. The cape is badly torn: the hem is ripped into long ragged tatters and a wide tear runs up one side, so it hangs in strips. Her sleeve is shredded at the forearm and the wrapping underneath has come loose and trails. Soot and dust on the armour, a smear of dirt across one cheek, a small bandage on her temple. Everything is ruined EXCEPT that the high-necked underlayer beneath the breastplate is whole and closed.
 
 SCENE — AFTER THE MISSION, AT SUNSET:
-Chest-up, close, facing the viewer. She has just come back from a fight and is smiling — a real, uncontrolled smile she is clearly not used to making. She looks straight at the viewer, but her eyes flick very slightly aside and her cheeks are flushed: happiness and embarrassment at once. One hand is raised just into the bottom of the frame, palm open, as if she had reached out and then thought better of it. A low sun and a soft field behind her, drawn simply.
+Chest-up, close, facing the viewer. She has just come back and is smiling — a real, uncontrolled smile she is clearly not used to making. She looks straight at the viewer, but her eyes flick very slightly aside and her cheeks are flushed: happiness and embarrassment at once. One hand is raised just into the bottom of the frame, palm open, as if she had reached out and then thought better of it. Torn cloak strips and dust drift in the wind around her. A low sun and a soft field behind her, drawn simply.
 
 RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft rim light from behind catching the edges of her hair, gentle bloom, blush hatching on the cheeks, background softly blurred.
+Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft rim light from behind catching the edges of her hair and the ragged cloth, gentle bloom, blush hatching on the cheeks, background softly blurred.
 ```
 
 **`assets/wallpaper/bunnyaxe_awkward.jpg`**
