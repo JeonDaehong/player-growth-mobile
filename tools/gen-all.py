@@ -39,6 +39,9 @@ OUT = os.path.join(ROOT, 'docs', 'ALL_PROMPTS.md')
 #
 # (폴더, 칸 수, 제목, 문서, 헤딩 정규식, 자를 때 쓸 이름표)
 #
+# **칸 수는 숫자 하나이거나 (가로, 세로) 다.** 한 줄짜리가 대부분이라 숫자
+# 하나로 두었는데, 선물 열여덟처럼 두 줄로 뽑는 시트가 생겼다.
+#
 # **폴더가 곧 검사다** — `assets/sprites/<폴더>` 에 png 가 있으면 들어온
 # 것으로 보고 뺀다. 폴더 이름이 슬라이서 설정의 `name` 과 같으므로
 # (`tools/sprites.config.json`) 따로 적을 것이 없다.
@@ -105,6 +108,34 @@ ITEMS = [
     ('elfarcher_dragon', 3, '용 모양 거대 화살',
      'MOTION_ART_PROMPTS.md', r'^## §P4',
      ['shot_1', 'shot_2', 'shot_3']),
+
+    ('gift_icon', 7, '선물 로고 · 얽힌 것 일곱 (좋아하거나 싫어하는 사람이 있다)',
+     'BOND_ART_PROMPTS.md', r'^## §B1',
+     ['gf_cookie', 'gf_pie', 'gf_carrot', 'gf_rabbit',
+      'gf_flower', 'gf_bible', 'gf_gong']),
+    # 6×2 격자에 열하나 — 마지막 칸은 비워 두고 `_skip` 으로 받는다
+    ('gift_icon2', (6, 2), '선물 로고 · 아무나 줘도 되는 것 열하나',
+     'BOND_ART_PROMPTS.md', r'^## §B2',
+     ['gf_tea', 'gf_ice', 'gf_bread', 'gf_apple', 'gf_honey', 'gf_cheese',
+      'gf_soup', 'gf_candy', 'gf_ribbon', 'gf_candle', 'gf_music', '_skip']),
+    ('item_icon', 3, '경험의 서 셋 — 같은 책이 세 단계로 자란다',
+     'BOND_ART_PROMPTS.md', r'^## §B3',
+     ['book_old', 'book_fine', 'book_prime']),
+]
+
+# ══ 자르지 않는 것들 ═══════════════════════════════════════
+#
+# 시트가 아니라 **낱장 그림**이다. 슬라이서를 안 타므로 `ITEMS` 와 같은 틀로
+# 못 싣는다 — 자르기 JSON 자리에 넣을 것이 없고, 들어왔는지도 스프라이트
+# 폴더가 아니라 딴 데서 봐야 한다.
+#
+# (검사할 파일 경로, 제목, 문서, 헤딩 정규식, 어디에 넣나)
+LOOSE = [
+    (os.path.join('assets', 'wallpaper', 'knightgirl_love.jpg'),
+     '이야기 월페이퍼 — 네 사람 × 네 단계 (한 장씩 따로 뽑습니다)',
+     'BOND_ART_PROMPTS.md', r'^## §B4',
+     'assets/wallpaper/<사람>_<단계>.jpg — 자르지 않습니다. '
+     '넣은 뒤 `src/ui/wallpapers.ts` 에 줄을 더하세요.'),
 ]
 
 # 폴더 이름이 실제와 다른 것들 — 검사할 때만 쓴다
@@ -113,6 +144,7 @@ ITEMS = [
 # 가른다. 그래서 그 안의 파일 이름으로 본다 (`labels` 의 첫 칸).
 REAL = {
     'growth2': 'growth',
+    'gift_icon2': 'gift_icon',
     'skill_icon_kg': 'skill_icon', 'skill_icon_ba': 'skill_icon',
     'skill_icon_ea': 'skill_icon', 'skill_icon_nu': 'skill_icon',
     'status_icon_g': 'status_icon', 'status_icon_f': 'status_icon',
@@ -195,17 +227,55 @@ HEAD = """# 프롬프트 전부 — 위에서부터 복붙
 """
 
 
-def one(n, key, cells, title, doc, head, labels):
+def grid(cells):
+    """칸 수를 (가로, 세로) 로 편다 — 숫자 하나면 한 줄짜리다."""
+    return cells if isinstance(cells, tuple) else (cells, 1)
+
+
+def loose(n, path, title, doc, head, where):
+    """자르지 않는 낱장 — 프롬프트와 넣을 자리만 적는다."""
     body = blocks_under(doc, head)
     if not body:
         raise SystemExit('코드블록 없음: %s 의 %s' % (doc, head))
-    folder = REAL.get(key, key)
     parts = [
         '## %d. %s' % (n, title),
         '',
         '| | |',
         '|---|---|',
-        '| 칸 | %d |' % cells,
+        '| 자르기 | **없음** |',
+        '| 넣는 곳 | %s |' % where,
+        "| 원본 | `docs/%s`  |" % doc.replace(chr(92), '/'),
+        '',
+        '### 프롬프트',
+        '',
+    ]
+    for b in body:
+        parts += ['```', b, '```', '']
+    return '\n'.join(parts)
+
+
+def one(n, key, cells, title, doc, head, labels, append=False):
+    """
+    시트 한 덩어리.
+
+    `append` 는 **같은 폴더에 두 번째로 들어가는 시트**에 붙는다. 슬라이서는
+    세트마다 그 폴더를 비우고 시작하므로, 안 붙이면 먼저 넣은 시트가 통째로
+    사라진다 (`docs/ART_REQUESTS.md` 에 실제로 그렇게 잃은 기록이 있다).
+
+    사람이 붙이는 것으로 두지 않는다 — 목록을 보고 "이건 두 번째인가" 를
+    매번 세어야 하는데, 그 셈을 여기서 이미 하고 있다.
+    """
+    body = blocks_under(doc, head)
+    if not body:
+        raise SystemExit('코드블록 없음: %s 의 %s' % (doc, head))
+    folder = REAL.get(key, key)
+    cols, rows = grid(cells)
+    parts = [
+        '## %d. %s' % (n, title),
+        '',
+        '| | |',
+        '|---|---|',
+        "| 칸 | %s |" % ('%d × %d 줄' % (cols, rows) if rows > 1 else str(cols)),
         '| 폴더 | `assets/sprites/%s/` |' % folder,
         '| 원본 | `docs/%s`  |' % doc.replace('\\', '/'),
         '',
@@ -218,8 +288,10 @@ def one(n, key, cells, title, doc, head, labels):
         '### 자르기',
         '',
         '```json',
-        '{ "file": "<받은 파일명>", "name": "%s", "expect": [%d, 1],' % (folder, cells),
-        '  "labels": [%s] }' % ', '.join('"%s"' % l for l in labels),
+        '{ "file": "<받은 파일명>", "name": "%s", "expect": [%d, %d],' % (folder, cols, rows),
+        '  "labels": [%s]%s }'
+        % (', '.join('"%s"' % l for l in labels),
+           ', "append": true' if append else ''),
         '```',
         '',
     ]
@@ -228,20 +300,34 @@ def one(n, key, cells, title, doc, head, labels):
 
 if __name__ == '__main__':
     todo = [i for i in ITEMS if not done(i[0], i[5])]
-    if not todo:
+    left = [x for x in LOOSE if not os.path.exists(os.path.join(ROOT, x[0]))]
+    if not todo and not left:
         io.open(OUT, 'w', encoding='utf-8').write(
             '# 프롬프트 전부\n\n**다 받았습니다.** 지금 필요한 그림이 없습니다.\n',
         )
-        print('%s — 남은 것 없음' % OUT)
+        print('%s - nothing left' % OUT)
         raise SystemExit(0)
 
-    index = '\n'.join(
-        '%d. **%s** — %d칸 → `%s`' % (n, t, c, REAL.get(k, k))
-        for n, (k, c, t, _d, _h, _l) in enumerate(todo, 1)
-    )
-    page = HEAD % {'index': index}
+    rows = ['%d. **%s** — %s칸 → `%s`' % (
+        n, t,
+        ('%d×%d' % grid(c)) if isinstance(c, tuple) else str(c),
+        REAL.get(k, k),
+    ) for n, (k, c, t, _d, _h, _l) in enumerate(todo, 1)]
+    rows += ['%d. **%s** — 낱장 (자르기 없음)' % (len(todo) + n, x[1])
+             for n, x in enumerate(left, 1)]
+
+    page = HEAD % {'index': '\n'.join(rows)}
+    # 같은 폴더가 두 번 나오면 뒤엣것부터 `append` 다 (`one` 머리말)
+    seen = set()
+    sheets = []
+    for n, it in enumerate(todo, 1):
+        folder = REAL.get(it[0], it[0])
+        sheets.append(one(n, *it, append=folder in seen))
+        seen.add(folder)
+
     page += '\n---\n\n'.join(
-        one(n, *it) for n, it in enumerate(todo, 1)
+        sheets + [loose(len(todo) + n, *x) for n, x in enumerate(left, 1)],
     )
     io.open(OUT, 'w', encoding='utf-8').write(page)
-    print('%s — %d 덩어리 (전체 %d 중)' % (OUT, len(todo), len(ITEMS)))
+    print('%s - %d blocks + %d loose (of %d)'
+          % (OUT, len(todo), len(left), len(ITEMS) + len(LOOSE)))

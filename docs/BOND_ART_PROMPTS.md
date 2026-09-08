@@ -1,26 +1,29 @@
-# 인연 — 필요한 그림 전부
+# 인연 · 아이템 그림
 
-인연 기능(`core/bond` · `screens/home/BondScreen`)에 들어가는 그림을 **한 판에**
-모았습니다. 아래 순서대로 뽑으면 그날 바로 붙습니다.
+인연 기능(`core/bond` · `screens/home/BondScreen`)과 가방(`core/bag`)에 들어가는
+그림의 **원본 프롬프트**입니다.
 
-| # | 무엇 | 장수 | 지금 | 급함 |
-|---|---|---|---|---|
-| 1 | 선물 로고 18종 | 2판 (7칸 + 11칸) | 없음 — 빈 액자로 뜸 | **높음** |
-| 2 | 경험의 서 로고 3종 | 1판 (3칸) | 없음 | **높음** |
-| 3 | 인연 단추 · 하트 | — | 코드 도형으로 그림 | 낮음 |
-| 4 | 이야기 월페이퍼 16장 | 16판 | 사람당 1장뿐 | 중간 |
+> **뽑을 때는 이 파일을 안 봐도 됩니다.** `python tools/gen-all.py` 를 돌리면
+> [`ALL_PROMPTS.md`](ALL_PROMPTS.md) 에 **아직 안 들어온 것만** 자르기 설정과
+> 함께 순서대로 실립니다. 여기는 그 원본이고, 고칠 때만 엽니다.
 
-2번은 [`ITEM_ICON_PROMPTS.md`](ITEM_ICON_PROMPTS.md) 에 따로 있습니다.
-3번은 안 그려도 됩니다 — 까닭은 아래 §3.
+| 절 | 무엇 | 판 | 폴더 |
+|---|---|---|---|
+| §B1 | 선물 로고 — 얽힌 것 일곱 | 7칸 1줄 | `gift_icon` |
+| §B2 | 선물 로고 — 아무나 줘도 되는 것 열하나 | 6칸 2줄 | `gift_icon` |
+| §B3 | 경험의 서 셋 | 3칸 1줄 | `item_icon` |
+| §B4 | 이야기 월페이퍼 열여섯 | 낱장 | `assets/wallpaper/` |
+| §B5 | 하트와 인연 단추 — **안 그려도 됩니다** | — | — |
 
 ---
 
-## 1. 선물 로고 18종 — `assets/sprites/gift_icon/`
+## §B0 선물 열여덟이 다 갈려야 합니다
 
-가방의 **기타** 칸과 선물주기 창에 26px 로 붙습니다. **두 판으로 나눠**
-뽑습니다 — 한 판에 열여덟을 넣으면 칸이 작아져서 1비트로 가릴 것이 없어집니다.
+두 판으로 나눠 뽑지만 **한 목록 안에 세로로 줄지어 섭니다.** 먹는 것이
+열둘이라, 그 열둘이 26px 에서 서로 안 헷갈리는 것이 이 판들의 제일 어려운
+부분입니다.
 
-### 판 A — 얽힌 것 일곱
+### 얽힌 것 일곱 (§B1)
 
 좋아하거나 싫어하는 사람이 있는 것들입니다. **이 일곱이 제일 급합니다** —
 선물이라는 기능의 내용이 여기 다 있습니다.
@@ -35,36 +38,23 @@
 | `gf_bible` | 성서 | 아녜스 ×2 | — |
 | `gf_gong` | 목탁 | — | **아녜스** |
 
-### 판 B — 아무나 줘도 되는 것 열하나
+### 아무나 줘도 되는 것 열하나 (§B2)
 
 전부 1배입니다. 열하나나 두는 까닭: 좋아하는 것 하나만 있으면 그것을 다
 쓰고 난 뒤에 할 일이 없어지는데, 인연은 **매일 조금씩** 쌓는 축이라 그날
 줄 것이 늘 있어야 합니다.
 
-| 로고 | 이름 |
-|---|---|
-| `gf_tea` | 따뜻한 차 |
-| `gf_ice` | 아이스 아메리카노 |
-| `gf_bread` | 갓 구운 빵 |
-| `gf_apple` | 붉은 사과 |
-| `gf_honey` | 꿀단지 |
-| `gf_cheese` | 치즈 한 덩이 |
-| `gf_soup` | 따뜻한 수프 |
-| `gf_candy` | 박하사탕 |
-| `gf_ribbon` | 비단 리본 |
-| `gf_candle` | 밀랍 초 |
-| `gf_music` | 오르골 |
+`gf_tea` 따뜻한 차 · `gf_ice` 아이스 아메리카노 · `gf_bread` 갓 구운 빵 ·
+`gf_apple` 붉은 사과 · `gf_honey` 꿀단지 · `gf_cheese` 치즈 한 덩이 ·
+`gf_soup` 따뜻한 수프 · `gf_candy` 박하사탕 · `gf_ribbon` 비단 리본 ·
+`gf_candle` 밀랍 초 · `gf_music` 오르골
 
 **고기는 여기 없습니다.** 비앙카가 싫어하는 것이 토끼 고기라, 고기붙이가
 여럿이면 "고기를 싫어한다" 로 읽혀서 그 한 줄이 흐려집니다.
 
-### 열여덟이 다 갈려야 합니다
+### 26px 에서 남는 윤곽
 
-한 목록 안에 세로로 줄지어 섭니다. **먹는 것이 열둘**이라 그 열둘이 서로
-안 헷갈리는 것이 이 판들의 제일 어려운 부분입니다. 26px 에서 남는 윤곽으로
-가릅니다.
-
-| 로고 | 26px 윤곽 |
+| 로고 | 윤곽 |
 |---|---|
 | `gf_cookie` | **동그라미** + 점 박힘 + 한 입 자국 |
 | `gf_pie` | **낮고 넓은 사다리꼴** + 위가 격자 |
@@ -101,7 +91,9 @@
 - **성서 ↔ 경험의 서** — 성서는 **표지에 세로 십자**, 경험의 서는 **왼쪽에
   책등 줄**. 십자는 경험의 서 셋 중 어디에도 넣지 마십시오
 
-### 프롬프트 — 판 A (7칸)
+---
+
+## §B1 선물 로고 · 얽힌 것 일곱
 
 ```
 ABSOLUTE RULE — NO TEXT OF ANY KIND:
@@ -147,7 +139,12 @@ LAYOUT:
 - The sheet is 7 times as wide as it is tall.
 ```
 
-### 프롬프트 — 판 B (11칸 + 빈 칸 하나)
+---
+
+## §B2 선물 로고 · 아무나 줘도 되는 것 열하나
+
+마지막 열두 번째 칸은 **비워 둡니다.** 6×2 격자라 열하나가 딱 안 떨어지는데,
+칸 수를 줄이면 슬라이서가 격자를 못 잡습니다.
 
 ```
 ABSOLUTE RULE — NO TEXT OF ANY KIND:
@@ -207,68 +204,78 @@ LAYOUT:
 - The sheet is 3 times as wide as it is tall.
 ```
 
-### 슬라이스
+---
 
-두 판을 따로 넣고 뒤엣것에 `append` 를 답니다 — 같은 폴더에 이어 붙입니다.
+## §B3 경험의 서 셋
 
-```json
-{
-  "file": "gift-a.jpg",
-  "name": "gift_icon",
-  "expect": [7, 1],
-  "labels": [
-    "gf_cookie", "gf_pie", "gf_carrot", "gf_rabbit",
-    "gf_flower", "gf_bible", "gf_gong"
-  ]
-},
-{
-  "file": "gift-b.jpg",
-  "name": "gift_icon",
-  "expect": [6, 2],
-  "labels": [
-    "gf_tea", "gf_ice", "gf_bread", "gf_apple", "gf_honey", "gf_cheese",
-    "gf_soup", "gf_candy", "gf_ribbon", "gf_candle", "gf_music", "_skip"
-  ],
-  "append": true
-}
+가방의 **소비** 칸과 레벨업 창(`LevelUpPopup`)에 붙습니다. 값이 10배씩
+벌어지므로 (120 · 1,200 · 12,000) 그림도 **같은 책이 자라는 것**으로 그립니다 —
+셋을 서로 다른 물건으로 그리면 (두루마리 · 책 · 석판) 값의 순서가 그림에서
+안 읽혀서 숫자로만 알게 됩니다.
+
+| 로고 | 이름 | 값 | 겹 | 표시 |
+|---|---|---|---|---|
+| `book_old` | 낡은 경험의 서 | 120 | 얇다 | 없음 — 맨 책 |
+| `book_fine` | 온전한 경험의 서 | 1,200 | 보통 | 잠금쇠 하나 |
+| `book_prime` | 명품 경험의 서 | 12,000 | 두껍다 | 잠금쇠 + 뜬 보석 |
+
+레벨업 창에서 **16px** 로 붙습니다. 낡은 것과 온전한 것의 차이가 잠금쇠
+하나뿐이므로, 그 잠금쇠가 3~4픽셀은 되어야 합니다. 책등의 결이나 종이 낱장은
+그리지 마십시오 — 16px 에서 뭉개져 얼룩이 됩니다.
+
+성서(`gf_bible`)와 안 겹쳐야 합니다: **십자는 성서에만** 있습니다.
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
+- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
+- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
+- A book cover with squiggles that read as writing is a failed output.
+- A cell containing even one letter-like mark is a failed output.
+
+SUBJECT: a single sheet of EXACTLY 3 ICONS in ONE row, left to right. Three cells. Not four, not two, and not two rows — three cells in one row. The three are THE SAME OBJECT AT THREE GRADES: a closed book seen from the front, lying slightly wider than it is tall. Each cell shows that book thicker and more ornate than the one before it. Do not draw three different objects.
+
+Cell 1 — A PLAIN THIN BOOK. A solid rectangle filling the middle of the cell, clearly WIDER than it is tall (about 4 wide to 3 tall). Along its left edge, a narrow vertical SPINE strip one sixth of the width, separated from the cover by one straight vertical line. Along the right edge, a shallow stack of PAGES suggested by TWO short horizontal lines only. One CORNER of the cover — the lower right — is bitten off by a small triangular notch, so the book reads as worn. Nothing else. No clasp, no gem, no straps, no rays. No cross. Squint test: a fat horizontal brick with a stripe down its left side.
+
+Cell 2 — THE SAME BOOK, THICKER, WITH ONE CLASP. Same wide rectangle and same left-edge spine strip, but the page stack on the right is now DEEPER — the body is noticeably taller than in cell 1 and the pages take a fifth of the width. No bitten corner; all four corners are square and whole. Crossing the right edge horizontally at the vertical middle, a small solid CLASP: a short bar that starts on the cover, crosses the page edge, and hooks around it — about a quarter of the cell wide and a tenth of the cell tall. Exactly ONE clasp. No gem, no glow, no cross. Squint test: the same brick, deeper, with one small tab sticking off its right side.
+
+Cell 3 — THE SAME BOOK, THICKEST, WITH CLASP AND A FLOATING GEM. Same wide rectangle, same spine strip, and the deepest page stack of the three — the body fills most of the cell. The horizontal CLASP from cell 2 is there, unchanged, on the right edge. In addition: two short RAISED BANDS cross the spine strip horizontally, near its top and bottom, each a third of the spine's height — the only marks on the spine. Above the book, floating clear of it with a visible GAP of empty black between them, a small solid DIAMOND — a four-pointed rhombus about a sixth of the cell wide, centred over the book. The gap is the point: the gem does not touch the cover. No rays, no sparkles, no stars, no crown, no cross.
+
+CONSISTENCY BETWEEN THE THREE CELLS:
+- The book occupies the same footprint and the same centre in all three cells. Only the thickness of the page stack and the added parts change.
+- The spine is always on the LEFT and the page edges always on the RIGHT.
+- All three read as ONE object growing richer, not as three unrelated items.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
+- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
+- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
+- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
+- Each icon must survive being shrunk to 16x16: one solid mass, one or two big notches,
+  no hairline detail, no page lines finer than 2 pixels.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No watermarks, no signatures, no sparkle marks in the corners.
+
+LAYOUT:
+- One row of 3 equal square cells, edge to edge, no gutters, no frames, no borders.
+- Each icon centred in its cell with a small margin of pure black around it.
+- The sheet is 3 times as wide as it is tall.
 ```
 
-빈 열두 번째 칸은 `_skip` 으로 받아 두고 슬라이스 뒤에 지웁니다 — 이름을
-안 주면 칸 수가 안 맞아 슬라이스가 멎습니다.
-
 ---
 
-## 2. 경험의 서 로고 3종
-
-[`ITEM_ICON_PROMPTS.md`](ITEM_ICON_PROMPTS.md) 에 프롬프트가 있습니다.
-**성서(`gf_bible`)와 안 겹치게** — 성서에만 십자가 있습니다.
-
----
-
-## 3. 하트와 인연 단추 — **안 그려도 됩니다**
-
-하트 게이지는 코드가 그립니다 (`BondScreen` 의 `Heart`) — 45도로 돌린
-마름모를 채우거나 비웁니다.
-
-그림으로 안 둔 까닭: 빈 하트와 찬 하트 **두 칸**이 필요한데, 흑백 1비트에서
-9~13px 짜리 하트 둘을 테두리만으로 가르는 것이 실제로 잘 안 됩니다. 열 칸이
-나란히 서므로 하나만 애매해도 세는 것이 어긋납니다.
-
-인연 단추(`hero_ui/bond`)도 이미 코드 도트가 있습니다. **그리고 싶으면**
-아래 조건만 지키면 됩니다 — 30px 원 안, 흰 선, 다른 단추(`paper` 월페이퍼)와
-윤곽이 안 겹칠 것.
-
----
-
-## 4. 이야기 월페이퍼 — 16장
+## §B4 이야기 월페이퍼 열여섯
 
 단계마다 한 장씩, 네 사람 × 네 단계입니다. **이야기를 다 보면 그 장면의
 월페이퍼를 받습니다** (`readStory`).
 
-지금은 사람당 한 장뿐이라 (`ui/wallpapers`) 어느 단계를 봐도 같은 그림이
-뜹니다. 넉 장이 오는 날 `WALLPAPERS` 를 `<사람>_<단계>` 로 가릅니다.
-
-### 파일 이름
+**자르지 않습니다.** `assets/wallpaper/` 에 그대로 넣고 `src/ui/wallpapers.ts`
+에 줄을 더합니다 — 번들러가 `require` 를 정적으로 읽으므로 손으로 적어야
+합니다 (그 파일 머리말에 까닭이 있습니다).
 
 ```
 assets/wallpaper/knightgirl_awkward.jpg   이졸데 · 어색한 관계
@@ -278,10 +285,14 @@ assets/wallpaper/knightgirl_love.jpg      이졸데 · 애정
 … bunnyaxe_* · elfarcher_* · nun_* 도 같은 넷씩
 ```
 
+지금은 사람당 한 장뿐이라 (`ui/wallpapers`) 어느 단계를 봐도 같은 그림이
+뜹니다. **16장이 부담이면 애정(D) 넷만 먼저** 뽑으십시오 — 값이 제일 큰
+자리가 제일 먼저 갈리는 편이 낫습니다.
+
 ### 단계가 **장면으로** 갈려야 합니다
 
 넷이 다 "예쁘게 서 있는 그림" 이면 단계를 올린 값이 안 보입니다. 거리로
-가릅니다 — 멀리서, 옆에서, 나란히, 가까이.
+가릅니다.
 
 | 단계 | 장면 | 거리 | 시선 |
 |---|---|---|---|
@@ -290,11 +301,9 @@ assets/wallpaper/knightgirl_love.jpg      이졸데 · 애정
 | 신뢰 | 등을 맡기고 서 있다 | 허리 위 | 정면, 담담 |
 | 애정 | 한 사람만, 아주 가까이 | 가슴 위 | **정면, 눈을 맞춘다** |
 
-### 프롬프트 — 이졸데 예시
-
-나머지 셋은 아래 `CHARACTER` 문단만 갈아 끼웁니다. 인물 묘사는
-[`CHARACTER_ART_PROMPTS.md`](CHARACTER_ART_PROMPTS.md) 의 것을 그대로 쓰십시오 —
-거기와 다르게 적으면 얼굴이 딴사람이 됩니다.
+아래 프롬프트에서 `CHARACTER` 문단과 `SCENE` 의 (A)~(D) 중 하나를 골라
+넣으면 한 장입니다. 인물 묘사는 [`CHARACTER_ART_PROMPTS.md`](CHARACTER_ART_PROMPTS.md)
+의 것과 **같아야** 합니다 — 다르게 적으면 얼굴이 딴사람이 됩니다.
 
 ```
 ABSOLUTE RULE — NO TEXT OF ANY KIND:
@@ -304,26 +313,43 @@ ABSOLUTE RULE — NO TEXT OF ANY KIND:
 
 FORMAT: one single illustration, landscape, 16:9, filling the frame edge to edge.
 
-CHARACTER — ISOLDE, the knight:
+CHARACTER — pick ONE:
+
+ISOLDE, the knight:
 A young woman in worn plate armour over a padded gambeson, a long surcoat to
 the knee, hair tied back, a plain kite shield on her left arm and a straight
 sword at her hip. Her face is calm and a little tired. No helmet.
 
-SCENE — pick ONE of the four below:
-(A) AWKWARD — Full figure, seen from far off across a training yard at dusk.
-    She is checking the straps of her shield, turned three-quarters away.
-    A second figure is implied only by a long shadow entering from the frame's
-    edge. She is NOT looking toward it. Wide empty ground between them.
+BIANCA, the axe-wielder:
+A cheerful young woman in a tavern server's dress with an apron, a kerchief
+over her hair, sturdy boots, carrying a large single-bladed woodcutter's axe
+over one shoulder as if it weighed nothing. Freckles. A wide grin.
+
+RIANNE, the elf archer:
+A slender elf with long pointed ears and long straight hair, in a light leather
+jerkin and a hooded cloak of leaves, a longbow taller than she is in one hand
+and a quiver at her hip. Calm, distant expression.
+
+AGNES, the sister:
+A young nun in a heavy habit and wimple, a plain wooden prayer-bead cord at her
+waist, hands usually folded. No weapon of any kind. Downcast eyes, gentle face.
+
+SCENE — pick ONE:
+
+(A) AWKWARD — Full figure, seen from far off across an open yard at dusk.
+    She is busy with her own gear, turned three-quarters away. A second figure
+    is implied only by a long shadow entering from the frame's edge. She is
+    NOT looking toward it. Wide empty ground between them.
 (B) FRIENDSHIP — Knee-up, seen from the side. She is laughing quietly with her
-    head turned to the left, looking at something outside the frame. Her shield
-    is set down against her leg. Warm interior — a tavern hearth behind her.
+    head turned to the left, looking at something outside the frame. Her weapon
+    is set down beside her. Warm interior — a tavern hearth behind her.
 (C) TRUST — Waist-up, facing the viewer straight on, standing at ease with her
-    sword point resting on the ground and both hands folded over the pommel.
-    Behind her shoulder, the back of another figure's head and shoulder is
-    visible at the frame's edge — they are standing back to back. Steady, level
-    gaze. Night, a low fire lighting her from below.
+    hands resting on her weapon. Behind her shoulder, the back of another
+    figure's head and shoulder is visible at the frame's edge — they are
+    standing back to back. Steady, level gaze. Night, a low fire lighting her
+    from below.
 (D) LOVE — Chest-up portrait, very close. She looks directly at the viewer,
-    armour half unbuckled at the collar, hair loosened. One hand is raised
+    her outer layer loosened at the collar, hair let down. One hand is raised
     just into the bottom of the frame, palm open. Soft light from the left.
     Quiet, unguarded expression.
 
@@ -339,37 +365,17 @@ STYLE (strict, non-negotiable):
 - The character must read clearly at 400px wide — no hairline detail on the face.
 ```
 
-### 나머지 셋의 `CHARACTER` 문단
-
-```
-BIANCA, the axe-wielder:
-A cheerful young woman in a tavern server's dress with an apron, a kerchief
-over her hair, sturdy boots, carrying a large single-bladed woodcutter's axe
-over one shoulder as if it weighed nothing. Freckles. A wide grin.
-
-RIANNE, the elf archer:
-A slender elf with long pointed ears and long straight hair, in a light leather
-jerkin and a hooded cloak of leaves, a longbow taller than she is in one hand
-and a quiver at her hip. Calm, distant expression.
-
-AGNES, the sister:
-A young nun in a heavy habit and wimple, a plain wooden prayer-bead cord at her
-waist, hands usually folded. No weapon of any kind. Downcast eyes, gentle face.
-```
-
-### 16장이 부담이면
-
-**애정(D) 넷만 먼저** 뽑으십시오. 지금 있는 사람당 한 장을 애정 자리에 놓고,
-나머지 셋은 그 한 장을 계속 쓰게 두면 됩니다 (지금 코드가 그렇게 돕니다).
-값이 제일 큰 자리가 제일 먼저 갈리는 편이 낫습니다.
-
 ---
 
-## 붙이는 차례
+## §B5 하트와 인연 단추 — **안 그려도 됩니다**
 
-1. `gift-a.jpg` (7칸) · `gift-b.jpg` (12칸) → `tools/sprites.config.json` 에
-   위 블록을 더하고 `python tools/slice.py`
-2. `book.jpg` (3칸) → 같은 방법 ([`ITEM_ICON_PROMPTS.md`](ITEM_ICON_PROMPTS.md))
-3. 월페이퍼는 `assets/wallpaper/` 에 그대로 넣고 `src/ui/wallpapers.ts` 에
-   줄을 더합니다 (번들러가 `require` 를 정적으로 읽으므로 **손으로** 적어야
-   합니다 — 그 파일 머리말에 까닭이 있습니다)
+하트 게이지는 코드가 그립니다 (`BondScreen` 의 `Heart`) — 45도로 돌린
+마름모를 채우거나 비웁니다.
+
+그림으로 안 둔 까닭: 빈 하트와 찬 하트 **두 칸**이 필요한데, 흑백 1비트에서
+9~13px 짜리 하트 둘을 테두리만으로 가르는 것이 실제로 잘 안 됩니다. 열 칸이
+나란히 서므로 하나만 애매해도 세는 것이 어긋납니다.
+
+인연 단추(`hero_ui/bond`)도 이미 코드 도트가 있습니다. **그리고 싶으면**
+30px 원 안에 흰 선으로, 월페이퍼 단추(`paper`)와 윤곽이 안 겹치게만
+그리면 됩니다.
