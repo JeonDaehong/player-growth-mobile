@@ -31,7 +31,7 @@ import { Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import {
   CHARS, DMG_NAME, NO_ARMOR, OwnedChar, SkillDef, blowOf, skillNeeds, skillOpen,
-  skillsFor, statOf, swingMs,
+  skillsFor, statOf, swingMs, targetName,
 } from '@/core/chars';
 import { PassiveDef, passiveOf } from '@/core/passives';
 import { nodeOn } from '@/core/skillTree';
@@ -135,14 +135,6 @@ function pierceText(sk: SkillDef, id: string): string {
   if (p.phys) on.push('방어력 무시');
   if (p.magic) on.push('마법저항력 무시');
   return on.join(' · ');
-}
-
-/** 누구를 때리나 — `pick` 을 사람 말로 */
-function targetText(sk: SkillDef): string {
-  if (sk.pick === 'none') return '아군 전체';
-  if (sk.pick === 'all') return '지나가는 길의 적 전부';
-  if (sk.pick === 'kind') return '떨어진 자리의 무리';
-  return `무작위 ${sk.targets}마리`;
 }
 
 /**
@@ -388,7 +380,14 @@ export function SkillDetail({ c, party, chars, sk, slot, readOnly }: {
         `코스트 4 마다` 를 한 번 더 적으면 같은 말이 두 줄이다.
       */}
       <KV k="빨라야" v={`${sec.toFixed(1)}초마다`} />
-      <KV k="대상" v={targetText(sk)} />
+      {/*
+        누구에게 걸리나 — **`core/chars` 가 안다** (`targetName`).
+
+        여기서 `pick` 을 읽어 적던 시절, 적을 안 고르는 기술 아홉이 전부
+        `아군 전체` 로 떴다. 함성은 자기 공격력만 오르고 도발은 적을 끌어
+        오는데도.
+      */}
+      <KV k="대상" v={targetName(sk)} />
       {/*
         ── 때리지도 채우지도 않는 기술들 ──
 

@@ -1379,6 +1379,49 @@ export function skillsOf(id: string): SkillDef[] {
 }
 
 /**
+ * ── 이 기술이 **누구에게 걸리나** ── 화면에 적는 한 마디.
+ *
+ * `SkillDef.pick` 은 **적을 어떻게 고르나**만 말한다. 그래서 적을 아예 안
+ * 고르는 기술은 넷이 다 `none` 인데, 그 넷이 하는 일은 서로 다르다 —
+ * 도발은 적 전체를 끌어오고, 기도는 아군 전체를 채우고, 함성은 자기 혼자
+ * 세지고, 정화는 아군 하나를 씻는다.
+ *
+ * 창이 `none` 을 통째로 `아군 전체` 로 읽고 있었다. 그래서 **이졸데의 함성이
+ * 아군 전체 대상으로 떴다** — 자기 공격력만 오르는 기술인데. 같은 줄에서
+ * 도발도 아군 전체였다.
+ *
+ * 여기서는 `pick` 이 아니라 **실제로 무엇을 거는지**를 보고 정한다. 새 기술이
+ * 생겨도 거는 칸만 채우면 이 줄이 저절로 맞는다.
+ *
+ * 차례가 곧 규칙이다.
+ *
+ *   도발이 있으면      적에게 거는 것이다 (때리지는 않아도)
+ *   걷어내는 것이면    하나냐 전체냐가 `cleanseAll` 에 달렸다
+ *   파티에 걸면        아군 전체
+ *   제 몸에만 걸면     자신
+ */
+export function targetName(sk: SkillDef): string {
+  if (sk.pick === 'all') return '지나가는 길의 적 전부';
+  if (sk.pick === 'kind') return '떨어진 자리의 무리';
+  if (sk.pick === 'random') return `무작위 ${sk.targets}마리`;
+
+  /* ── 여기부터는 적을 안 고르는 기술들 (`pick: 'none'`) ── */
+  if (sk.taunt) return '적 전체';
+  if (sk.cleanse) return sk.cleanseAll ? '아군 전체' : '아군 한 명';
+  if (
+    sk.heal > 0 || sk.healPct > 0 || !!sk.ward
+    || !!sk.party || !!sk.partyProc || (sk.partyAlso ?? []).length > 0
+  ) return '아군 전체';
+  if (sk.self || (sk.selfAlso ?? []).length > 0) return '자신';
+  /*
+    여기 오는 기술은 아직 없다. 거는 칸을 하나도 안 채운 채 `none` 이면
+    실제로 아무 일도 안 하는 기술이므로, 그렇게 적는다 — `아군 전체` 로
+    둘러대면 안 하는 일을 한다고 적는 셈이다.
+  */
+  return '없음';
+}
+
+/**
  * ── 트리 자리 하나가 여는 **액티브 기술** ──
  *
  * 패시브 자리는 여기 없다. 저것들은 기술을 하나 더 주는 것이 아니라 이미

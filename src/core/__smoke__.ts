@@ -3405,6 +3405,64 @@ console.log('\n── 스킬 트리 · 코스트 ──');
     지금은 칸이 `nodeDemo` 로 받아 적는다 (`SkillTreePopup` 의 `Node`). 표에
     그 칸이 되살아나면 여기서 걸린다.
   */
+  /*
+    ── 누구에게 걸리는가 ── 열일곱 기술 전수조사 (`targetName`).
+
+    창이 `SkillDef.pick` 을 읽어 이 줄을 적었다. 그런데 저 칸은 **적을 어떻게
+    고르나**만 말하므로, 적을 아예 안 고르는 기술은 아홉이 다 `none` 이다 —
+    그 아홉을 통째로 `아군 전체` 라고 적고 있었다.
+
+    그래서 이졸데의 함성이 대상 `아군 전체` 로 떴다. 자기 공격력만 오르는
+    기술인데. 도발도, 숲의 축복도, 불굴의 의지도 다 아군 전체였다.
+
+    아래 표가 사양이다. 손으로 적어 두는 까닭: 이 줄은 **사람이 읽고 맞다고
+    할 수 있는 것**이라야 하고, 코드로 다시 유도하면 `targetName` 을 두 벌
+    쓰는 셈이라 같이 틀린다.
+  */
+  {
+    const WANT: Record<string, string> = {
+      검기: '지나가는 길의 적 전부',
+      도발: '적 전체',
+      함성: '자신',
+      '수호의 결의': '아군 전체',
+      '성검 발현': '무작위 1마리',
+      강타: '떨어진 자리의 무리',
+      화산격: '무작위 1마리',
+      '용암 지대': '지나가는 길의 적 전부',
+      '불굴의 의지': '자신',
+      화살비: '무작위 3마리',
+      '숲의 축복': '자신',
+      '정령의 노래': '아군 전체',
+      '거대 화살': '지나가는 길의 적 전부',
+      '요정의 축제': '아군 전체',
+      기도: '아군 전체',
+      정화: '아군 한 명',
+      '신의 심판': '지나가는 길의 적 전부',
+    };
+    let bad = '';
+    let n = 0;
+    for (const id of Object.keys(tr.TREE) as CharId[]) {
+      for (const node of tr.TREE[id]) {
+        if (node.kind !== 'active') continue;
+        const sk = ct.nodeDemo(mk(id, 5, []), node.id);
+        if (!sk) { bad = bad || `${node.name} 기술 없음`; continue; }
+        n++;
+        const want = WANT[sk.name];
+        const got = ct.targetName(sk);
+        if (want === undefined) bad = bad || `${sk.name} 은 표에 없다`;
+        else if (want !== got) bad = bad || `${sk.name}: ${got} (기대 ${want})`;
+      }
+    }
+    ok('대상 줄이 실제로 걸리는 곳과 같다', !bad, bad || `${n}기술`);
+  }
+
+  /* 찬란한 빛을 찍으면 정화가 전체가 된다 — 대상 줄도 따라간다 */
+  ok('찬란한 빛: 정화 대상이 아군 전체로',
+    ct.targetName(ct.nodeDemo(mk('nun', 5, []), 'nu4b')!) === '아군 전체');
+  /* 강화된 화살은 셋에서 다섯으로 — 마릿수도 따라간다 */
+  ok('강화된 화살: 무작위 5마리',
+    ct.targetName(ct.nodeDemo(mk('elfarcher', 5, []), 'ea3a')!) === '무작위 5마리');
+
   ok('트리 표에 코스트를 다시 적어 두지 않았다',
     (Object.keys(tr.TREE) as CharId[]).every((id) => tr.TREE[id].every(
       (n) => !('cost' in n),

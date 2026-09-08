@@ -54,7 +54,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import {
-  CHARS, OwnedChar, SkillDef, blowOf, projFrame, projSet, statOf,
+  CHARS, OwnedChar, SkillDef, blowOf, projFrame, projSet, statOf, targetName,
 } from '@/core/chars';
 import { GOOD, STATUS_WHAT, StatusId } from '@/core/status';
 import { Sprite } from '@/ui/Sprite';
@@ -831,7 +831,11 @@ export function SkillDemo({
       </View>
       <T size={9} dim="dim" style={{ marginTop: 3 }}>
         {`예시입니다 — 실제로는 ${
-          sk.pick === 'none' ? '아군 전체' : '그때 서 있는 적들'
+          /*
+            여기도 `pick` 을 읽어 `아군 전체` 라고 적었다. 함성처럼 자기
+            혼자 세지는 기술까지 그렇게 떴다 (`core/chars` 의 `targetName`).
+          */
+          sk.pick === 'none' ? targetName(sk) : '그때 서 있는 적들'
         }에게 걸리고, 숫자는 위의 "한 대" 와 같은 값입니다 (${
           blowOf(c.id, sk).pierce.phys || blowOf(c.id, sk).pierce.magic
             ? '관통이라 상대 방어를 안 탑니다'
