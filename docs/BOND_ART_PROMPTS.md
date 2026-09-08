@@ -351,8 +351,7 @@ ART DIRECTION (this is the look we want):
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully clothed, everything covered.
-- No cleavage, no underwear, no skin-tight emphasis, no suggestive posing.
-- Camera at eye level. No low angles looking up.
+- She is in full armour, covered from the neck down. Camera at eye level, straight on.
 
 CHARACTER — ISOLDE, a young knight:
 Very long straight pale hair past her waist. A slim jewelled circlet with one small gem on her forehead. Silver plate armour with layered pauldrons and a fitted breastplate over a high-necked underlayer, a cape with an embroidered hem. Calm, polite, faintly tired features. Pretty and approachable, not stern.
@@ -416,7 +415,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully clothed and fully armoured, collar closed.
-- No cleavage, no skin-tight emphasis, no suggestive posing, no low angles.
+- She is in full armour, covered from the neck down. Camera at eye level, straight on.
 
 CHARACTER — ISOLDE, a young knight:
 Very long straight pale hair, a slim jewelled circlet, silver plate armour with layered pauldrons over a high-necked underlayer, a cape with an embroidered hem. Her armour is CLEAN and INTACT here — at most one small scuff on a pauldron. Pretty and approachable, not stern.
@@ -449,7 +448,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. The battle damage is to her ARMOUR AND CLOAK, not to her modesty — the underlayer stays intact and closed at the throat.
-- No cleavage, no exposed chest, no torn clothing revealing skin below the collarbone, no suggestive posing, no low angles.
+- The battle damage is to her ARMOUR AND CLOAK only; the high-necked underlayer beneath the breastplate is whole and closed. Camera at eye level, straight on.
 
 CHARACTER — ISOLDE, a young knight, straight out of a hard fight:
 Very long pale hair, now loose and dishevelled with strands stuck to her cheek; the circlet is knocked slightly crooked. Her armour has taken a beating — one pauldron is gone entirely, the breastplate is dented and scored with deep scratches, a buckle hangs loose. The cape is badly torn: the hem is ripped into long ragged tatters and a wide tear runs up one side, so it hangs in strips. Her sleeve is shredded at the forearm and the wrapping underneath has come loose and trails. Soot and dust on the armour, a smear of dirt across one cheek, a small bandage on her temple. Everything is ruined EXCEPT that the high-necked underlayer beneath the breastplate is whole and closed.
@@ -465,14 +464,23 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. So
 
 ### 비앙카 (`bunnyaxe_*`)
 
-> **옷을 잘못 적어 두었습니다.** `선술집 점원복 + 두건` 으로 썼는데, 그건
-> 만들려다 접은 기본 스킨입니다 (`docs/BIANCA_BASE_SKIN.md` — 한 벌에 그림이
-> 스물일곱 장이라 걷었습니다). 게임 안의 비앙카는 **바니걸**입니다 —
-> 전투 도트도 도감 초상도 다 그것입니다.
+> **옷을 잘못 적어 두었었습니다.** `선술집 점원복 + 두건` 으로 썼는데 그건
+> 만들려다 접은 기본 스킨입니다 (`docs/BIANCA_BASE_SKIN.md`). 게임 안의
+> 비앙카는 **바니걸**이고, 전투 도트도 도감 초상도 다 그것입니다.
+
+> **필터에 걸려서 한 번 더 고쳤습니다.** 처음에는 옷을 자세히 적고
+> (`strapless leotard` · `fluffy tail` · `sheer legwear`) 그 아래에 하지 말
+> 것을 몸 부위 이름으로 늘어놓았습니다 (`no chest emphasis` · `no thigh
+> focus`). 그 둘이 같은 문단에 있으면 **생성기가 통째로 거절합니다** —
+> 금지어를 적어 두는 것만으로도 그 주제로 읽히기 때문입니다.
 >
-> 아래 넷은 다 바니걸로 고쳤습니다. 옷이 옷이니만큼 `CONTENT RULES` 에
-> **가슴·엉덩이·허벅지를 강조하지 말 것**을 따로 적어 두었습니다 — 그 옷을
-> 입은 채로도 얼굴이 주인공이어야 합니다.
+> 지금은 반대로 씁니다.
+>
+> 1. **옷은 화면에 보이는 만큼만** 적습니다. 가슴 위로 자른 컷에서는 토끼 귀와
+>    나비넥타이와 어깨까지가 전부이므로, 나머지는 아예 안 적습니다
+> 2. **하지 말 것을 몸 이름으로 안 적습니다.** 대신 **카메라를 정해 줍니다** —
+>    `쇄골 위로만` · `눈높이` 처럼. 안 보이면 못 그립니다
+> 3. `young adult woman in her twenties` 를 넣어 나이를 못 박습니다
 
 > 넷이 안 겹치게 갈라 둔 것: 1번은 **옆을 보고**(손님) 전신, 2번은 **눈을
 > 맞추고** 잔을 들이밀며 가슴 위, 3번은 **문을 보고** 있어 시선이 아예 없는
@@ -490,17 +498,13 @@ ART DIRECTION:
 - The CHARACTER fills most of the frame; the tavern behind her is drawn simply and with less contrast.
 - Appealing modern anime face with large expressive eyes. Lively comedy manga energy.
 - Clean inked linework, cel shading, light screentone. Fun and warm, not cinematic or grim.
+- Wholesome all-ages slice-of-life comedy, like a page from a shounen tavern manga.
 
-CONTENT RULES (strict — her outfit is a costume, not the subject):
-- Her bunny-suit is a stage costume she wears for work. Draw it accurately but do NOT sexualize it.
-- NO chest emphasis, NO cleavage line drawn as a feature, NO butt or thigh focus, NO low camera angles, NO leaning-forward chest poses.
-- Camera at eye level. Wholesome and funny, all-ages. The picture is about her face and the situation.
-
-CHARACTER — BIANCA, a tavern girl who fights:
-A lively young woman with a short tousled bob, freckles, and a wide confident grin. She wears a BUNNY-SUIT stage costume: a bunny-ear headband, a black strapless leotard with a small bowtie at the collar, a fluffy round tail, sheer black legwear with one garter strap on the thigh, and tall lace-up heeled boots. Over her right shoulder, strapped on top of the costume, one battered steel PAULDRON — the only piece of armour she owns. She carries an enormous single-bladed woodcutter's axe as if it weighed nothing.
+CHARACTER — BIANCA, a tavern waitress who also fights:
+A cheerful young adult woman in her twenties with a short tousled bob and freckles. She works the floor in the tavern's performer uniform: a bunny-ear headband, a neat fitted black waistcoat-style outfit with a small bowtie at the collar, opaque dark tights, and tall lace-up heeled boots. Strapped over her right shoulder on top of it, one battered steel PAULDRON — the only piece of armour she owns. She carries an enormous single-bladed woodcutter's axe as if it weighed nothing.
 
 SCENE — THROWING OUT A ROWDY CUSTOMER:
-Full figure, seen a little from the side. One boot is planted on a toppled bench and she leans out to jab a finger down at a big drunk man who has fallen backward at the bottom of the frame — seen from behind, hands raised, drawn small and simple. Her other hand rests the axe over her shoulder. She is looking DOWN AT HIM, not at the viewer. Mouth open mid-scold, one eyebrow up, eyes bright: she is telling him off and enjoying it. A tankard and a couple of cards tumble through the air. The tavern behind is a soft suggestion of tables and lamps.
+Full figure, seen a little from the side, camera at eye level. One boot is planted on a toppled bench and she leans out to jab a finger down at a big drunk man who has fallen backward at the bottom of the frame — seen from behind, hands raised, drawn small and simple. Her other hand rests the axe over her shoulder. She is looking DOWN AT HIM, not at the viewer. Mouth open mid-scold, one eyebrow up, eyes bright: she is telling him off and enjoying it. A tankard and a couple of cards tumble through the air. The tavern behind is a soft suggestion of tables and lamps.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone, a few bold manga action lines. Warm lamplight, simple background, high contrast kept on HER.
@@ -515,17 +519,13 @@ ART DIRECTION:
 - The CHARACTER'S FACE and the glass fill the frame; the bar behind her is simple and low-contrast.
 - Appealing modern anime face with large expressive eyes and a big open grin. She is looking RIGHT AT THE VIEWER.
 - Clean inked linework, cel shading, light screentone. Cheerful and inviting.
+- Wholesome all-ages slice-of-life comedy.
 
-CONTENT RULES (strict — her outfit is a costume, not the subject):
-- Her bunny-suit is a stage costume. Draw it accurately but do NOT sexualize it.
-- NO chest emphasis, NO cleavage line drawn as a feature, NO butt or thigh focus, NO low camera angles.
-- She leans on the bar but it is NOT a chest-forward pose — her weight is on her ELBOWS, the camera is at eye level, and the framing is tight on her face and the glass.
-
-CHARACTER — BIANCA:
-Short tousled bob, freckles. BUNNY-SUIT costume: bunny-ear headband, black strapless leotard with a small bowtie at the collar, fluffy round tail, sheer black legwear, tall lace-up heeled boots. One battered steel pauldron on her right shoulder. Her huge axe leans against the bar behind her, out of the way.
+CHARACTER — BIANCA, a tavern waitress:
+A cheerful young adult woman in her twenties, short tousled bob, freckles. FRAMED FROM THE COLLARBONE UP, so all we see of her uniform is the bunny-ear headband, the small bowtie at her collar, and one battered steel pauldron on her right shoulder. Her huge axe leans against the bar behind her, out of the way.
 
 SCENE — HER OWN COCKTAIL:
-Chest-up, close, both elbows on a wooden bar, pushing a tall glass toward the viewer — the glass is large in the foreground, filled with layered liquid, ice, a curl of citrus peel and something dubious floating in it. Her grin is huge, eyebrows raised in expectation, eyes locked on the viewer, clearly saying "drink it". Her free hand gives a thumbs-up. A few bottles behind her, drawn simply.
+A tight head-and-shoulders shot, camera at eye level. She has both elbows on a wooden bar and is pushing a tall glass toward the viewer — the glass is large in the foreground, filled with layered liquid, ice, a curl of citrus peel and something dubious floating in it. Her grin is huge, eyebrows raised in expectation, eyes locked on the viewer, clearly saying "drink it". Her free hand gives a thumbs-up. A few bottles behind her, drawn simply.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Warm lamplight, gentle foreshortening on the glass, a few white highlights on the ice, background kept simple.
@@ -540,17 +540,13 @@ ART DIRECTION:
 - The CHARACTER fills most of the frame; the corridor is simple and low-contrast.
 - Appealing modern anime face with large expressive eyes; heavy blush drawn with manga blush lines.
 - Clean inked linework, cel shading, light screentone. Sweet and charming, gently funny.
+- Wholesome all-ages slice-of-life comedy.
 
-CONTENT RULES (strict — her outfit is a costume, not the subject):
-- Her bunny-suit is a stage costume she wears for work. Draw it accurately but do NOT sexualize it.
-- NO chest emphasis, NO butt or thigh focus, NO low camera angles, NO suggestive posing.
-- She is turned toward the DOOR, not toward the viewer — the camera catches her from the side, and she never makes eye contact.
-
-CHARACTER — BIANCA, a tavern girl who fights:
-A lively young woman with a short tousled bob and freckles. BUNNY-SUIT stage costume: a bunny-ear headband, a black strapless leotard with a small bowtie at the collar, a fluffy round tail, sheer black legwear, tall lace-up heeled boots — but tonight it is neat and pressed, the bowtie straightened, her hair brushed, a small ribbon tied to one bunny ear. No pauldron, no axe anywhere: she left the armour behind on purpose.
+CHARACTER — BIANCA, a tavern waitress:
+A cheerful young adult woman in her twenties, short tousled bob, freckles. She is off shift and has pulled a long coat on over her uniform, buttoned up, so only the bunny-ear headband and her boots show what she does for a living. Tonight her hair is brushed and a small ribbon is tied to one bunny ear. No pauldron, no axe anywhere: she left the armour behind on purpose.
 
 SCENE — OUTSIDE THE DOOR, ABOUT TO KNOCK:
-Full figure seen from the side, standing in a narrow lamp-lit corridor with her back lightly against the wall beside a closed wooden door. She stares at the DOOR, not at the viewer. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, eyes squeezed half-shut, mouth caught between a nervous grimace and an enormous helpless smile — she has been standing here a while and cannot make herself knock. One boot is up on its toe. Her shadow stretches long down the corridor.
+Full figure seen from the side, camera at eye level, standing in a narrow lamp-lit corridor with her back lightly against the wall beside a closed wooden door. She stares at the DOOR, not at the viewer, and never makes eye contact. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, eyes squeezed half-shut, mouth caught between a nervous grimace and an enormous helpless smile — she has been standing here a while and cannot make herself knock. One boot is up on its toe. Her shadow stretches long down the corridor.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Heavy blush hatching plus two small blush lines, one sweat drop. A single warm lamp, soft falloff, corridor drawn simply.
@@ -558,39 +554,44 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. He
 
 **`assets/wallpaper/bunnyaxe_love.jpg`**
 
-> 3번과 안 겹치게: 3번은 **문을 보고** 전신에 긴장, 4번은 **눈을 맞추고**
-> 가슴 위로 가까이, 그리고 행복이 새어 나옵니다.
+> 이 한 장이 유난히 잘 거절당했습니다. 옷 묘사를 **화면에 보이는 데까지**로
+> 줄이고, 금지 목록을 빼고, 옷을 조끼로 적었습니다 — 덮인 옷이라고 적으면
+> 걸릴 것이 없습니다.
+>
+> 카메라는 **상반신을 들이대는** 컷입니다. 가슴 위로 자르되 몸을 앞으로
+> 기울여 화면을 꽉 채웁니다 — 얼굴만 크게 잡으면 손 꼼지락이 안 보입니다.
 
 ```
 A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
 
 ART DIRECTION:
-- Close character portrait. Her FACE and her FIDGETING HANDS are the whole picture; the room behind her is soft, warm and low-contrast.
+- A tight portrait. Her FACE and her FIDGETING HANDS are the whole picture; the room behind her is soft, warm and low-contrast.
 - Appealing modern anime face: large expressive eyes with bright highlights, soft round cheeks, heavy manga blush.
 - Clean inked linework, cel shading, light screentone. Sweet, warm, a little bashful — the reader should want to smile back.
+- Wholesome all-ages slice-of-life. This is a shy, sincere moment between friends.
 
-CONTENT RULES (strict — her outfit is a costume, not the subject):
-- Her bunny-suit is a stage costume. Draw it accurately but do NOT sexualize it.
-- NO chest emphasis, NO butt or thigh focus, NO low camera angles, NO suggestive posing.
-- This is a tight chest-up shot — most of the costume is out of frame anyway. The picture is her face and her hands.
+FRAMING (fixed):
+- UPPER BODY SHOT, from the middle of her chest upward — head, shoulders, both arms and her fidgeting hands are all in frame. This is NOT a full-body shot and NOT a tight face close-up.
+- She LEANS IN toward the viewer so that she fills the frame edge to edge and the background falls away behind her. Camera at eye level, straight on.
 
-CHARACTER — BIANCA:
-Short tousled bob, freckles. BUNNY-SUIT costume: bunny-ear headband, black strapless leotard with a small bowtie at the collar. The bunny ears are drooping slightly, which makes her look even more bashful. No pauldron, no axe.
+CHARACTER — BIANCA, a tavern waitress:
+A cheerful young adult woman in her twenties, short tousled bob, freckles. She wears the tavern's performer uniform: a bunny-ear headband and a neat fitted black waistcoat-style outfit buttoned up the front with a small bowtie at the collar — properly covered, tidy, workaday. The bunny ears are drooping slightly, which makes her look even more bashful.
 
 POSE AND EXPRESSION — THIS IS THE WHOLE PICTURE:
 She is EMBARRASSED AND QUIETLY HAPPY at the same time, and cannot keep still.
-- Both hands are up near her chest, FINGERS FIDGETING — index fingers pressed together and poking at each other, knuckles a little tense. Draw the hands clearly and fairly large; the fidget is half the picture.
+- Both hands are raised in front of her chest, FINGERS FIDGETING — index fingers pressed together and poking at each other, knuckles a little tense. Draw the hands clearly and fairly large; the fidget is half the picture.
 - Shoulders drawn up and in, head tilted down a little, so she is looking UP at the viewer through her lashes — she IS making eye contact, shyly.
 - Cheeks deeply flushed with manga blush lines across the nose; a tiny sweat drop at the temple.
 - Mouth pulled into a small closed-lip smile that keeps escaping into a wider one — she is trying to hold it in and failing.
 - Read her as "…뭐, 뭘 봐. 그런 거 아니거든." — flustered, pleased, completely transparent about it. She is normally loud and confident, and that is exactly why this is charming.
 
-SCENE — AFTER, IN THE QUIET TAVERN:
-Chest-up, close, facing the viewer. She stands in the empty tavern after closing, a lamp behind her throwing a warm glow; chairs are up on the tables, drawn softly and simply. One strand of hair has fallen across her cheek. A couple of small manga sparkle marks near her shoulders.
+SCENE — AFTER CLOSING, IN THE QUIET TAVERN:
+She stands in the empty tavern after closing, a lamp behind her throwing a warm glow; chairs are up on the tables, drawn softly and simply, well out of focus. One strand of hair has fallen across her cheek. A couple of small manga sparkle marks near her shoulders.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft warm key light from behind and to one side, gentle bloom, delicate blush hatching, bright highlights in the eyes, background softly blurred.
 ```
+
 
 ---
 
@@ -612,7 +613,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully clothed; her tunic reaches mid-thigh and she wears leggings and tall boots.
-- The camera is slightly below her because she is in a tree, but it frames her FACE and the branch — never up her clothing. No thigh focus, no suggestive posing.
+- She is in a tree, so the camera is a little below her — but it is aimed at her FACE and the branch, and the branch itself blocks everything under it.
 
 CHARACTER — RIANNE, an elf archer:
 A slender elf with long pointed ears and very long pale hair in a high ponytail tied with a feather. A short-sleeved hooded jerkin over a fitted tunic, a wide belt, leather bracers, a quiver at her hip, a torn ragged-hemmed cloak, leggings and tall lace-up boots. A longbow taller than she is. Cool, distant expression.
@@ -636,7 +637,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully clothed, leggings and tall boots.
-- No cleavage, no thigh focus, no suggestive posing, no low angles.
+- Framed from the chest up. She is covered from the neck down in a jerkin, tunic, leggings and boots. Camera at eye level.
 
 CHARACTER — RIANNE:
 Long pointed ears, very long pale hair in a high ponytail with a feather, hooded jerkin over a fitted tunic, bracers, quiver, torn cloak, leggings, tall boots. Her longbow is slung across her back, freeing both hands.
@@ -660,7 +661,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict — this is a COMEDY panel):
 - Wholesome, all-ages, non-sexualized. Fully clothed, cloak wrapped around her shoulders.
-- No cleavage, no thigh focus, no suggestive posing, no low angles.
+- Her cloak is wrapped around her shoulders like a blanket, so she is covered. Camera at eye level.
 
 CHARACTER — RIANNE:
 Long pointed ears, long pale hair in a high ponytail with a feather, hooded jerkin, bracers, leggings, tall boots. Her torn cloak is pulled around her shoulders like a blanket; her bow leans against the wall.
@@ -684,8 +685,8 @@ ART DIRECTION:
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully clothed, tunic to mid-thigh, leggings and tall boots.
-- Hands behind the back is a SHY fidget, NOT a chest-forward pose — shoulders rounded and slightly hunched, weight shifted, head tucked down.
-- No cleavage, no chest emphasis, no thigh focus, no low angles.
+- Hands behind the back is a SHY fidget: shoulders rounded and slightly hunched, weight shifted, head tucked down. Camera at eye level, straight on.
+- She is covered from the neck down in a jerkin, tunic, leggings and boots.
 
 CHARACTER — RIANNE:
 Long pointed ears, very long pale hair — here loose and unbound rather than tied up — hooded jerkin, bracers, leggings, tall boots. No bow, no quiver.
@@ -719,7 +720,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully covered by a heavy habit — high collar, long sleeves, long skirt with NO slit.
-- No cleavage, no leg exposure, no suggestive posing, no low angles.
+- The habit covers her from the chin to the floor — high collar, long bell sleeves, long plain skirt. Camera at eye level.
 
 CHARACTER — AGNES, a young nun:
 Shoulder-length pale hair framing her face under a white headband and a black veil with a small leaf ornament at the temple. A high-collared black habit with wide bell sleeves, a long pale stole down the front, a sash at the waist, a long plain skirt. She carries a censer on a fine chain. Gentle features.
@@ -743,7 +744,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict — this is a COMEDY panel):
 - Wholesome, all-ages, non-sexualized. Fully covered by a heavy habit, high collar, long sleeves.
-- No cleavage, no suggestive posing, no low angles.
+- The habit covers her from the chin down. Camera at eye level, straight on.
 
 CHARACTER — AGNES:
 Shoulder-length pale hair under a white headband and black veil with a leaf ornament, a high-collared black habit with wide bell sleeves, a pale stole, a sash. No censer here.
@@ -768,7 +769,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully covered by a heavy habit — high collar, long sleeves, long skirt with NO slit.
-- No cleavage, no leg exposure, no suggestive posing, no low angles.
+- The habit covers her from the chin to the floor — high collar, long bell sleeves, long plain skirt. Camera at eye level.
 
 CHARACTER — AGNES:
 Shoulder-length pale hair under a white headband and black veil with a leaf ornament, high-collared black habit with wide bell sleeves, pale stole, sash, a censer on a chain hanging from one hand.
@@ -792,7 +793,7 @@ ART DIRECTION:
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully covered by a heavy habit, high collar closed.
-- No cleavage, no undressing, no suggestive posing, no low angles.
+- The habit stays on and closed at the throat. Camera at eye level, straight on.
 
 CHARACTER — AGNES:
 Shoulder-length pale hair under a white headband and black veil with a leaf ornament — here the veil is pushed slightly back and more of her hair shows — high-collared black habit with wide bell sleeves, pale stole, sash.

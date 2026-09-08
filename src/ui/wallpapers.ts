@@ -59,3 +59,16 @@ export function ownedWallpaper(
   }
   return out;
 }
+
+/**
+ * 이 사람의 **모든** 월페이퍼 열쇠 — 받았든 안 받았든.
+ *
+ * ⚠ 시험용이다 (`FREE_ENHANCE`). 실제로는 이야기를 다 봐야 받는 것이므로
+ * (`ownedWallpaper`), 이걸로 화면을 열면 안 본 이야기의 그림이 다 보인다.
+ *
+ * 차례는 인연 단계 순서다 — 어색 · 우정 · 신뢰 · 애정.
+ */
+export function allWallpapers(who: string): string[] {
+  const order = ['awkward', 'friend', 'trust', 'love'];
+  return order.map((s) => `${who}_${s}`).filter((k) => k in WALLPAPERS);
+}

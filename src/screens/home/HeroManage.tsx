@@ -110,7 +110,7 @@ import { LevelUpPopup } from './LevelUpPopup';
 import { bondStep } from '@/core/bond';
 import { SkillTreePopup } from './SkillTreePopup';
 import { WallpaperPopup } from './WallpaperPopup';
-import { ownedWallpaper } from '@/ui/wallpapers';
+import { allWallpapers, ownedWallpaper } from '@/ui/wallpapers';
 
 /**
  * 무대 — 인물이 서는 상자. 폭은 화면을 다 쓰고, **세로로 길다.**
@@ -779,6 +779,15 @@ export function HeroManage({ pick, onPick, onBond }: {
     됐는데, 지금은 인연 단계마다 한 장이라 **다 본 것만** 열려야 한다.
   */
   const mine = id ? ownedWallpaper(id, bonds[id]?.read ?? []) : null;
+  /*
+    ⚠ 시험 중에는 **다 본다** (`FREE_ENHANCE`).
+
+    실제로는 이야기를 다 봐야 한 장씩 받는 것이 맞는데 (`ownedWallpaper`),
+    그러면 그림이 제대로 붙었는지 보려고 인연을 10 까지 올려야 한다.
+    스위치를 끄면 저절로 받은 것 하나로 돌아간다.
+  */
+  const papers = id && FREE_ENHANCE ? allWallpapers(id) : [];
+  const canPaper = papers.length > 0 || !!mine;
 
   /*
     ── 이 사람이 할 수 있는 말들 ── 첫 줄이 `quote` 다 (`core/lines`).
@@ -931,7 +940,8 @@ export function HeroManage({ pick, onPick, onBond }: {
         그림을 여기서 미리 보여 주면 그 이야기를 열 이유가 사라진다.
       */}
       <WallpaperPopup
-        charId={paper ? mine : null}
+        charId={paper ? (papers[0] ?? mine) : null}
+        keys={papers}
         name={d.name}
         onClose={() => setPaper(false)}
       />
@@ -1178,7 +1188,7 @@ export function HeroManage({ pick, onPick, onBond }: {
             귀퉁이에 숫자까지 넣으면 단추가 무엇인지가 흐려진다.
           */}
           <T size={9} dim="sub">{bondStep(bondLv).name}</T>
-          {!!mine && (
+          {canPaper && (
             <ActBtn art="paper" label="월페이퍼" onPress={() => setPaper(true)} />
           )}
         </View>
