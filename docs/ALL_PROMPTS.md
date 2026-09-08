@@ -45,7 +45,7 @@ ART DIRECTION:
 - Wholesome all-ages slice-of-life comedy, like a page from a shounen tavern manga.
 
 CHARACTER — BIANCA, a tavern waitress who also fights:
-A cheerful young adult woman in her twenties with a short tousled bob and freckles. She works the floor in the tavern's performer uniform: a bunny-ear headband, a neat fitted black waistcoat-style outfit with a small bowtie at the collar, opaque dark tights, and tall lace-up heeled boots. Strapped over her right shoulder on top of it, one battered steel PAULDRON — the only piece of armour she owns. She carries an enormous single-bladed woodcutter's axe as if it weighed nothing.
+A cheerful young adult woman in her twenties with a short tousled bob and freckles. She works the floor in the tavern's performer uniform: a bunny-ear headband; a fitted black bodice that fastens up the front and cuts straight across the collarbone with NO SHOULDER STRAPS, so her shoulders and upper arms are bare; a narrow band collar at the throat with a small bowtie; white cuffs at the wrists; opaque dark tights; and tall lace-up heeled boots. Strapped over her right shoulder on top of it, one battered steel PAULDRON — the only piece of armour she owns. She carries an enormous single-bladed woodcutter's axe as if it weighed nothing.
 
 SCENE — THROWING OUT A ROWDY CUSTOMER:
 Full figure, seen a little from the side, camera at eye level. One boot is planted on a toppled bench and she leans out to jab a finger down at a big drunk man who has fallen backward at the bottom of the frame — seen from behind, hands raised, drawn small and simple. Her other hand rests the axe over her shoulder. She is looking DOWN AT HIM, not at the viewer. Mouth open mid-scold, one eyebrow up, eyes bright: she is telling him off and enjoying it. A tankard and a couple of cards tumble through the air. The tavern behind is a soft suggestion of tables and lamps.
@@ -66,7 +66,7 @@ ART DIRECTION:
 - Wholesome all-ages slice-of-life comedy.
 
 CHARACTER — BIANCA, a tavern waitress:
-A cheerful young adult woman in her twenties, short tousled bob, freckles. FRAMED FROM THE COLLARBONE UP, so all we see of her uniform is the bunny-ear headband, the small bowtie at her collar, and one battered steel pauldron on her right shoulder. Her huge axe leans against the bar behind her, out of the way.
+A cheerful young adult woman in her twenties, short tousled bob, freckles. Her work uniform is a bunny-ear headband and a fitted black bodice with NO SHOULDER STRAPS — it cuts straight across the collarbone, leaving her shoulders bare — with a narrow band collar and a small bowtie at the throat. FRAMED FROM THE COLLARBONE UP, so what shows is the headband, the bowtie, her bare shoulders, and one battered steel pauldron strapped over her right shoulder. Her huge axe leans against the bar behind her, out of the way.
 
 SCENE — HER OWN COCKTAIL:
 A tight head-and-shoulders shot, camera at eye level. She has both elbows on a wooden bar and is pushing a tall glass toward the viewer — the glass is large in the foreground, filled with layered liquid, ice, a curl of citrus peel and something dubious floating in it. Her grin is huge, eyebrows raised in expectation, eyes locked on the viewer, clearly saying "drink it". Her free hand gives a thumbs-up. A few bottles behind her, drawn simply.
@@ -87,7 +87,7 @@ ART DIRECTION:
 - Wholesome all-ages slice-of-life comedy.
 
 CHARACTER — BIANCA, a tavern waitress:
-A cheerful young adult woman in her twenties, short tousled bob, freckles. She is off shift and has pulled a long coat on over her uniform, buttoned up, so only the bunny-ear headband and her boots show what she does for a living. Tonight her hair is brushed and a small ribbon is tied to one bunny ear. No pauldron, no axe anywhere: she left the armour behind on purpose.
+A cheerful young adult woman in her twenties, short tousled bob, freckles. She is off shift and has pulled a long coat on over her uniform — the strapless black bodice she works in is underneath and out of sight — so only the bunny-ear headband and her boots show what she does for a living. Tonight her hair is brushed and a small ribbon is tied to one bunny ear. No pauldron, no axe anywhere: she left the armour behind on purpose.
 
 SCENE — OUTSIDE THE DOOR, ABOUT TO KNOCK:
 Full figure seen from the side, camera at eye level, standing in a narrow lamp-lit corridor with her back lightly against the wall beside a closed wooden door. She stares at the DOOR, not at the viewer, and never makes eye contact. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, eyes squeezed half-shut, mouth caught between a nervous grimace and an enormous helpless smile — she has been standing here a while and cannot make herself knock. One boot is up on its toe. Her shadow stretches long down the corridor.
@@ -112,7 +112,7 @@ FRAMING (fixed):
 - She LEANS IN toward the viewer so that she fills the frame edge to edge and the background falls away behind her. Camera at eye level, straight on.
 
 CHARACTER — BIANCA, a tavern waitress:
-A cheerful young adult woman in her twenties, short tousled bob, freckles. She wears the tavern's performer uniform: a bunny-ear headband and a neat fitted black waistcoat-style outfit buttoned up the front with a small bowtie at the collar — properly covered, tidy, workaday. Strapped over her RIGHT SHOULDER on top of it, one small battered steel PAULDRON — a single scuffed plate, the only piece of armour she owns; she wears it even off duty. It must be visible in this shot. The bunny ears are drooping slightly, which makes her look even more bashful.
+A cheerful young adult woman in her twenties, short tousled bob, freckles. She wears the tavern's performer uniform: a bunny-ear headband and a fitted black bodice that fastens up the front and cuts straight across the collarbone with NO SHOULDER STRAPS, so her shoulders and upper arms are bare; a narrow band collar at the throat with a small bowtie, and white cuffs at the wrists. Tidy and workaday — this is what she wears to serve tables. Strapped over her RIGHT SHOULDER on top of it, one small battered steel PAULDRON — a single scuffed plate, the only piece of armour she owns; she wears it even off duty. It must be visible in this shot. The bunny ears are drooping slightly, which makes her look even more bashful.
 
 POSE AND EXPRESSION — THIS IS THE WHOLE PICTURE:
 She is EMBARRASSED AND QUIETLY HAPPY at the same time, and cannot keep still.
