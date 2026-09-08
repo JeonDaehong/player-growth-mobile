@@ -361,12 +361,30 @@ export function liveSpd(
  * 방어와 마저는 같은 뺄셈의 두 겹이라(`core/chars` 의 `Armor`) 한쪽만
  * 깎으면 물리 우두머리 앞에서만 아프고 마법 우두머리 앞에서는 아무 일도
  * 안 일어난다.
+ *
+ * ## 보호막이 두르고 있으면 두꺼워진다 (`ward`)
+ *
+ * 수호신의 가호가 +10 을 준다 (`Ward.def`). 여태 이 계산이 **전투 안에만**
+ * 있었다 — 피해를 셈하는 자리에서 `armor0.def + wd.def` 로 직접 얹었다.
+ * 그래서 실제로는 두꺼워지는데 캐릭터 창의 방어력 옆에는 아무 표시도 없었고,
+ * 사람 입장에서는 10짜리 기술을 쓰고도 오른 것이 화면 어디에도 없었다.
+ *
+ * 이제 여기서 얹는다. 창과 전투가 **같은 함수**를 부르므로 갈릴 수가 없다.
+ *
+ * 깎는 것 **뒤에** 더한다. 파쇄가 방어를 반으로 만든 상태에서 가호가 붙으면
+ * 10 이 그대로 얹혀야 한다 — 먼저 더하면 파쇄가 가호까지 반으로 깎는다.
+ *
+ * 마법저항력도 같이 올린다. 위의 파쇄와 같은 까닭이다 — 한쪽만 올리면
+ * 물리 우두머리 앞에서만 단단해진다.
+ *
+ * @param ward 막이 지금 두르고 있으면 그 `def`. 없으면 0
  */
-export function liveArmor(c: OwnedChar, hex: readonly Hex[]): Armor {
+export function liveArmor(c: OwnedChar, hex: readonly Hex[], ward = 0): Armor {
   const s = statOf(c);
   const m = mulOf(hex, 'st_break');
-  if (m >= 1) return { def: s.def, res: s.res };
-  return { def: Math.floor(s.def * m), res: Math.floor(s.res * m) };
+  const up = Math.max(0, Math.round(ward));
+  if (m >= 1) return { def: s.def + up, res: s.res + up };
+  return { def: Math.floor(s.def * m) + up, res: Math.floor(s.res * m) + up };
 }
 
 /**
@@ -496,7 +514,7 @@ export function marksOf(
    * 안 주면 없는 것으로 본다. 캐릭터 창 미리보기처럼 판이 안 도는 곳에서는
    * 두를 것도 없다.
    */
-  ward?: { hp: number; ms: number },
+  ward?: { hp: number; ms: number; def?: number },
 ): readonly Mark[] {
   /* 쓰러진 사람에게는 아무것도 안 뜬다 — 시체에 붙은 버프는 거짓말이다 */
   if (cur <= 0) return NO_MARK;
@@ -515,7 +533,13 @@ export function marksOf(
   if (ward && ward.hp > 0 && ward.ms > 0) {
     good.push({
       set: 'status_icon', name: 'st_shield', good: true,
-      label: '보호막', what: '피해 흡수',
+      label: '보호막',
+      /*
+        가호를 찍었으면 **막이 몸도 두껍게 한다** (`Ward.def`). 그 말을 여기
+        안 하면 방어가 오른 것이 화면 어디에도 안 남는다 — 로고는 흡수
+        주머니 이야기만 하고 있었고, 캐릭터 창의 괄호도 비어 있었다.
+      */
+      what: (ward.def ?? 0) > 0 ? `피해 흡수 · 방어 +${ward.def}` : '피해 흡수',
       blink: dying(ward.ms),
     });
   }

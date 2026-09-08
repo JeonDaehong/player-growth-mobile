@@ -54,6 +54,7 @@ import { C, SP } from '@/ui/theme';
 import { BattleView } from './home/BattleView';
 import { PartyBar } from './home/PartyBar';
 import { CharPopup } from './home/CharPopup';
+import { ItemScreen } from './home/ItemScreen';
 import { RewardBar } from './home/RewardBar';
 import { Ticker } from './home/Ticker';
 import { TopBar } from './home/TopBar';
@@ -183,6 +184,15 @@ export default function HomeScreen() {
         안 볼 때까지 들고 있으면 편성 창과 확인 창까지 통째로 남는다.
       */}
       {tab === 'hero' && <HeroScreen />}
+
+      {/*
+        ── 아이템도 떠나면 사라진다 ── (영웅과 같은 까닭)
+
+        가진 것을 세는 화면이라 안 볼 때 들고 있을 이유가 없다. 무엇보다
+        가진 수는 다른 화면에서 바뀌므로 (레벨업 창이 책을 먹는다), 들고
+        있으면 돌아왔을 때 옛 수가 떠 있다.
+      */}
+      {tab === 'item' && <ItemScreen />}
 
       <BottomNav tab={tab} onTab={setTab} />
 

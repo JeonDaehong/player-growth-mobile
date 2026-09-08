@@ -40,6 +40,7 @@ import { skillBase, strikeFor } from '@/core/autoBattle';
 import {
   CLEANSE_OPTS, CleanseOpt, OPT_DESC, OPT_NAME, cleanseOptOf,
 } from '@/core/skillOpt';
+import { HEX_TICK_MS, StatusId, hexText } from '@/core/status';
 import { KV, ListItem, Row, T, Tag } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { SkillDemo } from './SkillDemo';
@@ -224,6 +225,100 @@ function SkCard({ set, art, name, tag, on, off, onPress }: {
 }
 
 /**
+ * ── 이 기술이 **무슨 일을 하나** ── 줄 목록을 데이터에서 짓는다.
+ *
+ * 여태 창이 손으로 적었다. 그래서 그 자리에 처음 온 기술의 문장이 굳어
+ * 버렸고, 종류가 바뀌어도 문장은 안 바뀌었다 — 함성은 공격력을 올리는데
+ * `공격속도 1.3배` 라고 떴고, 신의 심판은 적 공격력을 깎는데 `받는 회복량
+ * 20% 감소` 라고 떴다.
+ *
+ * **무슨 뜻인지는 한 곳만 안다** (`core/status` 의 `hexText`). 여기는 그것을
+ * 누구에게 · 몇 초 동안 거는지만 붙인다. 새 상태가 생겨도 이 함수는 안 고친다.
+ *
+ * 값이 없는 칸은 줄이 안 생긴다 — 안 하는 일을 `없음` 으로 적으면 목록이
+ * 안 하는 일로 길어진다.
+ */
+function effectRows(sk: SkillDef): { k: string; v: string }[] {
+  const out: { k: string; v: string }[] = [];
+  const secs = (sec: number, id: StatusId, mul: number) => `${sec}초간 ${hexText(id, mul)}`;
+
+  if (sk.taunt) out.push({ k: '도발', v: `${sk.taunt}초 동안 적 전부가 이 사람만 노립니다` });
+
+  /* 자기에게 — 걸리는 것이 여럿일 수 있다 (비앙카의 불굴의 의지는 셋) */
+  const mine = [...(sk.self ? [sk.self] : []), ...(sk.selfAlso ?? [])];
+  mine.forEach((h, i) => out.push({
+    k: i === 0 ? '자신에게' : ' ',
+    v: secs(h.sec, h.id, h.mul)
+      + (sk.self && h === sk.self && sk.self.noCharge ? ' (그동안 코스트가 안 찹니다)' : ''),
+  }));
+
+  /* 아군 전체에게 */
+  const ours = [...(sk.party ? [sk.party] : []), ...(sk.partyAlso ?? [])];
+  ours.forEach((h, i) => out.push({
+    k: i === 0 ? '아군 전체에게' : '  ',
+    v: secs(h.sec, h.id, h.mul),
+  }));
+  if (sk.partyProc) {
+    out.push({
+      k: '아군이 때릴 때',
+      v: `${sk.partyProc.sec}초간 ${Math.round(sk.partyProc.odds * 100)}% 확률로 `
+        + `공격력의 ${Math.round(sk.partyProc.pct * 100)}%가 한 번 더`,
+    });
+  }
+
+  /* 보호막 — 체력 주머니라 상태가 아니다 (`BattleState.ward`) */
+  if (sk.ward) {
+    out.push({
+      k: '보호막',
+      v: `아군 전체에게 내 최대 체력의 ${Math.round(sk.ward.pct * 100)}%`
+        + ` (${sk.ward.sec}초, 다 깎이면 사라집니다)`,
+    });
+    if (sk.ward.def > 0) {
+      out.push({ k: '두르고 있는 동안', v: `방어력·마법저항력 +${sk.ward.def}` });
+    }
+    if (sk.ward.back > 0) {
+      out.push({
+        k: '막아 낸 만큼',
+        v: `${Math.round(sk.ward.back * 100)}%를 때린 적에게 되돌립니다`,
+      });
+    }
+  }
+
+  /* 걷어내기 */
+  if (sk.cleanse) {
+    out.push({
+      k: '정화',
+      v: sk.cleanseAll
+        ? '아군 전체에게서 걷어냅니다'
+        : '한 명에게서 걷어냅니다 (무엇을 걷을지는 아래에서 고릅니다)',
+    });
+  }
+  if (sk.cleanseGift) {
+    out.push({ k: '걷어낸 사람에게', v: secs(sk.cleanseGift.sec, sk.cleanseGift.id, sk.cleanseGift.mul) });
+  }
+
+  /* 맞은 적에게 — 최대 둘 (`foeHex` · `foeHex2`) */
+  const theirs = [sk.foeHex, sk.foeHex2].filter(Boolean) as { id: StatusId; sec: number; mul: number }[];
+  theirs.forEach((h, i) => out.push({
+    k: i === 0 ? '맞은 적에게' : '   ',
+    v: secs(h.sec, h.id, h.mul),
+  }));
+  if (sk.foeDot) {
+    out.push({
+      k: '불바다',
+      v: `${sk.foeDot.sec}초간 ${(HEX_TICK_MS / 1000).toFixed(1)}초마다 `
+        + `공격력의 ${Math.round(sk.foeDot.pct * 100)}%가 ${DMG_NAME[sk.foeDot.dmg]} 피해로`,
+    });
+  }
+
+  /* 겹쳐서 꽂히나 — 적이 적을 때 남는 발이 어디로 가나 */
+  if (sk.stack) {
+    out.push({ k: '남는 발', v: '적이 모자라면 같은 적에게 겹쳐서 꽂힙니다' });
+  }
+  return out;
+}
+
+/**
  * ── 기술 하나의 수치 전부 ── 창 둘이 같이 쓴다.
  *
  * 여기 있던 것을 **떼어 냈다.** 여태 기술 목록을 펼친 자리에만 있었는데,
@@ -297,27 +392,20 @@ export function SkillDetail({ c, party, chars, sk, slot, readOnly }: {
       {/*
         ── 때리지도 채우지도 않는 기술들 ──
 
-        도발·광란·정화는 수치가 아니라 **무슨 일이 일어나나**로
-        적어야 읽힌다. "공격력의 0%" 를 적어 두면 고장 난 기술로
-        보인다.
+        도발·정화·버프는 수치가 아니라 **무슨 일이 일어나나**로 적어야
+        읽힌다. "공격력의 0%" 를 적어 두면 고장 난 기술로 보인다.
+
+        여기 줄들은 전부 `effectRows` 가 **데이터에서 짓는다.** 손으로 적던
+        시절에는 두 줄이 통째로 거짓말을 하고 있었다 —
+
+          이졸데의 함성   격노(공격력 1.3배)인데 `공격속도 1.3배` 로 떴다
+          아녜스의 심판   약화(적 공격력 20% 감소)인데 `받는 회복량 20% 감소`
+
+        둘 다 그 자리에 처음 온 기술의 문장을 그대로 두고 종류만 바뀐 것이다.
+        상태가 스물둘인데 문장이 하나면 스물한 번 틀린다. 지금은 무슨 뜻인지를
+        `core/status` 의 `hexText` 한 곳에서만 안다.
       */}
-      {!!sk.taunt && (
-        <KV k="지속" v={`${sk.taunt}초 동안 적 전부가 이 사람만 노립니다`} />
-      )}
-      {!!sk.self && (
-        <KV
-          k="자기 강화"
-          v={`${sk.self.sec}초간 공격속도 ${sk.self.mul}배`
-            + (sk.self.noCharge ? ' (그동안 코스트가 안 찹니다)' : '')}
-        />
-      )}
-      {!!sk.foeHex && (
-        <KV
-          k="맞은 적에게"
-          v={`${sk.foeHex.sec}초간 받는 회복량 `
-            + `${Math.round((1 - sk.foeHex.mul) * 100)}% 감소`}
-        />
-      )}
+      {effectRows(sk).map((r) => <KV key={r.k} k={r.k} v={r.v} />)}
       {sk.heal > 0 ? (
         <>
           <KV

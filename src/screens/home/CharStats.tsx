@@ -122,10 +122,21 @@ export function CharStats({ c, party, chars, cols = 1, live = true }: {
   */
   const hpMap = useGame((s) => s.battle.hp);
   const hexMap = useGame((s) => s.battle.hex);
+  /*
+    지금 두르고 있는 막 (`BattleState.ward`).
+
+    수호신의 가호가 막이 있는 동안 방어 두 겹을 +10 해 준다. 그 값을 여기
+    안 넘기면 방어력 옆의 괄호가 늘 비어서, 10짜리 기술을 쓰고도 오른 것이
+    화면 어디에도 안 남는다 (`core/passives` 의 `liveArmor`).
+  */
+  const wardMap = useGame((s) => s.battle.ward);
 
   const alive = livingMembers(party, chars, hpMap);
   const hex = hexOf(hexMap, c.id);
   const cur = hpOf(c, hpMap);
+  /* 막은 시간과 남은 양이 둘 다 있어야 두르고 있는 것이다 */
+  const w = wardMap?.[c.id];
+  const wardOn = !!w && w.ms > 0 && w.hp > 0;
   /* 줄을 떼어 낸 몸 — 괄호가 대형이 준 몫까지 말하게 (머리말) */
   const base = statOf({ ...c, row: undefined });
   /* 대형까지 얹은 몸 — 체력 막대의 최대치가 이것이다 (전투가 보는 값) */
@@ -133,7 +144,7 @@ export function CharStats({ c, party, chars, cols = 1, live = true }: {
   const now = cur > 0 ? {
     atk: Math.round(liveAtk(c, alive, hex)),
     spd: liveSpd(c, cur, alive, hex),
-    ...liveArmor(c, hex),
+    ...liveArmor(c, hex, wardOn ? (wardMap?.[c.id]?.def ?? 0) : 0),
   } : null;
   /* 집중이 올려 준 몫까지 — 굴리는 쪽과 같은 함수다 (`rollCrit`) */
   const critNow = critOf(base.crit, hex);

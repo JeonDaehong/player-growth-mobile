@@ -137,7 +137,7 @@ const ISOLDE: readonly TreeNode[] = [
   {
     id: 'kg4a', who: 'knightgirl', tier: 4, name: '수호신의 가호', kind: 'passive',
     rival: 'kg4b', needs: 'kg3a',
-    desc: '수호의 결의가 두 배가 되고, 보호막이 있는 동안 방어력 +10. '
+    desc: '수호의 결의가 두 배가 되고, 보호막이 있는 동안 방어력·마법저항력 +10. '
       + '보호막을 두른 아군이 맞으면 그 피해의 10%를 적에게 되돌린다.',
     art: 'sk_aegis', live: true,
   },
@@ -169,7 +169,7 @@ const BIANCA: readonly TreeNode[] = [
     id: 'ba3a', who: 'bunnyaxe', tier: 3, name: '용암 지대', kind: 'active',
     rival: 'ba3b',
     desc: '적 전체에 공격력의 130% 물리 피해. 5초간 [지옥불] — 0.5초마다 '
-      + '공격력의 20%가 화염 피해로 들어간다.',
+      + '공격력의 20%가 물리 피해로 들어간다 (방어력에 깎입니다).',
     art: 'sk_lava', live: true,
   },
   {

@@ -2535,7 +2535,7 @@ export interface Ward {
   hp: number;
   /** 남은 시간 (ms). 0 이 되면 사라진다 */
   ms: number;
-  /** 걸려 있는 동안 더해지는 방어력 (수호신의 가호 +10) */
+  /** 걸려 있는 동안 더해지는 **방어력과 마법저항력** (수호신의 가호 +10) */
   def: number;
   /** **막아 낸 만큼**의 몇 할을 때린 놈에게 되돌리나 (가호 0.1) */
   back: number;
@@ -4532,10 +4532,11 @@ export function battleTick(
       const wdOn = !!wd && wd.ms > 0 && wd.hp > 0;
       /** 이 사람이 이번 대에 **몸으로** 받은 양 — 흡혈이 이걸 본다 */
       let hurtNow = 0;
-      const armor0 = liveArmor(who2, hex[who2.id] ?? []);
-      const armor = wdOn && wd.def > 0
-        ? { def: armor0.def + wd.def, res: armor0.res }
-        : armor0;
+      /*
+        막이 주는 +10 은 `liveArmor` 가 얹는다 — 캐릭터 창도 같은 함수를
+        부르므로, 여기서 직접 더하던 시절처럼 창과 전투가 갈릴 수 없다.
+      */
+      const armor = liveArmor(who2, hex[who2.id] ?? [], wdOn ? wd.def : 0);
       const base = Math.round(h.atk * (h.pat ? h.pat.mul : 1));
       /*
         배수가 0 인 기술은 **때리지 않는다** — 거는 것만 한다 (3·4·8·12·14·15판).

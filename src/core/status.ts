@@ -240,6 +240,59 @@ export const STATUS_WHAT: Record<StatusId, string> = {
 };
 
 /**
+ * ── 이 배수가 **무슨 뜻인가** ── 화면에 적는 한 마디.
+ *
+ * `STATUS_WHAT` 은 종류만 말한다 (`공격력 증가`). 기술 창에는 **얼마나**까지
+ * 적어야 하는데, 그 "얼마나" 를 읽는 법이 종류마다 다르다.
+ *
+ *   배수      격노 1.3 은 공격력 1.3배        (`upOf` 가 곱한다)
+ *   덧셈      집중 1.3 은 확률 +30%p          (`critOf` 가 1 을 빼서 더한다)
+ *   비율      흡혈 1.07 은 입힌 것의 7%       (`upOf` 가 1 을 빼서 쓴다)
+ *   감소      둔화 0.7 은 30% 감소            (`mulOf`)
+ *
+ * **이 표가 그 규칙의 유일한 사본이다.** 여태 창이 손으로 적었는데, 이졸데의
+ * 함성(격노 1.3배 — 공격력)이 `5초간 공격속도 1.3배` 로 떠 있었다. 한 자리에
+ * 못 박아 두면 새 상태가 생길 때마다 창마다 다시 틀린다.
+ *
+ * 값을 읽는 쪽과 여기가 갈리면 화면이 거짓말을 하므로, 검사에서 둘을 맞춰
+ * 본다 (`__smoke__` 의 "적어 둔 뜻과 실제가 같다").
+ *
+ * @param mul 걸린 세기 (`Hex.mul`). 뜻이 없는 것에는 안 쓴다
+ */
+export function hexText(id: StatusId, mul = 1): string {
+  /** 1 에서 얼마나 떨어졌나 — 퍼센트로 */
+  const off = Math.round(Math.abs(1 - mul) * 100);
+  const x = Number(mul.toFixed(2));
+  switch (id) {
+    /* ── 곱하는 것 ── */
+    case 'st_rage': return `공격력 ${x}배`;
+    case 'st_haste': return `공격속도 ${x}배`;
+    case 'st_guard': return `방어력 ${x}배`;
+    /* ── 더하는 것 ── 0% 인 사람에게 걸려도 그만큼 는다 (`critOf`) */
+    case 'st_focus': return `치명타 확률 +${off}%p`;
+    /* ── 비율 ── 1 을 뺀 만큼이 뜻이다 */
+    case 'st_leech': return `입힌 피해의 ${off}%만큼 회복`;
+    /* ── 깎는 것 ── */
+    case 'st_slow': return `공격속도 ${off}% 감소`;
+    case 'st_weak': return `공격력 ${off}% 감소`;
+    case 'st_break': return `방어력·마법저항력 ${off}% 감소`;
+    case 'st_wither': return `받는 치유량 ${off}% 감소`;
+    /* ── 배수가 뜻이 없는 것들 ── 하는 일을 그대로 적는다 */
+    case 'st_ward': return '새 디버프에 안 걸림';
+    case 'st_fey': return '때릴 때마다 미니 화살이 한 번 더';
+    case 'st_regen': return '지속 회복';
+    case 'st_burn': return '불타는 지속 피해';
+    case 'st_bleed': return '물리 지속 피해';
+    case 'st_poison': return '마법 지속 피해';
+    case 'st_taunt': return '건 사람만 노린다';
+    case 'st_stun': return '행동 불가';
+    case 'st_shock': return '행동 불가 (감전)';
+    case 'st_silence': return '스킬 봉인';
+    default: return STATUS_WHAT[id];
+  }
+}
+
+/**
  * 좋은 것인가.
  *
  * 화면이 이걸로 **차례를 가른다** — 좋은 것이 먼저, 나쁜 것이 뒤.
@@ -402,6 +455,17 @@ export function upOf(list: readonly Hex[], id: StatusId): number {
  * 긴 쪽, 세기는 둘 중 센 쪽이다. 그러지 않으면 같은 기술을 두 번 맞았을 때
  * 3초짜리가 1초 남은 것으로 덮여 오히려 짧아진다.
  *
+ * ## "센 쪽" 은 **방향에 따라 다르다**
+ *
+ * 오래 `Math.min` 하나로 골랐다. 깎는 것에는 맞다 — 0.5 가 0.9 보다 아프다.
+ * 그런데 올려 주는 것은 반대다: 2배가 1.3배보다 세다.
+ *
+ * 그래서 리안느가 숲의 축복(신속 2배)을 켜 둔 채로 요정의 축제(신속 1.3배)를
+ * 쓰면 **제 버프가 1.3 으로 깎였다.** 둘 다 이 사람의 기술이고 4단계까지
+ * 키우면 반드시 겹치는 조합이라, 키울수록 느려지는 자리가 하나 있었던 셈이다.
+ *
+ * 지금은 `GOOD` 을 보고 방향을 고른다.
+ *
  * @param stack 몇 겹까지 쌓이나. 1 이면 안 쌓인다 (대부분).
  *              쌓이는 것은 10판 우두머리의 오염된 점성 하나뿐이다.
  */
@@ -435,8 +499,15 @@ export function putHex(
     ...next,
     ms: Math.max(was.ms, next.ms),
     dot: Math.max(was.dot, next.dot),
-    /* 배수는 **작을수록 세다** (0.5 가 0.9 보다 아프다) */
-    mul: Math.min(was.mul, next.mul),
+    /*
+      배수의 **센 쪽**은 방향에 달렸다 (머리말).
+
+        깎는 것   작을수록 세다 — 0.5 가 0.9 보다 아프다
+        올리는 것 클수록 세다 — 신속 2배가 1.3배보다 빠르다
+    */
+    mul: GOOD.has(next.id)
+      ? Math.max(was.mul, next.mul)
+      : Math.min(was.mul, next.mul),
     n: Math.min(Math.max(1, stack), was.n + (stack > 1 ? 1 : 0)),
   };
   return out;

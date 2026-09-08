@@ -3477,6 +3477,148 @@ console.log('\n── 스킬 트리 · 코스트 ──');
   }
 }
 
+console.log(NL + '── 버프 · 디버프의 셈 ──');
+{
+  const stx = require('./status') as typeof import('./status');
+  const pv = require('./passives') as typeof import('./passives');
+  const ct2 = require('./chars') as typeof import('./chars');
+
+  const hex = (id: string, mul: number, ms = 5000): import('./status').Hex =>
+    ({ id, ms, dot: 0, mul, n: 1 } as import('./status').Hex);
+  const mk = (id: CharId, star: number, tree: string[]): OwnedChar =>
+    ({ id, star, awake: false, lv: 1, exp: 0, copies: 0, tree } as OwnedChar);
+
+  /*
+    ── 올려 주는 것은 **안 곱해진다** ──
+
+    같은 것을 두 번 걸어도 두 배가 되지 않는다. `putHex` 가 겹치지 않고 새로
+    고치고 (`upOf` 도 제일 큰 하나만 고른다), 그래서 2배짜리를 두 번 받아도
+    2배다. 곱하게 두면 아군이 넷이서 같은 버프를 돌려 걸 때 배수가 폭발한다.
+  */
+  {
+    let l: import('./status').Hex[] = [];
+    l = stx.putHex(l, hex('st_haste', 2));
+    l = stx.putHex(l, hex('st_haste', 2));
+    ok('2배 버프를 두 번 받아도 2배', stx.upOf(l, 'st_haste') === 2 && l.length === 1,
+      `×${stx.upOf(l, 'st_haste')} · ${l.length}줄`);
+  }
+
+  /*
+    ── 그런데 **약한 것이 센 것을 덮고 있었다** ──
+
+    `putHex` 가 세기를 `Math.min` 하나로 골랐다. 깎는 것에는 맞다 (0.5 가 0.9
+    보다 아프다). 올려 주는 것은 반대인데 그걸 안 갈랐다.
+
+    그래서 리안느가 숲의 축복(신속 2배)을 켠 채로 요정의 축제(신속 1.3배)를
+    쓰면 제 버프가 **1.3 으로 깎였다.** 둘 다 이 사람의 기술이고 4단계까지
+    키우면 반드시 겹치는 조합이라, 키울수록 느려지는 자리가 하나 있었다.
+  */
+  {
+    let l: import('./status').Hex[] = [];
+    l = stx.putHex(l, hex('st_haste', 2));
+    l = stx.putHex(l, hex('st_haste', 1.3));
+    ok('센 버프가 약한 버프에 안 덮인다', stx.upOf(l, 'st_haste') === 2,
+      `×${stx.upOf(l, 'st_haste')}`);
+    /* 깎는 쪽은 그대로 — 더 아픈 쪽이 남는다 */
+    let d: import('./status').Hex[] = [];
+    d = stx.putHex(d, hex('st_slow', 0.9));
+    d = stx.putHex(d, hex('st_slow', 0.5));
+    ok('더 아픈 디버프가 남는다', stx.mulOf(d, 'st_slow') === 0.5,
+      `×${stx.mulOf(d, 'st_slow')}`);
+  }
+
+  /*
+    ── 치명타는 **더하기다** ──
+
+    +30%p 는 0% 인 사람을 30% 로 만드는 것이지 50% 를 65% 로 만드는 것이
+    아니다. 배수로 두면 넷 다 기본 0 이라 (`CHARS`) 아무 일도 안 일어난다.
+  */
+  ok('0% + 집중 = 30%', Math.round(pv.critOf(0, [hex('st_focus', 1.3)]) * 100) === 30);
+  ok('50% + 집중 = 80%', Math.round(pv.critOf(0.5, [hex('st_focus', 1.3)]) * 100) === 80);
+  ok('100% 를 안 넘는다', pv.critOf(0.9, [hex('st_focus', 1.3)]) === 1);
+
+  /*
+    ── 적어 둔 뜻과 **실제가 같다** ──
+
+    창이 손으로 적던 시절, 이졸데의 함성(격노 — 공격력 1.3배)이 `공격속도
+    1.3배` 로 떠 있었고 신의 심판(약화 — 적 공격력)이 `받는 회복량 감소` 로
+    떠 있었다. 지금은 `hexText` 한 곳이 뜻을 안다.
+
+    그 한 곳이 틀리면 화면 전체가 틀리므로, **글자가 말하는 축이 실제로
+    움직이는지**를 여기서 본다.
+  */
+  {
+    const c = mk('knightgirl', 5, []);
+    const none = pv.liveAtk(c, [], []);
+    const raged = pv.liveAtk(c, [], [hex('st_rage', 1.3)]);
+    ok('격노는 공격력을 올린다 (글자대로)',
+      Math.round(raged / none * 100) === 130 && stx.hexText('st_rage', 1.3).includes('공격력'),
+      stx.hexText('st_rage', 1.3));
+
+    const s0 = pv.liveSpd(c, 100, [], []);
+    const s1 = pv.liveSpd(c, 100, [], [hex('st_haste', 2)]);
+    ok('신속은 공격속도를 올린다 (글자대로)',
+      Math.round(s1 / s0 * 100) === 200 && stx.hexText('st_haste', 2).includes('공격속도'),
+      stx.hexText('st_haste', 2));
+
+    ok('집중은 %p 로 적는다', stx.hexText('st_focus', 1.3) === '치명타 확률 +30%p',
+      stx.hexText('st_focus', 1.3));
+    ok('약화는 공격력 감소로 적는다', stx.hexText('st_weak', 0.8) === '공격력 20% 감소',
+      stx.hexText('st_weak', 0.8));
+    ok('시듦은 치유 감소로 적는다', stx.hexText('st_wither', 0.5).includes('치유'),
+      stx.hexText('st_wither', 0.5));
+
+    /* 모든 상태가 한 마디씩 갖고 있다 — 빈 글자가 하나라도 있으면 그 줄이 사라진다 */
+    const empty = (Object.keys(stx.STATUS_NAME) as (keyof typeof stx.STATUS_NAME)[])
+      .filter((id) => !stx.hexText(id, 1.2));
+    ok('스물두 상태가 다 제 뜻을 갖고 있다', empty.length === 0, empty.join(',') || '전부');
+  }
+
+  /*
+    ── 보호막이 몸을 두껍게 한다 ── 수호신의 가호 (`Ward.def`).
+
+    이 셈이 전투 안에만 있었다. 그래서 실제로는 두꺼워지는데 캐릭터 창의
+    방어력 옆에는 아무 표시도 없었다 — 10짜리 기술을 쓰고도 오른 것이 화면
+    어디에도 안 남았다. 지금은 `liveArmor` 가 한다.
+
+    **마법저항력도 같이 오른다.** 파쇄가 둘 다 깎는 것과 같은 까닭이다
+    (`liveArmor` 머리말) — 한쪽만 올리면 물리 우두머리 앞에서만 단단해진다.
+  */
+  {
+    const c = mk('knightgirl', 5, []);
+    const bare = pv.liveArmor(c, []);
+    const up = pv.liveArmor(c, [], 10);
+    ok('막이 두르면 방어·마저가 +10',
+      up.def === bare.def + 10 && up.res === bare.res + 10,
+      `${bare.def}/${bare.res} → ${up.def}/${up.res}`);
+    /* 파쇄가 반으로 깎은 뒤에 얹힌다 — 먼저 더하면 가호까지 반이 된다 */
+    const broke = pv.liveArmor(c, [hex('st_break', 0.5)], 10);
+    ok('파쇄가 가호까지 깎지는 않는다',
+      broke.def === Math.floor(bare.def * 0.5) + 10, `${broke.def}`);
+  }
+
+  /* 가호를 찍으면 실제로 그 값이 기술에 붙는다 */
+  {
+    const aegis = ct2.nodeDemo(mk('knightgirl', 5, []), 'kg4a');
+    ok('수호신의 가호: 막 12% → 24%, 방어 +10, 되돌림 10%',
+      aegis?.ward?.pct === 0.24 && aegis?.ward?.def === 10 && aegis?.ward?.back === 0.1,
+      JSON.stringify(aegis?.ward));
+  }
+}
+
+console.log(NL + '── 가방 ──');
+{
+  const bg = require('./bag') as typeof import('./bag');
+  const rows = bg.bagOf({ books: { old: 40, fine: 8, prime: 0 }, elixir: 3 });
+  ok('0 개는 안 늘어놓는다', !rows.some((r) => r.n <= 0) && rows.length === 3,
+    rows.map((r) => `${r.name}×${r.n}`).join(' · '));
+  ok('경험의 서는 소비, 영약은 재료',
+    bg.bagIn(rows, 'use').length === 2 && bg.bagIn(rows, 'mat').length === 1);
+  ok('빈 갈래에도 할 말이 있다',
+    bg.BAG_TABS.every((t) => !!bg.BAG_EMPTY[t.id]));
+  ok('아무것도 없으면 빈 가방', bg.bagOf({ books: {}, elixir: 0 }).length === 0);
+}
+
 console.log(NL + '── 경험의 서 ──');
 {
   const ex = require('./exp') as typeof import('./exp');

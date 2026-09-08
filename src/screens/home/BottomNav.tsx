@@ -84,10 +84,10 @@ import { NAV } from '@/ui/sprites';
 import { sfx } from '@/ui/sfx';
 import { soon } from '@/ui/SoonPopup';
 import { FrameArt, frameStyle } from '@/ui/Frame';
-import { C, FS, LINE, O, SP } from '@/ui/theme';
+import { C, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 
 /** 아래 띠가 여는 화면들 — 지금 실제로 있는 것은 둘이다 */
-export type TabId = 'main' | 'hero';
+export type TabId = 'main' | 'hero' | 'item';
 
 /**
  * 로고가 앉는 상자 — **높이가 박혀 있다.**
@@ -141,8 +141,8 @@ const TABS: readonly { id: string; label: string; art: keyof typeof NAV }[] = [
  * 화면을 여는 셈이 되는데, 실제로 화면을 갈아 끼우는 것은 그 위(`HomeScreen`)
  * 라서 두 곳이 같은 것을 따로 기억하게 된다.
  *
- * 영웅과 메인만 실제로 있다. 나머지 셋은 아직 화면이 없어 준비중이다 —
- * 눌러도 탭은 안 바뀌고 안내만 뜬다 (`soon`).
+ * 메인 · 영웅 · 아이템이 실제로 있다. 길드와 컨텐츠는 아직 화면이 없어
+ * 준비중이다 — 눌러도 탭은 안 바뀌고 안내만 뜬다 (`soon`).
  */
 export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => void }) {
   const insets = useSafeAreaInsets();
@@ -178,7 +178,10 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
             disabled={here}
             onPress={() => {
               sfx('tap');
-              if (t.id === 'hero' || t.id === 'main') { onTab(t.id as TabId); return; }
+              if (t.id === 'hero' || t.id === 'main' || t.id === 'item') {
+                onTab(t.id as TabId);
+                return;
+              }
               soon(t.label);
             }}
             style={({ pressed }) => [
@@ -257,5 +260,94 @@ export function BottomNav({ tab, onTab }: { tab: TabId; onTab: (t: TabId) => voi
         );
       })}
       </View>
+  );
+}
+
+/**
+ * ── 갈래 줄 ── 탭 **안**의 갈래들. 다섯 칸 띠 바로 위에 붙는다.
+ *
+ * 한 번 맨 위에 뒀다가 내렸다. 위에 두면 굴려 내려가는 순간 갈래가 화면 밖으로
+ * 나가서, 목록 한참 아래에서 다른 갈래로 넘어가려면 **한 번 올라갔다 와야**
+ * 했다. 아래에 붙박아 두면 어디까지 굴렸든 손가락이 이미 가 있는 자리에 있다.
+ *
+ * 굴러가는 몸통 **밖**이다. 안에 넣으면 내용이 길어질 때 같이 밀려난다.
+ *
+ * ## 다섯 칸 띠와 **다른 모양이어야 한다**
+ *
+ * 둘이 세로로 붙어 선다. 같은 그림이면 열 칸짜리 띠 하나로 보이고, 그러면
+ * 영웅이 다섯 중 하나이고 도감이 그 안의 하나라는 **겹**이 사라진다.
+ *
+ * 셋으로 가른다.
+ *
+ *   1. **반전** — 고른 칸만 흰 바닥에 검은 글씨다. 아래 띠는 고른 칸에
+ *      옅은 면만 깔리므로 (`SURF.up`), 이 줄이 한 단 앞으로 나온다
+ *   2. **글자만** — 아래 띠는 로고와 글자 두 줄이라 키가 크다. 여기는 한 줄
+ *   3. **알약이 띠 안에 떠 있다** — 칸이 띠 폭을 다 안 먹고 여백을 남긴다
+ *
+ * 밑줄로도 해 봤는데, 흑백에서 1~2px 선은 바로 아래 띠의 윗선과 겹쳐 보여서
+ * 줄이 둘 그어진 것처럼 됐다.
+ *
+ * ## 왜 여기 있나
+ *
+ * 영웅 화면 안에 있었다. 아이템 화면이 같은 줄을 갖게 되면서 옮겼다 —
+ * 두 벌로 두면 한쪽만 손보는 날이 오고, 그러면 같은 자리의 같은 줄이
+ * 화면마다 다르게 생긴다. **띠와 붙어 서는 규칙**(`NAV_RISE` 만큼 물러나는
+ * 것)도 여기 한 곳에만 있으면 된다.
+ */
+export function SubTabs<T extends string>({ at, tabs, onGo }: {
+  at: T;
+  /** 왼쪽부터 차례로. 몇 개든 **정확히 같은 폭**으로 선다 */
+  tabs: readonly { id: T; label: string }[];
+  onGo: (t: T) => void;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        gap: SP.xs,
+        paddingHorizontal: SP.sm,
+        paddingTop: SP.xs + 2,
+        /*
+          아래 띠의 메인 칸이 여기까지 솟아 있다 (`NAV_RISE`). 그만큼 물러나
+          있지 않으면 가운데 알약의 아랫도리가 그 판에 덮인다.
+        */
+        paddingBottom: SP.xs + 2 + NAV_RISE,
+        borderTopWidth: 1,
+        borderTopColor: LINE.low,
+        backgroundColor: C.bg,
+      }}
+    >
+      {tabs.map((t) => {
+        const here = t.id === at;
+        return (
+          <Pressable
+            key={t.id}
+            disabled={here}
+            onPress={() => { sfx('tap'); onGo(t.id); }}
+            style={({ pressed }) => ({
+              /* 글자 길이가 자리를 못 바꾼다 */
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingVertical: SP.xs + 1,
+              borderRadius: R.round,
+              borderWidth: 1,
+              borderColor: here ? WHITE : LINE.low,
+              backgroundColor: here ? C.bgInv : (pressed ? SURF.up : 'transparent'),
+            })}
+          >
+            <T
+              size={FS.body}
+              bold={here}
+              dim={here ? 'full' : 'dim'}
+              /* 반전 칸은 글자가 검다 — 흰 바닥 위에 흰 글씨는 안 보인다 */
+              style={here ? { color: C.fgInv } : undefined}
+            >
+              {t.label}
+            </T>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }

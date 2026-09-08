@@ -102,12 +102,12 @@ import { FrameArt, frameStyle } from '@/ui/Frame';
 import { HEART, HERO_ACT, ICONS } from '@/ui/sprites';
 import { SPRITE_RATIO } from '@/ui/spriteAssets';
 import { Pixel } from '@/ui/Pixel';
-import { soon } from '@/ui/SoonPopup';
 import { sfx } from '@/ui/sfx';
 import { BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 import { CharStats } from './CharStats';
 import { SkillPanel } from './SkillPanel';
 import { LevelUpPopup } from './LevelUpPopup';
+import { BondPopup } from './BondPopup';
 import { SkillTreePopup } from './SkillTreePopup';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
@@ -751,6 +751,8 @@ export function HeroManage({ pick, onPick }: {
   const [tree, setTree] = useState(false);
   /** 월페이퍼를 보고 있나 */
   const [paper, setPaper] = useState(false);
+  /* 인연 창 — 아직 자리만 잡아 둔 것이다 (`BondPopup`) */
+  const [bond, setBond] = useState(false);
   /** 레벨업 창을 열었나 (`LevelUpPopup`) */
   const [lvUp, setLvUp] = useState(false);
 
@@ -1134,7 +1136,7 @@ export function HeroManage({ pick, onPick }: {
           "고장" 인지 알 수가 없다.
         */}
         <View style={{ position: 'absolute', right: SP.sm, top: SP.sm, gap: SP.xs }}>
-          <ActBtn art="bond" label="인연" onPress={() => soon('인연')} />
+          <ActBtn art="bond" label="인연" onPress={() => setBond(true)} />
           {hasWallpaper(c.id) && (
             <ActBtn art="paper" label="월페이퍼" onPress={() => setPaper(true)} />
           )}
@@ -1347,6 +1349,7 @@ export function HeroManage({ pick, onPick }: {
 
       {/* 레벨업 창 — 경험의 서를 붓는다 (`LevelUpPopup`) */}
       {lvUp && <LevelUpPopup who={c.id} onClose={() => setLvUp(false)} />}
+      {bond && <BondPopup who={c.id} onClose={() => setBond(false)} />}
     </>
   );
 }

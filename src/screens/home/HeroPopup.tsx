@@ -44,7 +44,7 @@ import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
 import { BORDER, C, FS, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
-import { NAV_RISE } from './BottomNav';
+import { SubTabs } from './BottomNav';
 import { CharPopup } from './CharPopup';
 import { HeroManage } from './HeroManage';
 import { HeroBook } from './HeroBook';
@@ -114,83 +114,6 @@ const SUBS: readonly { id: Sub; label: string }[] = [
   { id: 'party', label: '편성' },
   { id: 'book', label: '도감' },
 ];
-
-/**
- * ── 갈래 줄 ── 영웅 화면 **맨 아래**, 다섯 칸 띠 바로 위.
- *
- * 한 번 맨 위에 뒀다가 내렸다. 위에 두면 굴려 내려가는 순간 갈래가 화면 밖으로
- * 나가서, 목록 한참 아래에서 도감으로 넘어가려면 **한 번 올라갔다 와야**
- * 했다. 아래에 붙박아 두면 어디까지 굴렸든 손가락이 이미 가 있는 자리에 있다.
- *
- * 굴러가는 몸통 **밖**이다. 안에 넣으면 내용이 길어질 때 같이 밀려난다.
- *
- * ## 다섯 칸 띠와 **다른 모양이어야 한다**
- *
- * 둘이 세로로 붙어 선다. 같은 그림이면 열 칸짜리 띠 하나로 보이고, 그러면
- * 영웅이 다섯 중 하나이고 도감이 그 안의 하나라는 **겹**이 사라진다.
- *
- * 셋으로 가른다.
- *
- *   1. **반전** — 고른 칸만 흰 바닥에 검은 글씨다. 아래 띠는 고른 칸에
- *      옅은 면만 깔리므로 (`SURF.up`), 이 줄이 한 단 앞으로 나온다
- *   2. **글자만** — 아래 띠는 로고와 글자 두 줄이라 키가 크다. 여기는 한 줄
- *   3. **알약이 띠 안에 떠 있다** — 칸이 띠 폭을 다 안 먹고 여백을 남긴다
- *
- * 밑줄로도 해 봤는데, 흑백에서 1~2px 선은 바로 아래 띠의 윗선과 겹쳐 보여서
- * 줄이 둘 그어진 것처럼 됐다.
- */
-function SubTabs({ at, onGo }: { at: Sub; onGo: (s: Sub) => void }) {
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        gap: SP.xs,
-        paddingHorizontal: SP.sm,
-        paddingTop: SP.xs + 2,
-        /*
-          아래 띠의 메인 칸이 여기까지 솟아 있다 (`NAV_RISE`). 그만큼 물러나
-          있지 않으면 가운데 알약의 아랫도리가 그 판에 덮인다.
-        */
-        paddingBottom: SP.xs + 2 + NAV_RISE,
-        borderTopWidth: 1,
-        borderTopColor: LINE.low,
-        backgroundColor: C.bg,
-      }}
-    >
-      {SUBS.map((t) => {
-        const here = t.id === at;
-        return (
-          <Pressable
-            key={t.id}
-            disabled={here}
-            onPress={() => { sfx('tap'); onGo(t.id); }}
-            style={({ pressed }) => ({
-              /* 셋이 **정확히 같은 폭**이다 — 글자 길이가 자리를 못 바꾼다 */
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingVertical: SP.xs + 1,
-              borderRadius: R.round,
-              borderWidth: 1,
-              borderColor: here ? WHITE : LINE.low,
-              backgroundColor: here ? C.bgInv : (pressed ? SURF.up : 'transparent'),
-            })}
-          >
-            <T
-              size={FS.body}
-              bold={here}
-              dim={here ? 'full' : 'dim'}
-              /* 반전 칸은 글자가 검다 — 흰 바닥 위에 흰 글씨는 안 보인다 */
-              style={here ? { color: C.fgInv } : undefined}
-            >
-              {t.label}
-            </T>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 export function HeroScreen() {
   /** 어느 갈래를 보고 있나 */
@@ -388,7 +311,7 @@ export function HeroScreen() {
         굴러가는 몸통 밖이라 어디까지 내렸든 늘 제자리에 있다. 왜 위가 아니라
         아래인지, 왜 다섯 칸 띠와 다른 모양인지는 `SubTabs` 에 적어 두었다.
       */}
-      <SubTabs at={at} onGo={setAt} />
+      <SubTabs at={at} tabs={SUBS} onGo={setAt} />
 
       {/* 칸을 누르면 그 위에 겹쳐 열린다 */}
       <CharPopup slot={slot} onClose={() => setSlot(null)} />
