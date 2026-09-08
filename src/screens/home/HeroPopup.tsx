@@ -44,7 +44,7 @@ import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
 import { BORDER, C, FS, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
 import { SubTabs } from './BottomNav';
-import { CharPopup } from './CharPopup';
+import { PartySlotPopup } from './PartySlotPopup';
 import { HeroManage } from './HeroManage';
 import { HeroBook } from './HeroBook';
 import { FormationPicker } from './FormationPicker';
@@ -76,6 +76,15 @@ function Slot({ id, n, onPress }: {
         },
       ]}
     >
+      {/*
+        ── 번호는 **늘 있다** ──
+
+        빈 칸에만 `1번` 이 떴다. 그래서 넷이 다 차 있으면 자리 번호가 화면에서
+        통째로 사라졌는데, 대형이 앞줄·뒷줄을 자리 번호로 정하고 (`FORMATIONS`)
+        자리마다 맞는 확률도 다르다 (`AIM` — 1번이 절반을 받는다). 번호가
+        안 보이면 그 둘을 읽을 방법이 없다.
+      */}
+      <T size={8} dim="dim">{n}번</T>
       {c && d ? (
         <>
           <Sprite set="avatar" name={d.art} size={34} />
@@ -98,7 +107,7 @@ function Slot({ id, n, onPress }: {
           >
             <T size={15} dim="sub">+</T>
           </View>
-          <T size={FS.tiny} dim="dim">{n}번</T>
+          <T size={FS.tiny} dim="dim">비었음</T>
         </>
       )}
     </Pressable>
@@ -242,7 +251,16 @@ export function HeroScreen() {
       <SubTabs at={at} tabs={SUBS} onGo={setAt} />
 
       {/* 칸을 누르면 그 위에 겹쳐 열린다 */}
-      <CharPopup slot={slot} onClose={() => setSlot(null)} />
+      {/*
+        ── 자리를 누르면 **자리 창**이 뜬다 ── (`PartySlotPopup`)
+
+        여기서 캐릭터 창이 통째로 열렸다. 그 창은 한 사람을 보는 자리라
+        수치와 기술과 키우는 단추가 다 들어 있는데, 편성에서 칸을 누른
+        사람이 하려던 일은 "이 자리에 누굴 세울까" 하나다.
+
+        한 사람을 자세히 보는 것은 영웅 관리가 맡는다.
+      */}
+      <PartySlotPopup slot={slot} onClose={() => setSlot(null)} />
 
     </>
   );

@@ -16,7 +16,10 @@ import { H2H, h2hKey, lastSettleableSlot, matchForSlot, simulate, timingOf } fro
 import { pendingRewards } from '@/core/collection';
 import { TitleId, effectsOf } from '@/core/titles';
 import { ATTENDANCE_REWARD, dayKey as eventDayKey, isYesterday } from '@/core/events';
-import { couponMaterials, couponScrolls, couponSummary, redeemable } from '@/core/coupons';
+import {
+  couponBooks, couponMaterials, couponScrolls, couponSummary, redeemable,
+} from '@/core/coupons';
+import { BookId } from '@/core/exp';
 import { STAMINA_REQUIRED, work } from '@/core/parttime';
 import { DAILY_LIMIT, TICKET_PRICE, Ticket, drawKey, nextDrawAt } from '@/core/lottery';
 import { BOXES, Prize, boxState, dayKeyOf, draw as drawFromBox } from '@/core/draw';
@@ -198,10 +201,17 @@ export const createGambleSlice = (
     for (const [k, n] of Object.entries(gainedMat)) {
       materials[k as MaterialId] = (materials[k as MaterialId] ?? 0) + (n ?? 0);
     }
+    /* 아이템도 갖고 있던 것에 더한다 — 덮어쓰면 모아 둔 것이 날아간다 */
+    const books = { ...st.books };
+    for (const [k, n] of Object.entries(couponBooks(c))) {
+      books[k as BookId] = (books[k as BookId] ?? 0) + (n ?? 0);
+    }
     set({
       money: st.money + (c.money ?? 0),
       scrolls,
       materials,
+      books,
+      elixir: st.elixir + (c.elixir ?? 0),
       /*
         다시 쓸 수 있는 쿠폰은 **기록하지 않는다.**
 

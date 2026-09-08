@@ -6,6 +6,8 @@
  * 예외는 `repeatable` 이 붙은 시험용 쿠폰뿐이다.
  */
 import { fmtShort, g } from './currency';
+import { BOOKS, BOOK_IDS, BookId } from './exp';
+import { ELIXIR_NAME } from './growth';
 import { MATERIAL_IDS, MaterialId } from './artisans';
 import { SCROLL_IDS, ScrollId } from './types';
 
@@ -21,6 +23,15 @@ export interface CouponDef {
   scrollsEach?: number;
   /** 번스타인 재료 3종을 각각 이 개수만큼 */
   materialsEach?: number;
+  /**
+   * 경험의 서 세 가지를 각각 이 개수만큼 (`core/exp` 의 `BOOKS`).
+   *
+   * 종류별로 따로 안 받는다. 시험용으로 넣는 것이라 "셋 다 넉넉히" 말고는
+   * 쓸 일이 없고, 종류를 가릴 수 있게 두면 그만큼 칸이 늘어난다.
+   */
+  booksEach?: number;
+  /** 강성의 영약 (`core/growth` 의 `AWAKEN_ELIXIR` 가 쓰는 것) */
+  elixir?: number;
   /**
    * 몇 번이든 다시 쓸 수 있는가.
    *
@@ -75,7 +86,20 @@ const LIVE_COUPONS: CouponDef[] = [
     그 뒤로는 아무도 못 쓴다. (재사용 쿠폰은 `coupons` 배열에 기록을 안 남기므로
     지운 흔적도 저장본에 안 쌓인다.)
   */
-  { code: 'rakdos', label: '1,000만 골드', money: g(10_000_000), repeatable: true },
+  /*
+    골드에 **물건까지** 붙였다. 지금 게임에 있는 아이템이 넷뿐이라
+    (경험의 서 셋 · 강성의 영약) 종류를 가릴 이유가 없고, 시험할 때 필요한
+    것은 늘 "다 넉넉히" 다 — 레벨업 창도 각성도 가방도 한 번에 볼 수 있어야
+    한다.
+  */
+  {
+    code: 'rakdos',
+    label: '1,000만 골드 + 아이템 전 종류 100개',
+    money: g(10_000_000),
+    booksEach: 100,
+    elixir: 100,
+    repeatable: true,
+  },
 ];
 
 /**
@@ -105,6 +129,13 @@ export function couponMaterials(c: CouponDef): Partial<Record<MaterialId, number
   return out;
 }
 
+/** 쿠폰이 지급할 경험의 서 (종류별 개수) */
+export function couponBooks(c: CouponDef): Partial<Record<BookId, number>> {
+  const out: Partial<Record<BookId, number>> = {};
+  if (c.booksEach) for (const id of BOOK_IDS) out[id] = c.booksEach;
+  return out;
+}
+
 /** 쿠폰이 실제로 지급할 주문서 (scrollsEach 를 종류별로 펼친다) */
 export function couponScrolls(c: CouponDef): Partial<Record<ScrollId, number>> {
   const out: Partial<Record<ScrollId, number>> = {};
@@ -129,6 +160,8 @@ export function couponSummary(c: CouponDef): string {
       : `주문서 ${Object.values(sc).reduce((a, b) => a + (b ?? 0), 0)}장`);
   }
   if (c.materialsEach) parts.push(`번스타인 재료 3종 ${c.materialsEach}개씩`);
+  if (c.booksEach) parts.push(`${BOOKS.old.name.replace('낡은 ', '')} 3종 ${c.booksEach}권씩`);
+  if (c.elixir) parts.push(`${ELIXIR_NAME} ${c.elixir}개`);
   return parts.join(' + ');
 }
 

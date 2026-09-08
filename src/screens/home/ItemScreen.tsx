@@ -22,40 +22,46 @@
  * 가방은 **세는 자리**다.
  */
 import React, { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { BAG_EMPTY, BAG_TABS, BagTab, bagCounts, bagIn, bagOf } from '@/core/bag';
-import { Row, T } from '@/ui/atoms';
+import { BAG_EMPTY, BAG_TABS, BagRow, BagTab, bagCounts, bagIn, bagOf } from '@/core/bag';
+import { KV, Row, T } from '@/ui/atoms';
+import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
+import { sfx } from '@/ui/sfx';
 import { BORDER, FS, LINE, R, SP, SURF } from '@/ui/theme';
 import { SubTabs } from './BottomNav';
 import { TopBar } from './TopBar';
 
 /**
- * 물건 한 칸.
+ * 물건 한 칸 — **로고 · 이름 · 개수 셋뿐이다.**
  *
- * **개수가 제일 크다.** 이 화면에서 사람이 보러 온 것이 그것이다 — 무엇이
- * 있는지는 그림과 이름으로 이미 알고, 알고 싶은 것은 "몇 개 남았나" 다.
+ * 한동안 여기에 무엇에 쓰는지와 어디서 쓰는지까지 적었다. 가방을 여는 까닭이
+ * 대개 "몇 개 남았지" 하나인데, 그 한 줄을 읽으려고 넉 줄짜리 상자를 지나가야
+ * 했고 물건이 늘수록 화면이 그만큼 길어졌다.
  *
- * 그림은 액자에 넣는다. 아직 안 온 그림이 있어서 (`item_icon/book_*`) 액자가
- * 없으면 그 칸만 왼쪽이 텅 비어 보이는데, 액자가 있으면 "여기 그림이
- * 들어간다" 가 읽힌다 — `SkCard` 와 같은 규칙이다.
+ * 자세한 것은 **눌러서 본다** (`BagPopup`). 개수는 훑는 것이고 설명은 한 번
+ * 읽으면 되는 것이라, 훑는 자리에 늘 펴 두면 훑는 일이 느려진다.
  */
-function BagCard({ set, art, name, desc, n, where }: {
-  set: string;
-  art: string;
-  name: string;
-  desc: string;
-  n: number;
-  where: string;
-}) {
+function BagCard({ row, onPress }: { row: BagRow; onPress: () => void }) {
   return (
-    <View style={[BORDER, { padding: SP.sm, marginBottom: SP.xs, backgroundColor: SURF.up }]}>
+    <Pressable
+      onPress={() => { sfx('tap'); onPress(); }}
+      style={({ pressed }) => [
+        BORDER,
+        {
+          padding: SP.sm,
+          marginBottom: SP.xs,
+          backgroundColor: pressed ? SURF.up : 'transparent',
+        },
+      ]}
+    >
       <Row gap={SP.sm}>
+        {/* 액자 — 그림이 아직 없어도 "여기 그림이 들어간다" 가 보인다 */}
         <View
           style={{
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             borderRadius: R.sm,
             borderWidth: 1,
             borderColor: LINE.low,
@@ -64,29 +70,60 @@ function BagCard({ set, art, name, desc, n, where }: {
             justifyContent: 'center',
           }}
         >
-          <Sprite set={set} name={art} size={28} />
+          <Sprite set={row.set} name={row.art} size={26} />
+        </View>
+        <T size={FS.body} bold numberOfLines={1} style={{ flex: 1 }}>{row.name}</T>
+        {/* 개수 — 이 화면에서 사람이 보러 온 것 */}
+        <T size={FS.body} bold>{`×${row.n.toLocaleString()}`}</T>
+      </Row>
+    </Pressable>
+  );
+}
+
+/**
+ * 물건 하나를 열어 본 창.
+ *
+ * 목록에서 걷어 낸 것들이 여기 있다 — 무엇에 쓰는 물건인지, 어디서 쓰는지.
+ * 여기서도 **쓰지는 않는다**: 같은 일이 두 자리에 있으면 둘 중 한쪽에만
+ * 조건이 붙는 날이 온다 (머리말).
+ */
+function BagPopup({ row, onClose }: { row: BagRow | null; onClose: () => void }) {
+  if (!row) return null;
+  return (
+    <Popup visible title={row.name} onClose={onClose}>
+      <Row gap={SP.sm} style={{ alignItems: 'center' }}>
+        <View
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: R.sm,
+            borderWidth: 1,
+            borderColor: LINE.low,
+            backgroundColor: SURF.down,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Sprite set={row.set} name={row.art} size={36} />
         </View>
         <View style={{ flex: 1 }}>
-          <T size={FS.body} bold numberOfLines={1}>{name}</T>
-          <T size={FS.tiny} dim="dim" numberOfLines={2}>{desc}</T>
-        </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <T size={FS.hero} bold>{n.toLocaleString()}</T>
-          <T size={9} dim="dim">개</T>
+          <T size={FS.hero} bold>{`${row.n.toLocaleString()}개`}</T>
+          <T size={FS.tiny} dim="dim">가지고 있는 수</T>
         </View>
       </Row>
-      {/* 쓰는 자리 — 여기서 쓰지 않는 대신 어디로 가면 되는지를 적는다 */}
-      <Row between style={{ marginTop: SP.xs }}>
-        <T size={9} dim="dim">쓰는 곳</T>
-        <T size={9} dim="sub">{where}</T>
-      </Row>
-    </View>
+
+      <View style={{ height: 1, backgroundColor: LINE.low, marginVertical: SP.md }} />
+      <KV k="무엇인가" v={row.desc} />
+      <KV k="쓰는 곳" v={row.where} />
+    </Popup>
   );
 }
 
 export function ItemScreen() {
   /** 어느 갈래를 보고 있나 — 소비가 먼저다, 지금 실제로 든 것이 거기 있다 */
   const [at, setAt] = useState<BagTab>('use');
+  /** 열어 본 물건의 이름표 — `null` 이면 목록만 보인다 */
+  const [open, setOpen] = useState<string | null>(null);
   const books = useGame((s) => s.books);
   const elixir = useGame((s) => s.elixir);
 
@@ -134,15 +171,7 @@ export function ItemScreen() {
           </View>
         ) : (
           here.map((r) => (
-            <BagCard
-              key={r.key}
-              set={r.set}
-              art={r.art}
-              name={r.name}
-              desc={r.desc}
-              n={r.n}
-              where={r.where}
-            />
+            <BagCard key={r.key} row={r} onPress={() => setOpen(r.key)} />
           ))
         )}
       </ScrollView>
@@ -162,6 +191,9 @@ export function ItemScreen() {
         }))}
         onGo={setAt}
       />
+
+      {/* 눌러서 여는 창 — 무엇에 쓰는지와 어디서 쓰는지 */}
+      <BagPopup row={rows.find((r) => r.key === open) ?? null} onClose={() => setOpen(null)} />
     </>
   );
 }
