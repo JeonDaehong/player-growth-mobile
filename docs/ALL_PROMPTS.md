@@ -57,21 +57,28 @@ Grayscale only, no colour. Clean confident ink linework with screentone and hatc
 ```
 A black-and-white light-novel INTERIOR ILLUSTRATION (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
 
-CONTENT RULES (strict — this is a COMEDY panel, not a fanservice panel):
+CONTENT RULES (strict — this is a GENTLE COMEDY panel, not a fanservice panel):
 - Wholesome, all-ages, non-sexualized. NOTHING below the shoulders is visible.
 - She is submerged to the neck in an opaque wooden tub and thick steam fills the room; the water surface is drawn as solid white so nothing shows through.
 - No cleavage, no bare shoulders, no wet-skin rendering, no suggestive posing.
-- Camera at eye level, framed on her HEAD and one throwing arm only.
-- The joke is her furious embarrassed face and the flying soap, nothing else.
+- Camera at eye level, framed on her HEAD and one raised arm only.
+
+EXPRESSION — THIS IS THE MOST IMPORTANT PART:
+She is FLUSTERED AND EMBARRASSED, not angry. Do NOT draw a furious face, do NOT draw gritted teeth, sharp glaring eyes, an angry V-shaped brow, or a scowl. She is a composed, dutiful, slightly stiff knight who has never been caught off guard before, and she has no idea what to do.
+- Eyebrows raised and pulled together in helpless dismay, not lowered in anger.
+- Eyes wide and round and watery, pupils small, looking at the intruder in pure panic.
+- Mouth small and open in a wobbly, startled sound — she is stammering, not shouting.
+- Face and ears deeply flushed; one or two manga blush lines across the nose.
+- Read her as "가, 가지 마세요 — 아니, 나가 주세요!" — mortified, apologetic, overwhelmed. Cute and sympathetic, never scary.
 
 CHARACTER — ISOLDE, a young knight (off duty):
 Very long pale hair, here loose and damp, pinned up messily. No armour, no circlet.
 
 SCENE — THE DOOR OPENED BY MISTAKE:
-Framed from the chest of the tub upward. She is in a round wooden bath tub in a small bathhouse, sunk to the neck, thick steam everywhere. The heavy door at the frame's edge has just swung open and a bright shaft of light cuts in. Her eyes are huge, her whole face burning, mouth wide open mid-shout. One arm is thrown back over the tub rim mid-throw — a bar of soap flies toward the viewer with a spray of droplets, and a wooden bucket and a scrubbing brush tumble through the air beside it. Comic, loud, harmless.
+Framed from the rim of the tub upward. She is in a round wooden bath tub in a small bathhouse, sunk to the neck, thick steam everywhere. The heavy door at the frame's edge has just swung open and a bright shaft of light cuts in. One arm is up in a hasty, uncoordinated throw — a bar of soap tumbles toward the viewer with a spray of droplets, and a wooden bucket and a scrubbing brush wobble through the air beside it. The throw is a reflex of panic, weak and badly aimed, not an attack. Her other hand is pulling the tub rim up toward her chin as if it could hide her.
 
 RENDERING:
-Grayscale only, no colour. Clean ink linework with screentone shading, comedic manga energy — bold speed lines behind the thrown soap, a sweat-drop mark, exaggerated open-mouth expression. Strong backlight through the open door, dense white steam. Detailed wooden interior.
+Grayscale only, no colour. Clean ink linework with screentone shading, warm comedic manga energy — a couple of small motion arcs behind the soap, one sweat drop, heavy blush hatching. Strong backlight through the open door, dense white steam. Detailed wooden interior. The whole panel should feel endearing and funny, not aggressive.
 ```
 
 **`assets/wallpaper/knightgirl_trust.jpg`**
