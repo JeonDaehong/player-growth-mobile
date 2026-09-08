@@ -20,48 +20,34 @@
  * `giveGift` · `readStory`). 화면은 무엇을 골랐는지만 넘긴다 — 화면이 값을
  * 세면 화면에 뜬 수와 실제로 오른 수가 갈린다.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { CHARS, CharId, maxStar } from '@/core/chars';
 import {
-  BOND_STEPS, BondStep, GIFTS, GIFT_IDS, GiftId, RARITY_BOND, STORY_DIA,
-  TALKS, TALK_A_DAY, bondNeed, bondStep, giftMul, storyOpen,
+  BOND_STEPS, BondStep, GIFTS, GIFT_A_DAY, GIFT_BASE, GIFT_IDS, RARITY_BOND,
+  STORY_DIA, TALK_A_DAY, bondNeed, bondStep, storyNo, storyWhy,
 } from '@/core/bond';
 import { dayKey } from '@/core/events';
-import { Bar, Btn, Row, Stars, T, Tag } from '@/ui/atoms';
+import { Bar, Btn, Row, Stars, T } from '@/ui/atoms';
+import { Pixel } from '@/ui/Pixel';
+import { HEART, ICONS } from '@/ui/sprites';
 import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/ui/sfx';
+import { TalkView } from './TalkView';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
 import { BORDER, BORDER_HI, C, FS, LINE, O, R, SP, SURF } from '@/ui/theme';
 
-/** 하트 게이지 한 칸 — 채워졌나 */
-function Heart({ on, size = 11 }: { on: boolean; size?: number }) {
-  /*
-    하트를 그림으로 두지 않는다. 스프라이트 한 칸을 쓰면 빈 하트와 찬 하트
-    둘이 필요하고, 흑백에서 그 둘을 11px 로 가르는 것이 잘 안 된다.
-
-    대신 **마름모 하나**를 채우거나 비운다. 채운 것과 빈 것이 테두리 하나로
-    갈리므로 작은 크기에서도 세어진다.
-  */
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        transform: [{ rotate: '45deg' }],
-        borderWidth: 1,
-        borderColor: on ? C.fg : LINE.mid,
-        backgroundColor: on ? C.fg : 'transparent',
-      }}
-    />
-  );
-}
-
 /**
  * ── 하트 게이지 ── 지금 몇이고 어디까지 갈 수 있나.
+ *
+ * **진짜 하트를 쓴다** (`ui/sprites` 의 `HEART` — 9×8 도트). 한동안 45도로
+ * 돌린 마름모를 채우고 비웠는데, 열 개가 나란히 서면 그냥 **기울어진 네모
+ * 줄**이라 인연인지 무슨 칸인지 알 수가 없었다. 빈 것과 찬 것은 색이 아니라
+ * **밝기**로 가른다 (`O.faint`) — 흑백에서 같은 모양을 두 벌 그리는 것보다
+ * 이쪽이 작은 크기에서 잘 읽힌다.
  *
  * 상한까지만 그린다. 등급이 낮으면 칸이 적게 서므로 (`RARITY_BOND`)
  * "여기까지가 끝" 이 게이지 길이로 읽힌다 — 열 칸을 그려 놓고 셋만 채우면
@@ -71,82 +57,81 @@ export function BondGauge({ lv, cap, size = 11 }: {
   lv: number; cap: number; size?: number;
 }) {
   return (
-    <Row gap={3}>
+    <Row gap={2}>
       {Array.from({ length: cap }, (_v, i) => (
-        <Heart key={i} on={i < lv} size={size} />
+        <Pixel
+          key={i}
+          sprite={HEART}
+          scale={size / 9}
+          opacity={i < lv ? 1 : O.faint}
+        />
       ))}
     </Row>
   );
 }
 
-/** 대화 창 — 한 마디 묻고 셋 중에 고른다 */
-function TalkPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
-  const talkBond = useGame((s) => s.talkBond);
-  const toast = useGame((s) => s.toast);
-  const list = TALKS[who] ?? [];
-  /*
-    ── 어느 대화인지는 **창을 열 때 한 번** 정한다 ──
+/*
+  대화는 **화면**으로 나갔다 (`TalkView`). 창 안의 두 줄짜리 글로는 "이
+  사람과 마주 앉는다" 가 안 되고, 선택지 셋을 그 상자에 넣으면 창이 화면
+  절반이 된다 — 까닭은 그 파일 머리말에.
+*/
 
-    렌더마다 고르면 선택지를 누르는 순간 질문이 바뀐다. `useMemo` 로 묶어
-    두면 이 창이 살아 있는 동안 같은 대화다.
-  */
-  const pick = useMemo(() => Math.floor(Math.random() * Math.max(1, list.length)), [list]);
-  const talk = list[pick];
-  /** 고르고 난 뒤 — 그 사람의 대답과 오른 값 */
-  const [said, setSaid] = useState<{ reply: string; exp: number } | null>(null);
-
-  if (!talk) return null;
+/**
+ * ── 준 뒤에 뜨는 창 ── 얼마나 올랐나.
+ *
+ * 여태 토스트로만 알렸다. 토스트는 위에 잠깐 떴다 사라지는 것이라 **선물
+ * 목록에 가려져** 못 보고 지나가는 일이 잦았고, 좋아하는 것을 준 것과
+ * 싫어하는 것을 준 것이 화면에서 같아 보였다.
+ *
+ * 창은 **눌러야 닫힌다.** 값이 컸는지 작았는지 마이너스였는지를 한 번은
+ * 보게 된다 — 그게 이 사람이 무엇을 좋아하는지 알아 가는 유일한 길이다.
+ */
+function GiftResult({ who, art, name, exp, up, lv, onClose }: {
+  who: CharId;
+  art: string;
+  name: string;
+  exp: number;
+  /** 이번에 오른 칸 수 */
+  up: number;
+  /** 오르고 난 지금 레벨 */
+  lv: number;
+  onClose: () => void;
+}) {
   const d = CHARS[who];
-
+  const good = exp > 0;
   return (
-    <Popup visible title={`${d.name}와 대화`} onClose={onClose}>
-      <View style={[BORDER, { padding: SP.md, backgroundColor: SURF.up }]}>
-        <T size={FS.body}>{said ? said.reply : talk.ask}</T>
-      </View>
-
-      {said ? (
-        <>
-          {/*
-            오른 값을 적는다. 안 적으면 잘 고른 것과 잘못 고른 것이 화면에서
-            같아 보이고, 그러면 다음에 무엇을 고를지가 안 정해진다.
-          */}
-          <Row between style={{ marginTop: SP.md }}>
-            <T size={FS.tiny} dim="dim">애정</T>
-            <T size={FS.body} bold>
-              {said.exp >= 0 ? `+${said.exp}` : `${said.exp}`}
-            </T>
-          </Row>
-          <Btn label="닫기" size="lg" fill style={{ marginTop: SP.sm }} onPress={onClose} />
-        </>
-      ) : (
-        <View style={{ marginTop: SP.sm, gap: SP.xs }}>
-          {talk.choices.map((ch, i) => (
-            <Pressable
-              key={ch.text}
-              onPress={() => {
-                sfx('tap');
-                /*
-                  자리 번호를 넘긴다 — 값은 스토어가 표에서 읽는다. 여기서
-                  값을 넘기면 화면이 고친 수가 그대로 들어간다.
-                */
-                const r = talkBond(who, pick * talk.choices.length + i);
-                if (r === 'no') { toast('오늘은 더 말을 걸 수 없습니다', 'plain'); onClose(); return; }
-                if (r.up > 0) toast(`${d.name}와 더 가까워졌습니다`, 'good');
-                setSaid({ reply: ch.reply, exp: ch.exp });
-              }}
-              style={({ pressed }) => [
-                BORDER,
-                {
-                  padding: SP.sm,
-                  backgroundColor: pressed ? SURF.up : 'transparent',
-                },
-              ]}
-            >
-              <T size={FS.body}>{ch.text}</T>
-            </Pressable>
-          ))}
+    <Popup visible title="선물을 주었습니다" onClose={onClose}>
+      <View style={{ alignItems: 'center', paddingVertical: SP.md, gap: SP.xs }}>
+        <View
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: R.sm,
+            borderWidth: 1,
+            borderColor: LINE.low,
+            backgroundColor: SURF.down,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Sprite set="gift_icon" name={art} size={42} />
         </View>
-      )}
+        <T size={FS.body} dim="sub">{`${d.name}에게 ${name}`}</T>
+        {/* 오른 값이 제일 크다 — 이 창이 하는 말이 그것 하나다 */}
+        <T size={28} bold>{good ? `애정 +${exp}` : `애정 ${exp}`}</T>
+        <T size={FS.tiny} dim={good ? 'sub' : 'dim'}>
+          {good
+            ? (exp >= GIFT_BASE * 2 ? '아주 마음에 들어 합니다' : '나쁘지 않은 모양입니다')
+            : '싫어하는 것이었습니다'}
+        </T>
+        {up > 0 && (
+          <View style={{ alignItems: 'center', marginTop: SP.sm, gap: 3 }}>
+            <BondGauge lv={lv} cap={RARITY_BOND[d.rarity]} size={13} />
+            <T size={FS.body} bold>{`${bondStep(lv).name} 이 되었습니다`}</T>
+          </View>
+        )}
+      </View>
+      <Btn label="닫기" size="lg" fill onPress={onClose} />
     </Popup>
   );
 }
@@ -154,13 +139,28 @@ function TalkPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
 /** 선물 창 — 가진 것만 뜬다 */
 function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
   const gifts = useGame((s) => s.gifts);
+  const bonds = useGame((s) => s.bonds);
   const giveGift = useGame((s) => s.giveGift);
   const toast = useGame((s) => s.toast);
   const d = CHARS[who];
   const have = GIFT_IDS.filter((id) => (gifts[id] ?? 0) > 0);
+  /** 방금 준 것 — 창이 뜬다 */
+  const [done, setDone] = useState<
+    { art: string; name: string; exp: number; up: number; lv: number } | null
+  >(null);
+
+  const b = bonds[who];
+  const today = dayKey(Date.now());
+  const used = b && b.giftDay === today ? b.gaves : 0;
+  const left = Math.max(0, GIFT_A_DAY - used);
 
   return (
     <Popup visible title={`${d.name}에게 선물`} onClose={onClose}>
+      {/* 오늘 몇 개 남았나 — 누르기 전에 알아야 한다 */}
+      <Row between style={{ marginBottom: SP.xs }}>
+        <T size={FS.tiny} dim="dim">오늘 남은 선물</T>
+        <T size={FS.body} bold>{`${left} / ${GIFT_A_DAY}`}</T>
+      </Row>
       {have.length === 0 ? (
         <T size={FS.body} dim="dim" center style={{ paddingVertical: SP.lg }}>
           줄 수 있는 선물이 없습니다.{'\n'}가방의 기타 칸에 들어갑니다.
@@ -169,7 +169,6 @@ function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
         <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
           {have.map((id) => {
             const g = GIFTS[id];
-            const mul = giftMul(who, id);
             return (
               <Pressable
                 key={id}
@@ -177,10 +176,14 @@ function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
                   sfx('tap');
                   const r = giveGift(who, id);
                   if (r === 'none') return;
-                  toast(
-                    r.exp >= 0 ? `애정 +${r.exp}` : `애정 ${r.exp}`,
-                    r.exp >= 0 ? 'good' : 'bad',
-                  );
+                  if (r === 'no') {
+                    toast('오늘은 더 줄 수 없습니다', 'plain');
+                    return;
+                  }
+                  /* 값은 창이 말한다 — 토스트는 가려져서 못 보고 지나간다 */
+                  setDone({
+                    art: g.art, name: g.name, exp: r.exp, up: r.up, lv: r.lv,
+                  });
                 }}
                 style={({ pressed }) => [
                   BORDER,
@@ -230,67 +233,116 @@ function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
       <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
         좋아하는 것이 사람마다 다릅니다. 싫어하는 것을 주면 애정이 깎입니다.
       </T>
+
+      {/* 준 뒤의 창 — 목록 **위**에 뜬다 (`GiftResult`) */}
+      {!!done && (
+        <GiftResult
+          who={who}
+          art={done.art}
+          name={done.name}
+          exp={done.exp}
+          up={done.up}
+          lv={done.lv}
+          onClose={() => setDone(null)}
+        />
+      )}
     </Popup>
   );
 }
 
-/** 이야기 창 — 단계마다 하나 */
+/**
+ * ── 이야기 창 ── 네 장, 순서대로.
+ *
+ * ## 왜 `1장` 이라고 적나
+ *
+ * 단계 이름(`어색한 관계`)으로 적었었다. 그런데 그 이름은 바로 위 게이지가
+ * 이미 말하고 있고, 여기서 사람이 세는 것은 **몇 편까지 봤나** 다. 같은 말을
+ * 두 자리에 두면 둘 다 흐려진다.
+ *
+ * ## 오른쪽은 **보상**이다
+ *
+ * `열림` · `잠김` 같은 상태 딱지가 있었다. 그건 칸이 흐린 것과 자물쇠가
+ * 이미 말하고 있으므로 자리만 먹었다. 그 자리에 받을 것을 적는다 —
+ * 다이아 100. 이미 받았으면 **회색으로 남긴다**: 지우면 "원래 안 주는 장"
+ * 으로 읽히고, 받은 사람은 무엇을 받았는지 다시 볼 데가 없어진다.
+ *
+ * ## 잠긴 장을 눌러도 **뭔가 뜬다**
+ *
+ * 안 눌리게 두면 왜 안 되는지를 알 방법이 없다. 눌리게 두고 창에 까닭을
+ * 적는다 — 인연이 모자란 것인지, 앞 장을 안 본 것인지 (`storyWhy`).
+ */
 function StoryPopup({ who, lv, onClose }: {
   who: CharId; lv: number; onClose: () => void;
 }) {
   const bonds = useGame((s) => s.bonds);
   const readStory = useGame((s) => s.readStory);
   const toast = useGame((s) => s.toast);
+  /** 열어 본 장 */
   const [open, setOpen] = useState<BondStep | null>(null);
-  const [paper, setPaper] = useState(false);
+  /** 왜 못 보는지를 말하는 창 */
+  const [why, setWhy] = useState<{ step: BondStep; kind: 'level' | 'before' } | null>(null);
+  const [paper, setPaper] = useState<string | null>(null);
   const read = bonds[who]?.read ?? [];
   const d = CHARS[who];
 
   return (
     <>
       <Popup visible title={`${d.name}의 이야기`} onClose={onClose}>
-        {BOND_STEPS.map((s) => {
-          const ok = storyOpen(lv, s);
-          const done = read.includes(s.id);
+        {BOND_STEPS.map((st) => {
+          const kind = storyWhy(lv, st, read);
+          const ok = kind === 'ok';
+          const done = read.includes(st.id);
           return (
             <Pressable
-              key={s.id}
-              disabled={!ok}
-              onPress={() => { sfx('tap'); setOpen(s); }}
+              key={st.id}
+              onPress={() => {
+                sfx('tap');
+                if (ok || done) { setOpen(st); return; }
+                setWhy({ step: st, kind });
+              }}
               style={({ pressed }) => [
                 done ? BORDER_HI : BORDER,
                 {
                   padding: SP.sm,
                   marginBottom: SP.xs,
-                  opacity: ok ? 1 : O.dim,
-                  backgroundColor: pressed && ok ? SURF.up : 'transparent',
+                  opacity: ok || done ? 1 : O.dim,
+                  backgroundColor: pressed ? SURF.up : 'transparent',
                 },
               ]}
             >
               <Row between>
-                <T size={FS.body} bold>{s.name}</T>
-                {done
-                  ? <Tag label="봤음" fill />
-                  : <Tag label={ok ? '열림' : `인연 ${s.from}`} />}
+                <Row gap={SP.xs} style={{ alignItems: 'center', flex: 1 }}>
+                  {/* 잠긴 장에는 자물쇠 — 흐린 것만으로는 "아직" 이 안 읽힌다 */}
+                  {!ok && !done && <Pixel sprite={ICONS.lock} scale={1.2} opacity={O.sub} />}
+                  <T size={FS.body} bold numberOfLines={1}>
+                    {`${storyNo(st.id)}장 : 준비중`}
+                  </T>
+                </Row>
+                {/*
+                  ── 보상 ── 다이아 100.
+
+                  이미 받았으면 흐리게 남긴다 (머리말). 지우면 그 장만
+                  원래 안 주는 것처럼 보인다.
+                */}
+                <Row gap={3} style={{ alignItems: 'center', opacity: done ? O.dim : 1 }}>
+                  <Sprite set="coin_ui" name="gem" size={14} />
+                  <T size={FS.tiny} bold dim={done ? 'dim' : 'full'}>
+                    {`×${STORY_DIA}`}
+                  </T>
+                </Row>
               </Row>
-              <T size={FS.tiny} dim="dim" style={{ marginTop: 2 }}>
-                {ok ? s.hint : '아직 잠겨 있습니다.'}
-              </T>
             </Pressable>
           );
         })}
-        {/*
-          보상을 미리 적는다. 다 보고 나서야 알면 "그래서 뭘 받았지" 가 되고,
-          그러면 이야기를 여는 것이 값을 치를 만한 일인지 정할 수가 없다.
-        */}
-        <T size={9} dim="dim" style={{ marginTop: SP.xs }}>
-          {`이야기를 처음 끝까지 보면 다이아 ${STORY_DIA}개와 그 장면의 월페이퍼를 받습니다.`}
-        </T>
       </Popup>
 
       {/* 이야기 한 편 — 지금은 자리만 */}
       {!!open && (
-        <Popup visible title={`${d.name} · ${open.name}`} onClose={() => setOpen(null)}>
+        <Popup
+          visible
+          title={`${d.name} · ${storyNo(open.id)}장`}
+          onClose={() => setOpen(null)}
+        >
           <View
             style={[
               BORDER,
@@ -298,9 +350,6 @@ function StoryPopup({ who, lv, onClose }: {
             ]}
           >
             <T size={FS.title} bold>준비중</T>
-            <T size={FS.tiny} dim="dim" center style={{ marginTop: SP.xs }}>
-              {open.hint}
-            </T>
           </View>
           <Btn
             label={read.includes(open.id) ? '이미 받았습니다' : '다 봤습니다'}
@@ -312,7 +361,15 @@ function StoryPopup({ who, lv, onClose }: {
               sfx('tap');
               if (readStory(who, open.id)) {
                 toast(`다이아 ${STORY_DIA}개를 받았습니다`, 'good');
-                if (hasWallpaper(who)) setPaper(true);
+                /*
+                  ── 받은 월페이퍼를 그 자리에서 보여 준다 ──
+
+                  단계마다 다른 장이 붙는다 (`<사람>_<단계>`). 아직 안 온
+                  단계는 그 사람의 한 장으로 떨어지므로 (`wallpaperOf`),
+                  그림이 도착하는 순서와 상관없이 늘 뭔가를 보여 준다.
+                */
+                const key = `${who}_${open.id}`;
+                if (hasWallpaper(key)) setPaper(key);
               }
               setOpen(null);
             }}
@@ -320,19 +377,34 @@ function StoryPopup({ who, lv, onClose }: {
         </Popup>
       )}
 
-      {/*
-        ── 받은 월페이퍼를 **그 자리에서 보여 준다** ──
+      {/* 왜 못 보는지 — 눌러 보고 나서 알아야 할 것이 아니다 */}
+      {!!why && (
+        <Popup
+          visible
+          title={`${storyNo(why.step.id)}장`}
+          onClose={() => setWhy(null)}
+        >
+          <View style={{ alignItems: 'center', paddingVertical: SP.md, gap: SP.sm }}>
+            <Pixel sprite={ICONS.lock} scale={2.4} opacity={O.sub} />
+            <T size={FS.body} bold center>
+              {why.kind === 'before'
+                ? `${storyNo(why.step.id) - 1}장을 먼저 보고 오세요`
+                : `인연 ${why.step.from} 이 되어야 열립니다`}
+            </T>
+            <T size={FS.tiny} dim="dim" center>
+              {why.kind === 'before'
+                ? '이야기는 순서대로 봅니다.'
+                : `지금은 인연 ${lv} 입니다. 대화와 선물로 올릴 수 있습니다.`}
+            </T>
+          </View>
+          <Btn label="닫기" size="lg" fill onPress={() => setWhy(null)} />
+        </Popup>
+      )}
 
-        받았다는 토스트만 띄우면 어디로 갔는지 모른다. 한 번 띄워 주면
-        "이게 그 그림이다" 가 되고, 다시 볼 자리는 영웅 관리에 있다.
-
-        단계마다 다른 그림이 붙는 것이 사양인데 지금은 사람당 한 장뿐이라
-        (`ui/wallpapers`) 그 한 장을 띄운다. 넉 장이 오는 날 여기가 갈린다.
-      */}
       <WallpaperPopup
-        charId={paper ? who : null}
+        charId={paper}
         name={d.name}
-        onClose={() => setPaper(false)}
+        onClose={() => setPaper(null)}
       />
     </>
   );
@@ -347,12 +419,16 @@ export function BondScreen({ who, onBack }: { who: CharId; onBack: () => void })
   const d = CHARS[who];
   if (!c || !d) return null;
 
-  const b = bonds[who] ?? { lv: 0, exp: 0, talkDay: '', talks: 0, read: [] };
+  const b = bonds[who]
+    ?? { lv: 0, exp: 0, talkDay: '', talks: 0, giftDay: '', gaves: 0, read: [] };
   const cap = RARITY_BOND[d.rarity];
   const step = bondStep(b.lv);
   const today = dayKey(Date.now());
   const used = b.talkDay === today ? b.talks : 0;
   const left = Math.max(0, TALK_A_DAY - used);
+  /* 선물도 하루치가 있다 — 대화보다 하나 많다 (`core/bond` 의 `GIFT_A_DAY`) */
+  const gaves = b.giftDay === today ? b.gaves : 0;
+  const gLeft = Math.max(0, GIFT_A_DAY - gaves);
   const maxed = b.lv >= cap;
 
   return (
@@ -397,16 +473,23 @@ export function BondScreen({ who, onBack }: { who: CharId; onBack: () => void })
 
       {/* ── 할 수 있는 일 셋 ── */}
       <Row gap={SP.xs} style={{ marginTop: SP.md, alignItems: 'stretch' }}>
+        {/*
+          ── 대화는 **다 써도 눌린다** ──
+
+          횟수를 다 쓰면 고르는 대화 대신 한마디만 한다 (`TalkView` 의
+          `idle`). 단추를 막아 두면 "말을 걸 수 없다" 와 "오늘은 더 못
+          쌓는다" 가 화면에서 같아 보이는데, 이 사람은 늘 거기 있다.
+        */}
         <Act
           label="대화하기"
-          sub={left > 0 ? `오늘 ${left}번 남음` : '내일 다시'}
-          on={left > 0 && !maxed}
+          sub={left > 0 ? `오늘 ${left}번 남음` : '오늘은 다 했음'}
+          on
           onPress={() => setOpen('talk')}
         />
         <Act
           label="선물주기"
-          sub="가방의 기타"
-          on={!maxed}
+          sub={gLeft > 0 ? `오늘 ${gLeft}개 남음` : '오늘은 다 줬음'}
+          on={gLeft > 0 && !maxed}
           onPress={() => setOpen('gift')}
         />
         <Act
@@ -423,7 +506,7 @@ export function BondScreen({ who, onBack }: { who: CharId; onBack: () => void })
         </T>
       )}
 
-      {open === 'talk' && <TalkPopup who={who} onClose={() => setOpen(null)} />}
+      {open === 'talk' && <TalkView who={who} onClose={() => setOpen(null)} />}
       {open === 'gift' && <GiftPopup who={who} onClose={() => setOpen(null)} />}
       {open === 'story' && (
         <StoryPopup who={who} lv={b.lv} onClose={() => setOpen(null)} />

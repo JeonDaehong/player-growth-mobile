@@ -107,7 +107,6 @@ import { BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 import { CharStats } from './CharStats';
 import { SkillPanel } from './SkillPanel';
 import { LevelUpPopup } from './LevelUpPopup';
-import { BondGauge } from './BondScreen';
 import { RARITY_BOND, bondStep } from '@/core/bond';
 import { SkillTreePopup } from './SkillTreePopup';
 import { WallpaperPopup } from './WallpaperPopup';
@@ -1119,26 +1118,36 @@ export function HeroManage({ pick, onPick, onBond }: {
             {/*
               ── 인연 ── 이름 바로 밑 (`core/bond`).
 
-              **단계 이름과 하트를 같이** 둔다. 하트만 있으면 몇 칸인지는
-              세어야 알고, 이름만 있으면 다음 칸이 코앞인지 한참인지 모른다.
-              둘이 붙어 있으면 한 번에 읽힌다.
+              ## 하트 열 개를 늘어놓지 않는다
 
-              누르면 인연 화면으로 간다 — 오른쪽 위의 하트 단추와 같은 곳이다.
-              여기서도 눌리는 까닭: 이 줄이 곧 그 화면의 요약이라, 더 보고
-              싶은 사람의 손가락이 제일 먼저 닿는 자리다.
+              처음엔 그렇게 했다. 그런데 이 자리는 **인물 그림 위에 얹힌 왼쪽
+              귀퉁이**라 폭이 좁고, 아홉 픽셀짜리 열 개면 백 픽셀이 넘어서
+              얼굴을 가로질렀다. 게다가 위에 선 역할·패시브 줄은 로고 하나에
+              글자 하나인데 여기만 도형 열 개라 한 벌로 안 읽혔다.
+
+              **한 줄로 줄인다** — 하트 하나 · 단계 이름 · `3/10`. 위 두 줄과
+              같은 모양(`SideRow`)이 되고, 열 칸짜리 게이지는 자리가 넉넉한
+              인연 화면에서 본다 (`BondGauge`).
+
+              누르면 그리로 간다. 오른쪽 위 하트 단추와 같은 곳인데, 이 줄이
+              곧 그 화면의 요약이라 더 보고 싶은 사람의 손가락이 제일 먼저
+              닿는 자리다.
             */}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${d.name}와의 인연 보기`}
+              accessibilityLabel={`${d.name}와의 인연 보기 — ${bondStep(bondLv).name}`}
               onPress={() => { sfx('tap'); onBond(c.id); }}
               style={({ pressed }) => ({
-                marginTop: 3,
+                marginTop: 4,
                 opacity: pressed ? O.sub : 1,
               })}
             >
               <Row gap={SP.xs} style={{ alignItems: 'center' }}>
-                <BondGauge lv={bondLv} cap={RARITY_BOND[d.rarity]} size={9} />
-                <T size={FS.tiny} dim="sub">{bondStep(bondLv).name}</T>
+                <Pixel sprite={HEART} scale={10 / 9} />
+                <T size={FS.tiny} bold>{bondStep(bondLv).name}</T>
+                <T size={9} dim="dim">
+                  {`${bondLv}/${RARITY_BOND[d.rarity]}`}
+                </T>
               </Row>
             </Pressable>
           </View>

@@ -16,7 +16,8 @@ import {
   BOOK_IDS, BookId, expOf, feed, goldFor,
 } from '@/core/exp';
 import {
-  BOND_STEPS, GiftId, RARITY_BOND, STORY_DIA, TALKS, TALK_A_DAY, bondFeed, giftExp,
+  BOND_STEPS, GIFT_A_DAY, GiftId, RARITY_BOND, STORY_DIA, TALKS, TALK_A_DAY,
+  bondFeed, giftExp,
 } from '@/core/bond';
 import { dayKey } from '@/core/events';
 import { FormationId, PARTY_SIZE, Party, cleanParty, seatRows } from '@/core/party';
@@ -56,8 +57,10 @@ export interface RosterActions {
   revertEdits: () => void;
   /** 말을 건다 — 하루 두 번까지 (`state/types`) */
   talkBond: (who: CharId, choice: number) => 'no' | { up: number; exp: number };
-  /** 선물을 준다 */
-  giveGift: (who: CharId, gift: GiftId) => 'none' | { up: number; exp: number };
+  /** 선물을 준다 — 하루 세 개까지 (`state/types`) */
+  giveGift: (
+    who: CharId, gift: GiftId,
+  ) => 'none' | 'no' | { up: number; exp: number; lv: number };
   /** 이야기를 다 봤다 — 다이아를 받는다 */
   readStory: (who: CharId, step: string) => boolean;
   /** 짜 둔 편성을 버린다 — 아직 안 들어간 것만 사라진다 */
@@ -231,7 +234,9 @@ const snapTrees = (
 };
 
 /** 아직 아무 사이도 아닌 사람 — 키가 없을 때 이것으로 읽는다 */
-const NEW_BOND = { lv: 0, exp: 0, talkDay: '', talks: 0, read: [] as string[] };
+const NEW_BOND = {
+  lv: 0, exp: 0, talkDay: '', talks: 0, giftDay: '', gaves: 0, read: [] as string[],
+};
 
 const commitPending = (set: SliceSet, get: SliceGet) => {
   const st = get();
@@ -542,15 +547,25 @@ export const createRosterSlice = (
     const have = st.gifts[gift] ?? 0;
     if (have <= 0) return 'none';
     const b = st.bonds[who] ?? NEW_BOND;
+    const today = dayKey(Date.now());
+    /* 날이 바뀌면 0 이다 — 자정에 따로 비우는 일 없이 읽을 때 안다 */
+    const used = b.giftDay === today ? b.gaves : 0;
+    if (used >= GIFT_A_DAY) return 'no';
+
     const cap = RARITY_BOND[CHARS[who].rarity];
     const add = giftExp(who, gift);
     const got = bondFeed(b.lv, b.exp, add, cap);
     set({
       /* 싫어하는 선물이어도 **없어진다** — 준 것은 준 것이다 */
       gifts: { ...st.gifts, [gift]: have - 1 },
-      bonds: { ...st.bonds, [who]: { ...b, lv: got.lv, exp: got.exp } },
+      bonds: {
+        ...st.bonds,
+        [who]: {
+          ...b, lv: got.lv, exp: got.exp, giftDay: today, gaves: used + 1,
+        },
+      },
     });
-    return { up: got.up, exp: add };
+    return { up: got.up, exp: add, lv: got.lv };
   },
 
   readStory: (who, step) => {

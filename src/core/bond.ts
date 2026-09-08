@@ -184,6 +184,17 @@ export const GIFTS: Record<GiftId, GiftDef> = {
 export const GIFT_BASE = 20;
 
 /**
+ * 하루에 몇 개까지 줄 수 있나.
+ *
+ * 대화(둘)보다 하나 많다. 선물은 **모아야 하는 것**이라 그날 가진 만큼만
+ * 쓸 수 있는데, 거기에 횟수까지 같으면 두 축이 한 축처럼 굴러간다.
+ *
+ * 상한을 두는 까닭 자체는 대화와 같다 — 없으면 쿠폰으로 받은 백 개를 한
+ * 자리에서 다 부어서, 며칠에 걸쳐 쌓는 축이 5분짜리가 된다.
+ */
+export const GIFT_A_DAY = 3;
+
+/**
  * ── 이 사람에게 이 선물은 어떤가 ── 배수.
  *
  *    2   아주 좋아한다
@@ -220,6 +231,17 @@ export const giftExp = (who: CharId, gift: GiftId): number =>
 /** 하루에 몇 번까지 말을 걸 수 있나 */
 export const TALK_A_DAY = 2;
 
+/**
+ * ── 오늘 다 쓴 뒤의 한마디 ──
+ *
+ * 대화 횟수를 다 쓰면 고르는 대화가 안 나온다. 그때 아무 일도 안 일어나면
+ * 단추가 그냥 안 눌리는 것과 같은데, 그러면 **말을 걸 수 없다**와 **오늘은
+ * 더 못 쌓는다**가 화면에서 구분이 안 된다.
+ *
+ * 그래서 한마디는 한다 — 애정은 안 오르고 고를 것도 없다. 대사는 캐릭터
+ * 표에 이미 있는 것을 쓴다 (`core/lines` 의 `linesOf`), 여기 또 쓰면 같은
+ * 사람이 두 곳에서 다른 말투로 말하게 된다.
+ */
 export interface TalkChoice {
   text: string;
   /** 고르면 오르는(또는 깎이는) 애정 경험치 */
@@ -358,6 +380,39 @@ export const TALKS: Record<CharId, readonly TalkDef[]> = {
 
 /** 이야기 하나를 다 보면 주는 다이아 */
 export const STORY_DIA = 100;
+
+/**
+ * 이 단계가 몇 장인가 — 목록에 `1장` `2장` 으로 적는다.
+ *
+ * 단계 이름(`어색한 관계`)이 아니라 **장 번호**로 적는 까닭: 목록에서
+ * 사람이 세는 것은 "몇 편까지 봤나" 이고, 단계 이름은 이미 위 게이지가
+ * 말하고 있다. 같은 말을 두 자리에 두면 둘 다 흐려진다.
+ */
+export const storyNo = (step: BondStep['id']): number =>
+  BOND_STEPS.findIndex((s) => s.id === step) + 1;
+
+/**
+ * 이 장을 볼 수 있나 — **두 가지를 다 넘겨야** 한다.
+ *
+ *   1. 그 단계에 닿았나 (`storyOpen`)
+ *   2. **앞 장을 다 봤나**
+ *
+ * 둘째가 중요하다. 인연이 훌쩍 올라 3장이 먼저 열리면 이야기를 가운데부터
+ * 보게 되는데, 그러면 앞 장을 볼 이유가 사라진다 (보상은 이미 받을 수
+ * 있으므로). 순서대로 보게 두면 열린 장이 늘 하나뿐이라 다음에 볼 것이
+ * 화면에서 분명하다.
+ *
+ * @param read 다 본 장들 (`BondState.read`)
+ */
+export function storyWhy(
+  lv: number, step: BondStep, read: readonly string[],
+): 'ok' | 'level' | 'before' {
+  const at = BOND_STEPS.findIndex((s) => s.id === step.id);
+  const prev = BOND_STEPS[at - 1];
+  if (prev && !read.includes(prev.id)) return 'before';
+  if (!storyOpen(lv, step)) return 'level';
+  return 'ok';
+}
 
 /** 이야기의 열쇠 — `<캐릭터>:<단계>` */
 export const storyKey = (who: CharId, step: BondStep['id']): string => `${who}:${step}`;

@@ -95,6 +95,8 @@ function bondsOf(got: unknown): Record<string, BondState> {
       exp: Math.max(0, Math.floor(num(b.exp, 0))),
       talkDay: typeof b.talkDay === 'string' ? b.talkDay : '',
       talks: Math.max(0, Math.floor(num(b.talks, 0))),
+      giftDay: typeof b.giftDay === 'string' ? b.giftDay : '',
+      gaves: Math.max(0, Math.floor(num(b.gaves, 0))),
       read: Array.isArray(b.read)
         ? (b.read as unknown[]).filter((x): x is string => typeof x === 'string' && known.has(x))
         : [],

@@ -270,99 +270,303 @@ LAYOUT:
 
 ## §B4 이야기 월페이퍼 열여섯
 
-단계마다 한 장씩, 네 사람 × 네 단계입니다. **이야기를 다 보면 그 장면의
-월페이퍼를 받습니다** (`readStory`).
+인연 이야기를 처음 끝까지 보면 그 장면의 월페이퍼를 받습니다 (`readStory`).
+네 사람 × 네 단계 = 열여섯 장입니다.
 
-**자르지 않습니다.** `assets/wallpaper/` 에 그대로 넣고 `src/ui/wallpapers.ts`
-에 줄을 더합니다 — 번들러가 `require` 를 정적으로 읽으므로 손으로 적어야
-합니다 (그 파일 머리말에 까닭이 있습니다).
+**지금 있는 넉 장과 같은 그림**입니다 — 회색조 아트 일러스트, 세로 9:16,
+빛이 세고 배경이 두꺼운 것. 도트가 아닙니다. `assets/wallpaper/` 의 것을
+한 번 열어 보고 그 결을 맞추십시오.
+
+**자르지 않습니다.** `assets/wallpaper/<사람>_<단계>.jpg` 로 넣고
+`src/ui/wallpapers.ts` 에 줄을 더합니다 — 번들러가 `require` 를 정적으로
+읽으므로 손으로 적어야 합니다 (그 파일 머리말에 까닭이 있습니다). 아직 안
+온 단계는 지금 있는 한 장으로 떨어지므로 (`wallpaperOf`), **한 장씩 들어와도
+그때그때 붙습니다.**
+
+| 파일 | 장면 |
+|---|---|
+| `knightgirl_awkward` | 기사답게 인사한다 |
+| `knightgirl_friend` | 목욕 중에 문이 열려 비누를 던진다 |
+| `knightgirl_trust` | 검을 땅에 꽂고 맹세한다 |
+| `knightgirl_love` | 임무를 끝내고 노을 아래 웃는다 |
+| `bunnyaxe_awkward` | 술집에서 진상 손님을 혼낸다 |
+| `bunnyaxe_friend` | 제 특제 칵테일을 먹어 보라고 내민다 |
+| `bunnyaxe_trust` | 울던 자신을 달래 준 것이 고맙다 |
+| `bunnyaxe_love` | 고백 직전, 방문 앞에 서 있다 |
+| `elfarcher_awkward` | 나무 위에서 내려다본다 |
+| `elfarcher_friend` | 쑥스러워하며 손을 내민다 |
+| `elfarcher_trust` | 던전에서 물고기를 구우며 배고파한다 |
+| `elfarcher_love` | 팔을 뒤로 하고 몸을 배배 꼰다 |
+| `nun_awkward` | 폐허에서 기도한다 |
+| `nun_friend` | 물고기 머리가 올라간 괴식 파이를 맛있게 먹는다 |
+| `nun_trust` | 묘지에서 하늘을 보며 씁쓸하게 웃는다 |
+| `nun_love` | 고맙다며 행복하게 미소짓는다 |
+
+### 단계가 **표정으로** 갈립니다
+
+넷이 다 "예쁘게 서 있는 그림" 이면 단계를 올린 값이 안 보입니다.
+
+| 단계 | 무엇을 보여 주나 |
+|---|---|
+| 어색한 관계 | **그 사람의 직업.** 아직 나를 안 본다 |
+| 우정 | **허물어진 순간.** 웃거나, 당황하거나 |
+| 신뢰 | **속을 보인다.** 맹세 · 고마움 · 씁쓸함 |
+| 애정 | **나를 본다.** 부끄러움과 행복이 같이 있는 얼굴 |
+
+---
+
+### 이졸데 (`knightgirl_*`)
+
+**`assets/wallpaper/knightgirl_awkward.jpg`**
 
 ```
-assets/wallpaper/knightgirl_awkward.jpg   이졸데 · 어색한 관계
-assets/wallpaper/knightgirl_friend.jpg    이졸데 · 우정
-assets/wallpaper/knightgirl_trust.jpg     이졸데 · 신뢰
-assets/wallpaper/knightgirl_love.jpg      이졸데 · 애정
-… bunnyaxe_* · elfarcher_* · nun_* 도 같은 넷씩
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — ISOLDE:
+A tall young knight woman with very long straight pale hair falling past her waist. A slim jewelled circlet with a single gem sits on her forehead. She wears ornate layered silver plate armour — segmented pauldrons, a fitted breastplate, armoured thigh-high boots — over a fitted underlayer, with a long flowing cape whose hem is embroidered with a fine pattern. She carries a straight double-edged longsword. Calm, composed features.
+
+SCENE — A FORMAL KNIGHT'S GREETING:
+She stands in a vaulted stone hall, full figure, facing the viewer but with her eyes lowered — she has not looked up yet. Her right fist is placed over her heart and her left hand rests on the pommel of her sheathed sword; her upper body is bowed a few degrees in a stiff, correct salute. Her cape falls straight behind her. Cold light falls through a tall arched window behind her, throwing a long shadow forward across polished flagstones. Everything about the pose is proper and distant.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range from deep black to pure white, dramatic directional lighting, volumetric light shafts, fine crosshatched detail in the armour and stonework, floating dust motes catching the light. Sharp, clean line work. Highly detailed background, cinematic composition, subject centred and full-length in frame.
 ```
 
-지금은 사람당 한 장뿐이라 (`ui/wallpapers`) 어느 단계를 봐도 같은 그림이
-뜹니다. **16장이 부담이면 애정(D) 넷만 먼저** 뽑으십시오 — 값이 제일 큰
-자리가 제일 먼저 갈리는 편이 낫습니다.
-
-### 단계가 **장면으로** 갈려야 합니다
-
-넷이 다 "예쁘게 서 있는 그림" 이면 단계를 올린 값이 안 보입니다. 거리로
-가릅니다.
-
-| 단계 | 장면 | 거리 | 시선 |
-|---|---|---|---|
-| 어색한 관계 | 각자 제 일을 하고 있다 | 전신, 멀리 | **안 마주친다** |
-| 우정 | 같은 것을 보며 웃는다 | 무릎 위 | 옆을 본다 |
-| 신뢰 | 등을 맡기고 서 있다 | 허리 위 | 정면, 담담 |
-| 애정 | 한 사람만, 아주 가까이 | 가슴 위 | **정면, 눈을 맞춘다** |
-
-아래 프롬프트에서 `CHARACTER` 문단과 `SCENE` 의 (A)~(D) 중 하나를 골라
-넣으면 한 장입니다. 인물 묘사는 [`CHARACTER_ART_PROMPTS.md`](CHARACTER_ART_PROMPTS.md)
-의 것과 **같아야** 합니다 — 다르게 적으면 얼굴이 딴사람이 됩니다.
+**`assets/wallpaper/knightgirl_friend.jpg`**
 
 ```
-ABSOLUTE RULE — NO TEXT OF ANY KIND:
-- Do NOT write, print, label, caption, title, name, or number ANYTHING.
-- No caption bar, no name plate, no banner, no signature, no watermark.
-- This includes English, Korean, numerals, runes, and fake alien script.
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
 
-FORMAT: one single illustration, landscape, 16:9, filling the frame edge to edge.
+CHARACTER — ISOLDE:
+The same knight woman: very long straight pale hair, now loose and soaked, a slim jewelled circlet set aside. Her armour is off; she is in a wooden bathhouse.
 
-CHARACTER — pick ONE:
+SCENE — THE DOOR OPENED BY MISTAKE:
+Waist-up, seen from the doorway. She is in a steaming wooden bath tub, water and thick steam covering her to the collarbone and hiding everything below. The heavy door at the frame's edge has just swung open and a shaft of light cuts in. Her eyes are wide, her whole face burning with embarrassment, mouth open in a shout. Her arm is thrown back mid-throw — a bar of soap is flying toward the viewer, caught in the air with a spray of droplets, and a wooden bucket and a scrubbing brush tumble through the air beside it. Wet hair sticks to her cheek. Modest and non-explicit: steam, water and the tub's rim cover her completely.
 
-ISOLDE, the knight:
-A young woman in worn plate armour over a padded gambeson, a long surcoat to
-the knee, hair tied back, a plain kite shield on her left arm and a straight
-sword at her hip. Her face is calm and a little tired. No helmet.
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, strong backlight through the open door, dense volumetric steam, flying water droplets rendered as sharp white specks. Sharp clean line work, detailed wooden interior, cinematic composition.
+```
 
-BIANCA, the axe-wielder:
-A cheerful young woman in a tavern server's dress with an apron, a kerchief
-over her hair, sturdy boots, carrying a large single-bladed woodcutter's axe
-over one shoulder as if it weighed nothing. Freckles. A wide grin.
+**`assets/wallpaper/knightgirl_trust.jpg`**
 
-RIANNE, the elf archer:
-A slender elf with long pointed ears and long straight hair, in a light leather
-jerkin and a hooded cloak of leaves, a longbow taller than she is in one hand
-and a quiver at her hip. Calm, distant expression.
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
 
-AGNES, the sister:
-A young nun in a heavy habit and wimple, a plain wooden prayer-bead cord at her
-waist, hands usually folded. No weapon of any kind. Downcast eyes, gentle face.
+CHARACTER — ISOLDE:
+The same knight woman: very long straight pale hair, jewelled circlet, ornate layered silver plate armour with segmented pauldrons, a long embroidered cape, armoured thigh-high boots, a straight double-edged longsword.
 
-SCENE — pick ONE:
+SCENE — THE OATH:
+Full figure, kneeling on one knee at the centre of a ruined cathedral floor. Her longsword is driven point-down into the flagstones in front of her; both hands are folded over the crossguard and her forehead is bowed until it almost touches her hands. Her eyes are closed. The cape spills across the stone behind her in a wide arc. A single shaft of light from a shattered rose window falls straight down onto her. Petals and ash drift through the beam.
 
-(A) AWKWARD — Full figure, seen from far off across an open yard at dusk.
-    She is busy with her own gear, turned three-quarters away. A second figure
-    is implied only by a long shadow entering from the frame's edge. She is
-    NOT looking toward it. Wide empty ground between them.
-(B) FRIENDSHIP — Knee-up, seen from the side. She is laughing quietly with her
-    head turned to the left, looking at something outside the frame. Her weapon
-    is set down beside her. Warm interior — a tavern hearth behind her.
-(C) TRUST — Waist-up, facing the viewer straight on, standing at ease with her
-    hands resting on her weapon. Behind her shoulder, the back of another
-    figure's head and shoulder is visible at the frame's edge — they are
-    standing back to back. Steady, level gaze. Night, a low fire lighting her
-    from below.
-(D) LOVE — Chest-up portrait, very close. She looks directly at the viewer,
-    her outer layer loosened at the collar, hair let down. One hand is raised
-    just into the bottom of the frame, palm open. Soft light from the left.
-    Quiet, unguarded expression.
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range from deep black to pure white, a hard vertical light shaft, volumetric dust, fine crosshatching in the armour and the ruined stonework, reflective wet floor. Sharp clean line work, highly detailed gothic background, solemn cinematic composition.
+```
 
-STYLE (strict, non-negotiable):
-- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
-- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
-- All shading and all mid-tones done ONLY with 1-bit dithering patterns
-  (checkerboard, 25%/50%/75% ordered dither).
-- Chunky, clearly visible square pixels — every pixel a crisp hard-edged square.
-- Background: solid pure black with dithered forms. Subjects in pure white line and dither.
-- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
-  and the 1-bit look of "Return of the Obra Dinn".
-- The character must read clearly at 400px wide — no hairline detail on the face.
+**`assets/wallpaper/knightgirl_love.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — ISOLDE:
+The same knight woman: very long straight pale hair, jewelled circlet, ornate silver plate armour, a long cape. Here the armour is dented and dusty and the collar is unbuckled, the cape torn at the hem.
+
+SCENE — AFTER THE MISSION, AT SUNSET:
+Chest-up, very close, facing the viewer. She has just come back from a fight; a smear of dirt is on one cheek and strands of hair have escaped. She is smiling — a real, uncontrolled smile she is clearly not used to making — and looking straight at the viewer, but her eyes flick very slightly aside and her cheeks are flushed, caught between happiness and embarrassment. One hand is raised into the bottom of the frame, palm open, as if she had just reached out and then thought better of it. Behind her, a low sun over a broken field, the sky heavy with backlit clouds.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, strong warm-feeling rim light from behind blowing out the edges of her hair, deep soft shadow on the near side of her face, lens-flare starbursts, floating particles. Sharp clean line work, shallow depth of field with the background softly blurred, intimate cinematic composition.
+```
+
+---
+
+### 비앙카 (`bunnyaxe_*`)
+
+**`assets/wallpaper/bunnyaxe_awkward.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — BIANCA:
+A lively young woman with a short tousled bob, freckles, and a wide confident grin. She wears a tavern server's outfit — a laced bodice over a blouse with rolled sleeves, an apron, a kerchief tied over her hair — with one battered steel pauldron strapped over her right shoulder, and tall lace-up boots. She carries an enormous single-bladed woodcutter's axe with a long grip as if it weighed nothing.
+
+SCENE — THROWING OUT A ROWDY CUSTOMER:
+Full figure, low angle, in a crowded candle-lit tavern. She has one boot planted on a toppled bench and is leaning in, jabbing a finger down at a big drunk man who has fallen backward off his stool at the bottom of the frame — we see him from behind, hands raised. Her other hand holds the axe casually over her shoulder. Her mouth is open mid-shout and one eyebrow is up; she is furious and completely in control, almost enjoying it. Tankards, spilled ale and scattered cards are frozen in the air around her. Other patrons watch from the shadows.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, warm candlelight from below and behind, heavy smoke haze, splashing liquid rendered as sharp white arcs. Sharp clean line work, dense detailed tavern background, dynamic cinematic composition.
+```
+
+**`assets/wallpaper/bunnyaxe_friend.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — BIANCA:
+The same woman: short tousled bob, freckles, tavern server's outfit with a laced bodice, apron and kerchief, one battered steel pauldron on her right shoulder. Her huge axe leans against the bar behind her, out of the way.
+
+SCENE — HER OWN COCKTAIL:
+Waist-up, leaning across a polished tavern bar toward the viewer, both elbows on the wood. She is pushing a tall glass right into the foreground — the glass is enormous in frame, filled with layered liquid, ice, a curl of citrus peel and something dubious floating in it. Her grin is huge and she is looking straight at the viewer with her eyebrows raised in expectation, clearly saying "drink it". Her free hand is a thumbs-up. Bottles and hanging tankards crowd the shelves behind her.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, warm lamplight, strong wide-angle foreshortening on the glass, condensation droplets picked out in white, bokeh highlights from bottles behind. Sharp clean line work, densely detailed bar background, playful cinematic composition.
+```
+
+**`assets/wallpaper/bunnyaxe_trust.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — BIANCA:
+The same woman: short tousled bob, freckles, tavern server's outfit, one battered pauldron. Here her kerchief has slipped off and her apron is dirty; the axe lies on the ground beside her.
+
+SCENE — THANK YOU FOR STAYING:
+Chest-up, close, sitting on the back steps of the tavern at night. She has clearly been crying — her eyes and nose are red and wet, lashes clumped, a tear track still on one cheek — but she has just looked up at the viewer and is smiling through it, a crumpled, grateful, slightly embarrassed smile. One hand is wiping her eye with the back of her wrist; the other is half-raised toward the viewer. Her shoulders are still hitching. Warm light spills from the doorway behind her; the yard beyond is dark and rainy.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, soft warm key light from the doorway behind and a cold rim from the night, wet highlights in her eyes rendered with bright white specular dots, fine rain streaks. Sharp clean line work, quiet intimate cinematic composition, shallow depth of field.
+```
+
+**`assets/wallpaper/bunnyaxe_love.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — BIANCA:
+The same woman: short tousled bob, freckles, tavern server's outfit, one battered pauldron — but tonight the apron is off, the bodice is neatly laced, her hair is brushed and she is wearing a small ribbon. No axe anywhere.
+
+SCENE — OUTSIDE THE DOOR, ABOUT TO CONFESS:
+Full figure, standing in a narrow lamp-lit corridor with her back pressed lightly against the wall beside a closed wooden door. She is looking at the door, not at the viewer. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, her eyes are squeezed half-shut and her mouth is caught between a nervous grimace and an enormous helpless smile — she has been standing here a while. One boot is up on its toe. Her shadow stretches long down the corridor.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, a single warm lamp above and to one side, deep falloff into black down the corridor, heavy blush rendered with fine hatching. Sharp clean line work, detailed timber-and-plaster interior, tense charming cinematic composition.
+```
+
+---
+
+### 리안느 (`elfarcher_*`)
+
+**`assets/wallpaper/elfarcher_awkward.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — RIANNE:
+A slender elf woman with long pointed ears and very long pale hair gathered into a high ponytail with a feather tied at the base. She wears a short-sleeved hooded jerkin over a fitted tunic, a wide belt, leather bracers, a quiver of fletched arrows at her hip and a torn ragged-hemmed cloak, with tall lace-up boots. She carries a longbow taller than she is. Cool, distant expression.
+
+SCENE — LOOKING DOWN FROM THE BRANCH:
+Full figure, seen from below at a steep upward angle. She is perched on a thick branch high in an ancient forest, one knee drawn up and the other leg hanging, her bow resting across her lap with an arrow held loosely between two fingers. She is looking straight down at the viewer, chin slightly lowered, expression unreadable and evaluating — not hostile, not welcoming. Her ponytail and the torn cloak hang down past the branch. Shafts of light break through the canopy far above; leaves drift down through the frame.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, strong god-rays from the canopy, deep shadow in the lower canopy, fine detail in bark and leaves, floating pollen motes. Sharp clean line work, dramatic low-angle perspective, highly detailed forest background.
+```
+
+**`assets/wallpaper/elfarcher_friend.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — RIANNE:
+The same elf: long pointed ears, very long pale hair in a high ponytail with a feather, hooded jerkin, bracers, quiver, torn cloak, tall boots. Her longbow is slung across her back here, freeing both hands.
+
+SCENE — THE OFFERED HAND:
+Knee-up, standing on a mossy forest path, turned three-quarters toward the viewer. She has extended one hand toward the viewer, palm up, fingers slightly curled — and immediately regretted it: her arm is not fully straight, her shoulders are drawn in, and she has turned her face away and down, looking off to the side with her ears visibly reddened and her lips pressed thin. Her other hand grips her own elbow. The gesture is sincere and awkward at once.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, dappled forest light, soft rim light along her arm and hair, blush on the ear tips rendered with fine hatching. Sharp clean line work, detailed mossy woodland background, shallow depth of field with the offered hand nearest the viewer and sharpest.
+```
+
+**`assets/wallpaper/elfarcher_trust.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — RIANNE:
+The same elf: long pointed ears, long pale hair in a high ponytail with a feather, hooded jerkin, bracers, quiver, torn cloak, tall boots. Her cloak is pulled around her shoulders like a blanket here and her bow leans against the wall.
+
+SCENE — GRILLING A FISH IN THE DUNGEON:
+Waist-up, crouched on her heels beside a small campfire in a cramped stone dungeon chamber. She is holding a stick over the flames with a whole fish skewered on it, leaning so far forward that her face is almost in the fire. Her eyes are huge and fixed on the fish, her mouth is open and she is very obviously about to drool; one hand hovers as if to grab it early. All her usual composure is gone. Firelight throws her shadow enormous on the wet brick wall behind; her pack and a discarded arrow lie beside her.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, the fire as the single hard light source lighting her from below, deep black beyond the firelight, sparks and smoke rising, glistening highlights on the fish. Sharp clean line work, detailed damp stonework, warm and comic cinematic composition.
+```
+
+**`assets/wallpaper/elfarcher_love.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — RIANNE:
+The same elf: long pointed ears, very long pale hair — here loose and unbound rather than tied up — hooded jerkin loosened at the collar, bracers, torn cloak, tall boots. No bow, no quiver.
+
+SCENE — HANDS BEHIND HER BACK, SQUIRMING:
+Knee-up, standing in a sunlit forest clearing, facing the viewer. Both hands are clasped behind her back, which pushes her shoulders back and makes her sway — one boot is turned inward on its toe and her hips are twisted, her whole body making a soft S-curve of embarrassment. She is looking at the viewer through her lashes with her chin tucked down, ears bright red, and a small helpless pleased smile she cannot get rid of. Loose strands of hair fall across her face. Petals and light drift around her.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, soft backlight through leaves haloing her hair, gentle bloom, blush rendered with fine hatching on the ears and cheeks. Sharp clean line work, softly blurred forest background, warm intimate cinematic composition.
+```
+
+---
+
+### 아녜스 (`nun_*`)
+
+**`assets/wallpaper/nun_awkward.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — AGNES:
+A young nun with shoulder-length pale hair framing her face, wearing a black habit: a white headband under a black veil with a small leaf ornament at the temple, a high-collared black dress with wide bell sleeves, a long pale stole down the front, a sash at the waist, and a long skirt with a high slit over heeled shoes. She carries a censer on a fine chain. Gentle, downcast features.
+
+SCENE — PRAYING IN THE RUIN:
+Full figure, kneeling in the nave of a roofless ruined medieval cathedral. Her hands are clasped at her chest and her head is bowed, eyes closed. The censer rests on the broken flagstones beside her, a thin line of smoke rising from it. Shattered pews and fallen masonry stretch away on both sides; above her the ribs of the vault are open to a heavy overcast sky. Ash and paper fragments drift in the still air.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range from deep black to pure white, soft flat overcast light from above with strong local contrast, drifting particles, fine crosshatched detail in the fabric and the ruined stonework. Sharp clean line work, highly detailed gothic ruin background, hushed cinematic composition.
+```
+
+**`assets/wallpaper/nun_friend.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — AGNES:
+The same nun: shoulder-length pale hair, white headband under a black veil with a leaf ornament, high-collared black habit with wide bell sleeves, pale stole, sash. No censer here.
+
+SCENE — THE TERRIBLE PIE, ENJOYED:
+Waist-up, seated at a plain wooden refectory table, seen from across it. In front of her is a pie with an entire fish head thrust up through the crust, eyes open, tail sticking out the other side. She has a large forkful raised to her mouth and her eyes are closed in genuine, blissful delight; one cheek is already full and she is smiling around it. Her free hand is pressed to her cheek in appreciation. Everything about her says this is delicious. A second untouched plate sits opposite, pushed slightly away.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, warm side light from a window, steam rising from the pie, glistening highlights on the crust and the fish's eye, fine detail in the wood grain. Sharp clean line work, detailed monastery interior, deadpan comic cinematic composition.
+```
+
+**`assets/wallpaper/nun_trust.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — AGNES:
+The same nun: shoulder-length pale hair, white headband under a black veil with a leaf ornament, high-collared black habit with wide bell sleeves, pale stole, sash, censer on a chain hanging from one hand.
+
+SCENE — IN THE GRAVEYARD, LOOKING UP:
+Waist-up, standing among leaning weathered headstones at dusk, her body turned away but her face tilted up toward a break in the clouds. She is smiling — a small, tired, bitter smile with no happiness in it — and her eyes are open and dry. The censer hangs still at her side, its smoke going straight up. Bare branches reach across the top of the frame; long grass moves around the stones.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, cold light breaking through heavy cloud from above and behind, strong rim light on her cheek and veil, deep shadow across the graves, drifting smoke. Sharp clean line work, highly detailed graveyard background, melancholy cinematic composition.
+```
+
+**`assets/wallpaper/nun_love.jpg`**
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — AGNES:
+The same nun: shoulder-length pale hair, white headband under a black veil with a leaf ornament, high-collared black habit with wide bell sleeves, pale stole, sash. Here the veil is pushed slightly back and more of her hair shows.
+
+SCENE — THANK YOU:
+Chest-up, very close, facing the viewer straight on. She is smiling openly and fully for the first time — eyes crinkled almost shut with happiness, head tilted a little to one side — and both hands are folded together at her chest. Her cheeks are flushed. She is looking directly at the viewer and clearly saying thank you. Soft light falls from a high window to the left; motes drift through it.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, soft directional key light with gentle falloff, a bright halo of blown-out light behind her head, delicate hatching for the blush, glistening highlights in the eyes. Sharp clean line work, softly blurred chapel background, warm intimate cinematic composition.
 ```
 
 ---

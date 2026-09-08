@@ -128,6 +128,10 @@ export interface BondState {
   talkDay: string;
   /** 그날 몇 번 걸었나 — 날이 바뀌면 0 으로 읽는다 */
   talks: number;
+  /** 마지막으로 선물한 날 */
+  giftDay: string;
+  /** 그날 몇 개 줬나 (`core/bond` 의 `GIFT_A_DAY`) */
+  gaves: number;
   /** 다 본 이야기의 단계들 (`BondStep.id`) */
   read: string[];
 }
@@ -838,8 +842,16 @@ export interface GameActions {
    * @returns 오늘 더 걸 수 없으면 `no`, 그 밖에는 오른 칸 수
    */
   talkBond: (who: CharId, choice: number) => 'no' | { up: number; exp: number };
-  /** 선물을 준다 — 없으면 아무 일도 안 한다 (`core/bond` 의 `giftExp`) */
-  giveGift: (who: CharId, gift: GiftId) => 'none' | { up: number; exp: number };
+  /**
+   * 선물을 준다 — 하루 세 개까지 (`core/bond` 의 `GIFT_A_DAY`).
+   *
+   * `none` 은 그 선물이 없는 것, `no` 는 오늘 몫을 다 쓴 것이다. 둘을 갈라
+   * 두는 까닭: 화면이 하는 말이 다르다 — 앞엣것은 "가서 구해 오라" 이고
+   * 뒤엣것은 "내일 오라" 다.
+   */
+  giveGift: (
+    who: CharId, gift: GiftId,
+  ) => 'none' | 'no' | { up: number; exp: number; lv: number };
   /**
    * 이야기를 다 봤다 — 그 단계의 보상을 받는다 (다이아 `STORY_DIA`).
    *

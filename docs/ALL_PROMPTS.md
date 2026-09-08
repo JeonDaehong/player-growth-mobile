@@ -18,213 +18,10 @@
 
 ## 지금 남은 것
 
-1. **선물 로고 · 얽힌 것 일곱 (좋아하거나 싫어하는 사람이 있다)** — 7칸 → `gift_icon`
-2. **선물 로고 · 아무나 줘도 되는 것 열하나** — 6×2칸 → `gift_icon`
-3. **경험의 서 셋 — 같은 책이 세 단계로 자란다** — 3칸 → `item_icon`
-4. **이야기 월페이퍼 — 네 사람 × 네 단계 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
+1. **이야기 월페이퍼 — 네 사람 × 네 단계 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
 
 ---
-## 1. 선물 로고 · 얽힌 것 일곱 (좋아하거나 싫어하는 사람이 있다)
-
-| | |
-|---|---|
-| 칸 | 7 |
-| 폴더 | `assets/sprites/gift_icon/` |
-| 원본 | `docs/BOND_ART_PROMPTS.md`  |
-
-### 프롬프트
-
-```
-ABSOLUTE RULE — NO TEXT OF ANY KIND:
-- Do NOT write, print, label, caption, title, name, or number ANYTHING.
-- There is NO caption area, NO name plate, NO banner, NO signature.
-- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
-- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
-- A book cover with squiggles that read as writing is a failed output.
-- A cell containing even one letter-like mark is a failed output.
-
-SUBJECT: a single sheet of EXACTLY 7 ICONS in ONE row, left to right. Seven cells. Not eight, not six. Each cell holds a different object; do not repeat an object anywhere on the sheet.
-
-Cell 1 — A ROUND COOKIE. One solid circle filling most of the cell. A BITE is taken out of its upper right edge: a clean crescent notch about a quarter of the circle's width, so the outline is not a plain circle. Scattered across the face, FOUR small solid dots of equal size, none touching the edge. No crumbs, no plate, no steam. Squint test: a circle with one chunk missing.
-
-Cell 2 — A WEDGE OF PIE. A LOW WIDE TRAPEZOID sitting on the bottom edge — twice as wide as it is tall, its top edge slightly narrower than its base. Across the top face only, a LATTICE of three straight lines running one way and three the other, forming a coarse grid. The sides are plain and solid. Nothing above it. Squint test: a flat wide slab with a crosshatched top.
-
-Cell 3 — A SLICE OF CARROT CAKE. A TALL UPRIGHT RECTANGLE, clearly taller than it is wide (about 2 wide to 3 tall), standing on the bottom edge. Across its face, TWO horizontal bands divide it into three layers of equal height. Sitting on top, centred, a small solid TRIANGLE pointing up — about a third of the cell wide — with two short lines rising from its flat top. No plate, no fork, no icing swirls. Squint test: a standing brick in three layers with a tiny cone on top.
-
-Cell 4 — A CUT OF MEAT ON THE BONE. A long shape running diagonally from the lower left to the upper right. The lower two thirds is a THICK ROUNDED MASS. From its upper end a NARROW BONE continues, a fifth as thick as the mass, ending in a small knob at the upper right corner. One thin CURVED line inside the mass follows its edge, the only interior mark. No plate, no flames, no animal. Squint test: fat at one end, a thin stick with a knob at the other.
-
-Cell 5 — A SINGLE FLOWER. Rising from the bottom edge, a straight vertical STEM one sixth of the cell wide, reaching to the middle of the cell. On the stem, one small solid LEAF pointing left. At the top, FIVE rounded PETALS arranged around a small solid centre dot, the whole head about half the cell wide. Exactly five petals, all the same size, evenly spaced. No pot, no sparkles, no second bloom.
-
-Cell 6 — A CLOSED BOOK, FRONT ON, WITH A CROSS. A solid rectangle WIDER than it is tall (about 4 wide to 3 tall), centred. On its face, a plain CROSS: one vertical bar from the top edge to the bottom edge of the cover, a fifth of the cover's width, and one horizontal bar above the middle, half the cover's width. The cover is otherwise blank. A narrow band of PAGE EDGES runs down the right side, a sixth of the width. No clasp, no gem, no rays, no letters.
-
-Cell 7 — A WOODEN HAND-BELL. A large solid ROUNDED MASS filling the lower two thirds of the cell — wider than tall, flattened on the bottom, with a single deep SLIT cut horizontally into its lower right side, a third of the mass wide. From the top of the mass, a straight HANDLE rises diagonally to the upper right corner, a sixth of the cell wide, ending square. No mallet, no sound lines, no rope.
-
-STYLE (strict, non-negotiable):
-- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
-- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
-- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
-- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
-- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
-- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
-- Each icon must survive being shrunk to 16x16: one solid mass, one or two big notches,
-  no hairline detail, no line finer than 2 pixels.
-- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
-  and the 1-bit look of "Return of the Obra Dinn".
-- No watermarks, no signatures, no sparkle marks in the corners.
-
-LAYOUT:
-- One row of 7 equal square cells, edge to edge, no gutters, no frames, no borders.
-- Each icon centred in its cell with a small margin of pure black around it.
-- The sheet is 7 times as wide as it is tall.
-```
-
-### 자르기
-
-```json
-{ "file": "<받은 파일명>", "name": "gift_icon", "expect": [7, 1],
-  "labels": ["gf_cookie", "gf_pie", "gf_carrot", "gf_rabbit", "gf_flower", "gf_bible", "gf_gong"] }
-```
-
----
-
-## 2. 선물 로고 · 아무나 줘도 되는 것 열하나
-
-| | |
-|---|---|
-| 칸 | 6 × 2 줄 |
-| 폴더 | `assets/sprites/gift_icon/` |
-| 원본 | `docs/BOND_ART_PROMPTS.md`  |
-
-### 프롬프트
-
-```
-ABSOLUTE RULE — NO TEXT OF ANY KIND:
-- Do NOT write, print, label, caption, title, name, or number ANYTHING.
-- There is NO caption area, NO name plate, NO banner, NO signature.
-- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
-- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
-- A cell containing even one letter-like mark is a failed output.
-
-SUBJECT: a single sheet of EXACTLY 12 CELLS in TWO rows of SIX, left to right, top row first. Eleven of them hold an object; the LAST cell (bottom right) is empty solid black. Each object appears once; do not repeat an object anywhere on the sheet.
-
-TOP ROW, left to right:
-
-Cell 1 — A CUP OF TEA WITH STEAM. On the bottom half, a CUP: a solid U shape with thick walls, wider at the rim than at the base, about half the cell wide, standing on a thin flat SAUCER line slightly wider than the cup. Above the rim, floating clear with a visible GAP of black between them, TWO short WAVY LINES of steam, the taller one on the left. No handle, no leaves.
-
-Cell 2 — A TALL ICED DRINK. A TALL NARROW TUMBLER filling most of the cell's height, straight-sided, slightly wider at the top than at the bottom, about a third of the cell wide. Inside the upper half, THREE small solid SQUARES of ice, tilted at different angles, not touching each other. A straight STRAW rises out of the rim and leans to the upper right, poking clear of the glass by a quarter of the cell. No condensation dots, no coaster.
-
-Cell 3 — A LOAF OF BREAD. One fat solid OVAL lying on its side, wider than tall, its ends rounded. Across the top, THREE short parallel SLASHES cut at a diagonal, evenly spaced, each a fifth of the loaf's length. No basket, no crumbs, no knife.
-
-Cell 4 — AN APPLE. One solid circle filling most of the cell, with a small NOTCH dimpled into the top centre. From that notch a short straight STEM rises, and one small pointed LEAF juts off it to the right. No bite taken out. No dots on the face. Squint test: a circle with a tiny sprout on top.
-
-Cell 5 — A HONEY JAR. A POT that is widest at the bottom, pulls in to a narrow NECK about two thirds of the way up, then flares slightly to the rim. Sitting on the rim, a flat LID slightly wider than the neck, with a small knob on top. On the belly of the pot, ONE thick horizontal BAND. No dipper, no bees, no drips.
-
-Cell 6 — A WEDGE OF CHEESE. A solid RIGHT TRIANGLE with the right angle at the lower left, its flat bottom on the cell's bottom edge and its vertical side on the left, the slope running down to the lower right. THREE round HOLES of different sizes are cut out of the mass, none touching the edges. No board, no knife.
-
-BOTTOM ROW, left to right:
-
-Cell 7 — A BOWL OF SOUP. A WIDE SHALLOW BOWL on the bottom half — much wider than it is deep, a flattened U with thick walls, nearly the full width of the cell. NO saucer under it. Above the rim, floating clear with a gap of black, ONE short WAVY LINE of steam, centred. Squint test: a wide flat dish with one squiggle over it.
-
-Cell 8 — A WRAPPED CANDY. In the centre, one solid circle about half the cell wide. From its left and right sides, two small TWISTED WRAPPER ends flare outward like little triangles with notched outer edges, each a fifth of the cell wide. The three parts touch. Squint test: a bow tie with a fat middle.
-
-Cell 9 — A RIBBON BOW. Two rounded LOOPS meeting at a small solid KNOT in the centre, one loop to the left and one to the right, each a third of the cell wide. Below the knot, two short TAILS hang down and out, ending in notched V tips. No box, no gift underneath.
-
-Cell 10 — A CANDLE. A straight vertical COLUMN of constant width, a quarter of the cell wide, rising from the bottom edge to two thirds of the cell's height, its top cut flat. A short WICK line rises from the centre of that flat top, and above it a small solid TEARDROP FLAME, pointed at the top, about a fifth of the cell wide. The flame touches the wick. No holder, no melted wax runs.
-
-Cell 11 — A MUSIC BOX. A LOW WIDE BOX sitting on the bottom edge, about twice as wide as it is tall, with a thin LID line across its top. On its right side, a small CRANK: a short horizontal arm ending in a round knob, sticking clear of the box by a sixth of the cell. On the lid, ONE small solid square inlay, centred. No notes, no sparkles, no ballerina.
-
-Cell 12 — EMPTY. Solid pure black, nothing drawn at all.
-
-STYLE (strict, non-negotiable):
-- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
-- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
-- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
-- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
-- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
-- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
-- Each icon must survive being shrunk to 16x16: one solid mass, one or two big notches,
-  no hairline detail, no line finer than 2 pixels.
-- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
-  and the 1-bit look of "Return of the Obra Dinn".
-- No watermarks, no signatures, no sparkle marks in the corners.
-
-LAYOUT:
-- Two rows of 6 equal square cells, edge to edge, no gutters, no frames, no borders.
-- The last cell (bottom right) is empty black.
-- Each icon centred in its cell with a small margin of pure black around it.
-- The sheet is 3 times as wide as it is tall.
-```
-
-### 자르기
-
-```json
-{ "file": "<받은 파일명>", "name": "gift_icon", "expect": [6, 2],
-  "labels": ["gf_tea", "gf_ice", "gf_bread", "gf_apple", "gf_honey", "gf_cheese", "gf_soup", "gf_candy", "gf_ribbon", "gf_candle", "gf_music", "_skip"], "append": true }
-```
-
----
-
-## 3. 경험의 서 셋 — 같은 책이 세 단계로 자란다
-
-| | |
-|---|---|
-| 칸 | 3 |
-| 폴더 | `assets/sprites/item_icon/` |
-| 원본 | `docs/BOND_ART_PROMPTS.md`  |
-
-### 프롬프트
-
-```
-ABSOLUTE RULE — NO TEXT OF ANY KIND:
-- Do NOT write, print, label, caption, title, name, or number ANYTHING.
-- There is NO caption area, NO name plate, NO banner, NO scroll of text, NO signature.
-- Every cell is artwork EDGE TO EDGE. Nothing is written above, below, or beside the art.
-- This includes English, Korean, numerals, roman numerals, runes, and fake alien script.
-- A book cover with squiggles that read as writing is a failed output.
-- A cell containing even one letter-like mark is a failed output.
-
-SUBJECT: a single sheet of EXACTLY 3 ICONS in ONE row, left to right. Three cells. Not four, not two, and not two rows — three cells in one row. The three are THE SAME OBJECT AT THREE GRADES: a closed book seen from the front, lying slightly wider than it is tall. Each cell shows that book thicker and more ornate than the one before it. Do not draw three different objects.
-
-Cell 1 — A PLAIN THIN BOOK. A solid rectangle filling the middle of the cell, clearly WIDER than it is tall (about 4 wide to 3 tall). Along its left edge, a narrow vertical SPINE strip one sixth of the width, separated from the cover by one straight vertical line. Along the right edge, a shallow stack of PAGES suggested by TWO short horizontal lines only. One CORNER of the cover — the lower right — is bitten off by a small triangular notch, so the book reads as worn. Nothing else. No clasp, no gem, no straps, no rays. No cross. Squint test: a fat horizontal brick with a stripe down its left side.
-
-Cell 2 — THE SAME BOOK, THICKER, WITH ONE CLASP. Same wide rectangle and same left-edge spine strip, but the page stack on the right is now DEEPER — the body is noticeably taller than in cell 1 and the pages take a fifth of the width. No bitten corner; all four corners are square and whole. Crossing the right edge horizontally at the vertical middle, a small solid CLASP: a short bar that starts on the cover, crosses the page edge, and hooks around it — about a quarter of the cell wide and a tenth of the cell tall. Exactly ONE clasp. No gem, no glow, no cross. Squint test: the same brick, deeper, with one small tab sticking off its right side.
-
-Cell 3 — THE SAME BOOK, THICKEST, WITH CLASP AND A FLOATING GEM. Same wide rectangle, same spine strip, and the deepest page stack of the three — the body fills most of the cell. The horizontal CLASP from cell 2 is there, unchanged, on the right edge. In addition: two short RAISED BANDS cross the spine strip horizontally, near its top and bottom, each a third of the spine's height — the only marks on the spine. Above the book, floating clear of it with a visible GAP of empty black between them, a small solid DIAMOND — a four-pointed rhombus about a sixth of the cell wide, centred over the book. The gap is the point: the gem does not touch the cover. No rays, no sparkles, no stars, no crown, no cross.
-
-CONSISTENCY BETWEEN THE THREE CELLS:
-- The book occupies the same footprint and the same centre in all three cells. Only the thickness of the page stack and the added parts change.
-- The spine is always on the LEFT and the page edges always on the RIGHT.
-- All three read as ONE object growing richer, not as three unrelated items.
-
-STYLE (strict, non-negotiable):
-- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
-- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
-- Shading ONLY via 1-bit checkerboard dithering (alternating black/white pixels).
-- Chunky, clearly visible square pixels — every pixel must be a crisp hard-edged square.
-- Background: solid pure black. Subjects drawn in pure white outlines and dithered fills.
-- NEVER put a white, light, or filled panel behind a subject — the ground is always black.
-- Each icon must survive being shrunk to 16x16: one solid mass, one or two big notches,
-  no hairline detail, no page lines finer than 2 pixels.
-- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
-  and the 1-bit look of "Return of the Obra Dinn".
-- No watermarks, no signatures, no sparkle marks in the corners.
-
-LAYOUT:
-- One row of 3 equal square cells, edge to edge, no gutters, no frames, no borders.
-- Each icon centred in its cell with a small margin of pure black around it.
-- The sheet is 3 times as wide as it is tall.
-```
-
-### 자르기
-
-```json
-{ "file": "<받은 파일명>", "name": "item_icon", "expect": [3, 1],
-  "labels": ["book_old", "book_fine", "book_prime"] }
-```
-
----
-
-## 4. 이야기 월페이퍼 — 네 사람 × 네 단계 (한 장씩 따로 뽑습니다)
+## 1. 이야기 월페이퍼 — 네 사람 × 네 단계 (한 장씩 따로 뽑습니다)
 
 | | |
 |---|---|
@@ -235,69 +32,209 @@ LAYOUT:
 ### 프롬프트
 
 ```
-assets/wallpaper/knightgirl_awkward.jpg   이졸데 · 어색한 관계
-assets/wallpaper/knightgirl_friend.jpg    이졸데 · 우정
-assets/wallpaper/knightgirl_trust.jpg     이졸데 · 신뢰
-assets/wallpaper/knightgirl_love.jpg      이졸데 · 애정
-… bunnyaxe_* · elfarcher_* · nun_* 도 같은 넷씩
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — ISOLDE:
+A tall young knight woman with very long straight pale hair falling past her waist. A slim jewelled circlet with a single gem sits on her forehead. She wears ornate layered silver plate armour — segmented pauldrons, a fitted breastplate, armoured thigh-high boots — over a fitted underlayer, with a long flowing cape whose hem is embroidered with a fine pattern. She carries a straight double-edged longsword. Calm, composed features.
+
+SCENE — A FORMAL KNIGHT'S GREETING:
+She stands in a vaulted stone hall, full figure, facing the viewer but with her eyes lowered — she has not looked up yet. Her right fist is placed over her heart and her left hand rests on the pommel of her sheathed sword; her upper body is bowed a few degrees in a stiff, correct salute. Her cape falls straight behind her. Cold light falls through a tall arched window behind her, throwing a long shadow forward across polished flagstones. Everything about the pose is proper and distant.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range from deep black to pure white, dramatic directional lighting, volumetric light shafts, fine crosshatched detail in the armour and stonework, floating dust motes catching the light. Sharp, clean line work. Highly detailed background, cinematic composition, subject centred and full-length in frame.
 ```
 
 ```
-ABSOLUTE RULE — NO TEXT OF ANY KIND:
-- Do NOT write, print, label, caption, title, name, or number ANYTHING.
-- No caption bar, no name plate, no banner, no signature, no watermark.
-- This includes English, Korean, numerals, runes, and fake alien script.
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
 
-FORMAT: one single illustration, landscape, 16:9, filling the frame edge to edge.
+CHARACTER — ISOLDE:
+The same knight woman: very long straight pale hair, now loose and soaked, a slim jewelled circlet set aside. Her armour is off; she is in a wooden bathhouse.
 
-CHARACTER — pick ONE:
+SCENE — THE DOOR OPENED BY MISTAKE:
+Waist-up, seen from the doorway. She is in a steaming wooden bath tub, water and thick steam covering her to the collarbone and hiding everything below. The heavy door at the frame's edge has just swung open and a shaft of light cuts in. Her eyes are wide, her whole face burning with embarrassment, mouth open in a shout. Her arm is thrown back mid-throw — a bar of soap is flying toward the viewer, caught in the air with a spray of droplets, and a wooden bucket and a scrubbing brush tumble through the air beside it. Wet hair sticks to her cheek. Modest and non-explicit: steam, water and the tub's rim cover her completely.
 
-ISOLDE, the knight:
-A young woman in worn plate armour over a padded gambeson, a long surcoat to
-the knee, hair tied back, a plain kite shield on her left arm and a straight
-sword at her hip. Her face is calm and a little tired. No helmet.
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, strong backlight through the open door, dense volumetric steam, flying water droplets rendered as sharp white specks. Sharp clean line work, detailed wooden interior, cinematic composition.
+```
 
-BIANCA, the axe-wielder:
-A cheerful young woman in a tavern server's dress with an apron, a kerchief
-over her hair, sturdy boots, carrying a large single-bladed woodcutter's axe
-over one shoulder as if it weighed nothing. Freckles. A wide grin.
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
 
-RIANNE, the elf archer:
-A slender elf with long pointed ears and long straight hair, in a light leather
-jerkin and a hooded cloak of leaves, a longbow taller than she is in one hand
-and a quiver at her hip. Calm, distant expression.
+CHARACTER — ISOLDE:
+The same knight woman: very long straight pale hair, jewelled circlet, ornate layered silver plate armour with segmented pauldrons, a long embroidered cape, armoured thigh-high boots, a straight double-edged longsword.
 
-AGNES, the sister:
-A young nun in a heavy habit and wimple, a plain wooden prayer-bead cord at her
-waist, hands usually folded. No weapon of any kind. Downcast eyes, gentle face.
+SCENE — THE OATH:
+Full figure, kneeling on one knee at the centre of a ruined cathedral floor. Her longsword is driven point-down into the flagstones in front of her; both hands are folded over the crossguard and her forehead is bowed until it almost touches her hands. Her eyes are closed. The cape spills across the stone behind her in a wide arc. A single shaft of light from a shattered rose window falls straight down onto her. Petals and ash drift through the beam.
 
-SCENE — pick ONE:
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range from deep black to pure white, a hard vertical light shaft, volumetric dust, fine crosshatching in the armour and the ruined stonework, reflective wet floor. Sharp clean line work, highly detailed gothic background, solemn cinematic composition.
+```
 
-(A) AWKWARD — Full figure, seen from far off across an open yard at dusk.
-    She is busy with her own gear, turned three-quarters away. A second figure
-    is implied only by a long shadow entering from the frame's edge. She is
-    NOT looking toward it. Wide empty ground between them.
-(B) FRIENDSHIP — Knee-up, seen from the side. She is laughing quietly with her
-    head turned to the left, looking at something outside the frame. Her weapon
-    is set down beside her. Warm interior — a tavern hearth behind her.
-(C) TRUST — Waist-up, facing the viewer straight on, standing at ease with her
-    hands resting on her weapon. Behind her shoulder, the back of another
-    figure's head and shoulder is visible at the frame's edge — they are
-    standing back to back. Steady, level gaze. Night, a low fire lighting her
-    from below.
-(D) LOVE — Chest-up portrait, very close. She looks directly at the viewer,
-    her outer layer loosened at the collar, hair let down. One hand is raised
-    just into the bottom of the frame, palm open. Soft light from the left.
-    Quiet, unguarded expression.
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
 
-STYLE (strict, non-negotiable):
-- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
-- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
-- All shading and all mid-tones done ONLY with 1-bit dithering patterns
-  (checkerboard, 25%/50%/75% ordered dither).
-- Chunky, clearly visible square pixels — every pixel a crisp hard-edged square.
-- Background: solid pure black with dithered forms. Subjects in pure white line and dither.
-- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
-  and the 1-bit look of "Return of the Obra Dinn".
-- The character must read clearly at 400px wide — no hairline detail on the face.
+CHARACTER — ISOLDE:
+The same knight woman: very long straight pale hair, jewelled circlet, ornate silver plate armour, a long cape. Here the armour is dented and dusty and the collar is unbuckled, the cape torn at the hem.
+
+SCENE — AFTER THE MISSION, AT SUNSET:
+Chest-up, very close, facing the viewer. She has just come back from a fight; a smear of dirt is on one cheek and strands of hair have escaped. She is smiling — a real, uncontrolled smile she is clearly not used to making — and looking straight at the viewer, but her eyes flick very slightly aside and her cheeks are flushed, caught between happiness and embarrassment. One hand is raised into the bottom of the frame, palm open, as if she had just reached out and then thought better of it. Behind her, a low sun over a broken field, the sky heavy with backlit clouds.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, strong warm-feeling rim light from behind blowing out the edges of her hair, deep soft shadow on the near side of her face, lens-flare starbursts, floating particles. Sharp clean line work, shallow depth of field with the background softly blurred, intimate cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — BIANCA:
+A lively young woman with a short tousled bob, freckles, and a wide confident grin. She wears a tavern server's outfit — a laced bodice over a blouse with rolled sleeves, an apron, a kerchief tied over her hair — with one battered steel pauldron strapped over her right shoulder, and tall lace-up boots. She carries an enormous single-bladed woodcutter's axe with a long grip as if it weighed nothing.
+
+SCENE — THROWING OUT A ROWDY CUSTOMER:
+Full figure, low angle, in a crowded candle-lit tavern. She has one boot planted on a toppled bench and is leaning in, jabbing a finger down at a big drunk man who has fallen backward off his stool at the bottom of the frame — we see him from behind, hands raised. Her other hand holds the axe casually over her shoulder. Her mouth is open mid-shout and one eyebrow is up; she is furious and completely in control, almost enjoying it. Tankards, spilled ale and scattered cards are frozen in the air around her. Other patrons watch from the shadows.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, warm candlelight from below and behind, heavy smoke haze, splashing liquid rendered as sharp white arcs. Sharp clean line work, dense detailed tavern background, dynamic cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — BIANCA:
+The same woman: short tousled bob, freckles, tavern server's outfit with a laced bodice, apron and kerchief, one battered steel pauldron on her right shoulder. Her huge axe leans against the bar behind her, out of the way.
+
+SCENE — HER OWN COCKTAIL:
+Waist-up, leaning across a polished tavern bar toward the viewer, both elbows on the wood. She is pushing a tall glass right into the foreground — the glass is enormous in frame, filled with layered liquid, ice, a curl of citrus peel and something dubious floating in it. Her grin is huge and she is looking straight at the viewer with her eyebrows raised in expectation, clearly saying "drink it". Her free hand is a thumbs-up. Bottles and hanging tankards crowd the shelves behind her.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, warm lamplight, strong wide-angle foreshortening on the glass, condensation droplets picked out in white, bokeh highlights from bottles behind. Sharp clean line work, densely detailed bar background, playful cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — BIANCA:
+The same woman: short tousled bob, freckles, tavern server's outfit, one battered pauldron. Here her kerchief has slipped off and her apron is dirty; the axe lies on the ground beside her.
+
+SCENE — THANK YOU FOR STAYING:
+Chest-up, close, sitting on the back steps of the tavern at night. She has clearly been crying — her eyes and nose are red and wet, lashes clumped, a tear track still on one cheek — but she has just looked up at the viewer and is smiling through it, a crumpled, grateful, slightly embarrassed smile. One hand is wiping her eye with the back of her wrist; the other is half-raised toward the viewer. Her shoulders are still hitching. Warm light spills from the doorway behind her; the yard beyond is dark and rainy.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, soft warm key light from the doorway behind and a cold rim from the night, wet highlights in her eyes rendered with bright white specular dots, fine rain streaks. Sharp clean line work, quiet intimate cinematic composition, shallow depth of field.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — BIANCA:
+The same woman: short tousled bob, freckles, tavern server's outfit, one battered pauldron — but tonight the apron is off, the bodice is neatly laced, her hair is brushed and she is wearing a small ribbon. No axe anywhere.
+
+SCENE — OUTSIDE THE DOOR, ABOUT TO CONFESS:
+Full figure, standing in a narrow lamp-lit corridor with her back pressed lightly against the wall beside a closed wooden door. She is looking at the door, not at the viewer. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, her eyes are squeezed half-shut and her mouth is caught between a nervous grimace and an enormous helpless smile — she has been standing here a while. One boot is up on its toe. Her shadow stretches long down the corridor.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, a single warm lamp above and to one side, deep falloff into black down the corridor, heavy blush rendered with fine hatching. Sharp clean line work, detailed timber-and-plaster interior, tense charming cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — RIANNE:
+A slender elf woman with long pointed ears and very long pale hair gathered into a high ponytail with a feather tied at the base. She wears a short-sleeved hooded jerkin over a fitted tunic, a wide belt, leather bracers, a quiver of fletched arrows at her hip and a torn ragged-hemmed cloak, with tall lace-up boots. She carries a longbow taller than she is. Cool, distant expression.
+
+SCENE — LOOKING DOWN FROM THE BRANCH:
+Full figure, seen from below at a steep upward angle. She is perched on a thick branch high in an ancient forest, one knee drawn up and the other leg hanging, her bow resting across her lap with an arrow held loosely between two fingers. She is looking straight down at the viewer, chin slightly lowered, expression unreadable and evaluating — not hostile, not welcoming. Her ponytail and the torn cloak hang down past the branch. Shafts of light break through the canopy far above; leaves drift down through the frame.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, strong god-rays from the canopy, deep shadow in the lower canopy, fine detail in bark and leaves, floating pollen motes. Sharp clean line work, dramatic low-angle perspective, highly detailed forest background.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — RIANNE:
+The same elf: long pointed ears, very long pale hair in a high ponytail with a feather, hooded jerkin, bracers, quiver, torn cloak, tall boots. Her longbow is slung across her back here, freeing both hands.
+
+SCENE — THE OFFERED HAND:
+Knee-up, standing on a mossy forest path, turned three-quarters toward the viewer. She has extended one hand toward the viewer, palm up, fingers slightly curled — and immediately regretted it: her arm is not fully straight, her shoulders are drawn in, and she has turned her face away and down, looking off to the side with her ears visibly reddened and her lips pressed thin. Her other hand grips her own elbow. The gesture is sincere and awkward at once.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, dappled forest light, soft rim light along her arm and hair, blush on the ear tips rendered with fine hatching. Sharp clean line work, detailed mossy woodland background, shallow depth of field with the offered hand nearest the viewer and sharpest.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — RIANNE:
+The same elf: long pointed ears, long pale hair in a high ponytail with a feather, hooded jerkin, bracers, quiver, torn cloak, tall boots. Her cloak is pulled around her shoulders like a blanket here and her bow leans against the wall.
+
+SCENE — GRILLING A FISH IN THE DUNGEON:
+Waist-up, crouched on her heels beside a small campfire in a cramped stone dungeon chamber. She is holding a stick over the flames with a whole fish skewered on it, leaning so far forward that her face is almost in the fire. Her eyes are huge and fixed on the fish, her mouth is open and she is very obviously about to drool; one hand hovers as if to grab it early. All her usual composure is gone. Firelight throws her shadow enormous on the wet brick wall behind; her pack and a discarded arrow lie beside her.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, the fire as the single hard light source lighting her from below, deep black beyond the firelight, sparks and smoke rising, glistening highlights on the fish. Sharp clean line work, detailed damp stonework, warm and comic cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — RIANNE:
+The same elf: long pointed ears, very long pale hair — here loose and unbound rather than tied up — hooded jerkin loosened at the collar, bracers, torn cloak, tall boots. No bow, no quiver.
+
+SCENE — HANDS BEHIND HER BACK, SQUIRMING:
+Knee-up, standing in a sunlit forest clearing, facing the viewer. Both hands are clasped behind her back, which pushes her shoulders back and makes her sway — one boot is turned inward on its toe and her hips are twisted, her whole body making a soft S-curve of embarrassment. She is looking at the viewer through her lashes with her chin tucked down, ears bright red, and a small helpless pleased smile she cannot get rid of. Loose strands of hair fall across her face. Petals and light drift around her.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, soft backlight through leaves haloing her hair, gentle bloom, blush rendered with fine hatching on the ears and cheeks. Sharp clean line work, softly blurred forest background, warm intimate cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — AGNES:
+A young nun with shoulder-length pale hair framing her face, wearing a black habit: a white headband under a black veil with a small leaf ornament at the temple, a high-collared black dress with wide bell sleeves, a long pale stole down the front, a sash at the waist, and a long skirt with a high slit over heeled shoes. She carries a censer on a fine chain. Gentle, downcast features.
+
+SCENE — PRAYING IN THE RUIN:
+Full figure, kneeling in the nave of a roofless ruined medieval cathedral. Her hands are clasped at her chest and her head is bowed, eyes closed. The censer rests on the broken flagstones beside her, a thin line of smoke rising from it. Shattered pews and fallen masonry stretch away on both sides; above her the ribs of the vault are open to a heavy overcast sky. Ash and paper fragments drift in the still air.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range from deep black to pure white, soft flat overcast light from above with strong local contrast, drifting particles, fine crosshatched detail in the fabric and the ruined stonework. Sharp clean line work, highly detailed gothic ruin background, hushed cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — AGNES:
+The same nun: shoulder-length pale hair, white headband under a black veil with a leaf ornament, high-collared black habit with wide bell sleeves, pale stole, sash. No censer here.
+
+SCENE — THE TERRIBLE PIE, ENJOYED:
+Waist-up, seated at a plain wooden refectory table, seen from across it. In front of her is a pie with an entire fish head thrust up through the crust, eyes open, tail sticking out the other side. She has a large forkful raised to her mouth and her eyes are closed in genuine, blissful delight; one cheek is already full and she is smiling around it. Her free hand is pressed to her cheek in appreciation. Everything about her says this is delicious. A second untouched plate sits opposite, pushed slightly away.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, warm side light from a window, steam rising from the pie, glistening highlights on the crust and the fish's eye, fine detail in the wood grain. Sharp clean line work, detailed monastery interior, deadpan comic cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — AGNES:
+The same nun: shoulder-length pale hair, white headband under a black veil with a leaf ornament, high-collared black habit with wide bell sleeves, pale stole, sash, censer on a chain hanging from one hand.
+
+SCENE — IN THE GRAVEYARD, LOOKING UP:
+Waist-up, standing among leaning weathered headstones at dusk, her body turned away but her face tilted up toward a break in the clouds. She is smiling — a small, tired, bitter smile with no happiness in it — and her eyes are open and dry. The censer hangs still at her side, its smoke going straight up. Bare branches reach across the top of the frame; long grass moves around the stones.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, cold light breaking through heavy cloud from above and behind, strong rim light on her cheek and veil, deep shadow across the graves, drifting smoke. Sharp clean line work, highly detailed graveyard background, melancholy cinematic composition.
+```
+
+```
+A monochrome grayscale anime illustration, vertical 9:16 portrait, in the style of a high-detail black-and-white light-novel cover. NO TEXT of any kind anywhere in the image — no captions, no signatures, no watermarks, no letters or numerals.
+
+CHARACTER — AGNES:
+The same nun: shoulder-length pale hair, white headband under a black veil with a leaf ornament, high-collared black habit with wide bell sleeves, pale stole, sash. Here the veil is pushed slightly back and more of her hair shows.
+
+SCENE — THANK YOU:
+Chest-up, very close, facing the viewer straight on. She is smiling openly and fully for the first time — eyes crinkled almost shut with happiness, head tilted a little to one side — and both hands are folded together at her chest. Her cheeks are flushed. She is looking directly at the viewer and clearly saying thank you. Soft light falls from a high window to the left; motes drift through it.
+
+RENDERING:
+Black and white only, no colour at all. Rich full tonal range, soft directional key light with gentle falloff, a bright halo of blown-out light behind her head, delicate hatching for the blush, glistening highlights in the eyes. Sharp clean line work, softly blurred chapel background, warm intimate cinematic composition.
 ```

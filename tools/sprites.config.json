@@ -4337,6 +4337,35 @@
       "append": true
     },
     {
+      "file": "item-1.jpg",
+      "grid": [7, 1],
+      "name": "gift_icon",
+      "expect": [7, 1],
+      "labels": [
+        "gf_cookie", "gf_pie", "gf_carrot", "gf_rabbit",
+        "gf_flower", "gf_bible", "gf_gong"
+      ]
+    },
+    {
+      "file": "item-2.jpg",
+      "grid": [6, 2],
+      "name": "gift_icon",
+      "expect": [6, 2],
+      "labels": [
+        "gf_tea", "gf_ice", "gf_bread", "gf_apple", "gf_honey", "gf_cheese",
+        "gf_soup", "gf_candy", "gf_ribbon", "gf_candle", "gf_music"
+      ],
+      "drop": [12],
+      "append": true
+    },
+    {
+      "file": "item-3.jpg",
+      "grid": [3, 1],
+      "name": "item_icon",
+      "expect": [3, 1],
+      "labels": ["book_old", "book_fine", "book_prime"]
+    },
+    {
       "file": "spider-cc.jpg",
       "name": "bfx_cocoon",
       "expect": [

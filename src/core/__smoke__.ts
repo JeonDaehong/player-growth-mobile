@@ -3796,8 +3796,28 @@ console.log(NL + '── 인연 ──');
     }
     ok('대화는 넷 다 셋씩 · 선택지 셋 · 값 셋 고정', !bad, bad || '12가지');
   }
-  ok('하루 두 번', bd.TALK_A_DAY === 2);
+  ok('대화는 하루 두 번 · 선물은 세 개',
+    bd.TALK_A_DAY === 2 && bd.GIFT_A_DAY === 3);
   ok('이야기 보상은 다이아 100', bd.STORY_DIA === 100);
+
+  /*
+    ── 이야기는 **순서대로** ── 앞 장을 봐야 다음이 열린다.
+
+    인연이 훌쩍 올라 3장이 먼저 열리면 이야기를 가운데부터 보게 되는데,
+    그러면 앞 장을 볼 이유가 사라진다 (보상은 이미 받을 수 있으므로).
+  */
+  {
+    const steps = bd.BOND_STEPS;
+    ok('1장은 0 에서 바로 열린다', bd.storyWhy(0, steps[0], []) === 'ok');
+    ok('2장은 앞을 안 보면 안 열린다',
+      bd.storyWhy(10, steps[1], []) === 'before');
+    ok('앞을 봤어도 인연이 모자라면 안 열린다',
+      bd.storyWhy(0, steps[1], ['awkward']) === 'level');
+    ok('둘 다 되면 열린다',
+      bd.storyWhy(3, steps[1], ['awkward']) === 'ok');
+    ok('장 번호는 1부터',
+      bd.storyNo('awkward') === 1 && bd.storyNo('love') === 4);
+  }
 }
 
 console.log(NL + '── 가방 ──');
