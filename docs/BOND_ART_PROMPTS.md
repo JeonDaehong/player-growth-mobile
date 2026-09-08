@@ -465,6 +465,19 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. So
 
 ### 비앙카 (`bunnyaxe_*`)
 
+> **옷을 잘못 적어 두었습니다.** `선술집 점원복 + 두건` 으로 썼는데, 그건
+> 만들려다 접은 기본 스킨입니다 (`docs/BIANCA_BASE_SKIN.md` — 한 벌에 그림이
+> 스물일곱 장이라 걷었습니다). 게임 안의 비앙카는 **바니걸**입니다 —
+> 전투 도트도 도감 초상도 다 그것입니다.
+>
+> 아래 넷은 다 바니걸로 고쳤습니다. 옷이 옷이니만큼 `CONTENT RULES` 에
+> **가슴·엉덩이·허벅지를 강조하지 말 것**을 따로 적어 두었습니다 — 그 옷을
+> 입은 채로도 얼굴이 주인공이어야 합니다.
+
+> 넷이 안 겹치게 갈라 둔 것: 1번은 **옆을 보고**(손님) 전신에 가깝고,
+> 2번은 **눈을 맞추고** 물건을 들이밀며 가까이, 3번은 **울다 웃는 얼굴**
+> 클로즈업, 4번은 **문을 보고** 있어 시선이 아예 없습니다.
+
 **`assets/wallpaper/bunnyaxe_awkward.jpg`**
 
 ```
@@ -475,16 +488,16 @@ ART DIRECTION:
 - Appealing modern anime face with large expressive eyes. Lively comedy manga energy.
 - Clean inked linework, cel shading, light screentone. Fun and warm, not cinematic or grim.
 
-CONTENT RULES (strict):
-- Wholesome, all-ages, non-sexualized. Fully clothed in a modest tavern uniform.
-- No cleavage, no short-skirt or thigh emphasis, no suggestive posing.
-- Camera stays on her FACE and the fallen customer, never on her body.
+CONTENT RULES (strict — her outfit is a costume, not the subject):
+- Her bunny-suit is a stage costume she wears for work. Draw it accurately but do NOT sexualize it.
+- NO chest emphasis, NO cleavage line drawn as a feature, NO butt or thigh focus, NO low camera angles, NO leaning-forward chest poses.
+- Camera at eye level. Wholesome and funny, all-ages. The picture is about her face and the situation.
 
-CHARACTER — BIANCA, a tavern server who fights:
-A lively young woman with a short tousled bob, freckles, and a wide confident grin. A laced bodice over a long-sleeved blouse, a full apron, a kerchief tied over her hair, knee-high boots, one battered steel pauldron on her right shoulder. She carries an enormous single-bladed woodcutter's axe as if it weighed nothing.
+CHARACTER — BIANCA, a tavern girl who fights:
+A lively young woman with a short tousled bob, freckles, and a wide confident grin. She wears a BUNNY-SUIT stage costume: a bunny-ear headband, a black strapless leotard with a small bowtie at the collar, a fluffy round tail, sheer black legwear with one garter strap on the thigh, and tall lace-up heeled boots. Over her right shoulder, strapped on top of the costume, one battered steel PAULDRON — the only piece of armour she owns. She carries an enormous single-bladed woodcutter's axe as if it weighed nothing.
 
 SCENE — THROWING OUT A ROWDY CUSTOMER:
-Knee-up, close. One boot planted on a toppled bench, she leans in and jabs a finger down at a big drunk man who has fallen backward at the bottom of the frame — seen from behind, hands raised, drawn small and simple. Her other hand rests the axe over her shoulder. Mouth open mid-scold, one eyebrow up, eyes bright: she is telling him off and enjoying it. A tankard and a couple of cards tumble through the air. The tavern behind is a soft suggestion of tables and lamps.
+Full figure, seen a little from the side. One boot is planted on a toppled bench and she leans out to jab a finger down at a big drunk man who has fallen backward at the bottom of the frame — seen from behind, hands raised, drawn small and simple. Her other hand rests the axe over her shoulder. She is looking DOWN AT HIM, not at the viewer. Mouth open mid-scold, one eyebrow up, eyes bright: she is telling him off and enjoying it. A tankard and a couple of cards tumble through the air. The tavern behind is a soft suggestion of tables and lamps.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone, a few bold manga action lines. Warm lamplight, simple background, high contrast kept on HER.
@@ -496,20 +509,20 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone, a 
 A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
 
 ART DIRECTION:
-- The CHARACTER and the glass fill the frame; the bar behind her is simple and low-contrast.
-- Appealing modern anime face with large expressive eyes and a big open grin.
+- The CHARACTER'S FACE and the glass fill the frame; the bar behind her is simple and low-contrast.
+- Appealing modern anime face with large expressive eyes and a big open grin. She is looking RIGHT AT THE VIEWER.
 - Clean inked linework, cel shading, light screentone. Cheerful and inviting.
 
-CONTENT RULES (strict):
-- Wholesome, all-ages, non-sexualized. Fully clothed, collar closed.
-- She leans on the bar but it is NOT a chest-forward pose — her weight is on her elbows, camera at eye level, framed on her face and the glass.
-- No cleavage, no suggestive posing, no low angles.
+CONTENT RULES (strict — her outfit is a costume, not the subject):
+- Her bunny-suit is a stage costume. Draw it accurately but do NOT sexualize it.
+- NO chest emphasis, NO cleavage line drawn as a feature, NO butt or thigh focus, NO low camera angles.
+- She leans on the bar but it is NOT a chest-forward pose — her weight is on her ELBOWS, the camera is at eye level, and the framing is tight on her face and the glass.
 
 CHARACTER — BIANCA:
-Short tousled bob, freckles, laced bodice over a long-sleeved blouse, apron, kerchief, one battered pauldron on her right shoulder. Her huge axe leans against the bar behind her, out of the way.
+Short tousled bob, freckles. BUNNY-SUIT costume: bunny-ear headband, black strapless leotard with a small bowtie at the collar, fluffy round tail, sheer black legwear, tall lace-up heeled boots. One battered steel pauldron on her right shoulder. Her huge axe leans against the bar behind her, out of the way.
 
 SCENE — HER OWN COCKTAIL:
-Waist-up, both elbows on a wooden bar, pushing a tall glass toward the viewer — the glass is large in frame, filled with layered liquid, ice, a curl of citrus peel and something dubious floating in it. Her grin is huge, eyebrows raised in expectation, clearly saying "drink it". Her free hand gives a thumbs-up. A few bottles behind her, drawn simply.
+Chest-up, close, both elbows on a wooden bar, pushing a tall glass toward the viewer — the glass is large in the foreground, filled with layered liquid, ice, a curl of citrus peel and something dubious floating in it. Her grin is huge, eyebrows raised in expectation, eyes locked on the viewer, clearly saying "drink it". Her free hand gives a thumbs-up. A few bottles behind her, drawn simply.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Warm lamplight, gentle foreshortening on the glass, a few white highlights on the ice, background kept simple.
@@ -525,15 +538,15 @@ ART DIRECTION:
 - Appealing modern anime face: large watery eyes with bright highlights, soft cheeks.
 - Clean inked linework, cel shading, light screentone. Tender and warm — quiet, not dramatic.
 
-CONTENT RULES (strict):
-- Wholesome, all-ages, non-sexualized. Fully clothed, collar closed, apron on.
-- No cleavage, no suggestive posing, no low angles, no wet-clothing rendering.
+CONTENT RULES (strict — her outfit is a costume, not the subject):
+- Her bunny-suit is a stage costume. Draw it accurately but do NOT sexualize it.
+- This is a tight FACE shot; almost none of the costume is in frame anyway. NO chest emphasis, NO low angles, NO wet-clothing rendering.
 
 CHARACTER — BIANCA:
-Short tousled bob — here messy, her kerchief slipped off — freckles, laced bodice over a long-sleeved blouse, a dirty apron, one battered pauldron. Her axe lies on the ground beside her.
+Short tousled bob — here messy, the bunny-ear headband knocked crooked — freckles. She has a rough blanket or a coat pulled around her shoulders over the costume, so mostly her face, the crooked ears and the blanket show. Her axe lies on the ground beside her.
 
 SCENE — THANK YOU FOR STAYING:
-Chest-up, close, sitting on the back steps of the tavern at night. She has clearly been crying — eyes and nose red, lashes wet and clumped, a tear track on one cheek — but she has just looked up at the viewer and is smiling through it: a crumpled, grateful, slightly embarrassed smile. One hand wipes her eye with the back of her wrist; the other is half-raised toward the viewer. Warm light from the doorway behind her; the yard beyond is dark and simple.
+Chest-up, very close, sitting on the back steps of the tavern at night. She has clearly been crying — eyes and nose red, lashes wet and clumped, a tear track on one cheek — but she has just looked up at the viewer and is smiling through it: a crumpled, grateful, slightly embarrassed smile. One hand wipes her eye with the back of her wrist; the other is half-raised toward the viewer. Warm light from the doorway behind her; the yard beyond is dark and simple.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, fine screentone. Soft key light from behind, bright white specular dots in her wet eyes, a few fine rain streaks, background softly blurred.
@@ -549,15 +562,16 @@ ART DIRECTION:
 - Appealing modern anime face with large expressive eyes; heavy blush drawn with manga blush lines.
 - Clean inked linework, cel shading, light screentone. Sweet and charming, gently funny.
 
-CONTENT RULES (strict):
-- Wholesome, all-ages, non-sexualized. Fully clothed, neatly dressed, collar closed.
-- No cleavage, no suggestive posing, no low angles, no body emphasis.
+CONTENT RULES (strict — her outfit is a costume, not the subject):
+- Her bunny-suit is a stage costume. Draw it accurately but do NOT sexualize it.
+- NO chest emphasis, NO butt or thigh focus, NO low camera angles, NO suggestive posing.
+- She is turned toward the DOOR, not toward the viewer — the camera catches her from the side.
 
 CHARACTER — BIANCA:
-Short tousled bob, freckles — but tonight the apron is off, the bodice is neatly laced over a clean blouse, her hair is brushed and she wears a small ribbon. No axe anywhere.
+Short tousled bob, freckles. BUNNY-SUIT costume — but tonight it is neat and pressed, the bowtie straightened, her hair brushed, a small ribbon tied to one bunny ear. Sheer black legwear and tall lace-up heeled boots. No pauldron, no axe anywhere: she left the armour behind on purpose.
 
 SCENE — OUTSIDE THE DOOR, ABOUT TO CONFESS:
-Knee-up, standing in a lamp-lit corridor, her back lightly against the wall beside a closed wooden door. She looks at the door, not at the viewer. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, eyes squeezed half-shut, mouth caught between a nervous grimace and an enormous helpless smile — she has been standing here a while. One boot is up on its toe.
+Full figure seen from the side, standing in a narrow lamp-lit corridor with her back lightly against the wall beside a closed wooden door. She stares at the DOOR, not at the viewer. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, eyes squeezed half-shut, mouth caught between a nervous grimace and an enormous helpless smile — she has been standing here a while. One boot is up on its toe. Her shadow stretches long down the corridor.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Heavy blush hatching plus two small blush lines, one sweat drop. A single warm lamp, soft falloff, corridor drawn simply.
@@ -566,6 +580,10 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. He
 ---
 
 ### 리안느 (`elfarcher_*`)
+
+> 2번(우정)과 4번(애정)이 겹쳤습니다 — 둘 다 숲에서 귀가 빨개진 채 수줍어
+> 하는 그림이었습니다. 갈랐습니다: **2번은 손이 주인공**이고 얼굴은 돌려
+> 있어서 눈이 안 맞고, **4번은 몸 전체가 주인공**이고 눈을 맞춥니다.
 
 **`assets/wallpaper/elfarcher_awkward.jpg`**
 
@@ -608,8 +626,8 @@ CONTENT RULES (strict):
 CHARACTER — RIANNE:
 Long pointed ears, very long pale hair in a high ponytail with a feather, hooded jerkin over a fitted tunic, bracers, quiver, torn cloak, leggings, tall boots. Her longbow is slung across her back, freeing both hands.
 
-SCENE — THE OFFERED HAND:
-Waist-up, close, turned three-quarters toward the viewer. She has extended one hand toward the viewer, palm up, fingers slightly curled — and immediately regretted it: the arm is not fully straight, her shoulders are drawn in, and she has turned her face away and down, looking off to the side with her ear tips visibly red and her lips pressed thin. Her other hand grips her own elbow. The hand nearest the viewer is drawn largest and sharpest.
+SCENE — THE OFFERED HAND (the HAND is the subject of this picture):
+Chest-up, very close, turned mostly AWAY from the viewer. Her open HAND is thrust into the foreground, palm up, fingers slightly curled — it is the biggest, nearest and sharpest thing in the frame, filling the lower third. She has extended it and immediately regretted it: the arm is not fully straight and her shoulders are drawn in. Her FACE is turned away and down over her shoulder, so she is NOT making eye contact with the viewer — we see her in profile, lips pressed thin, one ear tip bright red. Her other hand grips her own elbow. Daylight on a mossy path.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Dappled light, soft rim light along her arm and hair, blush hatching on the ear tips, background softly blurred.
@@ -657,8 +675,8 @@ CONTENT RULES (strict):
 CHARACTER — RIANNE:
 Long pointed ears, very long pale hair — here loose and unbound rather than tied up — hooded jerkin, bracers, leggings, tall boots. No bow, no quiver.
 
-SCENE — HANDS BEHIND HER BACK, FIDGETING:
-Waist-up to knee-up, close, facing the viewer in a sunlit clearing. Both hands are clasped behind her back and she is rocking slightly on her heels; one boot is turned inward on its toe. Her shoulders are drawn up and in, her chin is tucked down, and she looks at the viewer through her lashes with her ears bright red and a small helpless pleased smile she cannot get rid of. Loose strands of hair fall across her face. A few petals drift past.
+SCENE — HANDS BEHIND HER BACK, FIDGETING (her WHOLE BODY is the subject):
+Full figure, seen from a little distance so the whole fidgeting stance reads — NOT a face close-up. She faces the viewer squarely in a sunlit clearing and MAKES EYE CONTACT. Both hands are clasped behind her back and she is rocking slightly on her heels; one boot is turned inward on its toe. Her shoulders are drawn up and in, her chin is tucked down, and she looks at the viewer through her lashes with her ears bright red and a small helpless pleased smile she cannot get rid of. Loose strands of hair fall across her face. A few petals drift past.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft backlight through leaves haloing her hair, gentle bloom, blush hatching on the ears and cheeks, background softly blurred.
@@ -667,6 +685,11 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. So
 ---
 
 ### 아녜스 (`nun_*`)
+
+> 넷 중 셋이 **눈을 감고** 있었습니다 (기도 · 파이 · 감사). 그러면 표정으로
+> 단계를 가른다는 규칙이 아녜스에게만 안 먹습니다. 2번을 **눈을 뜨고 정면을
+> 보는** 쪽으로 바꿨습니다 — 지금은 감음(1) · 뜸(2) · 위를 봄(3) · 접힌 눈(4)
+> 으로 넷이 다 다릅니다.
 
 **`assets/wallpaper/nun_awkward.jpg`**
 
@@ -687,7 +710,7 @@ CHARACTER — AGNES, a young nun:
 Shoulder-length pale hair framing her face under a white headband and a black veil with a small leaf ornament at the temple. A high-collared black habit with wide bell sleeves, a long pale stole down the front, a sash at the waist, a long plain skirt. She carries a censer on a fine chain. Gentle features.
 
 SCENE — PRAYING IN THE RUIN:
-Waist-up, close, kneeling. Her hands are clasped at her chest, her head bowed a little, eyes closed with long lashes drawn clearly. The censer rests beside her with a thin line of smoke. A few loose strands of hair have escaped the veil. Ash and paper fragments drift slowly past. The broken chapel is only suggested behind her.
+Full figure, seen from the side at a little distance, kneeling. Her hands are clasped at her chest, her head bowed deeply, eyes closed with long lashes drawn clearly. We see her in profile — she is not aware of the viewer at all. The censer rests beside her with a thin line of smoke. A few loose strands of hair have escaped the veil. Ash and paper fragments drift slowly past. The broken chapel is only suggested behind her.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft even light from above, a few drifting particles, background simple and low-contrast.
@@ -700,7 +723,7 @@ A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome mang
 
 ART DIRECTION:
 - The CHARACTER and the pie fill the frame; the refectory behind is simple.
-- Appealing modern anime face, eyes closed in bliss, cheeks full. Comedy manga energy — deadpan and funny.
+- Appealing modern anime face with big round EYES OPEN and sparkling, looking straight at the viewer, cheeks full. Comedy manga energy — deadpan and funny.
 - Clean inked linework, cel shading, light screentone. Warm and silly.
 
 CONTENT RULES (strict — this is a COMEDY panel):
@@ -711,7 +734,7 @@ CHARACTER — AGNES:
 Shoulder-length pale hair under a white headband and black veil with a leaf ornament, a high-collared black habit with wide bell sleeves, a pale stole, a sash. No censer here.
 
 SCENE — THE TERRIBLE PIE, ENJOYED:
-Waist-up, seated at a wooden table, seen from across it. In front of her sits a pie with an entire fish head thrust up through the crust, eyes open, tail sticking out the other side. She has a large forkful raised to her mouth and her eyes are closed in genuine, blissful delight; one cheek is already full and she is smiling around it. Her free hand is pressed to her cheek in appreciation.
+Waist-up, seated at a wooden table, seen from across it. In front of her sits a pie with an entire fish head thrust up through the crust, eyes open, tail sticking out the other side — drawn large in the foreground. She has a large forkful raised and is looking STRAIGHT AT THE VIEWER with wide, bright, sparkling eyes, eyebrows up, clearly saying "이거 진짜 맛있어요, 드셔 보세요". One cheek is already full and she is smiling around it. Her free hand pushes a second plate toward the viewer. She has no idea anything is wrong.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Small comedic manga marks — sparkles around her face, a single sweat drop over the fish head. Warm side light, steam rising, background simple.

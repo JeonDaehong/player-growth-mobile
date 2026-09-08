@@ -110,7 +110,7 @@ import { LevelUpPopup } from './LevelUpPopup';
 import { bondStep } from '@/core/bond';
 import { SkillTreePopup } from './SkillTreePopup';
 import { WallpaperPopup } from './WallpaperPopup';
-import { hasWallpaper } from '@/ui/wallpapers';
+import { ownedWallpaper } from '@/ui/wallpapers';
 
 /**
  * 무대 — 인물이 서는 상자. 폭은 화면을 다 쓰고, **세로로 길다.**
@@ -772,6 +772,13 @@ export function HeroManage({ pick, onPick, onBond }: {
   const d = c ? CHARS[c.id] : null;
   /* 인연 레벨 — 아직 아무 사이도 아니면 0 이다 (`GameState.bonds`) */
   const bondLv = (id ? bonds[id]?.lv : 0) ?? 0;
+  /*
+    받아 둔 월페이퍼 — 없으면 단추가 안 뜬다.
+
+    `hasWallpaper(c.id)` 로 묻던 자리다. 그때는 사람당 한 장이라 그것으로
+    됐는데, 지금은 인연 단계마다 한 장이라 **다 본 것만** 열려야 한다.
+  */
+  const mine = id ? ownedWallpaper(id, bonds[id]?.read ?? []) : null;
 
   /*
     ── 이 사람이 할 수 있는 말들 ── 첫 줄이 `quote` 다 (`core/lines`).
@@ -918,8 +925,13 @@ export function HeroManage({ pick, onPick, onBond }: {
   return (
     <>
       <SkillTreePopup who={tree ? c.id : null} onClose={() => setTree(false)} />
+      {/*
+        받아 둔 것 중 **제일 나중 것**을 연다 (`ownedWallpaper`). 아무거나
+        열면 안 되는 까닭: 월페이퍼는 이야기를 다 본 값이라, 안 본 단계의
+        그림을 여기서 미리 보여 주면 그 이야기를 열 이유가 사라진다.
+      */}
       <WallpaperPopup
-        charId={paper ? c.id : null}
+        charId={paper ? mine : null}
         name={d.name}
         onClose={() => setPaper(false)}
       />
@@ -1166,7 +1178,7 @@ export function HeroManage({ pick, onPick, onBond }: {
             귀퉁이에 숫자까지 넣으면 단추가 무엇인지가 흐려진다.
           */}
           <T size={9} dim="sub">{bondStep(bondLv).name}</T>
-          {hasWallpaper(c.id) && (
+          {!!mine && (
             <ActBtn art="paper" label="월페이퍼" onPress={() => setPaper(true)} />
           )}
         </View>

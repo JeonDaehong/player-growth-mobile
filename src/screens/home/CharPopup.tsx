@@ -43,7 +43,7 @@ import { CharStats } from './CharStats';
 import { SkillTreePopup } from './SkillTreePopup';
 import { openPicks } from '@/core/skillTree';
 import { WallpaperPopup } from './WallpaperPopup';
-import { hasWallpaper } from '@/ui/wallpapers';
+import { ownedWallpaper } from '@/ui/wallpapers';
 import { seatRows } from '@/core/party';
 
 export function CharPopup({
@@ -75,6 +75,7 @@ export function CharPopup({
   */
   const party = useGame((s) => s.pendingParty ?? s.party);
   const raw = useGame((s) => s.chars);
+  const bonds = useGame((s) => s.bonds);
   const form = useGame((s) => s.formation);
   /*
     ── 화면도 **앉힌 명부**를 본다 ──
@@ -118,6 +119,8 @@ export function CharPopup({
 
   const id = party[slot] ?? null;
   const c = id ? chars[id] : null;
+  /* 받아 둔 월페이퍼 — 인연 이야기를 다 봐야 생긴다 (`ownedWallpaper`) */
+  const mine = id ? ownedWallpaper(id, bonds[id]?.read ?? []) : null;
   const d = c ? CHARS[c.id] : null;
 
   /*
@@ -158,7 +161,7 @@ export function CharPopup({
     {/* 스킬 트리 — 캐릭터 창 위에 겹쳐 뜬다 */}
     <SkillTreePopup who={tree && c ? c.id : null} onClose={() => setTree(false)} />
     <WallpaperPopup
-      charId={paper && c ? c.id : null}
+      charId={paper ? mine : null}
       name={d?.name}
       onClose={() => setPaper(false)}
     />
@@ -206,11 +209,14 @@ export function CharPopup({
                 {`전투력 ${charPower(c).toLocaleString()}`}
               </T>
               {/*
-                월페이퍼 — **그림이 있는 사람에게만** 뜬다 (`hasWallpaper`).
+                월페이퍼 — **받아 둔 사람에게만** 뜬다 (`ownedWallpaper`).
                 없는 사람에게 눌리지 않는 단추를 남겨 두면, 그게 "아직 안
                 나왔다" 인지 "고장" 인지 알 수가 없다.
+
+                인연 이야기를 다 봐야 받는다 (`readStory`). 안 본 단계의
+                그림을 여기서 미리 열면 그 이야기를 볼 이유가 사라진다.
               */}
-              {hasWallpaper(c.id) && !readOnly && (
+              {!!mine && !readOnly && (
                 <Btn
                   label="월페이퍼 보기"
                   size="sm"

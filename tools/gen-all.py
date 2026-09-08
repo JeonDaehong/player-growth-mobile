@@ -135,12 +135,27 @@ ITEMS = [
 # 폴더가 아니라 딴 데서 봐야 한다.
 #
 # (검사할 파일 경로, 제목, 문서, 헤딩 정규식, 어디에 넣나)
+#
+# 월페이퍼는 **사람마다 넉 장**이라 사람 단위로 센다. 넷 다 한 덩어리로 두면
+# 이졸데 넉 장이 들어온 순간 나머지 열두 장까지 목록에서 사라진다 — 실제로
+# 그랬다.
+#
+# 검사는 그 사람의 `_love` 한 장으로 한다. 넷 중 마지막에 그리는 것이라,
+# 그것이 있으면 나머지 셋도 있다고 봐도 된다.
+WALL_WHERE = ('assets/wallpaper/<사람>_<단계>.jpg — 자르지 않습니다. '
+              '넣은 뒤 `src/ui/wallpapers.ts` 에 줄을 더하세요.')
+
 LOOSE = [
-    (os.path.join('assets', 'wallpaper', 'knightgirl_love.jpg'),
-     '이야기 월페이퍼 — 네 사람 × 네 단계 (한 장씩 따로 뽑습니다)',
-     'BOND_ART_PROMPTS.md', r'^## §B4',
-     'assets/wallpaper/<사람>_<단계>.jpg — 자르지 않습니다. '
-     '넣은 뒤 `src/ui/wallpapers.ts` 에 줄을 더하세요.'),
+    (os.path.join('assets', 'wallpaper', '%s_love.jpg' % who),
+     '이야기 월페이퍼 · %s 넉 장 (한 장씩 따로 뽑습니다)' % name,
+     'BOND_ART_PROMPTS.md', r'^### %s ' % name,
+     WALL_WHERE)
+    for who, name in (
+        ('knightgirl', '이졸데'),
+        ('bunnyaxe', '비앙카'),
+        ('elfarcher', '리안느'),
+        ('nun', '아녜스'),
+    )
 ]
 
 # 폴더 이름이 실제와 다른 것들 — 검사할 때만 쓴다
@@ -176,6 +191,26 @@ def done(key, labels):
     )
 
 
+def section_end(lines, at):
+    """
+    그 절이 어디서 끝나나 — **같거나 더 큰 헤딩**이 나오는 줄.
+
+    `## ` 하나로만 끊었었다. 그러면 `### 이졸데` 를 집었을 때 그 아래 비앙카와
+    리안느까지 통째로 딸려 온다 — 사람마다 따로 싣게 되면서 걸렸다.
+
+    헤딩의 `#` 개수를 세서 그보다 얕거나 같은 것에서 멎는다.
+    """
+    depth = len(lines[at]) - len(lines[at].lstrip('#'))
+    for i in range(at + 1, len(lines)):
+        l = lines[i]
+        if not l.startswith('#'):
+            continue
+        d = len(l) - len(l.lstrip('#'))
+        if d <= depth and l[d:d + 1] == ' ':
+            return i
+    return len(lines)
+
+
 def blocks_under(doc, head):
     """
     그 헤딩 아래, 다음 `## ` 전까지의 코드블록 전부.
@@ -193,10 +228,7 @@ def blocks_under(doc, head):
     at = next((i for i, l in enumerate(lines) if re.match(head, l)), None)
     if at is None:
         raise SystemExit('못 찾음: %s 의 %s' % (doc, head))
-    end = next(
-        (i for i in range(at + 1, len(lines)) if lines[i].startswith('## ')),
-        len(lines),
-    )
+    end = section_end(lines, at)
     out, buf, on = [], [], False
     tag = None          # 방금 지나온 굵은 줄 — 다음 블록의 이름표
     for l in lines[at + 1:end]:
@@ -237,10 +269,7 @@ def slice_under(doc, head):
     at = next((i for i, l in enumerate(lines) if re.match(head, l)), None)
     if at is None:
         return None
-    end = next(
-        (i for i in range(at + 1, len(lines)) if lines[i].startswith('## ')),
-        len(lines),
-    )
+    end = section_end(lines, at)
     buf, on = [], False
     for l in lines[at + 1:end]:
         if l.startswith('```'):
