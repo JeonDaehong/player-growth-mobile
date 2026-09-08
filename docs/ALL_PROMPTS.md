@@ -18,120 +18,11 @@
 
 ## 지금 남은 것
 
-1. **이야기 월페이퍼 · 비앙카 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
-2. **이야기 월페이퍼 · 리안느 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
-3. **이야기 월페이퍼 · 아녜스 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
+1. **이야기 월페이퍼 · 리안느 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
+2. **이야기 월페이퍼 · 아녜스 넉 장 (한 장씩 따로 뽑습니다)** — 낱장 (자르기 없음)
 
 ---
-## 1. 이야기 월페이퍼 · 비앙카 넉 장 (한 장씩 따로 뽑습니다)
-
-| | |
-|---|---|
-| 자르기 | **없음** |
-| 넣는 곳 | assets/wallpaper/<사람>_<단계>.jpg — 자르지 않습니다. 넣은 뒤 `src/ui/wallpapers.ts` 에 줄을 더하세요. |
-| 원본 | `docs/BOND_ART_PROMPTS.md`  |
-
-### 프롬프트
-
-**`assets/wallpaper/bunnyaxe_awkward.jpg`**
-
-```
-A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
-
-ART DIRECTION:
-- The CHARACTER fills most of the frame; the tavern behind her is drawn simply and with less contrast.
-- Appealing modern anime face with large expressive eyes. Lively comedy manga energy.
-- Clean inked linework, cel shading, light screentone. Fun and warm, not cinematic or grim.
-- Wholesome all-ages slice-of-life comedy, like a page from a shounen tavern manga.
-
-CHARACTER — BIANCA, a tavern waitress who also fights:
-A cheerful young adult woman in her twenties with a short tousled bob and freckles. She works the floor in the tavern's performer uniform: a bunny-ear headband; a fitted black bodice that fastens up the front and cuts straight across the collarbone with NO SHOULDER STRAPS, so her shoulders and upper arms are bare; a narrow band collar at the throat with a small bowtie; white cuffs at the wrists; opaque dark tights; and tall lace-up heeled boots. Strapped over her right shoulder on top of it, one battered steel PAULDRON — the only piece of armour she owns. She carries an enormous single-bladed woodcutter's axe as if it weighed nothing.
-
-SCENE — THROWING OUT A ROWDY CUSTOMER:
-Full figure, seen a little from the side, camera at eye level. One boot is planted on a toppled bench and she leans out to jab a finger down at a big drunk man who has fallen backward at the bottom of the frame — seen from behind, hands raised, drawn small and simple. Her other hand rests the axe over her shoulder. She is looking DOWN AT HIM, not at the viewer. Mouth open mid-scold, one eyebrow up, eyes bright: she is telling him off and enjoying it. A tankard and a couple of cards tumble through the air. The tavern behind is a soft suggestion of tables and lamps.
-
-RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, light screentone, a few bold manga action lines. Warm lamplight, simple background, high contrast kept on HER.
-```
-
-**`assets/wallpaper/bunnyaxe_friend.jpg`**
-
-```
-A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
-
-ART DIRECTION:
-- The CHARACTER'S FACE and the glass fill the frame; the bar behind her is simple and low-contrast.
-- Appealing modern anime face with large expressive eyes and a big open grin. She is looking RIGHT AT THE VIEWER.
-- Clean inked linework, cel shading, light screentone. Cheerful and inviting.
-- Wholesome all-ages slice-of-life comedy.
-
-CHARACTER — BIANCA, a tavern waitress:
-A cheerful young adult woman in her twenties, short tousled bob, freckles. Her work uniform is a bunny-ear headband and a fitted black bodice with NO SHOULDER STRAPS — it cuts straight across the collarbone, leaving her shoulders bare — with a narrow band collar and a small bowtie at the throat. FRAMED FROM THE COLLARBONE UP, so what shows is the headband, the bowtie, her bare shoulders, and one battered steel pauldron strapped over her right shoulder. Her huge axe leans against the bar behind her, out of the way.
-
-SCENE — HER OWN COCKTAIL:
-A tight head-and-shoulders shot, camera at eye level. She has both elbows on a wooden bar and is pushing a tall glass toward the viewer — the glass is large in the foreground, filled with layered liquid, ice, a curl of citrus peel and something dubious floating in it. Her grin is huge, eyebrows raised in expectation, eyes locked on the viewer, clearly saying "drink it". Her free hand gives a thumbs-up. A few bottles behind her, drawn simply.
-
-RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Warm lamplight, gentle foreshortening on the glass, a few white highlights on the ice, background kept simple.
-```
-
-**`assets/wallpaper/bunnyaxe_trust.jpg`**
-
-```
-A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
-
-ART DIRECTION:
-- The CHARACTER fills most of the frame; the corridor is simple and low-contrast.
-- Appealing modern anime face with large expressive eyes; heavy blush drawn with manga blush lines.
-- Clean inked linework, cel shading, light screentone. Sweet and charming, gently funny.
-- Wholesome all-ages slice-of-life comedy.
-
-CHARACTER — BIANCA, a tavern waitress:
-A cheerful young adult woman in her twenties, short tousled bob, freckles. She is off shift and has pulled a long coat on over her uniform — the strapless black bodice she works in is underneath and out of sight — so only the bunny-ear headband and her boots show what she does for a living. Tonight her hair is brushed and a small ribbon is tied to one bunny ear. No pauldron, no axe anywhere: she left the armour behind on purpose.
-
-SCENE — OUTSIDE THE DOOR, ABOUT TO KNOCK:
-Full figure seen from the side, camera at eye level, standing in a narrow lamp-lit corridor with her back lightly against the wall beside a closed wooden door. She stares at the DOOR, not at the viewer, and never makes eye contact. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, eyes squeezed half-shut, mouth caught between a nervous grimace and an enormous helpless smile — she has been standing here a while and cannot make herself knock. One boot is up on its toe. Her shadow stretches long down the corridor.
-
-RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Heavy blush hatching plus two small blush lines, one sweat drop. A single warm lamp, soft falloff, corridor drawn simply.
-```
-
-**`assets/wallpaper/bunnyaxe_love.jpg`**
-
-```
-A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
-
-ART DIRECTION:
-- A tight portrait. Her FACE and her FIDGETING HANDS are the whole picture; the room behind her is soft, warm and low-contrast.
-- Appealing modern anime face: large expressive eyes with bright highlights, soft round cheeks, heavy manga blush.
-- Clean inked linework, cel shading, light screentone. Sweet, warm, a little bashful — the reader should want to smile back.
-- Wholesome all-ages slice-of-life. This is a shy, sincere moment between friends.
-
-FRAMING (fixed):
-- UPPER BODY SHOT, from the middle of her chest upward — head, shoulders, both arms and her fidgeting hands are all in frame. This is NOT a full-body shot and NOT a tight face close-up.
-- She LEANS IN toward the viewer so that she fills the frame edge to edge and the background falls away behind her. Camera at eye level, straight on.
-
-CHARACTER — BIANCA, a tavern waitress:
-A cheerful young adult woman in her twenties, short tousled bob, freckles. She wears the tavern's performer uniform: a bunny-ear headband and a fitted black bodice that fastens up the front and cuts straight across the collarbone with NO SHOULDER STRAPS, so her shoulders and upper arms are bare; a narrow band collar at the throat with a small bowtie, and white cuffs at the wrists. Tidy and workaday — this is what she wears to serve tables. Strapped over her RIGHT SHOULDER on top of it, one small battered steel PAULDRON — a single scuffed plate, the only piece of armour she owns; she wears it even off duty. It must be visible in this shot. The bunny ears are drooping slightly, which makes her look even more bashful.
-
-POSE AND EXPRESSION — THIS IS THE WHOLE PICTURE:
-She is EMBARRASSED AND QUIETLY HAPPY at the same time, and cannot keep still.
-- Both hands are raised in front of her chest, FINGERS FIDGETING — index fingers pressed together and poking at each other, knuckles a little tense. Draw the hands clearly and fairly large; the fidget is half the picture.
-- Shoulders drawn up and in, head tilted down a little, so she is looking UP at the viewer through her lashes — she IS making eye contact, shyly.
-- Cheeks deeply flushed with manga blush lines across the nose; a tiny sweat drop at the temple.
-- Mouth pulled into a small closed-lip smile that keeps escaping into a wider one — she is trying to hold it in and failing.
-- Read her as "…뭐, 뭘 봐. 그런 거 아니거든." — flustered, pleased, completely transparent about it. She is normally loud and confident, and that is exactly why this is charming.
-
-SCENE — AFTER CLOSING, IN THE QUIET TAVERN:
-She stands in the empty tavern after closing, a lamp behind her throwing a warm glow; chairs are up on the tables, drawn softly and simply, well out of focus. One strand of hair has fallen across her cheek. A couple of small manga sparkle marks near her shoulders.
-
-RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft warm key light from behind and to one side, gentle bloom, delicate blush hatching, bright highlights in the eyes, background softly blurred.
-```
-
----
-
-## 2. 이야기 월페이퍼 · 리안느 넉 장 (한 장씩 따로 뽑습니다)
+## 1. 이야기 월페이퍼 · 리안느 넉 장 (한 장씩 따로 뽑습니다)
 
 | | |
 |---|---|
@@ -240,7 +131,7 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. So
 
 ---
 
-## 3. 이야기 월페이퍼 · 아녜스 넉 장 (한 장씩 따로 뽑습니다)
+## 2. 이야기 월페이퍼 · 아녜스 넉 장 (한 장씩 따로 뽑습니다)
 
 | | |
 |---|---|
@@ -249,31 +140,6 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. So
 | 원본 | `docs/BOND_ART_PROMPTS.md`  |
 
 ### 프롬프트
-
-**`assets/wallpaper/nun_awkward.jpg`**
-
-```
-A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
-
-ART DIRECTION:
-- The CHARACTER fills most of the frame. The ruin behind her is drawn LIGHTLY — a few broken arches, low contrast, softly out of focus.
-- Appealing modern anime face with large expressive eyes and long lashes; her face must read clearly even with her head bowed.
-- Clean inked linework, cel shading, light screentone.
-- Quiet, NOT grand. NO cathedral-scale architecture dwarfing her, NO heavy god-rays, NO religious-painting solemnity. She is a girl praying, not an altarpiece.
-
-CONTENT RULES (strict):
-- Wholesome, all-ages, non-sexualized. Fully covered by a heavy habit — high collar, long sleeves, long skirt with NO slit.
-- The habit covers her from the chin to the floor — high collar, long bell sleeves, long plain skirt. Camera at eye level.
-
-CHARACTER — AGNES, a young nun:
-Shoulder-length pale hair framing her face under a white headband and a black veil with a small leaf ornament at the temple. A high-collared black habit with wide bell sleeves, a long pale stole down the front, a sash at the waist, a long plain skirt. She carries a censer on a fine chain. Gentle features.
-
-SCENE — PRAYING IN THE RUIN:
-Full figure, seen from the side at a little distance, kneeling. Her hands are clasped at her chest, her head bowed deeply, eyes closed with long lashes drawn clearly. We see her in profile — she is not aware of the viewer at all. The censer rests beside her with a thin line of smoke. A few loose strands of hair have escaped the veil. Ash and paper fragments drift slowly past. The broken chapel is only suggested behind her.
-
-RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft even light from above, a few drifting particles, background simple and low-contrast.
-```
 
 **`assets/wallpaper/nun_friend.jpg`**
 

@@ -334,6 +334,16 @@ def loose(n, path, title, doc, head, where):
         '',
     ]
     for t, b in body:
+        """
+        이름표가 **이미 들어온 파일**을 가리키면 그 덩어리는 안 싣는다.
+
+        낱장은 사람 단위로 세는데 (`LOOSE`), 그러면 아녜스처럼 한 장만
+        들어온 사람은 넉 장이 다 다시 실린다. 이름표가 곧 파일 이름이므로
+        (`**assets/wallpaper/nun_awkward.jpg**`) 그것으로 하나씩 거른다.
+        """
+        got = re.search(r'`([^`]+\.(?:jpg|png))`', t or '')
+        if got and os.path.exists(os.path.join(ROOT, got.group(1))):
+            continue
         if t:
             parts += ['**%s**' % t, '']
         parts += ['```', b, '```', '']

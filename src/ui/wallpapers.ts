@@ -27,9 +27,17 @@ export const WALLPAPERS: Record<string, number> = {
   knightgirl_friend: require('../../assets/wallpaper/knightgirl_friend.jpg'),
   knightgirl_trust: require('../../assets/wallpaper/knightgirl_trust.jpg'),
   knightgirl_love: require('../../assets/wallpaper/knightgirl_love.jpg'),
+  bunnyaxe_awkward: require('../../assets/wallpaper/bunnyaxe_awkward.jpg'),
+  bunnyaxe_friend: require('../../assets/wallpaper/bunnyaxe_friend.jpg'),
+  bunnyaxe_trust: require('../../assets/wallpaper/bunnyaxe_trust.jpg'),
+  bunnyaxe_love: require('../../assets/wallpaper/bunnyaxe_love.jpg'),
+  nun_awkward: require('../../assets/wallpaper/nun_awkward.jpg'),
   /*
-    비앙카 · 리안느 · 아녜스는 아직 없다. 프롬프트는 다 있다
-    (`docs/BOND_ART_PROMPTS.md` §B4) — 들어오는 대로 넉 줄씩 더한다.
+    리안느 넉 장과 아녜스 석 장이 남았다. 프롬프트는 다 있다
+    (`docs/BOND_ART_PROMPTS.md` §B4) — 들어오는 대로 한 줄씩 더한다.
+
+    **한 장씩 들어와도 된다.** `allWallpapers` 는 없는 열쇠를 걸러 내므로
+    (시험용 넘겨 보기), 아녜스처럼 1장만 있어도 그 한 장만 뜬다.
   */
 };
 
