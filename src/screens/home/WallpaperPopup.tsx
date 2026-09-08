@@ -92,10 +92,34 @@ export function WallpaperPopup({ charId, keys, name, onClose }: {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           /*
+            ── 한 번에 **한 장만** 넘어간다 ──
+
+            `pagingEnabled` 만으로는 부족했다. 저건 "한 장 폭에 물린다" 까지고,
+            손가락을 놓은 뒤의 관성은 그대로 살아 있어서 조금 세게 밀면 두세
+            장을 지나쳐 버렸다.
+
+            `disableIntervalMomentum` 이 그 관성을 자른다 — 놓은 자리에서
+            **가장 가까운 한 칸**까지만 가고 멎는다. `snapToInterval` 로 그
+            칸 폭을 다시 못 박고, `decelerationRate="fast"` 로 미끄러지는
+            거리를 줄인다. 셋이 같이 있어야 웹과 앱에서 같게 움직인다.
+          */
+          disableIntervalMomentum
+          snapToInterval={win.width}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          /*
             **다 민 뒤에 한 번만** 센다. 미는 도중에 세면 손가락이 조금만
             흔들려도 아래 이름표가 앞뒤로 튄다.
+
+            손가락을 떼는 순간(`onScrollEndDrag`)도 같이 본다 — 웹에서는
+            관성이 없으면 `onMomentumScrollEnd` 가 아예 안 오는 일이 있어서,
+            그때 이름표만 옛 자리에 남는다.
           */
           onMomentumScrollEnd={(e) => {
+            const n = Math.round(e.nativeEvent.contentOffset.x / win.width);
+            if (n !== at) { setAt(n); sfx('tap'); }
+          }}
+          onScrollEndDrag={(e) => {
             const n = Math.round(e.nativeEvent.contentOffset.x / win.width);
             if (n !== at) { setAt(n); sfx('tap'); }
           }}
