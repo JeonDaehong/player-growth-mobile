@@ -26,7 +26,7 @@
  * 쌓는다" 가 화면에서 같아 보인다.
  */
 import React, { useMemo, useState } from 'react';
-import { Image, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Modal, Pressable, View } from 'react-native';
 import { useGame } from '@/state/store';
 import { CHARS, CharId } from '@/core/chars';
 import { TALKS, TALK_A_DAY, TalkDef } from '@/core/bond';
@@ -103,16 +103,27 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
           안에서** 일어나는 일로 보이려면 배경이 딴 데서 온 것이면 안 된다.
           흐리게 까는 까닭은 글을 읽는 화면이기 때문이다.
 
-          **`StyleSheet.absoluteFill` 을 쓴다.** `inset: 0` 으로 적었더니
-          크기가 안 잡혀서, 그림이 제 원래 크기로 왼쪽 위 귀퉁이에 조그맣게
-          떴다 — 화면 11시 방향에 지도 한 장이 떠 있는 꼴이었다.
+          ## 크기를 **두 겹으로** 준다
+
+          그림이 화면 11시에 조그맣게 떴다. `inset: 0` 도 `absoluteFill` 도
+          이 자리에서는 안 먹었다 — `Image` 가 제 원래 크기로 놓였다.
+
+          그래서 **자리를 잡는 상자와 크기를 채우는 그림**을 갈랐다. 바깥
+          상자가 네 변을 0 으로 못 박아 화면을 덮고, 그림은 그 안에서
+          `100%` 로 채운다. 월페이퍼가 이미 그렇게 돌고 있다
+          (`WallpaperPopup`) — 되는 것이 있으면 그것과 같은 모양으로 둔다.
         */}
         {!!bg && (
-          <Image
-            source={bg}
-            resizeMode="cover"
-            style={[StyleSheet.absoluteFill, { opacity: 0.22 }]}
-          />
+          <View
+            pointerEvents="none"
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            <Image
+              source={bg}
+              resizeMode="cover"
+              style={{ width: '100%', height: '100%', opacity: 0.22 }}
+            />
+          </View>
         )}
 
         {/* 아무 데나 누르면 넘어간다 — 답을 다 읽었으면 닫힌다 */}
@@ -212,15 +223,17 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
         */}
         {asking && !!talk && (
           <View
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(0,0,0,0.55)',
-                paddingHorizontal: SP.lg,
-              },
-            ]}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0,0,0,0.55)',
+              paddingHorizontal: SP.lg,
+            }}
           >
             <View
               style={[

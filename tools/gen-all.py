@@ -172,7 +172,16 @@ def done(key, labels):
 
 
 def blocks_under(doc, head):
-    """그 헤딩 아래, 다음 `## ` 전까지의 코드블록 전부."""
+    """
+    그 헤딩 아래, 다음 `## ` 전까지의 코드블록 전부.
+
+    **바로 위의 굵은 한 줄을 이름표로 같이 가져온다.** 한 절에 블록이 열여섯
+    개씩 들어가는 자리가 생겼는데 (월페이퍼), 그냥 이어 붙이면 어느 것이
+    어느 파일인지 알 수가 없다. 원본 문서에는 `**assets/...jpg**` 로 적혀
+    있으므로 그것을 딸려 보낸다.
+
+    돌려주는 것은 `(이름표 또는 None, 본문)` 짝이다.
+    """
     path = os.path.join(ROOT, 'docs', doc)
     text = io.open(path, encoding='utf-8').read()
     lines = text.split('\n')
@@ -184,21 +193,26 @@ def blocks_under(doc, head):
         len(lines),
     )
     out, buf, on = [], [], False
+    tag = None          # 방금 지나온 굵은 줄 — 다음 블록의 이름표
     for l in lines[at + 1:end]:
         if l.startswith('```'):
             if on:
-                out.append('\n'.join(buf))
-                buf = []
+                out.append((tag, '\n'.join(buf)))
+                buf, tag = [], None
             on = not on
             continue
         if on:
             buf.append(l)
+            continue
+        t = l.strip()
+        if t.startswith('**') and t.endswith('**') and len(t) > 4:
+            tag = t.strip('*')
     # 프롬프트 말고 **자르기 설정**도 코드블록으로 들어 있다. 여기서는 자르기를
     # 아래에서 따로 적으므로 (`one`), 그 블록까지 실으면 같은 JSON 이 두 번
     # 나온다 — 복붙하는 사람이 어느 쪽을 쓸지 고민하게 된다.
     #
     # 첫 글자가 `{` 나 `[` 면 설정으로 본다. 프롬프트는 늘 영어 문장이다.
-    return [b for b in out if not b.lstrip().startswith(('{', '['))]
+    return [(t, b) for t, b in out if not b.lstrip().startswith(('{', '['))]
 
 
 HEAD = """# 프롬프트 전부 — 위에서부터 복붙
@@ -249,7 +263,9 @@ def loose(n, path, title, doc, head, where):
         '### 프롬프트',
         '',
     ]
-    for b in body:
+    for t, b in body:
+        if t:
+            parts += ['**%s**' % t, '']
         parts += ['```', b, '```', '']
     return '\n'.join(parts)
 
@@ -282,7 +298,9 @@ def one(n, key, cells, title, doc, head, labels, append=False):
         '### 프롬프트',
         '',
     ]
-    for b in body:
+    for t, b in body:
+        if t:
+            parts += ['**%s**' % t, '']
         parts += ['```', b, '```', '']
     parts += [
         '### 자르기',

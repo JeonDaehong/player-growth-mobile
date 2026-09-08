@@ -186,7 +186,7 @@ function GiftPopup({ who, onClose }: { who: CharId; onClose: () => void }) {
       {/* 오늘 몇 개 남았나 — 누르기 전에 알아야 한다 */}
       <Row between style={{ marginBottom: SP.xs }}>
         <T size={FS.tiny} dim="dim">오늘 남은 선물</T>
-        <T size={FS.body} bold>{`${left} / ${GIFT_A_DAY}`}</T>
+        <T size={FS.body} bold>{`${left}/${GIFT_A_DAY}`}</T>
       </Row>
       {have.length === 0 ? (
         <T size={FS.body} dim="dim" center style={{ paddingVertical: SP.lg }}>
@@ -509,9 +509,15 @@ export function BondScreen({ who, onBack }: { who: CharId; onBack: () => void })
           `idle`). 단추를 막아 두면 "말을 걸 수 없다" 와 "오늘은 더 못
           쌓는다" 가 화면에서 같아 보이는데, 이 사람은 늘 거기 있다.
         */}
+        {/*
+          남은 것은 **분수로** 적는다 (`0/2`). `오늘 2번 남음` · `오늘은 다
+          했음` 처럼 말로 적었더니 두 상태의 글자 수가 달라서 칸이 흔들렸고,
+          무엇보다 **상한이 몇인지**가 다 쓴 뒤에는 화면에서 사라졌다 —
+          분수는 남은 것과 상한을 한 번에 말한다.
+        */}
         <Act
           label="대화하기"
-          sub={left > 0 ? `오늘 ${left}번 남음` : '오늘은 다 했음'}
+          sub={`${left}/${TALK_A_DAY}`}
           on
           onPress={() => setOpen('talk')}
         />
@@ -521,13 +527,13 @@ export function BondScreen({ who, onBack }: { who: CharId; onBack: () => void })
         */}
         <Act
           label="선물주기"
-          sub={gLeft > 0 ? `오늘 ${gLeft}개 남음` : '오늘은 다 줬음'}
+          sub={`${gLeft}/${GIFT_A_DAY}`}
           on
           onPress={() => (gLeft > 0 ? setOpen('gift') : setNoGift(true))}
         />
         <Act
           label="스토리보기"
-          sub={`${(b.read ?? []).length} / ${BOND_STEPS.length}`}
+          sub={`${(b.read ?? []).length}/${BOND_STEPS.length}`}
           on
           onPress={() => setOpen('story')}
         />
