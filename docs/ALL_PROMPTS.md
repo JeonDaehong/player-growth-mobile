@@ -112,7 +112,7 @@ FRAMING (fixed):
 - She LEANS IN toward the viewer so that she fills the frame edge to edge and the background falls away behind her. Camera at eye level, straight on.
 
 CHARACTER — BIANCA, a tavern waitress:
-A cheerful young adult woman in her twenties, short tousled bob, freckles. She wears the tavern's performer uniform: a bunny-ear headband and a neat fitted black waistcoat-style outfit buttoned up the front with a small bowtie at the collar — properly covered, tidy, workaday. The bunny ears are drooping slightly, which makes her look even more bashful.
+A cheerful young adult woman in her twenties, short tousled bob, freckles. She wears the tavern's performer uniform: a bunny-ear headband and a neat fitted black waistcoat-style outfit buttoned up the front with a small bowtie at the collar — properly covered, tidy, workaday. Strapped over her RIGHT SHOULDER on top of it, one small battered steel PAULDRON — a single scuffed plate, the only piece of armour she owns; she wears it even off duty. It must be visible in this shot. The bunny ears are drooping slightly, which makes her look even more bashful.
 
 POSE AND EXPRESSION — THIS IS THE WHOLE PICTURE:
 She is EMBARRASSED AND QUIETLY HAPPY at the same time, and cannot keep still.
