@@ -26,7 +26,7 @@
  * 쌓는다" 가 화면에서 같아 보인다.
  */
 import React, { useMemo, useState } from 'react';
-import { Image, Modal, Pressable, View } from 'react-native';
+import { Image, Modal, Pressable, View, useWindowDimensions } from 'react-native';
 import { useGame } from '@/state/store';
 import { CHARS, CharId } from '@/core/chars';
 import { TALKS, TALK_A_DAY, TalkDef } from '@/core/bond';
@@ -43,6 +43,18 @@ import { BLACK, BORDER, C, FS, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
 const BOX_H = 168;
 
 export function TalkView({ who, onClose }: { who: CharId; onClose: () => void }) {
+  /*
+    ── 화면 크기를 **직접 잰다** ──
+
+    배경이 세 번 고쳐도 화면 11시에 조그맣게 떴다. `inset: 0` · `absoluteFill` ·
+    `절대 상자 + 100%` 를 차례로 해 봤는데 다 같았다 — 셋 다 **부모의 크기를
+    물려받는** 방법이라, 부모가 크기를 못 잡으면 셋 다 똑같이 0 이 된다.
+    창 안에서 `flex: 1` 이 높이를 못 잡고 있었던 것이다.
+
+    그래서 물려받기를 그만두고 잰다. `useWindowDimensions` 는 화면이 돌거나
+    브라우저 창이 바뀌면 다시 알려 주므로, 한 번 박아 넣는 것과 다르다.
+  */
+  const win = useWindowDimensions();
   const talkBond = useGame((s) => s.talkBond);
   const bonds = useGame((s) => s.bonds);
   const toast = useGame((s) => s.toast);
@@ -95,7 +107,7 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: BLACK }}>
+      <View style={{ width: win.width, height: win.height, backgroundColor: BLACK }}>
         {/*
           ── 배경 ── 판 그림 한 장을 아주 흐리게.
 
@@ -103,32 +115,27 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
           안에서** 일어나는 일로 보이려면 배경이 딴 데서 온 것이면 안 된다.
           흐리게 까는 까닭은 글을 읽는 화면이기 때문이다.
 
-          ## 크기를 **두 겹으로** 준다
-
-          그림이 화면 11시에 조그맣게 떴다. `inset: 0` 도 `absoluteFill` 도
-          이 자리에서는 안 먹었다 — `Image` 가 제 원래 크기로 놓였다.
-
-          그래서 **자리를 잡는 상자와 크기를 채우는 그림**을 갈랐다. 바깥
-          상자가 네 변을 0 으로 못 박아 화면을 덮고, 그림은 그 안에서
-          `100%` 로 채운다. 월페이퍼가 이미 그렇게 돌고 있다
-          (`WallpaperPopup`) — 되는 것이 있으면 그것과 같은 모양으로 둔다.
+          **잰 크기를 그대로 준다** (`win`). 비율로 주면 부모가 크기를 못
+          잡았을 때 0 이 되는데, 그 증상이 바로 11시의 작은 그림이었다.
         */}
         {!!bg && (
-          <View
-            pointerEvents="none"
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-          >
-            <Image
-              source={bg}
-              resizeMode="cover"
-              style={{ width: '100%', height: '100%', opacity: 0.22 }}
-            />
-          </View>
+          <Image
+            source={bg}
+            resizeMode="cover"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: win.width,
+              height: win.height,
+              opacity: 0.22,
+            }}
+          />
         )}
 
         {/* 아무 데나 누르면 넘어간다 — 답을 다 읽었으면 닫힌다 */}
         <Pressable
-          style={{ flex: 1 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           onPress={() => {
             sfx('tap');
             if (waiting) { setAsking(true); return; }
@@ -224,11 +231,12 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
         {asking && !!talk && (
           <View
             style={{
+              /* 여기도 잰 크기다 — 배경과 같은 까닭 (위 `win`) */
               position: 'absolute',
               top: 0,
               left: 0,
-              right: 0,
-              bottom: 0,
+              width: win.width,
+              height: win.height,
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: 'rgba(0,0,0,0.55)',
