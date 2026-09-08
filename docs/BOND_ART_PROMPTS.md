@@ -284,7 +284,7 @@ LAYOUT:
 |---|---|
 | `knightgirl_awkward` | 기사답게 인사한다 |
 | `knightgirl_friend` | 목욕 중에 문이 열려 비누를 던진다 |
-| `knightgirl_trust` | 해냈다며 뿌듯해한다 |
+| `knightgirl_trust` | 엣헴— 하고 자랑한다 |
 | `knightgirl_love` | 임무를 끝내고 노을 아래 웃는다 |
 | `bunnyaxe_awkward` | 술집에서 진상 손님을 혼낸다 |
 | `bunnyaxe_friend` | 제 특제 칵테일을 먹어 보라고 내민다 |
@@ -400,34 +400,41 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. A 
 
 **`assets/wallpaper/knightgirl_trust.jpg`**
 
+> 4번(애정)과 **겹치면 안 됩니다.** 둘 다 웃는 얼굴이라 자칫 같은 그림이
+> 되는데, 다섯 가지를 갈라 두었습니다 — 거리(무릎 위 ↔ 가슴 위) · 시선(눈을
+> 감았다 ↔ 눈을 맞춘다) · 감정(자랑 ↔ 부끄러움) · 시간(한낮 ↔ 노을) ·
+> 옷(멀쩡하다 ↔ 너덜너덜하다).
+
 ```
 A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
 
 ART DIRECTION:
 - The CHARACTER fills most of the frame; the background is drawn LIGHTLY and softly, with much less contrast than she has.
-- Appealing modern anime face with large expressive eyes and bright highlights. Her face is the whole picture.
+- Appealing modern anime face, slightly rounded and cute proportions. Comedy manga energy — this panel should make the reader grin.
 - Clean inked linework, cel shading, light screentone.
-- Warm and uplifting. NO grand cinematic mood, NO heavy god-rays, NO epic architecture, NO museum-painting solemnity.
+- Bright, sunny, playful. NO cinematic mood, NO god-rays, NO epic architecture, NO solemnity of any kind.
 
 CONTENT RULES (strict):
 - Wholesome, all-ages, non-sexualized. Fully clothed and fully armoured, collar closed.
 - No cleavage, no skin-tight emphasis, no suggestive posing, no low angles.
 
 CHARACTER — ISOLDE, a young knight:
-Very long straight pale hair, a slim jewelled circlet, silver plate armour with layered pauldrons over a high-necked underlayer, a cape with an embroidered hem. Pretty and approachable, not stern.
+Very long straight pale hair, a slim jewelled circlet, silver plate armour with layered pauldrons over a high-necked underlayer, a cape with an embroidered hem. Her armour is CLEAN and INTACT here — at most one small scuff on a pauldron. Pretty and approachable, not stern.
 
-EXPRESSION — THIS IS THE POINT OF THE PICTURE:
-She is PROUD OF HERSELF and quietly delighted about it. Not solemn, not praying, not grim.
-- A wide, unguarded smile — teeth showing a little, cheeks lifted, eyes bright and crinkled at the corners.
-- Chin up, chest out, shoulders squared. She is standing tall on purpose.
-- A faint blush: she knows she is showing off a bit and cannot help it.
-- Read her as "봤어요? 제가 해냈어요." — pleased, a little boastful, completely sincere.
+POSE AND EXPRESSION — THIS IS THE WHOLE PICTURE:
+She is DOING A LITTLE "AHEM!" — puffed up with pride and openly showing off, and it is adorable rather than arrogant.
+- Standing straight and tall, chest puffed out, chin lifted high, back arched slightly backward. She is making herself as big as possible.
+- BOTH FISTS PLANTED ON HER HIPS, elbows out wide. Classic proud pose.
+- EYES CLOSED in a smug, self-satisfied curve (^ ^ shapes), eyebrows raised high, a big pleased grin with the corners pulled up.
+- A light blush across the cheeks — she knows she is bragging and is enjoying it.
+- Her cape flares out behind her as if she flicked it on purpose.
+- Read her as "엣헴—! 어때요, 제가 해냈다니까요?" — boastful, cute, completely harmless. Do NOT make her look modest, tearful, shy, or solemn.
 
-SCENE — SHE DID IT:
-Waist-up, close, facing the viewer. She has just finished something difficult and is standing straight with her sword resting point-down in front of her, both hands stacked on the pommel — the pose of a knight at ease, but she is beaming instead of bowing. Her cape is caught mid-settle behind her. A few strands of hair are out of place and there is a light scuff on one pauldron, proof that it was not easy. Behind her, a soft bright sky and the suggestion of a field, drawn simply.
+SCENE — SHOWING OFF, IN BROAD DAYLIGHT:
+Knee-up, seen straight on from a little distance so her whole proud stance reads — NOT a tight face close-up. She stands in the middle of the frame in bright midday light. Her sword is sheathed at her hip, untouched. Behind her, a simple sunny courtyard: a low wall and one tree, drawn softly and lightly. A few small manga sparkle marks pop around her head and shoulders.
 
 RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft bright light from above and behind haloing her hair, a few sparkle marks in the air (manga style), background low-contrast and simple.
+Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Bright even daylight, minimal shadows, a couple of small speed lines under the cape flare, sparkle marks. Background low-contrast and simple.
 ```
 
 **`assets/wallpaper/knightgirl_love.jpg`**
