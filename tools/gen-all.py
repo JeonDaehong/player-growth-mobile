@@ -121,6 +121,11 @@ ITEMS = [
     ('item_icon', 3, '경험의 서 셋 — 같은 책이 세 단계로 자란다',
      'BOND_ART_PROMPTS.md', r'^## §B3',
      ['book_old', 'book_fine', 'book_prime']),
+    # 세로 한 장짜리 배경. 자르기는 `grid: [1, 1]` 이고 `size` 를 따로 준다 —
+    # 아래 자동 JSON 대신 문서에 적힌 것을 쓰는 편이 낫다 (§B6 에 있다).
+    ('bg_talk', 1, '인연 대화 배경 한 장 — 세로 9:16',
+     'BOND_ART_PROMPTS.md', r'^## §B6',
+     ['night']),
 ]
 
 # ══ 자르지 않는 것들 ═══════════════════════════════════════
@@ -215,6 +220,42 @@ def blocks_under(doc, head):
     return [(t, b) for t, b in out if not b.lstrip().startswith(('{', '['))]
 
 
+def slice_under(doc, head):
+    """
+    그 절에 **손으로 적어 둔 자르기 JSON** — 없으면 `None`.
+
+    보통은 아래 `one` 이 칸 수와 이름표로 자동으로 짓는다. 그런데 그것으로
+    안 되는 자리가 있다 — 세로 배경 한 장은 `grid` 와 `size` 와 `allowFilled`
+    가 필요한데, 자동으로 짓는 쪽은 `expect` 밖에 모른다.
+
+    문서가 적어 두었으면 문서를 믿는다. 자동이 못 하는 것을 사람이 적어 둔
+    것이므로, 여기서 덮어쓰면 그 사람이 적은 이유가 사라진다.
+    """
+    path = os.path.join(ROOT, 'docs', doc)
+    text = io.open(path, encoding='utf-8').read()
+    lines = text.split('\n')
+    at = next((i for i, l in enumerate(lines) if re.match(head, l)), None)
+    if at is None:
+        return None
+    end = next(
+        (i for i in range(at + 1, len(lines)) if lines[i].startswith('## ')),
+        len(lines),
+    )
+    buf, on = [], False
+    for l in lines[at + 1:end]:
+        if l.startswith('```'):
+            if on:
+                body = '\n'.join(buf)
+                if body.lstrip().startswith('{'):
+                    return body
+                buf = []
+            on = not on
+            continue
+        if on:
+            buf.append(l)
+    return None
+
+
 HEAD = """# 프롬프트 전부 — 위에서부터 복붙
 
 **이 파일은 자동 생성됩니다** — `python tools/gen-all.py`.
@@ -302,17 +343,20 @@ def one(n, key, cells, title, doc, head, labels, append=False):
         if t:
             parts += ['**%s**' % t, '']
         parts += ['```', b, '```', '']
-    parts += [
-        '### 자르기',
-        '',
-        '```json',
-        '{ "file": "<받은 파일명>", "name": "%s", "expect": [%d, %d],' % (folder, cols, rows),
-        '  "labels": [%s]%s }'
-        % (', '.join('"%s"' % l for l in labels),
-           ', "append": true' if append else ''),
-        '```',
-        '',
-    ]
+    hand = slice_under(doc, head)
+    parts += ['### 자르기', '', '```json']
+    if hand:
+        # 문서가 적어 둔 것이 있으면 그것을 쓴다 (`slice_under`)
+        parts += [hand]
+    else:
+        parts += [
+            '{ "file": "<받은 파일명>", "name": "%s", "expect": [%d, %d],'
+            % (folder, cols, rows),
+            '  "labels": [%s]%s }'
+            % (', '.join('"%s"' % l for l in labels),
+               ', "append": true' if append else ''),
+        ]
+    parts += ['```', '']
     return '\n'.join(parts)
 
 

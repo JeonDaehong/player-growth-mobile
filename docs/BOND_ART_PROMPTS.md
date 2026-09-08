@@ -14,6 +14,7 @@
 | §B3 | 경험의 서 셋 | 3칸 1줄 | `item_icon` |
 | §B4 | 이야기 월페이퍼 열여섯 | 낱장 | `assets/wallpaper/` |
 | §B5 | 하트와 인연 단추 — **안 그려도 됩니다** | — | — |
+| §B6 | 대화 배경 한 장 | 세로 1장 | `bg_talk` |
 
 ---
 
@@ -772,3 +773,89 @@ Grayscale only, no colour. Clean ink linework, cel shading, fine screentone. Sof
 인연 단추(`hero_ui/bond`)도 이미 코드 도트가 있습니다. **그리고 싶으면**
 30px 원 안에 흰 선으로, 월페이퍼 단추(`paper`)와 윤곽이 안 겹치게만
 그리면 됩니다.
+
+---
+
+## §B6 대화 배경 — `assets/sprites/bg_talk/`
+
+대화 화면(`screens/home/TalkView`)이 뒤에 까는 그림입니다. 지금은 판 배경
+한 장을 빌려 쓰는데 (`bg_chapter/01`), 저건 **가로로 긴 무대 그림**이라
+세로 화면에 늘리면 위아래가 텅 비고 나무 몇 그루만 늘어집니다.
+
+**한 장이면 됩니다.** 네 사람이 다 쓰므로 누구의 방도 아닌 자리여야 합니다.
+
+### 이 그림에는 **비워 둘 자리가 정해져 있습니다**
+
+화면 위에 두 가지가 얹힙니다.
+
+```
+┌─────────────────┐
+│                 │  ← 위: 비어도 됨 (달·하늘)
+│         ┌───────┤
+│  여기만 │ 인물이 │  ← 오른쪽 절반: 사람이 선다. 비워 둘 것
+│  보인다 │  선다  │
+│         └───────┤
+├─────────────────┤
+│   대사창이 덮음   │  ← 아래 3분의 1: 무엇을 그려도 안 보인다
+└─────────────────┘
+```
+
+그래서 **볼거리를 왼쪽 위 3분의 2에** 몰아야 합니다. 오른쪽에 탑이나 큰
+나무를 세우면 인물과 겹쳐서 둘 다 안 읽힙니다.
+
+### 선이 성글어야 합니다
+
+이 그림 위에 **흰 글씨**가 올라갑니다 (대사창은 반투명 검정이라 완전히
+가리지는 않습니다). 벽돌 한 장 한 장까지 그리면 글자가 무늬에 묻힙니다.
+`bg_hero/hall` 정도의 성긴 선이 기준입니다 — 큰 형태 몇 개, 선 사이가 넓게.
+
+### 프롬프트
+
+```
+ABSOLUTE RULE — NO TEXT OF ANY KIND:
+- Do NOT write, print, label, caption, title, name, or number ANYTHING.
+- No signature, no watermark, no letters, no numerals, no runes, no fake script.
+
+SUBJECT: a single VERTICAL background plate for a visual-novel dialogue screen. Portrait orientation, 9:16 (for example 1080 x 1920). One image, not a sheet, no panels, no borders.
+
+THE PLACE — a quiet stone terrace at night, at the edge of a keep:
+- On the LEFT, a tall pointed ARCHWAY in a stone wall, empty and open, looking out into the dark. Its arch is drawn with two or three concentric lines only.
+- Through and beyond the arch, a simple night sky with a large plain MOON, high and to the left, and three or four small stars. No clouds with detail — at most one long thin cloud band crossing the moon.
+- Running across the LOWER-MIDDLE, a low stone PARAPET wall about waist height, drawn as two long horizontal lines with a few vertical joints. It reads as the edge of a balcony.
+- Growing up the left wall, a sparse trail of IVY — a dozen simple leaf shapes on a thin stem, no more.
+- Underfoot, a stone FLOOR suggested by three or four long lines converging slightly toward the centre. No tile grid, no cobbles.
+
+COMPOSITION — this matters as much as the drawing:
+- The RIGHT HALF of the image must stay almost EMPTY — flat dark wall or open night sky only. A character will stand there and must not overlap anything.
+- The BOTTOM THIRD must stay simple and quiet: a dialogue box will cover it. Put nothing important below that line.
+- All the visual interest belongs in the UPPER LEFT two thirds: the arch, the moon, the ivy.
+- Leave a generous amount of empty black. This is a backdrop, not a scene.
+
+STYLE (strict, non-negotiable):
+- 1-bit monochrome pixel art. ONLY two colors: pure black #000000 and pure white #FFFFFF.
+- NO grayscale, NO anti-aliasing, NO gradients, NO soft edges, NO blur, NO color fringing.
+- Drawn as clean WHITE OUTLINES on solid pure black. Shapes are NOT filled in white — the black shows through them.
+- Lines are sparse and far apart. Big simple forms only. Do NOT draw individual bricks, roof tiles, cobblestones, wood grain, or dense hatching — white text will be laid over this image and dense texture would swallow it.
+- Chunky, clearly visible square pixels — every line a crisp hard-edged 1-2 pixel run.
+- Retro handheld / early-1990s monochrome LCD game aesthetic. Think "Downwell", "Minit",
+  and the 1-bit look of "Return of the Obra Dinn".
+- No characters, no people, no animals, no furniture, no props. The place only.
+```
+
+### 슬라이스
+
+```json
+{
+  "file": "bg-talk.jpg",
+  "name": "bg_talk",
+  "grid": [1, 1],
+  "labels": ["night"],
+  "size": 640,
+  "allowFilled": true
+}
+```
+
+들어오면 `TalkView` 가 저절로 씁니다 — 없으면 지금처럼 판 배경으로
+떨어지게 해 뒀습니다.
+
+---

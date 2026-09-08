@@ -103,7 +103,15 @@ export function TalkView({ who, onClose }: { who: CharId; onClose: () => void })
   const line = said ? said.reply : (talk ? talk.ask : idle);
   /** 아직 고를 것이 남았나 */
   const waiting = !!talk && !said;
-  const bg = spriteLoose('bg_chapter', '01');
+  /*
+    ── 배경 ── 대화 전용 한 장을 먼저 찾고, 없으면 판 배경으로 떨어진다.
+
+    지금 쓰는 `bg_chapter/01` 은 **가로로 긴 무대 그림**이라 세로 화면에
+    늘리면 위아래가 텅 비고 나무 몇 그루만 늘어진다. 세로로 그린 것이
+    들어오면 (`docs/BOND_ART_PROMPTS.md` §B6) 이 줄이 저절로 그것을 쓴다 —
+    코드를 다시 고칠 일이 없다.
+  */
+  const bg = spriteLoose('bg_talk', 'night') ?? spriteLoose('bg_chapter', '01');
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
