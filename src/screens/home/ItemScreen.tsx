@@ -126,8 +126,9 @@ export function ItemScreen() {
   const [open, setOpen] = useState<string | null>(null);
   const books = useGame((s) => s.books);
   const elixir = useGame((s) => s.elixir);
+  const gifts = useGame((s) => s.gifts);
 
-  const rows = bagOf({ books, elixir });
+  const rows = bagOf({ books, elixir, gifts });
   const here = bagIn(rows, at);
   const n = bagCounts(rows);
 

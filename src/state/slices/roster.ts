@@ -15,6 +15,10 @@ import {
 import {
   BOOK_IDS, BookId, expOf, feed, goldFor,
 } from '@/core/exp';
+import {
+  BOND_STEPS, GiftId, RARITY_BOND, STORY_DIA, TALKS, TALK_A_DAY, bondFeed, giftExp,
+} from '@/core/bond';
+import { dayKey } from '@/core/events';
 import { FormationId, PARTY_SIZE, Party, cleanParty, seatRows } from '@/core/party';
 import { allOwned, drawChar, poolOf, recruitCost } from '@/core/recruit';
 import { whyLocked } from '@/core/skillTree';
@@ -50,6 +54,12 @@ export interface RosterActions {
   applyEdits: () => void;
   /** 만진 것을 전부 물린다 — 예약한 편성도, 찍은 스킬도 */
   revertEdits: () => void;
+  /** 말을 건다 — 하루 두 번까지 (`state/types`) */
+  talkBond: (who: CharId, choice: number) => 'no' | { up: number; exp: number };
+  /** 선물을 준다 */
+  giveGift: (who: CharId, gift: GiftId) => 'none' | { up: number; exp: number };
+  /** 이야기를 다 봤다 — 다이아를 받는다 */
+  readStory: (who: CharId, step: string) => boolean;
   /** 짜 둔 편성을 버린다 — 아직 안 들어간 것만 사라진다 */
   clearPending: () => void;
   /*
@@ -219,6 +229,9 @@ const snapTrees = (
   for (const [id, c] of Object.entries(chars)) out[id] = [...(c.tree ?? [])];
   return out;
 };
+
+/** 아직 아무 사이도 아닌 사람 — 키가 없을 때 이것으로 읽는다 */
+const NEW_BOND = { lv: 0, exp: 0, talkDay: '', talks: 0, read: [] as string[] };
 
 const commitPending = (set: SliceSet, get: SliceGet) => {
   const st = get();
@@ -491,6 +504,68 @@ export const createRosterSlice = (
       treeMark: st.treeMark ?? snapTrees(st.chars),
       chars: { ...st.chars, [id]: { ...c, tree: [] } },
     });
+  },
+
+  talkBond: (who, choice) => {
+    const st = get();
+    const c = st.chars[who];
+    if (!c) return 'no';
+    const today = dayKey(Date.now());
+    const b = st.bonds[who] ?? NEW_BOND;
+    /* 날이 바뀌면 횟수가 0 이다 — 자정에 따로 비우는 일 없이 읽을 때 안다 */
+    const used = b.talkDay === today ? b.talks : 0;
+    if (used >= TALK_A_DAY) return 'no';
+
+    const list = TALKS[who] ?? [];
+    /*
+      **어느 대화였는지는 화면이 안다.** 여기서 다시 고르면 화면에 뜬 선택지와
+      값이 갈릴 수 있으므로, 값만 받아서 넣는다 — 대신 자리 번호를 거른다.
+    */
+    const all = list.flatMap((t) => t.choices);
+    const pick = all[choice];
+    const add = pick ? pick.exp : 0;
+
+    const cap = RARITY_BOND[CHARS[who].rarity];
+    const got = bondFeed(b.lv, b.exp, add, cap);
+    set({
+      bonds: {
+        ...st.bonds,
+        [who]: { ...b, lv: got.lv, exp: got.exp, talkDay: today, talks: used + 1 },
+      },
+    });
+    return { up: got.up, exp: add };
+  },
+
+  giveGift: (who, gift) => {
+    const st = get();
+    if (!st.chars[who]) return 'none';
+    const have = st.gifts[gift] ?? 0;
+    if (have <= 0) return 'none';
+    const b = st.bonds[who] ?? NEW_BOND;
+    const cap = RARITY_BOND[CHARS[who].rarity];
+    const add = giftExp(who, gift);
+    const got = bondFeed(b.lv, b.exp, add, cap);
+    set({
+      /* 싫어하는 선물이어도 **없어진다** — 준 것은 준 것이다 */
+      gifts: { ...st.gifts, [gift]: have - 1 },
+      bonds: { ...st.bonds, [who]: { ...b, lv: got.lv, exp: got.exp } },
+    });
+    return { up: got.up, exp: add };
+  },
+
+  readStory: (who, step) => {
+    const st = get();
+    if (!st.chars[who]) return false;
+    const b = st.bonds[who] ?? NEW_BOND;
+    /* 이미 본 것은 다시 안 준다 — `read` 에 남는 것이 그 기록이다 */
+    if (b.read.includes(step)) return false;
+    const s2 = BOND_STEPS.find((x) => x.id === step);
+    if (!s2 || b.lv < s2.from) return false;
+    set({
+      dia: st.dia + STORY_DIA,
+      bonds: { ...st.bonds, [who]: { ...b, read: [...b.read, step] } },
+    });
+    return true;
   },
 
   applyEdits: () => {

@@ -45,6 +45,7 @@ import { sfx } from '@/ui/sfx';
 import { BORDER, C, FS, LINE, R, SP, SURF, WHITE } from '@/ui/theme';
 import { SubTabs } from './BottomNav';
 import { PartySlotPopup } from './PartySlotPopup';
+import { BondScreen } from './BondScreen';
 import { HeroManage } from './HeroManage';
 import { HeroBook } from './HeroBook';
 import { FormationPicker } from './FormationPicker';
@@ -133,6 +134,14 @@ export function HeroScreen() {
    * 그쪽이 그 값을 모르므로, 넘어가자마자 다시 첫 사람이 선다.
    */
   const [pick, setPick] = useState<CharId | null>(null);
+  /**
+   * 인연 화면을 보고 있는 사람 — `null` 이면 안 보고 있다.
+   *
+   * **화면이 들고 있는다.** 영웅 관리 안에 두면 갈래를 옮겼다 돌아올 때
+   * 인연 화면이 열린 채로 남거나, 반대로 닫힌 채로 돌아온다. 여기 두면
+   * 나가는 길이 하나다 (`onBack`).
+   */
+  const [bond, setBond] = useState<CharId | null>(null);
   /*
     ── 짜 둔 것을 보여 준다 ──
 
@@ -174,6 +183,18 @@ export function HeroScreen() {
         하는 자리인지가 흐려진다. 이름과 지갑만 남는다.
       */}
       <TopBar gates={false} />
+      {/*
+        ── 인연은 **화면을 통째로 덮는다** ──
+
+        갈래 줄(`SubTabs`)도 안 그린다. 저 줄은 "영웅 안에서 어디를 볼까" 를
+        말하는데, 인연은 그 안에서 한 사람을 붙들고 하는 일이라 갈래가 옆에
+        있으면 나가는 길이 둘이 된다 — 하나는 돌아가는 길이고 하나는 딴 데로
+        가는 길인데, 둘이 같이 있으면 어느 쪽이 "그만두기" 인지 흐려진다.
+      */}
+      {bond !== null ? (
+        <BondScreen who={bond} onBack={() => setBond(null)} />
+      ) : (
+      <>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: SP.md, paddingBottom: SP.xl }}
@@ -188,7 +209,7 @@ export function HeroScreen() {
         */}
         <T size={FS.hero} bold style={{ marginBottom: SP.sm }}>영웅</T>
 
-        {at === 'manage' && <HeroManage pick={pick} onPick={setPick} />}
+        {at === 'manage' && <HeroManage pick={pick} onPick={setPick} onBond={setBond} />}
         {at === 'book' && (
           <HeroBook
             onPick={(id) => { setPick(id); setAt('manage'); }}
@@ -249,6 +270,8 @@ export function HeroScreen() {
         아래인지, 왜 다섯 칸 띠와 다른 모양인지는 `SubTabs` 에 적어 두었다.
       */}
       <SubTabs at={at} tabs={SUBS} onGo={setAt} />
+      </>
+      )}
 
       {/* 칸을 누르면 그 위에 겹쳐 열린다 */}
       {/*

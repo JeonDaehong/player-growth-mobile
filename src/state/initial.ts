@@ -114,6 +114,10 @@ export const initial = (): GameState => {
     pendingFormation: null,
     /* 되돌릴 자리 — 영웅 탭에서 스킬을 만지는 순간 채워진다 (`GameState.treeMark`) */
     treeMark: null,
+    /* 인연은 **0 에서 시작한다** — 처음부터 아는 사이인 사람은 없다 */
+    bonds: {},
+    /* 선물은 아직 나오는 데가 없다 (쿠폰으로만) — 드롭이 붙으면 여기 기본값은 그대로 0 */
+    gifts: {},
     battle: newBattle(),
     /* 아무도 안 건드린 상태 — 읽을 때 기본값으로 떨어진다 (`cleanseOptOf`) */
     skillOpts: {},

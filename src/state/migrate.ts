@@ -19,6 +19,8 @@
  */
 const BOOK_START = { old: 40, fine: 8, prime: 2 } as const;
 import type { GameState } from './store';
+import type { BondState } from './types';
+import { BOND_CAP, BOND_STEPS, GIFT_IDS, GiftId } from '@/core/bond';
 import { BANK_CLOSE_SEQ, MARKET_CLOSE_SEQ, initial } from './initial';
 import { initCreatures } from '@/core/rush';
 import { COUPON_RESET_SEQ } from '@/core/coupons';
@@ -73,6 +75,45 @@ const isObj = (v: unknown): v is Bag =>
 
 /** 유한한 숫자만 (null · NaN · Infinity · 문자열 차단) */
 const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+
+/**
+ * ── 인연을 읽는다 ── 쓰레기가 섞여 있어도 안 무너지게.
+ *
+ * 레벨은 상한(`BOND_CAP`)까지만, 경험치는 0 아래로 안 내려간다. 다 본
+ * 이야기는 아는 단계 이름만 남긴다 — 저장본에 딴것이 적혀 있으면 화면이
+ * 없는 이야기를 다 본 것으로 친다.
+ */
+function bondsOf(got: unknown): Record<string, BondState> {
+  const out: Record<string, BondState> = {};
+  if (!got || typeof got !== 'object') return out;
+  const known = new Set(BOND_STEPS.map((x) => x.id as string));
+  for (const [id, v] of Object.entries(got as Record<string, unknown>)) {
+    if (!v || typeof v !== 'object') continue;
+    const b = v as Record<string, unknown>;
+    out[id] = {
+      lv: Math.max(0, Math.min(BOND_CAP, Math.floor(num(b.lv, 0)))),
+      exp: Math.max(0, Math.floor(num(b.exp, 0))),
+      talkDay: typeof b.talkDay === 'string' ? b.talkDay : '',
+      talks: Math.max(0, Math.floor(num(b.talks, 0))),
+      read: Array.isArray(b.read)
+        ? (b.read as unknown[]).filter((x): x is string => typeof x === 'string' && known.has(x))
+        : [],
+    };
+  }
+  return out;
+}
+
+/** 선물 창고 — 아는 종류만, 음수는 0 으로 */
+function giftsOf(got: unknown): Partial<Record<GiftId, number>> {
+  const out: Partial<Record<GiftId, number>> = {};
+  if (!got || typeof got !== 'object') return out;
+  const g = got as Record<string, unknown>;
+  for (const id of GIFT_IDS) {
+    const n = Math.max(0, Math.floor(num(g[id], 0)));
+    if (n > 0) out[id] = n;
+  }
+  return out;
+}
 const str = (v: unknown, d: string) => (typeof v === 'string' ? v : d);
 const arr = <T>(v: unknown, d: T[]): T[] => (Array.isArray(v) ? (v as T[]) : d);
 const bag = (v: unknown): Bag => (isObj(v) ? v : {});
@@ -411,6 +452,12 @@ export function migrateState(persisted: unknown): GameState {
       떠 있으면 그건 되돌리기가 아니라 사고다.
     */
     treeMark: null,
+    /*
+      ── 인연 ── 옛 저장본에는 없다. 없으면 **아무와도 아직 아무 사이가
+      아니다** — 0 으로 채워 두지 않고 키 자체를 비워 둔다 (`GameState.bonds`).
+    */
+    bonds: bondsOf(p.bonds),
+    gifts: giftsOf(p.gifts),
     /*
       게이지 시각이 없는 저장본(이 칸이 생기기 전)은 **지금부터** 센다.
       0 으로 두면 1970년부터 흐른 것이 되어 켜자마자 가득 차 있다.

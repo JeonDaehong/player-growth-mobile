@@ -7,6 +7,7 @@
  */
 import { fmtShort, g } from './currency';
 import { BOOKS, BOOK_IDS, BookId } from './exp';
+import { GIFT_IDS, GiftId } from './bond';
 import { ELIXIR_NAME } from './growth';
 import { MATERIAL_IDS, MaterialId } from './artisans';
 import { SCROLL_IDS, ScrollId } from './types';
@@ -32,6 +33,8 @@ export interface CouponDef {
   booksEach?: number;
   /** 강성의 영약 (`core/growth` 의 `AWAKEN_ELIXIR` 가 쓰는 것) */
   elixir?: number;
+  /** 선물 전 종류를 각각 이 개수만큼 (`core/bond` 의 `GIFTS`) */
+  giftsEach?: number;
   /**
    * 몇 번이든 다시 쓸 수 있는가.
    *
@@ -94,10 +97,11 @@ const LIVE_COUPONS: CouponDef[] = [
   */
   {
     code: 'rakdos',
-    label: '1,000만 골드 + 아이템 전 종류 100개',
+    label: '1,000만 골드 + 아이템 전 종류 100개 (선물 포함)',
     money: g(10_000_000),
     booksEach: 100,
     elixir: 100,
+    giftsEach: 100,
     repeatable: true,
   },
 ];
@@ -136,6 +140,13 @@ export function couponBooks(c: CouponDef): Partial<Record<BookId, number>> {
   return out;
 }
 
+/** 쿠폰이 지급할 선물 (종류별 개수) */
+export function couponGifts(c: CouponDef): Partial<Record<GiftId, number>> {
+  const out: Partial<Record<GiftId, number>> = {};
+  if (c.giftsEach) for (const id of GIFT_IDS) out[id] = c.giftsEach;
+  return out;
+}
+
 /** 쿠폰이 실제로 지급할 주문서 (scrollsEach 를 종류별로 펼친다) */
 export function couponScrolls(c: CouponDef): Partial<Record<ScrollId, number>> {
   const out: Partial<Record<ScrollId, number>> = {};
@@ -162,6 +173,7 @@ export function couponSummary(c: CouponDef): string {
   if (c.materialsEach) parts.push(`번스타인 재료 3종 ${c.materialsEach}개씩`);
   if (c.booksEach) parts.push(`${BOOKS.old.name.replace('낡은 ', '')} 3종 ${c.booksEach}권씩`);
   if (c.elixir) parts.push(`${ELIXIR_NAME} ${c.elixir}개`);
+  if (c.giftsEach) parts.push(`선물 ${GIFT_IDS.length}종 ${c.giftsEach}개씩`);
   return parts.join(' + ');
 }
 

@@ -31,6 +31,7 @@
  * 그러면 둘 중 한쪽에만 조건이 붙는 날이 온다.
  */
 import { BOOKS, BOOK_IDS, BookId } from './exp';
+import { GIFTS, GIFT_IDS, GiftId } from './bond';
 import { ELIXIR_NAME } from './growth';
 
 /** 가방의 갈래 */
@@ -49,7 +50,7 @@ export const BAG_EMPTY: Record<BagTab, string> = {
     + '레벨·성·스킬 트리가 그 자리를 대신합니다.',
   use: '쓸 것이 없습니다.\n경험의 서는 판을 깨면 나옵니다.',
   mat: '재료가 없습니다.\n강성의 영약은 10판부터 우두머리에게서 나옵니다.',
-  etc: '아직 없습니다.',
+  etc: '선물이 없습니다.\n인연을 쌓는 데 씁니다.',
 };
 
 /** 가방에 놓인 칸 하나 */
@@ -73,6 +74,7 @@ export interface BagRow {
 export interface BagOwned {
   books: Partial<Record<BookId, number>>;
   elixir: number;
+  gifts: Partial<Record<GiftId, number>>;
 }
 
 /**
@@ -112,6 +114,29 @@ export function bagOf(own: BagOwned): BagRow[] {
       art: 'elixir',
       n: el,
       where: '영웅 관리 · 각성',
+    });
+  }
+
+  /*
+    ── 선물은 **기타**다 ──
+
+    소비도 재료도 아니다. 쓰면 없어지지만 경험의 서처럼 부어 넣는 것이
+    아니라 **누구에게 무엇을 주느냐**가 곧 내용이라, 소비 칸에 섞으면
+    고르는 일이 아니게 된다 (`core/bond` 의 `GIFT_LIKE`).
+  */
+  for (const id of GIFT_IDS) {
+    const n = Math.max(0, Math.floor(own.gifts?.[id] ?? 0));
+    if (n <= 0) continue;
+    const d = GIFTS[id];
+    out.push({
+      key: id,
+      tab: 'etc',
+      name: d.name,
+      desc: d.desc,
+      set: 'gift_icon',
+      art: d.art,
+      n,
+      where: '영웅 관리 · 인연 · 선물주기',
     });
   }
 

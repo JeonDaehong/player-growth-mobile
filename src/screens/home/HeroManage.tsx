@@ -107,7 +107,8 @@ import { BORDER, FS, LINE, O, R, SP, SURF, WHITE } from '@/ui/theme';
 import { CharStats } from './CharStats';
 import { SkillPanel } from './SkillPanel';
 import { LevelUpPopup } from './LevelUpPopup';
-import { BondPopup } from './BondPopup';
+import { BondGauge } from './BondScreen';
+import { RARITY_BOND, bondStep } from '@/core/bond';
 import { SkillTreePopup } from './SkillTreePopup';
 import { WallpaperPopup } from './WallpaperPopup';
 import { hasWallpaper } from '@/ui/wallpapers';
@@ -724,16 +725,19 @@ function GrowBtn({ label, now, need, art, icon, on, onPress }: {
   );
 }
 
-export function HeroManage({ pick, onPick }: {
+export function HeroManage({ pick, onPick, onBond }: {
   /** 지금 보고 있는 사람. 없으면 첫 사람 */
   pick: CharId | null;
   onPick: (id: CharId) => void;
+  /** 하트를 눌렀다 — 인연 화면으로 넘어간다 (`BondScreen`) */
+  onBond: (id: CharId) => void;
 }) {
   const raw = useGame((s) => s.chars);
   const party = useGame((s) => s.pendingParty ?? s.party);
   const form = useGame((s) => s.formation);
   const money = useGame((s) => s.money);
   const elixir = useGame((s) => s.elixir);
+  const bonds = useGame((s) => s.bonds);
   const starUp = useGame((s) => s.starUp);
   const awaken = useGame((s) => s.awaken);
   const toast = useGame((s) => s.toast);
@@ -751,8 +755,6 @@ export function HeroManage({ pick, onPick }: {
   const [tree, setTree] = useState(false);
   /** 월페이퍼를 보고 있나 */
   const [paper, setPaper] = useState(false);
-  /* 인연 창 — 아직 자리만 잡아 둔 것이다 (`BondPopup`) */
-  const [bond, setBond] = useState(false);
   /** 레벨업 창을 열었나 (`LevelUpPopup`) */
   const [lvUp, setLvUp] = useState(false);
 
@@ -769,6 +771,8 @@ export function HeroManage({ pick, onPick }: {
   const id = owned[at];
   const c = id ? chars[id] : null;
   const d = c ? CHARS[c.id] : null;
+  /* 인연 레벨 — 아직 아무 사이도 아니면 0 이다 (`GameState.bonds`) */
+  const bondLv = (id ? bonds[id]?.lv : 0) ?? 0;
 
   /*
     ── 이 사람이 할 수 있는 말들 ── 첫 줄이 `quote` 다 (`core/lines`).
@@ -1112,6 +1116,31 @@ export function HeroManage({ pick, onPick }: {
               fill={d.rarity === 'mythic' || d.rarity === 'legendary'}
             />
             <T size={FS.hero} bold numberOfLines={1} style={{ marginTop: 2 }}>{d.name}</T>
+            {/*
+              ── 인연 ── 이름 바로 밑 (`core/bond`).
+
+              **단계 이름과 하트를 같이** 둔다. 하트만 있으면 몇 칸인지는
+              세어야 알고, 이름만 있으면 다음 칸이 코앞인지 한참인지 모른다.
+              둘이 붙어 있으면 한 번에 읽힌다.
+
+              누르면 인연 화면으로 간다 — 오른쪽 위의 하트 단추와 같은 곳이다.
+              여기서도 눌리는 까닭: 이 줄이 곧 그 화면의 요약이라, 더 보고
+              싶은 사람의 손가락이 제일 먼저 닿는 자리다.
+            */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${d.name}와의 인연 보기`}
+              onPress={() => { sfx('tap'); onBond(c.id); }}
+              style={({ pressed }) => ({
+                marginTop: 3,
+                opacity: pressed ? O.sub : 1,
+              })}
+            >
+              <Row gap={SP.xs} style={{ alignItems: 'center' }}>
+                <BondGauge lv={bondLv} cap={RARITY_BOND[d.rarity]} size={9} />
+                <T size={FS.tiny} dim="sub">{bondStep(bondLv).name}</T>
+              </Row>
+            </Pressable>
           </View>
         </View>
 
@@ -1136,7 +1165,7 @@ export function HeroManage({ pick, onPick }: {
           "고장" 인지 알 수가 없다.
         */}
         <View style={{ position: 'absolute', right: SP.sm, top: SP.sm, gap: SP.xs }}>
-          <ActBtn art="bond" label="인연" onPress={() => setBond(true)} />
+          <ActBtn art="bond" label="인연" onPress={() => onBond(c.id)} />
           {hasWallpaper(c.id) && (
             <ActBtn art="paper" label="월페이퍼" onPress={() => setPaper(true)} />
           )}
@@ -1349,7 +1378,6 @@ export function HeroManage({ pick, onPick }: {
 
       {/* 레벨업 창 — 경험의 서를 붓는다 (`LevelUpPopup`) */}
       {lvUp && <LevelUpPopup who={c.id} onClose={() => setLvUp(false)} />}
-      {bond && <BondPopup who={c.id} onClose={() => setBond(false)} />}
     </>
   );
 }

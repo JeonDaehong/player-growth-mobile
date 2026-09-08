@@ -25,6 +25,7 @@ import type {
   SlotId,
 } from '@/core/types';
 import type { BookId } from '@/core/exp';
+import type { GiftId } from '@/core/bond';
 import type { Equipped } from '@/core/tiers';
 import type { EnhanceOutcome, tryEnhance } from '@/core/enhance';
 import type { Ghost, StaminaKind } from '@/core/combat';
@@ -115,6 +116,20 @@ export interface ArenaState {
   rerollAt: number;
   /** 그 뒤로 돈 내고 다시 뽑은 횟수 (10분이 지나면 0으로 돌아간다) */
   rerolls: number;
+}
+
+/** 한 사람과의 인연 (`core/bond`) */
+export interface BondState {
+  /** 인연 레벨 (0 ~ 등급 상한). 0 이 시작이다 */
+  lv: number;
+  /** 다음 칸까지 쌓인 애정 경험치 */
+  exp: number;
+  /** 마지막으로 말을 건 날 (`core/events` 의 `dayKey`) */
+  talkDay: string;
+  /** 그날 몇 번 걸었나 — 날이 바뀌면 0 으로 읽는다 */
+  talks: number;
+  /** 다 본 이야기의 단계들 (`BondStep.id`) */
+  read: string[];
 }
 
 export interface GameState {
@@ -223,6 +238,22 @@ export interface GameState {
    * 골드·다이아처럼 무엇이든 살 수 있는 것이 아니라 쓸 데가 하나뿐이다.
    */
   books: Record<BookId, number>;
+  /**
+   * ── 선물 ── 인연에 쓰는 물건 (`core/bond` 의 `GIFTS`).
+   *
+   * 가방의 **기타** 칸에 들어간다 (`core/bag`). 소비도 재료도 아니어서다 —
+   * 쓰면 없어지지만 그 사람에게 무엇을 주느냐가 곧 내용이라, 경험의 서처럼
+   * "부어 넣는 것" 과 같은 칸에 두면 고르는 일이 아니게 된다.
+   */
+  gifts: Partial<Record<GiftId, number>>;
+  /**
+   * ── 인연 ── 사람마다 하나씩 (`core/bond`).
+   *
+   * 키가 없으면 **0 레벨**이다. 처음부터 넷을 다 적어 두지 않는 까닭:
+   * 아직 안 만난 사람의 인연을 0 으로 적어 두면, 뽑았을 때 "원래 있던
+   * 사이" 와 구분이 안 된다.
+   */
+  bonds: Record<string, BondState>;
   /**
    * 온라인 게이지를 **마지막으로 비운 시각** (ms).
    *
@@ -798,6 +829,23 @@ export interface GameActions {
   applyEdits: () => void;
   /** 만진 것을 전부 물린다 — 예약한 편성도, 찍은 스킬도 (`treeMark`) */
   revertEdits: () => void;
+  /**
+   * ── 말을 건다 ── 하루 두 번까지 (`core/bond` 의 `TALK_A_DAY`).
+   *
+   * 고른 선택지의 값이 그대로 애정 경험치가 된다. 나쁜 것을 골라도 **레벨은
+   * 안 내려간다** — 쌓아 둔 것만 깎인다 (`bondFeed`).
+   *
+   * @returns 오늘 더 걸 수 없으면 `no`, 그 밖에는 오른 칸 수
+   */
+  talkBond: (who: CharId, choice: number) => 'no' | { up: number; exp: number };
+  /** 선물을 준다 — 없으면 아무 일도 안 한다 (`core/bond` 의 `giftExp`) */
+  giveGift: (who: CharId, gift: GiftId) => 'none' | { up: number; exp: number };
+  /**
+   * 이야기를 다 봤다 — 그 단계의 보상을 받는다 (다이아 `STORY_DIA`).
+   *
+   * 이미 본 것은 다시 안 준다. `read` 에 남는 것이 그 기록이다.
+   */
+  readStory: (who: CharId, step: string) => boolean;
   /** 가득 찬 게이지를 받는다 (`core/idle`) */
   claimIdle: () => boolean;
   /** 다이아로 게이지를 그 자리에서 채워 받는다 — 하루 세 번 */

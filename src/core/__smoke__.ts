@@ -3709,17 +3709,108 @@ console.log(NL + '── 버프 · 디버프의 셈 ──');
   }
 }
 
+console.log(NL + '── 인연 ──');
+{
+  const bd = require('./bond') as typeof import('./bond');
+
+  /*
+    ── 상한이 등급으로 갈린다 ── 성 상한과 같은 모양이다.
+
+    낮은 등급은 끝까지 가도 `우정` 에서 멈춘다 — 그게 등급이 뜻하는 바다.
+  */
+  ok('상한: 일반 3 · 희귀 6 · 영웅 이상 10',
+    bd.RARITY_BOND.common === 3 && bd.RARITY_BOND.rare === 6
+    && bd.RARITY_BOND.epic === 10 && bd.RARITY_BOND.mythic === 10);
+  ok('일반은 우정에서 멈춘다', bd.bondStepCap('common').id === 'friend',
+    bd.bondStepCap('common').name);
+  ok('영웅은 애정까지 간다', bd.bondStepCap('epic').id === 'love');
+
+  /* 구간 — 0~2 어색 · 3~5 우정 · 6~9 신뢰 · 10 애정 */
+  {
+    const at = (lv: number) => bd.bondStep(lv).name;
+    const want = ['어색한 관계', '어색한 관계', '어색한 관계', '우정', '우정', '우정',
+      '신뢰', '신뢰', '신뢰', '신뢰', '애정'];
+    const got = Array.from({ length: 11 }, (_v, i) => at(i));
+    ok('단계 구간이 사양대로', got.join() === want.join(), got.join(' '));
+  }
+
+  /* 0 에서 시작한다 — 처음부터 아는 사이인 사람은 없다 */
+  ok('인연은 0 에서 시작', bd.bondStep(0).id === 'awkward');
+
+  /*
+    ── 나쁜 것을 골라도 **레벨은 안 내려간다** ──
+
+    며칠 걸려 올린 칸이 한 번 잘못 누른 것으로 내려가면, 사람은 선택지를
+    고르는 대신 정답을 찾아보고 나서 누른다.
+  */
+  {
+    const g = bd.bondFeed(3, 5, bd.TALK_BAD, 10);
+    ok('잘못 골라도 칸은 안 내려간다', g.lv === 3 && g.exp === 0, `Lv${g.lv} +${g.exp}`);
+  }
+  /* 남는 것은 쌓인다 */
+  {
+    const need = bd.bondNeed(0);
+    const g = bd.bondFeed(0, 0, need + 7, 10);
+    ok('한 칸 오르고 남는 것은 쌓인다', g.lv === 1 && g.exp === 7 && g.up === 1,
+      `Lv${g.lv} +${g.exp}`);
+  }
+  /* 상한에서는 안 쌓는다 */
+  {
+    const g = bd.bondFeed(3, 0, 9999, 3);
+    ok('상한에서 멈추고 안 쌓는다', g.lv === 3 && g.exp === 0 && g.up === 0);
+  }
+
+  /*
+    ── 선물 ── 사람마다 좋아하는 것 하나, 싫어하는 것 하나 (리안느만 없다).
+
+    표에 없으면 1 배다. 그래서 선물이 늘어도 이 표는 안 자란다.
+  */
+  ok('이졸데: 딸기맛 쿠키 2배 · 호두 파이 감소',
+    bd.giftMul('knightgirl', 'gf_cookie') === 2
+    && bd.giftMul('knightgirl', 'gf_pie') === -1);
+  ok('비앙카: 당근 케이크 2배 · 토끼 고기 감소',
+    bd.giftMul('bunnyaxe', 'gf_carrot') === 2
+    && bd.giftMul('bunnyaxe', 'gf_rabbit') === -1);
+  ok('리안느: 진귀한 꽃 2배 · 싫어하는 것 없음',
+    bd.giftMul('elfarcher', 'gf_flower') === 2
+    && bd.GIFT_IDS.every((g) => bd.giftMul('elfarcher', g) >= 1));
+  ok('아녜스: 성서 2배 · 목탁 감소',
+    bd.giftMul('nun', 'gf_bible') === 2 && bd.giftMul('nun', 'gf_gong') === -1);
+  ok('나머지는 다 1배',
+    bd.giftMul('knightgirl', 'gf_tea') === 1 && bd.giftMul('nun', 'gf_carrot') === 1);
+  ok('싫어하는 선물은 애정이 깎인다', bd.giftExp('nun', 'gf_gong') < 0,
+    String(bd.giftExp('nun', 'gf_gong')));
+
+  /* 대화 — 넷 다 셋씩, 선택지는 늘 셋이고 값이 셋으로 고정이다 */
+  {
+    let bad = '';
+    for (const [who, list] of Object.entries(bd.TALKS)) {
+      if (list.length < 3) bad = bad || `${who} 대화가 ${list.length}개`;
+      for (const t of list) {
+        if (t.choices.length !== 3) bad = bad || `${who} 선택지가 ${t.choices.length}개`;
+        const vals = t.choices.map((x) => x.exp).sort((a, b) => a - b);
+        if (vals.join() !== [bd.TALK_BAD, bd.TALK_MEH, bd.TALK_GOOD].join()) {
+          bad = bad || `${who} 값이 ${vals.join()}`;
+        }
+      }
+    }
+    ok('대화는 넷 다 셋씩 · 선택지 셋 · 값 셋 고정', !bad, bad || '12가지');
+  }
+  ok('하루 두 번', bd.TALK_A_DAY === 2);
+  ok('이야기 보상은 다이아 100', bd.STORY_DIA === 100);
+}
+
 console.log(NL + '── 가방 ──');
 {
   const bg = require('./bag') as typeof import('./bag');
-  const rows = bg.bagOf({ books: { old: 40, fine: 8, prime: 0 }, elixir: 3 });
-  ok('0 개는 안 늘어놓는다', !rows.some((r) => r.n <= 0) && rows.length === 3,
+  const rows = bg.bagOf({ books: { old: 40, fine: 8, prime: 0 }, elixir: 3, gifts: { gf_cookie: 5 } });
+  ok('0 개는 안 늘어놓는다', !rows.some((r) => r.n <= 0) && rows.length === 4,
     rows.map((r) => `${r.name}×${r.n}`).join(' · '));
   ok('경험의 서는 소비, 영약은 재료',
     bg.bagIn(rows, 'use').length === 2 && bg.bagIn(rows, 'mat').length === 1);
   ok('빈 갈래에도 할 말이 있다',
     bg.BAG_TABS.every((t) => !!bg.BAG_EMPTY[t.id]));
-  ok('아무것도 없으면 빈 가방', bg.bagOf({ books: {}, elixir: 0 }).length === 0);
+  ok('아무것도 없으면 빈 가방', bg.bagOf({ books: {}, elixir: 0, gifts: {} }).length === 0);
 }
 
 console.log(NL + '── 경험의 서 ──');
