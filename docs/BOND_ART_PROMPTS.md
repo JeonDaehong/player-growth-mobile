@@ -288,8 +288,8 @@ LAYOUT:
 | `knightgirl_love` | 임무를 끝내고 노을 아래 웃는다 |
 | `bunnyaxe_awkward` | 술집에서 진상 손님을 혼낸다 |
 | `bunnyaxe_friend` | 제 특제 칵테일을 먹어 보라고 내민다 |
-| `bunnyaxe_trust` | 울던 자신을 달래 준 것이 고맙다 |
-| `bunnyaxe_love` | 고백 직전, 방문 앞에 서 있다 |
+| `bunnyaxe_trust` | 고백하려 방문 앞에 서 있다 |
+| `bunnyaxe_love` | 손을 꼼지락거리며 부끄럽게 웃는다 |
 | `elfarcher_awkward` | 나무 위에서 내려다본다 |
 | `elfarcher_friend` | 쑥스러워하며 손을 내민다 |
 | `elfarcher_trust` | 던전에서 물고기를 구우며 배고파한다 |
@@ -474,9 +474,12 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. So
 > **가슴·엉덩이·허벅지를 강조하지 말 것**을 따로 적어 두었습니다 — 그 옷을
 > 입은 채로도 얼굴이 주인공이어야 합니다.
 
-> 넷이 안 겹치게 갈라 둔 것: 1번은 **옆을 보고**(손님) 전신에 가깝고,
-> 2번은 **눈을 맞추고** 물건을 들이밀며 가까이, 3번은 **울다 웃는 얼굴**
-> 클로즈업, 4번은 **문을 보고** 있어 시선이 아예 없습니다.
+> 넷이 안 겹치게 갈라 둔 것: 1번은 **옆을 보고**(손님) 전신, 2번은 **눈을
+> 맞추고** 잔을 들이밀며 가슴 위, 3번은 **문을 보고** 있어 시선이 아예 없는
+> 전신, 4번은 **눈을 맞추고** 손을 꼼지락거리는 가슴 위입니다.
+>
+> 2번과 4번이 둘 다 눈을 맞추지만, 2번은 **잔이 주인공**이고 활짝 웃는
+> 얼굴이며 4번은 **손이 주인공**이고 참으려다 새어 나오는 웃음입니다.
 
 **`assets/wallpaper/bunnyaxe_awkward.jpg`**
 
@@ -534,47 +537,59 @@ Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Wa
 A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
 
 ART DIRECTION:
-- Close character portrait. Her face is the whole picture; the doorway and rainy yard behind are soft and simple.
-- Appealing modern anime face: large watery eyes with bright highlights, soft cheeks.
-- Clean inked linework, cel shading, light screentone. Tender and warm — quiet, not dramatic.
-
-CONTENT RULES (strict — her outfit is a costume, not the subject):
-- Her bunny-suit is a stage costume. Draw it accurately but do NOT sexualize it.
-- This is a tight FACE shot; almost none of the costume is in frame anyway. NO chest emphasis, NO low angles, NO wet-clothing rendering.
-
-CHARACTER — BIANCA:
-Short tousled bob — here messy, the bunny-ear headband knocked crooked — freckles. She has a rough blanket or a coat pulled around her shoulders over the costume, so mostly her face, the crooked ears and the blanket show. Her axe lies on the ground beside her.
-
-SCENE — THANK YOU FOR STAYING:
-Chest-up, very close, sitting on the back steps of the tavern at night. She has clearly been crying — eyes and nose red, lashes wet and clumped, a tear track on one cheek — but she has just looked up at the viewer and is smiling through it: a crumpled, grateful, slightly embarrassed smile. One hand wipes her eye with the back of her wrist; the other is half-raised toward the viewer. Warm light from the doorway behind her; the yard beyond is dark and simple.
-
-RENDERING:
-Grayscale only, no colour. Clean ink linework, cel shading, fine screentone. Soft key light from behind, bright white specular dots in her wet eyes, a few fine rain streaks, background softly blurred.
-```
-
-**`assets/wallpaper/bunnyaxe_love.jpg`**
-
-```
-A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
-
-ART DIRECTION:
 - The CHARACTER fills most of the frame; the corridor is simple and low-contrast.
 - Appealing modern anime face with large expressive eyes; heavy blush drawn with manga blush lines.
 - Clean inked linework, cel shading, light screentone. Sweet and charming, gently funny.
 
 CONTENT RULES (strict — her outfit is a costume, not the subject):
-- Her bunny-suit is a stage costume. Draw it accurately but do NOT sexualize it.
+- Her bunny-suit is a stage costume she wears for work. Draw it accurately but do NOT sexualize it.
 - NO chest emphasis, NO butt or thigh focus, NO low camera angles, NO suggestive posing.
-- She is turned toward the DOOR, not toward the viewer — the camera catches her from the side.
+- She is turned toward the DOOR, not toward the viewer — the camera catches her from the side, and she never makes eye contact.
 
-CHARACTER — BIANCA:
-Short tousled bob, freckles. BUNNY-SUIT costume — but tonight it is neat and pressed, the bowtie straightened, her hair brushed, a small ribbon tied to one bunny ear. Sheer black legwear and tall lace-up heeled boots. No pauldron, no axe anywhere: she left the armour behind on purpose.
+CHARACTER — BIANCA, a tavern girl who fights:
+A lively young woman with a short tousled bob and freckles. BUNNY-SUIT stage costume: a bunny-ear headband, a black strapless leotard with a small bowtie at the collar, a fluffy round tail, sheer black legwear, tall lace-up heeled boots — but tonight it is neat and pressed, the bowtie straightened, her hair brushed, a small ribbon tied to one bunny ear. No pauldron, no axe anywhere: she left the armour behind on purpose.
 
-SCENE — OUTSIDE THE DOOR, ABOUT TO CONFESS:
-Full figure seen from the side, standing in a narrow lamp-lit corridor with her back lightly against the wall beside a closed wooden door. She stares at the DOOR, not at the viewer. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, eyes squeezed half-shut, mouth caught between a nervous grimace and an enormous helpless smile — she has been standing here a while. One boot is up on its toe. Her shadow stretches long down the corridor.
+SCENE — OUTSIDE THE DOOR, ABOUT TO KNOCK:
+Full figure seen from the side, standing in a narrow lamp-lit corridor with her back lightly against the wall beside a closed wooden door. She stares at the DOOR, not at the viewer. Both hands are clutched together at her chest around a small wrapped parcel. Her face is bright red, eyes squeezed half-shut, mouth caught between a nervous grimace and an enormous helpless smile — she has been standing here a while and cannot make herself knock. One boot is up on its toe. Her shadow stretches long down the corridor.
 
 RENDERING:
 Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Heavy blush hatching plus two small blush lines, one sweat drop. A single warm lamp, soft falloff, corridor drawn simply.
+```
+
+**`assets/wallpaper/bunnyaxe_love.jpg`**
+
+> 3번과 안 겹치게: 3번은 **문을 보고** 전신에 긴장, 4번은 **눈을 맞추고**
+> 가슴 위로 가까이, 그리고 행복이 새어 나옵니다.
+
+```
+A Japanese light-novel INTERIOR ILLUSTRATION in black and white (monochrome manga insert art), vertical 9:16. NO TEXT anywhere — no captions, no signatures, no watermarks, no letters or numerals.
+
+ART DIRECTION:
+- Close character portrait. Her FACE and her FIDGETING HANDS are the whole picture; the room behind her is soft, warm and low-contrast.
+- Appealing modern anime face: large expressive eyes with bright highlights, soft round cheeks, heavy manga blush.
+- Clean inked linework, cel shading, light screentone. Sweet, warm, a little bashful — the reader should want to smile back.
+
+CONTENT RULES (strict — her outfit is a costume, not the subject):
+- Her bunny-suit is a stage costume. Draw it accurately but do NOT sexualize it.
+- NO chest emphasis, NO butt or thigh focus, NO low camera angles, NO suggestive posing.
+- This is a tight chest-up shot — most of the costume is out of frame anyway. The picture is her face and her hands.
+
+CHARACTER — BIANCA:
+Short tousled bob, freckles. BUNNY-SUIT costume: bunny-ear headband, black strapless leotard with a small bowtie at the collar. The bunny ears are drooping slightly, which makes her look even more bashful. No pauldron, no axe.
+
+POSE AND EXPRESSION — THIS IS THE WHOLE PICTURE:
+She is EMBARRASSED AND QUIETLY HAPPY at the same time, and cannot keep still.
+- Both hands are up near her chest, FINGERS FIDGETING — index fingers pressed together and poking at each other, knuckles a little tense. Draw the hands clearly and fairly large; the fidget is half the picture.
+- Shoulders drawn up and in, head tilted down a little, so she is looking UP at the viewer through her lashes — she IS making eye contact, shyly.
+- Cheeks deeply flushed with manga blush lines across the nose; a tiny sweat drop at the temple.
+- Mouth pulled into a small closed-lip smile that keeps escaping into a wider one — she is trying to hold it in and failing.
+- Read her as "…뭐, 뭘 봐. 그런 거 아니거든." — flustered, pleased, completely transparent about it. She is normally loud and confident, and that is exactly why this is charming.
+
+SCENE — AFTER, IN THE QUIET TAVERN:
+Chest-up, close, facing the viewer. She stands in the empty tavern after closing, a lamp behind her throwing a warm glow; chairs are up on the tables, drawn softly and simply. One strand of hair has fallen across her cheek. A couple of small manga sparkle marks near her shoulders.
+
+RENDERING:
+Grayscale only, no colour. Clean ink linework, cel shading, light screentone. Soft warm key light from behind and to one side, gentle bloom, delicate blush hatching, bright highlights in the eyes, background softly blurred.
 ```
 
 ---
