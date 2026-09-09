@@ -142,7 +142,16 @@ export function ItemScreen() {
       <TopBar gates={false} />
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: SP.md, paddingBottom: SP.xl }}
+        /*
+          **속이 화면만큼 자란다** (`flexGrow`). 굴러갈 것이 없을 때 속은
+          제 내용만큼만 크므로, 그 안에서 아무리 가운데를 잡아 봐야 글자
+          한 줄 높이의 가운데다 — 화면 위쪽에 붙어 보이던 것이 그것이다.
+        */
+        contentContainerStyle={{
+          padding: SP.md,
+          paddingBottom: SP.xl,
+          flexGrow: 1,
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* 굴려 내려가면 아래 띠가 화면 밖이라, 여기가 어디인지 맨 위에서 한 번 말한다 */}
@@ -163,10 +172,14 @@ export function ItemScreen() {
             못했다.
 
             상자도 걷고 글자만 흐리게 놓는다. 없다는 말은 조용해야 한다.
+
+            **남은 자리의 한가운데**에 놓는다 (`flex: 1`). 위쪽 제목 줄은
+            그대로 맨 위에 있고, 그 아래 빈 자리를 이 상자가 다 차지한 뒤
+            그 안에서 가운데를 잡는다.
           */
-          <T size={FS.body} dim="dim" center style={{ paddingVertical: SP.xl }}>
-            {BAG_EMPTY[at]}
-          </T>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <T size={FS.body} dim="dim" center>{BAG_EMPTY[at]}</T>
+          </View>
         ) : (
           here.map((r) => (
             <BagCard key={r.key} row={r} onPress={() => setOpen(r.key)} />
