@@ -207,7 +207,6 @@ export function FormationPicker() {
     아래에 지금 싸우는 대형을 따로 한 줄 적는다. 둘이 다를 때만 뜬다.
   */
   const form = useGame((s) => s.pendingFormation ?? s.formation);
-  const live = useGame((s) => s.formation);
   const setFormation = useGame((s) => s.setFormation);
   /** 규칙을 펴 놓았나 (`FormationHelp`) */
   const [help, setHelp] = useState(false);
@@ -278,7 +277,20 @@ export function FormationPicker() {
                 },
               ]}
             >
-              <T size={FS.label} bold dim={on ? 'full' : 'sub'}>{id}</T>
+              {/*
+                ── 이름이 위, 번호가 아래 ──
+
+                여태 `3-1` 하나만 적었다. 저건 앞뒤 인원을 말하는 것이라
+                정확하지만, 고르는 사람이 알고 싶은 것은 인원이 아니라
+                **그래서 무엇이 되나** 다 (`core/party` 의 `FormationDef.name`).
+
+                번호도 지우지 않는다. 아래 그림이 그 배치를 그리고 있으므로,
+                번호가 그림과 이름 사이를 잇는다.
+              */}
+              <T size={FS.label} bold dim={on ? 'full' : 'sub'}>
+                {FORMATIONS[id].name}
+              </T>
+              <T size={9} dim="dim">{id}</T>
               <Grid form={id} inv={false} />
             </Pressable>
           );
@@ -292,14 +304,11 @@ export function FormationPicker() {
         말인데 **한 번 읽으면 다시 안 읽는 종류**라, 대형 칸 셋보다 긴 글이
         늘 밑에 붙어 있었다. 위 물음표로 옮겼다 (`FormationHelp`).
 
-        지금 판과 다르다는 줄만 남는다. 저건 규칙이 아니라 **지금 벌어지고
-        있는 일**이라, 물어봐야 나오면 안 된다.
+        지금 판과 다르다는 줄도 걷었다. 언제 들어가는지는 **나갈 때 묻는
+        창**이 말한다 (`ApplyPopup`) — 거기서 적용을 누르면 그 자리에서 판이
+        다시 서므로, 여기서 미리 알려 줄 것이 없어졌다. 남겨 두면 두 곳이
+        같은 말을 하는데 한쪽은 이미 틀린 말이다.
       */}
-      {form !== live && (
-        <T size={FS.tiny} dim="dim">
-          {`지금 판은 ${live} 로 싸우는 중입니다 — 다음 판부터 ${form} 이 들어갑니다`}
-        </T>
-      )}
 
       <FormationHelp visible={help} onClose={() => setHelp(false)} />
     </View>
@@ -366,7 +375,7 @@ function FormationHelp({ visible, onClose }: { visible: boolean; onClose: () => 
         const d = FORMATIONS[id];
         return (
           <Row key={id} between style={{ paddingVertical: 2 }}>
-            <T size={11} bold>{id}</T>
+            <T size={11} bold>{`${d.name} (${id})`}</T>
             <T size={10} dim="sub">
               {`앞 ${d.front}명 ${Math.round(d.frontAim * 100)}% · `
                 + `뒤 ${PARTY_SIZE - d.front}명 ${Math.round(d.backAim * 100)}%`}

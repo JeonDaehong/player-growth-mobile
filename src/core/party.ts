@@ -293,6 +293,17 @@ export const FORM_LANES = 5;
 
 export interface FormationDef {
   id: FormationId;
+  /**
+   * 화면에 뜨는 이름 — `공격대형` · `밸런스대형` · `방어대형`.
+   *
+   * 여태 `3-1` 처럼 번호로만 불렀다. 저건 **앞뒤 인원**을 말하는 것이라
+   * 정확하지만, 고르는 사람이 알고 싶은 것은 인원이 아니라 **그래서 무엇이
+   * 되나** 다 — 뒤에 셋을 세우면 세지고 앞에 셋을 세우면 단단해진다
+   * (`core/chars` 의 `ROW_MOD`).
+   *
+   * 번호는 그대로 둔다. 이름 옆에 작게 붙어서 자리 배치를 말한다.
+   */
+  name: string;
   /** 뒷줄 인원 */
   back: number;
   /** 앞줄 인원 */
@@ -334,6 +345,8 @@ export interface FormationDef {
 export const FORMATIONS: Record<FormationId, FormationDef> = {
   '3-1': {
     id: '3-1',
+    /* 뒤에 셋 — 뒷줄은 공격이 1.15배다 (`ROW_MOD`) */
+    name: '공격대형',
     back: 3,
     front: 1,
     backLanes: [0, 2, 4],
@@ -344,6 +357,7 @@ export const FORMATIONS: Record<FormationId, FormationDef> = {
   },
   '2-2': {
     id: '2-2',
+    name: '밸런스대형',
     back: 2,
     front: 2,
     backLanes: [1, 3],
@@ -354,6 +368,8 @@ export const FORMATIONS: Record<FormationId, FormationDef> = {
   },
   '1-3': {
     id: '1-3',
+    /* 앞에 셋 — 앞줄은 방어와 마저가 1.5배다 (`ROW_MOD`) */
+    name: '방어대형',
     back: 1,
     front: 3,
     backLanes: [2],
