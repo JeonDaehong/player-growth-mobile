@@ -8,9 +8,9 @@
  *
  * ## 갈래 넷은 **비어도 남는다**
  *
- * 장비 칸에 아무것도 없다. 지우지 않고 남긴 뒤 그 자리에 까닭을 적는다
- * (`BAG_EMPTY`) — "장비가 없다" 와 "이 게임에 장비라는 것이 없다" 는 다른
- * 말이고, 빈 칸만 있으면 사람은 앞엣것으로 읽는다.
+ * 장비 칸에 아무것도 없다. 지우지 않고 남기고 `아직 장비가 없습니다` 한
+ * 줄만 적는다 (`BAG_EMPTY`) — 칸이 있는 것과 없는 것은 다른 말이고, 칸이
+ * 있으면 "언젠가 여기 들어온다" 가 저절로 읽힌다.
  *
  * ## 여기서 **쓰지는 않는다**
  *
@@ -155,20 +155,18 @@ export function ItemScreen() {
 
         {here.length === 0 ? (
           /*
-            ── 빈 갈래 ── **까닭을 적는다.**
+            ── 빈 갈래 ── **한 줄만.**
 
-            빈 상자만 두면 "아직 안 만든 화면" 으로 읽힌다. 무엇이 여기
-            들어오고 어디서 나오는지를 적어 두면, 비어 있는 것 자체가
-            "가서 구해 오라" 는 말이 된다.
+            테두리 친 상자에 넉 줄짜리 안내를 담았었다 (무엇이 들어오고
+            어디서 나오는지까지). 빈 화면을 설명하려던 것인데, 실제로는
+            **아무것도 없는 자리에 놓인 제일 큰 덩어리**가 되어 없느니만
+            못했다.
+
+            상자도 걷고 글자만 흐리게 놓는다. 없다는 말은 조용해야 한다.
           */
-          <View
-            style={[
-              BORDER,
-              { padding: SP.lg, alignItems: 'center', backgroundColor: SURF.up },
-            ]}
-          >
-            <T size={FS.body} dim="sub" center>{BAG_EMPTY[at]}</T>
-          </View>
+          <T size={FS.body} dim="dim" center style={{ paddingVertical: SP.xl }}>
+            {BAG_EMPTY[at]}
+          </T>
         ) : (
           here.map((r) => (
             <BagCard key={r.key} row={r} onPress={() => setOpen(r.key)} />
