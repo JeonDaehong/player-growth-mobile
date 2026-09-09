@@ -31,13 +31,20 @@ export const WALLPAPERS: Record<string, number> = {
   bunnyaxe_friend: require('../../assets/wallpaper/bunnyaxe_friend.jpg'),
   bunnyaxe_trust: require('../../assets/wallpaper/bunnyaxe_trust.jpg'),
   bunnyaxe_love: require('../../assets/wallpaper/bunnyaxe_love.jpg'),
+  elfarcher_awkward: require('../../assets/wallpaper/elfarcher_awkward.jpg'),
+  elfarcher_friend: require('../../assets/wallpaper/elfarcher_friend.jpg'),
+  elfarcher_trust: require('../../assets/wallpaper/elfarcher_trust.jpg'),
+  elfarcher_love: require('../../assets/wallpaper/elfarcher_love.jpg'),
   nun_awkward: require('../../assets/wallpaper/nun_awkward.jpg'),
+  nun_friend: require('../../assets/wallpaper/nun_friend.jpg'),
+  nun_trust: require('../../assets/wallpaper/nun_trust.jpg'),
+  nun_love: require('../../assets/wallpaper/nun_love.jpg'),
   /*
-    리안느 넉 장과 아녜스 석 장이 남았다. 프롬프트는 다 있다
-    (`docs/BOND_ART_PROMPTS.md` §B4) — 들어오는 대로 한 줄씩 더한다.
+    **넷 × 넉 장이 다 찼다.** 사람이 늘면 넉 줄씩 더한다 — 프롬프트 짜는 법은
+    `docs/BOND_ART_PROMPTS.md` §B4 에 있다.
 
-    **한 장씩 들어와도 된다.** `allWallpapers` 는 없는 열쇠를 걸러 내므로
-    (시험용 넘겨 보기), 아녜스처럼 1장만 있어도 그 한 장만 뜬다.
+    한 장씩 들어와도 된다: `allWallpapers` 가 없는 열쇠를 걸러 내므로, 두
+    장만 있는 사람은 그 둘만 뜬다.
   */
 };
 

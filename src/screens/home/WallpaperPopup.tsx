@@ -1,5 +1,5 @@
 /**
- * 월페이퍼 — **화면을 꽉 채워서** 본다. 여러 장이면 손가락으로 넘긴다.
+ * 월페이퍼 — **화면을 꽉 채워서** 본다. 여러 장이면 아래 단추로 고른다.
  *
  * ## 왜 팝업(`Popup`)을 안 쓰나
  *
@@ -7,16 +7,17 @@
  * 거기 넣으면 상자 안의 작은 그림이 되어, 월페이퍼를 보는 것이 아니라
  * **썸네일을 보는 것**이 된다. 1672x941 짜리를 받아 놓고 그러면 볼 이유가 없다.
  *
- * ## 화살표를 걷고 **밀어서** 넘긴다
+ * ## 미는 것을 걷었다 — **단추만 남긴다**
  *
- * 좌우에 `‹ ›` 를 붙여 두었었다. 그런데 이 화면은 **아무 데나 누르면 닫히는**
- * 화면이라, 화살표를 누르면 넘어가면서 동시에 닫으려 들었다 — 넘어갔다
- * 도로 돌아오는 것처럼 보인 것이 그것이다. 누름이 위로 새는 것을 막아
- * 보려 했지만 그 방법이 자리마다 다르게 먹는다.
+ * 두 번 고쳤다. 처음엔 좌우 화살표였는데, 이 화면은 아무 데나 누르면 닫히는
+ * 화면이라 화살표를 누르면 넘어가면서 동시에 닫으려 들었다. 그래서 가로로
+ * 미는 판으로 바꿨더니 이번엔 관성이 살아서 한 번에 두세 장씩 지나쳤다 —
+ * `disableIntervalMomentum` 까지 걸어도 웹에서는 미덥지 않았다.
  *
- * 그래서 **누르는 일을 하나로 줄였다**: 누르면 닫힌다, 넘기려면 민다.
- * 가로로 굴러가는 판을 한 장씩 물리므로 (`pagingEnabled`) 반쯤 밀면 제자리로
- * 돌아가고 충분히 밀면 다음 장이다 — 손가락이 이미 아는 규칙이다.
+ * 세 번째는 **미는 일을 아예 없앤다.** 그림은 한 장만 그리고, 넘기는 것은
+ * 아래 단추가 한다. 손가락이 그림 위에서 할 수 있는 일이 "닫기" 하나뿐이라
+ * 부딪힐 것이 없고, 어느 장으로 갈지도 한 번에 고른다 — 세 장을 밀어야
+ * 닿던 자리가 한 번에 닿는다.
  *
  * ## 잘리지 않게 담는다
  *
@@ -24,15 +25,28 @@
  * 있으리라는 보장이 없으므로 얼굴이 잘릴 수 있다. `contain` 으로 **다 보이게**
  * 담고 남는 자리는 검게 둔다 — 이 게임의 바탕이 어차피 검다.
  */
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  Image, Modal, Pressable, ScrollView, View, useWindowDimensions,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, Modal, Pressable, View, useWindowDimensions } from 'react-native';
 import { WALLPAPERS } from '@/ui/wallpapers';
+import { BOND_STEPS } from '@/core/bond';
 import { T } from '@/ui/atoms';
 import { sfx } from '@/ui/sfx';
 import { BLACK, C, FS, LINE, O, SP, SURF, WHITE } from '@/ui/theme';
 import { useBackClose } from '@/ui/backGuard';
+
+/** 위 띠의 높이 — 그림이 그만큼 물러난다 */
+const BAR_H = 46;
+
+/**
+ * 이 열쇠가 무슨 장면인가 — `knightgirl_love` → `애정`.
+ *
+ * 단계 이름을 `core/bond` 에서 가져온다. 여기 또 적으면 인연 화면의 이름과
+ * 이 띠의 이름이 갈릴 수 있는데, 같은 것을 두 이름으로 부르는 셈이 된다.
+ */
+const stepName = (key: string): string => {
+  const tail = key.split('_')[1] ?? '';
+  return BOND_STEPS.find((s) => s.id === tail)?.name ?? '';
+};
 
 export function WallpaperPopup({ charId, keys, name, onClose }: {
   /** 볼 것 하나. `null` 이면 안 뜬다 (`keys` 를 주면 그쪽이 이긴다) */
@@ -45,12 +59,11 @@ export function WallpaperPopup({ charId, keys, name, onClose }: {
    * (`ui/wallpapers` 의 `ownedWallpaper`).
    */
   keys?: readonly string[];
-  /** 위에 작게 적는 이름 */
+  /** 위 띠에 적는 사람 이름 */
   name?: string;
   onClose: () => void;
 }) {
   const win = useWindowDimensions();
-  const roll = useRef<ScrollView | null>(null);
   /** 몇 번째를 보고 있나 */
   const [at, setAt] = useState(0);
 
@@ -61,13 +74,8 @@ export function WallpaperPopup({ charId, keys, name, onClose }: {
   /*
     다른 사람을 열면 처음으로 돌린다. 안 그러면 넉 장을 보다 닫고 다른
     사람을 열었을 때 세 번째부터 시작한다.
-
-    굴림판도 같이 되돌린다 — 값만 0 으로 두면 화면은 그대로 세 번째다.
   */
-  useEffect(() => {
-    setAt(0);
-    roll.current?.scrollTo({ x: 0, animated: false });
-  }, [charId]);
+  useEffect(() => { setAt(0); }, [charId]);
 
   /*
     뒤로가기로도 닫힌다. 캐릭터 창 **위에** 뜨므로, 한 번 누르면 이것만
@@ -79,89 +87,41 @@ export function WallpaperPopup({ charId, keys, name, onClose }: {
   useBackClose(!!charId && !!src, onClose);
   if (!charId || !src || !now) return null;
 
-  /** 밑에 이름표가 붙는 만큼 그림이 물러난다 — 여러 장일 때만 */
+  /** 아래 단추 줄이 붙는 만큼 그림이 또 물러난다 — 여러 장일 때만 */
   const tabH = list.length > 1 ? 52 : 0;
-  const pageH = win.height - tabH;
+  const step = stepName(now);
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <View style={{ width: win.width, height: win.height, backgroundColor: BLACK }}>
-        <ScrollView
-          ref={roll}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          /*
-            ── 한 번에 **한 장만** 넘어간다 ──
+        {/*
+          ── 위 띠 ── 누구의 어느 장면인가.
 
-            `pagingEnabled` 만으로는 부족했다. 저건 "한 장 폭에 물린다" 까지고,
-            손가락을 놓은 뒤의 관성은 그대로 살아 있어서 조금 세게 밀면 두세
-            장을 지나쳐 버렸다.
-
-            `disableIntervalMomentum` 이 그 관성을 자른다 — 놓은 자리에서
-            **가장 가까운 한 칸**까지만 가고 멎는다. `snapToInterval` 로 그
-            칸 폭을 다시 못 박고, `decelerationRate="fast"` 로 미끄러지는
-            거리를 줄인다. 셋이 같이 있어야 웹과 앱에서 같게 움직인다.
-          */
-          disableIntervalMomentum
-          snapToInterval={win.width}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          /*
-            **다 민 뒤에 한 번만** 센다. 미는 도중에 세면 손가락이 조금만
-            흔들려도 아래 이름표가 앞뒤로 튄다.
-
-            손가락을 떼는 순간(`onScrollEndDrag`)도 같이 본다 — 웹에서는
-            관성이 없으면 `onMomentumScrollEnd` 가 아예 안 오는 일이 있어서,
-            그때 이름표만 옛 자리에 남는다.
-          */
-          onMomentumScrollEnd={(e) => {
-            const n = Math.round(e.nativeEvent.contentOffset.x / win.width);
-            if (n !== at) { setAt(n); sfx('tap'); }
-          }}
-          onScrollEndDrag={(e) => {
-            const n = Math.round(e.nativeEvent.contentOffset.x / win.width);
-            if (n !== at) { setAt(n); sfx('tap'); }
-          }}
-          style={{ width: win.width, height: pageH }}
-        >
-          {list.map((k) => (
-            /*
-              장마다 **누르면 닫힌다.** 미는 것과 안 부딪힌다 — 밀면 굴림판이
-              손가락을 가져가므로 `onPress` 가 안 뜬다.
-            */
-            <Pressable
-              key={k}
-              onPress={onClose}
-              style={{ width: win.width, height: pageH, justifyContent: 'center' }}
-            >
-              <Image
-                source={WALLPAPERS[k]}
-                resizeMode="contain"
-                style={{ width: win.width, height: pageH }}
-              />
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        {/* 위 — 이름과 나가는 문 */}
+          그림 **위에 얹지 않고 자리를 차지한다.** 얹으면 세로로 긴 그림의
+          머리 위에 글씨가 겹치는데, 이 그림들은 대개 얼굴이 위쪽에 있다.
+        */}
         <View
-          pointerEvents="box-none"
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            paddingTop: SP.xl,
+            height: BAR_H,
             paddingHorizontal: SP.md,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
+            borderBottomWidth: 1,
+            borderBottomColor: LINE.low,
+            backgroundColor: 'rgba(0,0,0,0.7)',
           }}
         >
-          <T size={11} bold>{name ?? ''}</T>
+          <View style={{ flex: 1 }}>
+            <T size={FS.body} bold numberOfLines={1}>
+              {step ? `${name ?? ''} · ${step}` : (name ?? '')}
+            </T>
+            {list.length > 1 && (
+              <T size={9} dim="dim">{`${at + 1} / ${list.length}`}</T>
+            )}
+          </View>
           <Pressable
-            onPress={onClose}
+            onPress={() => { sfx('tap'); onClose(); }}
             /* 글자 하나짜리 과녁이라 손가락이 닿을 자리를 넓힌다 */
             hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
             style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
@@ -171,21 +131,36 @@ export function WallpaperPopup({ charId, keys, name, onClose }: {
         </View>
 
         {/*
-          ── 아래 이름표 ── `스토리 1` … `스토리 4`.
+          ── 그림 한 장 ── 누르면 닫힌다.
+
+          손가락이 여기서 할 수 있는 일이 하나뿐이라 (머리말), 미는 것과
+          부딪힐 것이 없다.
+        */}
+        <Pressable
+          onPress={onClose}
+          style={{
+            width: win.width,
+            height: win.height - BAR_H - tabH,
+            justifyContent: 'center',
+          }}
+        >
+          <Image
+            source={src}
+            resizeMode="contain"
+            style={{ width: win.width, height: win.height - BAR_H - tabH }}
+          />
+        </Pressable>
+
+        {/*
+          ── 아래 단추 ── `스토리 1` … `스토리 4`.
 
           몇 장인지와 지금 어디인지를 한 줄이 같이 말한다. 점 네 개로 두는
           것보다 낫다 — 점은 "네 장이 있다" 만 말하고 **몇 번째 이야기인지**는
           말하지 않는데, 이 그림들은 이야기마다 하나씩 붙는 것이다.
-
-          눌러서 바로 갈 수도 있다. 세 장을 밀어야 닿는 자리가 한 번에 닿는다.
         */}
         {list.length > 1 && (
           <View
             style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 0,
               height: tabH,
               flexDirection: 'row',
               alignItems: 'center',
@@ -202,11 +177,7 @@ export function WallpaperPopup({ charId, keys, name, onClose }: {
                 <Pressable
                   key={k}
                   disabled={here}
-                  onPress={() => {
-                    sfx('tap');
-                    setAt(i);
-                    roll.current?.scrollTo({ x: i * win.width, animated: true });
-                  }}
+                  onPress={() => { sfx('tap'); setAt(i); }}
                   style={({ pressed }) => ({
                     paddingVertical: SP.xs,
                     paddingHorizontal: SP.sm,
