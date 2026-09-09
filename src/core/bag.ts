@@ -147,9 +147,11 @@ export function bagOf(own: BagOwned): BagRow[] {
 export const bagIn = (rows: readonly BagRow[], tab: BagTab): BagRow[] =>
   rows.filter((r) => r.tab === tab);
 
-/** 갈래마다 몇 칸인가 — 갈래 줄에 숫자를 붙인다 */
-export function bagCounts(rows: readonly BagRow[]): Record<BagTab, number> {
-  const out: Record<BagTab, number> = { gear: 0, use: 0, mat: 0, etc: 0 };
-  for (const r of rows) out[r.tab] += 1;
-  return out;
-}
+/*
+  여기 `bagCounts` 가 있었다 — 갈래마다 몇 칸인지를 세어 아래 줄에
+  `소비 2` 처럼 붙이던 것이다. 걷었다: 저 줄은 **어디를 볼까**를 고르는
+  자리이지 세는 자리가 아니고, 네 칸이 정확히 같은 폭으로 서는데 어떤
+  칸에만 숫자가 붙으면 글자 길이가 들쭉날쭉해진다.
+
+  세는 자리는 화면 맨 위에 따로 있다 (`ItemScreen` 의 `소비 2종`).
+*/

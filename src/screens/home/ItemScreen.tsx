@@ -24,7 +24,7 @@
 import React, { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useGame } from '@/state/store';
-import { BAG_EMPTY, BAG_TABS, BagRow, BagTab, bagCounts, bagIn, bagOf } from '@/core/bag';
+import { BAG_EMPTY, BAG_TABS, BagRow, BagTab, bagIn, bagOf } from '@/core/bag';
 import { KV, Row, T } from '@/ui/atoms';
 import { Popup } from '@/ui/Popup';
 import { Sprite } from '@/ui/Sprite';
@@ -130,7 +130,6 @@ export function ItemScreen() {
 
   const rows = bagOf({ books, elixir, gifts });
   const here = bagIn(rows, at);
-  const n = bagCounts(rows);
 
   return (
     <>
@@ -181,17 +180,12 @@ export function ItemScreen() {
         갈래 줄은 굴러가는 몸통 **밖**이다 (`SubTabs`). 가진 것이 늘어나
         목록이 길어져도 갈래는 늘 손가락이 가 있는 자리에 있다.
 
-        칸마다 숫자를 붙인다 — 어느 갈래에 무엇이 있는지 눌러 보지 않고
-        알 수 있어야, 빈 갈래를 눌러 보는 일이 안 생긴다.
+        칸마다 숫자를 붙였었다 (`소비 2`). 걷은 까닭: 저 줄은 **어디를 볼까**
+        를 고르는 자리이지 세는 자리가 아니다. 네 칸이 정확히 같은 폭으로
+        서는데 (`SubTabs`) 어떤 칸에만 숫자가 붙으면 글자 길이가 들쭉날쭉해
+        지고, 정작 세어야 할 자리는 이미 위에 있다 (`소비 2종`).
       */}
-      <SubTabs
-        at={at}
-        tabs={BAG_TABS.map((t) => ({
-          id: t.id,
-          label: n[t.id] > 0 ? `${t.label} ${n[t.id]}` : t.label,
-        }))}
-        onGo={setAt}
-      />
+      <SubTabs at={at} tabs={BAG_TABS} onGo={setAt} />
 
       {/* 눌러서 여는 창 — 무엇에 쓰는지와 어디서 쓰는지 */}
       <BagPopup row={rows.find((r) => r.key === open) ?? null} onClose={() => setOpen(null)} />
